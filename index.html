@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>RC Ondas</title><meta name="theme-color" content="#0b2a5b"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="RC Ondas">
+<meta name="description" content="Painel de produção e operação de ondas">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f4f7fc;--card:#fff;--ink:#0f1d36;--mut:#5d6b85;--line:#dce4f0;--side:#0b2a5b;--g:#1d5fd6;--a:#5aa0f2;--r:#e5484d;--v:#0b3d91;--t:#7db3f5;--sh:0 1px 2px rgba(15,40,90,.05),0 1px 8px rgba(15,40,90,.04);box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0b1426;--card:#121e36;--ink:#e7eefc;--mut:#93a4c4;--line:#22324f;--side:#071327;--sh:none}}
+:root[data-theme="dark"]{--bg:#0b1426;--card:#121e36;--ink:#e7eefc;--mut:#93a4c4;--line:#22324f;--side:#071327;--sh:none}
+*{box-sizing:border-box}html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:radial-gradient(1100px 480px at 100% -10%,color-mix(in srgb,var(--g) 10%,transparent),transparent 60%),var(--bg);background-attachment:fixed;color:var(--ink);font:14px/1.45 Inter,system-ui,sans-serif}
+h1,h2,h3,.num{font-family:Inter,system-ui,sans-serif;margin:0;font-variant-numeric:tabular-nums;letter-spacing:-.015em}
+.app{display:grid;grid-template-columns:232px 1fr;min-height:100vh}
+nav.side{background:linear-gradient(180deg,var(--side),color-mix(in srgb,var(--side) 78%,#000));color:#b9c8e3;padding:18px 12px;position:sticky;top:0;height:100vh;display:flex;flex-direction:column;gap:6px}
+.brand{display:flex;align-items:center;gap:10px;padding:4px 8px 18px;color:#fff;font:700 16px/1.15 Inter,sans-serif;border-bottom:1px solid rgba(255,255,255,.1);margin-bottom:10px}
+.brand i{width:32px;height:32px;border-radius:8px;background:var(--g);display:grid;place-items:center;flex:none}.brand svg{width:18px;height:18px;stroke:#fff;fill:none;stroke-width:2;stroke-linecap:round}
+.brand small{display:block;font:500 11px Inter,sans-serif;color:#8fa6cc;margin-top:2px}
+.tab{all:unset;cursor:pointer;padding:10px 12px;border-radius:10px;display:flex;gap:10px;align-items:center;font-weight:500;min-height:44px}
+.tab:hover{background:rgba(255,255,255,.06)}.tab.on{background:rgba(255,255,255,.1);color:#fff;box-shadow:inset 3px 0 0 var(--a)}
+.tab svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.side .sp{flex:1}.side .who{font-size:11px;color:#8fa6cc;padding:0 10px 6px}
+main{padding:20px 28px 48px;min-width:0;max-width:1440px;width:100%}
+header.top{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;margin-bottom:16px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 16px;box-shadow:var(--sh)}
+header.top h1{font-size:18px;font-weight:700}.sub2{color:var(--mut);font-size:12.5px;margin-top:2px}
+.ctl{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+select,input,button.b{font:inherit;color:var(--ink);background:var(--card);border:1px solid var(--line);border-radius:8px;padding:9px 11px;min-height:40px}
+input:focus,select:focus{outline:2px solid var(--g);outline-offset:1px}
+select:hover,input:hover{border-color:color-mix(in srgb,var(--g) 45%,var(--line))}
+.pill{display:inline-flex;gap:6px;align-items:center;padding:5px 11px;border-radius:99px;font-size:12px;font-weight:600;background:#dce9ff;color:#1448a8;cursor:pointer;border:0}
+.pill.off{background:#fde4e0;color:#b23a2d}.pill.warn{background:#eaf1fd;color:#3b6bc0}.pill.ot{background:#fdeedd;color:#9a5a12}
+.grid{display:grid;gap:12px}.k5{grid-template-columns:repeat(auto-fit,minmax(160px,1fr))}.two{grid-template-columns:repeat(auto-fit,minmax(300px,1fr))}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px;box-shadow:var(--sh);transition:box-shadow .2s,border-color .2s}
+.card:hover{border-color:color-mix(in srgb,var(--g) 28%,var(--line));box-shadow:0 2px 4px rgba(15,40,90,.06),0 10px 24px rgba(15,40,90,.08)}
+.card h3{font-size:11.5px;color:var(--mut);font-weight:600;letter-spacing:.06em;text-transform:uppercase;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.kpi{position:relative;overflow:hidden}.kpi h3{padding-right:40px;margin-bottom:10px}
+.ki{position:absolute;right:14px;top:14px;width:32px;height:32px;border-radius:8px;background:color-mix(in srgb,var(--c) 13%,transparent);display:grid;place-items:center}
+.ki svg{width:17px;height:17px;stroke:var(--c);fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.kpi .num{font-size:28px;font-weight:700;line-height:1.15;letter-spacing:-.025em}.kpi small{color:var(--mut)}
+.kpi.hero{--c:#fff!important;background:linear-gradient(135deg,#0b3d91,#1d5fd6);color:#fff;border-color:transparent}
+.kpi.hero h3,.kpi.hero small{color:rgba(255,255,255,.82)}.kpi.hero .ki{background:rgba(255,255,255,.16)}
+.bar{height:8px;background:var(--line);border-radius:9px;overflow:hidden}.bar b{display:block;height:100%;border-radius:9px;background:linear-gradient(90deg,color-mix(in srgb,var(--c,var(--g)) 62%,#fff),var(--c,var(--g)));transition:width .5s}
+.gal{margin-bottom:12px}.gal .r{display:flex;justify-content:space-between;font-size:13px;margin-bottom:5px;gap:8px}
+svg.ch{width:100%;height:auto;display:block}svg text{fill:var(--mut);font:10px Inter,sans-serif}
+.legend{display:flex;gap:12px;font-size:12px;color:var(--mut);margin-top:6px;flex-wrap:wrap}.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:4px}
+.seg{display:flex;flex-wrap:wrap;gap:8px}.seg button{all:unset;cursor:pointer;flex:1 1 120px;text-align:center;padding:12px 8px;border:1px solid var(--line);border-radius:8px;font-weight:600;font-size:13px;background:var(--card);min-height:44px;transition:border-color .15s,background .15s}
+.seg button.on{border-color:var(--c,var(--g));background:color-mix(in srgb,var(--c,var(--g)) 14%,var(--card));color:var(--c,var(--g))}
+.seg button:hover{border-color:color-mix(in srgb,var(--g) 45%,var(--line))}
+.f{display:grid;gap:10px}.f label{font-size:12px;color:var(--mut);font-weight:600;display:grid;gap:4px}
+.f label.row{display:flex;gap:8px;align-items:center;flex-direction:row;color:var(--ink);font-weight:500}
+.big{font:700 30px Inter,sans-serif;letter-spacing:-.02em;font-variant-numeric:tabular-nums;text-align:center;padding:12px}
+.btn{all:unset;cursor:pointer;text-align:center;background:var(--g);color:#fff;font-weight:600;padding:12px 16px;border-radius:8px;min-height:44px;box-shadow:0 1px 2px rgba(15,40,90,.2);transition:filter .15s,transform .1s}
+.btn:hover{filter:brightness(1.08)}.btn:active{transform:translateY(1px)}
+.btn.alt{background:var(--card);color:var(--ink);border:1px solid var(--line);box-shadow:none}.btn.d{background:var(--r)}.btn.am{background:var(--a);color:#06224a}
+.btn.sm{padding:7px 11px;min-height:34px;font-size:12.5px}
+.btn:focus-visible,.tab:focus-visible,.seg button:focus-visible,.sub button:focus-visible,.pill:focus-visible{outline:2px solid var(--a);outline-offset:2px}
+table{width:100%;border-collapse:collapse;font-size:13px}th{text-align:left;color:var(--mut);font-size:11px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;padding:8px 10px}td{padding:10px;border-top:1px solid var(--line)}
+table tr:hover td{background:color-mix(in srgb,var(--g) 4%,transparent)}
+.tw{overflow-x:auto}.st{padding:3px 9px;border-radius:6px;font-size:11px;font-weight:600;white-space:nowrap}
+.st:before{content:"";display:inline-block;width:6px;height:6px;border-radius:50%;background:currentColor;margin-right:6px;vertical-align:1px}
+.s0{background:#dce9ff;color:#1448a8}.s1{background:#e9edf5;color:#4a5a78}.s2{background:#fde4e0;color:#b23a2d}
+.sub{display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap}.sub button{all:unset;cursor:pointer;padding:8px 14px;border-radius:8px;border:1px solid var(--line);background:var(--card);font-weight:600;min-height:20px;transition:border-color .15s,background .15s}
+.sub button.on{background:var(--g);color:#fff;border-color:var(--g)}.sub button:not(.on):hover{border-color:color-mix(in srgb,var(--g) 45%,var(--line))}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translate(-50%,40px);background:var(--ink);color:var(--bg);padding:11px 18px;border-radius:12px;opacity:0;transition:.3s;z-index:20;font-weight:600;max-width:90vw;text-align:center}.toast.on{opacity:1;transform:translate(-50%,0)}
+.empty{color:var(--mut);padding:28px 18px;text-align:center;border:1px dashed var(--line);border-radius:10px}
+.hide{display:none!important}
+.prog{margin-bottom:18px}.pbar{height:6px;border-radius:9px;background:var(--line);overflow:hidden}.pbar b{display:block;height:100%;width:0;border-radius:9px;background:linear-gradient(90deg,var(--a),var(--g));transition:width .6s cubic-bezier(.2,.8,.2,1)}
+.plab{display:flex;justify-content:space-between;margin-top:8px;font-size:12px;color:var(--mut);font-weight:600}
+.plab span{transition:color .3s,transform .3s}.plab span.on{color:var(--g);transform:translateY(-1px)}.plab span.done{color:var(--ink)}
+.plab span.done:after{content:" ✓";color:var(--g)}
+.stp{animation:stIn .4s cubic-bezier(.2,.8,.2,1)}@keyframes stIn{from{opacity:0;transform:translateX(18px)}to{opacity:1;transform:none}}
+.wrow{display:grid;grid-template-columns:1fr 1fr auto;gap:10px;align-items:end;padding:12px;border:1px solid var(--line);border-radius:10px;margin-bottom:8px;animation:rowIn .35s cubic-bezier(.2,.8,.2,1) both;transition:border-color .2s,box-shadow .2s}
+.wrow.err{border-color:var(--r);box-shadow:0 0 0 3px color-mix(in srgb,var(--r) 15%,transparent)}
+.wrow label{font-size:12px;color:var(--mut);font-weight:600;display:grid;gap:4px;min-width:0}
+.wrow input{width:100%;font-size:17px;font-weight:700}
+.wrow .x{all:unset;cursor:pointer;width:40px;height:40px;border-radius:8px;display:grid;place-items:center;color:var(--r);font-size:22px;background:color-mix(in srgb,var(--r) 10%,transparent)}
+@keyframes rowIn{from{opacity:0;transform:translateY(-6px) scale(.98)}to{opacity:1;transform:none}}
+.ctl2{display:flex;gap:8px;margin-top:12px;justify-content:space-between;align-items:center}
+.ctl2 .btn{flex:0 0 auto}
+.seg button small{display:block;font-weight:400;font-size:11px;color:var(--mut);margin-top:3px}
+.sumline{font-size:13px;color:var(--mut);margin-bottom:12px}.sumline b{color:var(--ink)}
+.tag{font-size:11px;font-weight:600;padding:2px 8px;border-radius:6px;background:color-mix(in srgb,var(--g) 12%,transparent);color:var(--g)}
+.tag.t2{background:color-mix(in srgb,var(--v) 14%,transparent);color:var(--v)}
+.ins{display:grid;gap:8px}.ins div{display:flex;gap:8px;align-items:flex-start;font-size:13px}.ins b{color:var(--g)}
+.ins span.ic{flex:none;width:18px;text-align:center}
+.mask{position:fixed;inset:0;background:rgba(6,18,40,.55);display:grid;place-items:center;z-index:30;padding:16px}
+.mask .card{max-width:360px;width:100%}
+section:not(.hide){animation:fd .28s ease}@keyframes fd{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+@media(max-width:760px){.app{grid-template-columns:1fr}nav.side{position:fixed;bottom:0;left:0;right:0;top:auto;height:auto;flex-direction:row;z-index:5;padding:6px 6px calc(6px + env(safe-area-inset-bottom,0px));justify-content:space-around;gap:0}.brand,.side .sp,.side .who{display:none}.tab{flex-direction:column;gap:2px;font-size:10.5px;padding:6px 8px;min-height:44px}.tab.on{box-shadow:inset 0 2px 0 var(--a)}main{padding:12px 12px 90px}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<div class="app">
+<nav class="side" aria-label="Principal">
+ <div class="brand"><i><svg viewBox="0 0 24 24"><path d="M2 9c3-4 5 4 10 0s7 4 10 0M2 16c3-4 5 4 10 0s7 4 10 0"/></svg></i><span>RC Ondas<small>Gestão de produção</small></span></div>
+ <button class="tab on" data-t="painel"><svg viewBox="0 0 24 24"><path d="M4 20V11M10 20V5M16 20v-6M2 20h20"/></svg>Painel</button>
+ <button class="tab" data-t="op"><svg viewBox="0 0 24 24"><path d="M13 2 4 14h7l-1 8 9-12h-7z"/></svg>Operação</button>
+ <button class="tab" data-t="ind"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.5"/><path d="M5 21c0-4 3.5-6 7-6s7 2 7 6"/></svg>Individual</button>
+ <button class="tab" data-t="cfg"><svg viewBox="0 0 24 24"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/></svg>Config</button>
+ <div class="sp"></div>
+ <div class="who" id="who"></div>
+ <button class="tab" id="logbtn"><svg viewBox="0 0 24 24"><path d="M15 3h4v18h-4M11 8l-4 4 4 4M7 12h9"/></svg><span id="logtx">Entrar</span></button>
+ <button class="tab" id="inst"><svg viewBox="0 0 24 24"><path d="M12 3v12M7 10l5 5 5-5M4 20h16"/></svg>Instalar app</button>
+ <button class="tab" id="theme"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 3v18"/></svg>Tema</button>
+</nav>
+<main>
+<header class="top">
+ <div><h1 id="ttl">Painel</h1><div class="sub2" id="sub2"></div></div>
+ <div class="ctl">
+  <select id="turnoF" aria-label="Turno"><option value="">Todos os turnos</option><option value="1">1º turno</option><option value="2">2º turno</option></select>
+  <select id="gal" aria-label="Galpão da sessão"></select>
+  <input type="date" id="day" aria-label="Data">
+  <button class="pill" id="net" title="Clique para simular queda de internet"></button>
+ </div>
+</header>
+
+<!-- ======================= PAINEL ======================= -->
+<section id="painel">
+ <div class="grid k5" id="kpis"></div>
+ <div class="grid two" style="margin-top:12px">
+  <div class="card"><h3>Produção por hora <span id="peak"></span></h3><div id="chH"></div><div id="pace" style="margin-top:12px;font-size:13px;color:var(--mut);line-height:1.5"></div></div>
+  <div class="card"><h3>Quantidades por tipo de onda</h3><div id="chT"></div></div>
+ </div>
+ <div class="grid two" style="margin-top:12px">
+  <div class="card"><h3>Produção por galpão</h3><div id="gals"></div></div>
+  <div class="card"><h3>Tempo de onda por tipo</h3><div id="tmp"></div></div>
+ </div>
+</section>
+
+<!-- ======================= OPERAÇÃO ======================= -->
+<section id="op" class="hide">
+ <div class="sub" id="sub"><button data-s="reg" class="on">Registro</button><button data-s="ctl" id="subCtl">Controle de Ondas</button><button data-s="ace">Acompanhamento</button></div>
+
+ <div id="reg" class="grid two">
+  <div class="card"><h3>Nova onda</h3>
+   <div class="prog"><div class="pbar"><b id="pbar"></b></div><div class="plab"><span data-sp="1">Operador</span><span data-sp="2">Tipo</span><span data-sp="3">Ondas</span></div></div>
+   <div class="stp" id="s1"><div class="f">
+    <label>Operador (nome ou código)<input id="opIn" list="opl" placeholder="CL001 ou nome" autocomplete="off"></label><datalist id="opl"></datalist>
+    <div id="opName" style="font-weight:600;color:var(--g);min-height:20px"></div>
+    <div class="ctl2"><span></span><button class="btn sm" id="n1">Continuar →</button></div>
+   </div></div>
+   <div class="stp hide" id="s2">
+    <div class="sumline" id="sum2"></div>
+    <div class="seg" id="types_b"></div>
+    <div class="ctl2"><button class="btn alt sm" id="b2">← Voltar</button><span></span></div>
+   </div>
+   <div class="stp hide" id="s3">
+    <div class="sumline" id="sum"></div>
+    <div id="rowsL"></div>
+    <button class="btn alt" id="addRow" style="display:block;width:100%;box-sizing:border-box;margin:0;padding:10px 16px;min-height:40px;text-align:center">+ Adicionar outra onda</button>
+    <div class="ctl2"><button class="btn alt sm" id="b3">← Voltar</button><button class="btn" id="save">Salvar ondas</button></div>
+   </div>
+  </div>
+  <div class="card"><h3>Últimos registros <span id="cnt"></span></h3><div class="tw" id="last"></div></div>
+ </div>
+
+ <div id="ctl" class="card hide"><h3>Ondas em andamento</h3>
+  <div class="ctl" style="margin-bottom:10px"><select id="fOp"></select><select id="fTy"></select><select id="fSt"></select></div>
+  <div class="tw" id="ctlList"></div></div>
+
+ <div id="ace" class="grid two hide">
+  <div class="card"><h3>Temporizador automático</h3><div id="tauto"></div><div class="legend">Janela de agrupamento de 5 min, depois contagem efetiva. Trocar de operador reinicia.</div></div>
+  <div class="card"><h3>Temporizador manual</h3><div id="tman"></div>
+   <div class="grid" style="grid-template-columns:repeat(3,1fr);margin-top:8px"><button class="btn" id="mS">Iniciar</button><button class="btn am" id="mP">Pausar</button><button class="btn d" id="mE">Encerrar</button></div>
+   <div id="mLog" class="legend"></div></div>
+ </div>
+</section>
+
+<!-- ======================= INDIVIDUAL ======================= -->
+<section id="ind" class="hide">
+ <div class="ctl" style="margin-bottom:12px"><select id="iOp" aria-label="Operador"></select><select id="iPer" aria-label="Período"><option value="1">Dia selecionado</option><option value="7">Últimos 7 dias</option><option value="30">Últimos 30 dias</option></select></div>
+ <div id="iBody"></div>
+</section>
+
+<!-- ======================= CONFIG ======================= -->
+<section id="cfg" class="hide">
+ <div class="sub" id="csub"><button data-c="cop" class="on">Operação</button><button data-c="cus">Usuários</button><button data-c="cga">Galpões</button><button data-c="cge">Gestores</button></div>
+
+ <div id="cop" class="grid two">
+  <div class="card"><h3>Limite por onda</h3><div class="f" id="lims"></div></div>
+  <div class="card"><h3>Turnos</h3><div class="f" id="turnos"></div><div class="legend">Registros fora da janela do turno do operador são marcados como hora extra.</div></div>
+  <div class="card"><h3>Ondas</h3><div class="f">
+   <label class="row"><input type="checkbox" id="and" style="min-height:auto"> Modo de ondas em andamento</label>
+   <label>Intervalo máximo entre ondas do mesmo operador para contar como tempo de onda (min)<input type="number" id="gap" min="1" max="120"></label>
+   <label>Tolerância de hora extra (min)<input type="number" id="tol" min="0" max="120"></label></div></div>
+ </div>
+
+ <div id="cus" class="grid two hide">
+  <div class="card"><h3>Novo usuário <span id="nextCode" class="tag"></span></h3><div class="f">
+   <label>Nome<input id="uN" placeholder="Nome do operador" autocomplete="off"></label>
+   <div class="seg" id="uT"></div>
+   <label>Galpão<select id="uG"></select></label>
+   <button class="btn" id="uB">Criar usuário</button></div>
+   <div class="legend">Usuários de operação não usam senha. O código segue a sequência CL001 e um código excluído volta a ficar disponível.</div></div>
+  <div class="card"><h3>Usuários <span id="uCnt"></span></h3><div class="tw" id="uL"></div></div>
+ </div>
+
+ <div id="cga" class="grid two hide">
+  <div class="card"><h3>Novo galpão</h3><div class="f">
+   <label>Nome<input id="gN" placeholder="Galpão 4" autocomplete="off"></label>
+   <label>Meta diária (opcional)<input id="gM" type="number" min="0" placeholder="ex.: 10000" inputmode="numeric"></label>
+   <button class="btn" id="gB">Criar galpão</button></div></div>
+  <div class="card"><h3>Galpões</h3><div class="tw" id="gL"></div><div class="legend">Renomear um galpão atualiza os registros já lançados.</div></div>
+ </div>
+
+ <div id="cge" class="grid two hide">
+  <div class="card"><h3>Novo gestor</h3><div class="f">
+   <label>Nome<input id="mN" placeholder="Nome do gestor" autocomplete="off"></label>
+   <label>Usuário de login<input id="mU" placeholder="gabriel" autocomplete="off"></label>
+   <label>Galpão do gestor<select id="mG"></select></label>
+   <label>Senha (opcional)<input id="mP2" type="password" placeholder="deixe vazio para entrar só com o usuário" autocomplete="new-password"></label>
+   <label class="row"><input type="checkbox" id="mC" checked style="min-height:auto"> Pode alterar configurações</label>
+   <label class="row"><input type="checkbox" id="mI" checked style="min-height:auto"> Pode ver acompanhamento individual</label>
+   <label class="row"><input type="checkbox" id="mR" checked style="min-height:auto"> Pode alterar e excluir registros</label>
+   <label class="row"><input type="checkbox" id="mA" style="min-height:auto"> Administrador (vê todos os galpões)</label>
+   <button class="btn" id="mB">Criar gestor</button></div></div>
+  <div class="card"><h3>Gestores</h3><div class="tw" id="mL"></div><div class="legend">Enquanto não existir nenhum gestor, Configurações e Individual ficam abertos. Depois do primeiro gestor, passam a exigir login.</div></div>
+ </div>
+</section>
+</main>
+</div>
+<div class="toast" id="toast" role="status"></div>
+<div class="mask hide" id="login"><div class="card"><h3>Entrar como gestor</h3><div class="f">
+ <label>Usuário<input id="lU" autocomplete="username"></label>
+ <label>Senha<input id="lP" type="password" autocomplete="current-password"></label>
+ <div class="grid" style="grid-template-columns:1fr 1fr"><button class="btn" id="lB">Entrar</button><button class="btn alt" id="lX">Cancelar</button></div></div></div></div>
+
+<script>
+/* ===================== estado ===================== */
+const TY=[["Vários","var(--g)"],["Múltiplos","var(--v)"],["Itens Únicos","var(--a)"],["Maiores/Pesados","var(--r)"]];
+const ST=["Concluído","Procurando","Difícil acesso"],SC=["s0","s1","s2"];
+const LS="rcondas.v2",$=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
+const DEF={cfg:{lim:{"Vários":1000,"Múltiplos":1000,"Itens Únicos":100,"Maiores/Pesados":10},and:true,gap:30,tol:15,
+ turnos:{1:{ini:7,fim:16},2:{ini:16,fim:23}}},gals:["Galpão 1","Galpão 2","Galpão 3"],ops:[],ges:[],waves:[],gal:"Galpão 1",off:false,man:{log:[]}};
+let S;try{S=JSON.parse(localStorage.getItem(LS))}catch(e){}
+if(!S){ /* migra base antiga, se existir */
+ let old=null;try{old=JSON.parse(localStorage.getItem("rcondas.v1"))}catch(e){}
+ S=JSON.parse(JSON.stringify(DEF));
+ if(old){S.waves=old.waves||[];S.gals=Object.keys(old.cfg&&old.cfg.metas||{}).length?Object.keys(old.cfg.metas):S.gals;
+  S.ops=(old.ops||[]).map(o=>({m:(o.m||"").replace(/\s|^CL0*/g,"")?"CL"+String(+(o.m||"").replace(/\D/g,"")).padStart(3,"0"):o.m,n:o.n,t:1,g:S.gals[0]}));
+  if(old.cfg){S.cfg.lim=old.cfg.lim||S.cfg.lim;S.cfg.and=old.cfg.and!==false;S.cfg.turnos[1]={ini:old.cfg.ini||7,fim:old.cfg.fim||16}}
+  S.gal=old.gal||S.gals[0]}
+}
+["cfg","gals","ops","ges","waves","man"].forEach(k=>{if(S[k]==null)S[k]=JSON.parse(JSON.stringify(DEF[k]))});
+Object.keys(DEF.cfg).forEach(k=>{if(S.cfg[k]==null)S.cfg[k]=JSON.parse(JSON.stringify(DEF.cfg[k]))});
+if(!S.metas)S.metas={};
+if(!S.gals.length)S.gals=["Galpão 1"];
+if(!S.gals.includes(S.gal))S.gal=S.gals[0];
+let ty="Vários",st=0,draft=[],tim={op:null,t0:0},view="painel",me=null,uT=1,csub="cop";
+const save=()=>{try{localStorage.setItem(LS,JSON.stringify(S))}catch(e){}};
+const online=()=>!S.off&&navigator.onLine;
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const dk=t=>{const d=new Date(t);return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")};
+const fmt=n=>Math.round(n).toLocaleString("pt-BR");
+const mm=ms=>{ms=Math.max(0,ms)/1e3|0;const h=ms/3600|0,m=(ms%3600)/60|0,s=ms%60;return(h?h+":":"")+String(m).padStart(2,"0")+":"+String(s).padStart(2,"0")};
+const hh=ms=>{const m=Math.round(Math.max(0,ms)/6e4);return(m/60|0)+"h"+String(m%60).padStart(2,"0")};
+const uid=()=>"w"+Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+function toast(m,ms){const t=$("#toast");t.textContent=m;t.classList.add("on");clearTimeout(toast.h);toast.h=setTimeout(()=>t.classList.remove("on"),ms||2400)}
+function flush(){let n=0;S.waves.forEach(w=>{if(!w.sync){w.sync=1;n++}});if(n){save();toast(n+" registro(s) sincronizado(s)")}}
+
+/* ===================== usuários / códigos ===================== */
+function nextCode(){const used=new Set(S.ops.map(o=>o.m));for(let i=1;i<1000;i++){const c="CL"+String(i).padStart(3,"0");if(!used.has(c))return c}return"CL999"}
+function findOp(v){v=(v||"").trim().toLowerCase();return S.ops.find(o=>o.m.toLowerCase()===v||o.n.toLowerCase()===v)}
+function opOf(code){return S.ops.find(o=>o.m===code)}
+const h32=s=>{let h=5381;for(let i=0;i<s.length;i++)h=(h*33^s.charCodeAt(i))>>>0;return h.toString(36)};
+
+/* ===================== turno / hora extra ===================== */
+function turnoOf(o){return S.cfg.turnos[o&&o.t===2?2:1]}
+function isOT(w){const o=opOf(w.op);if(!o)return false;const t=turnoOf(o),d=new Date(w.fin||w.ts),h=d.getHours()+d.getMinutes()/60,tol=(S.cfg.tol||0)/60;
+ if(t.fim>t.ini)return h<t.ini-tol||h>t.fim+tol;
+ return h<t.ini-tol&&h>t.fim+tol}
+
+/* ===================== seleções de dados ===================== */
+function dayWaves(d){d=d||$("#day").value;return S.waves.filter(w=>dk(w.ts)===d&&inView(w))}
+function rangeWaves(days){if(days<=1)return dayWaves();const end=new Date($("#day").value+"T12:00"),out=[];
+ for(let i=0;i<days;i++){const d=new Date(end);d.setDate(d.getDate()-i);out.push(dk(d))}
+ const set=new Set(out);return S.waves.filter(w=>set.has(dk(w.ts))&&inView(w))}
+const prod=l=>l.filter(w=>w.st===0);
+function hourly(list,gal){const H=24,a=Array(H).fill(0),o=Array(H).fill(0);
+ prod(list).filter(w=>!gal||w.gal===gal).forEach(w=>{const h=new Date(w.fin||w.ts).getHours();a[h]+=w.qty;o[h]++});return{a,o}}
+function hourWindow(a){let f=a.findIndex(v=>v>0),l=-1;a.forEach((v,i)=>{if(v>0)l=i});
+ if(f<0){const t=S.cfg.turnos[1];return[t.ini,Math.max(t.fim,t.ini+1)]}
+ return[Math.max(0,f-1),Math.min(23,l+1)]}
+/* tempo de onda: intervalo entre ondas concluídas consecutivas do mesmo operador */
+function durs(list){const by={},out=[];
+ prod(list).slice().sort((x,y)=>(x.fin||x.ts)-(y.fin||y.ts)).forEach(w=>{(by[w.op]=by[w.op]||[]).push(w)});
+ Object.values(by).forEach(a=>{for(let i=1;i<a.length;i++){const d=(a[i].fin||a[i].ts)-(a[i-1].fin||a[i-1].ts);
+  if(d>0&&d<=(S.cfg.gap||30)*6e4)out.push({w:a[i],d})}});return out}
+const avg=a=>a.length?a.reduce((s,v)=>s+v,0)/a.length:0;
+
+/* ===================== gráficos ===================== */
+function barsSvg(a,i0,i1,ov){ov=ov||{};const lab=[],v=[];for(let i=i0;i<=i1;i++){lab.push(i);v.push(a[i])}
+ const W=600,H=170,p=22,mx=Math.max(...v,ov.need||0,ov.avg||0,1),bw=(W-p*2)/v.length,hi=v.indexOf(Math.max(...v)),act=v.filter(x=>x>0),lo=act.length>1?v.indexOf(Math.min(...act)):-1;
+ let s=`<svg class="ch" viewBox="0 0 ${W} ${H}" role="img" aria-label="Produção por hora">`+[0,1,2].map(i=>`<line x1="${p}" x2="${W-p}" y1="${H-24-i*(H-44)/2}" y2="${H-24-i*(H-44)/2}" stroke="var(--line)"/>`).join("");
+ v.forEach((q,i)=>{const h=q/mx*(H-44),x=p+i*bw+4,c=q&&i===hi?"var(--g)":i===lo?"var(--r)":"var(--t)";
+  s+=`<rect x="${x}" y="${H-24-h}" width="${Math.max(bw-8,2)}" height="${h}" rx="3" fill="${c}" opacity="${q?1:.15}"/>${q?`<text x="${x+(bw-8)/2}" y="${H-28-h}" text-anchor="middle" style="fill:var(--ink)">${fmt(q)}</text>`:""}<text x="${x+(bw-8)/2}" y="${H-8}" text-anchor="middle">${lab[i]}h</text>`});
+ const Y=val=>H-24-val/mx*(H-44);
+ if(ov.avg)s+=`<line x1="${p}" x2="${W-p}" y1="${Y(ov.avg)}" y2="${Y(ov.avg)}" stroke="var(--v)" stroke-width="2"/><text x="${W-p}" y="${Y(ov.avg)-5}" text-anchor="end" style="fill:var(--v)">média ${fmt(ov.avg)}/h</text>`;
+ if(ov.need)s+=`<line x1="${p}" x2="${W-p}" y1="${Y(ov.need)}" y2="${Y(ov.need)}" stroke="var(--r)" stroke-width="2" stroke-dasharray="6 5"/><text x="${W-p}" y="${Y(ov.need)-5}" text-anchor="end" style="fill:var(--r)">necessário ${fmt(ov.need)}/h</text>`;
+ return s+"</svg><div class='legend'><span><i style='background:var(--g)'></i>Pico</span><span><i style='background:var(--r)'></i>Menor</span><span><i style='background:var(--t)'></i>Demais</span><span><i style='background:var(--v)'></i>Média</span><span><i style='background:var(--r)'></i>Necessário p/ meta</span></div>"}
+function bars(items){const mx=Math.max(...items.map(i=>i.v),1);
+ return items.map(i=>`<div class="gal"><div class="r"><b>${esc(i.k)}</b><span>${fmt(i.v)}${i.s?' <small style="color:var(--mut)">'+esc(i.s)+"</small>":""}</span></div><div class="bar"><b style="width:${i.v/mx*100}%;--c:${i.c||"var(--g)"}"></b></div></div>`).join("")||'<div class="empty">Sem registros.</div>'}
+
+/* ===================== PAINEL (só produção) ===================== */
+function painel(){
+ const g=$("#gal").value==="__all"?null:$("#gal").value,all=dayWaves().filter(inTurno),L=g?all.filter(w=>w.gal===g):all,P=prod(L),
+  tot=P.reduce((s,w)=>s+w.qty,0),ond=P.length,pes=new Set(P.map(w=>w.op)).size,
+  D=durs(L),md=avg(D.map(d=>d.d)),ot=P.filter(isOT),
+  {a}=hourly(all,g),[i0,i1]=hourWindow(a),mx=Math.max(...a);
+ const TF=$("#turnoF").value,TW=TF?S.cfg.turnos[TF]:{ini:Math.min(S.cfg.turnos[1].ini,S.cfg.turnos[2].ini),fim:Math.max(S.cfg.turnos[1].fim,S.cfg.turnos[2].fim)};
+ const nowF=new Date().getHours()+new Date().getMinutes()/60,isNow=$("#day").value===dk(Date.now());
+ const hWin=Math.max(TW.fim-TW.ini,1),elapsed=isNow?Math.min(Math.max(nowF-TW.ini,0),hWin):hWin,remain=isNow?Math.max(TW.fim-Math.max(nowF,TW.ini),0):0;
+ const metaT=g?(+S.metas[g]||0):visG().reduce((s,k)=>s+(+S.metas[k]||0),0);
+ const faltam=Math.max(metaT-tot,0),need=remain>0?faltam/remain:0,avgH=elapsed>0?tot/elapsed:0,upw=ond?tot/ond:0,ondH=upw?need/upw:0;
+ const IC={"Produção total":"M3 8l9-5 9 5v8l-9 5-9-5zM3 8l9 5 9-5M12 13v8","Ondas concluídas":"M2 9c3-4 5 4 10 0s7 4 10 0M2 16c3-4 5 4 10 0s7 4 10 0","Pessoas":"M9 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM2 21c0-3.5 3-5.5 7-5.5M17 11a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5zM14 21c0-3 2-4.5 5-4.5","Tempo médio de onda":"M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zM12 7v5l3 2","Unidades por onda":"M4 7h16M4 12h16M4 17h10","Hora extra":"M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zM12 7v5l3 2M19 3l2 2"};
+ const K=(t,v,s,c,hero)=>`<div class="card kpi${hero?" hero":""}" style="--c:${c}"><span class="ki"><svg viewBox="0 0 24 24"><path d="${IC[t]||""}"/></svg></span><h3>${t}</h3><div class="num">${v}</div><small>${s}</small></div>`;
+ $("#kpis").innerHTML=
+  K("Produção total",fmt(tot),"unidades concluídas","var(--g)",1)+
+  K("Ondas concluídas",fmt(ond),"registros válidos","var(--g)")+
+  K("Pessoas",fmt(pes),"operadores com produção","var(--v)")+
+  K("Tempo médio de onda",D.length?mm(md):"—",D.length+" intervalos medidos","var(--a)")+
+  K("Unidades por onda",ond?fmt(tot/ond):"0","média por onda","var(--t)")+
+  K("Hora extra",fmt(ot.reduce((s,w)=>s+w.qty,0)),ot.length+" ondas fora do turno","var(--r)");
+ $("#chH").innerHTML=barsSvg(a,i0,i1,{need:need,avg:avgH});
+ $("#pace").innerHTML=!metaT?"Defina a meta do galpão em Config → Galpões para ver o ritmo necessário.":!isNow?"Dia encerrado · faltam <b style='color:var(--ink)'>"+fmt(faltam)+" un.</b> para a meta.":faltam<=0?"<b style='color:var(--g)'>Meta batida</b> · "+fmt(tot)+" un. produzidas.":remain<=0?"Fora do horário do turno · faltam <b style='color:var(--ink)'>"+fmt(faltam)+" un.</b>":"<b style='color:var(--ink)'>Para bater a meta:</b> "+fmt(need)+" un/h"+(upw?" ≈ "+ondH.toFixed(1)+" ondas/h ("+fmt(upw)+" un/onda)":"")+" · <b style='color:var(--ink)'>média atual:</b> "+fmt(avgH)+" un/h · faltam "+fmt(faltam)+" un em "+remain.toFixed(1)+" h";
+ $("#peak").textContent=mx?"pico "+a.indexOf(mx)+"h":"";
+ $("#chT").innerHTML=bars(TY.map(([n,c])=>{const q=P.filter(w=>w.ty===n);return{k:n,v:q.reduce((s,w)=>s+w.qty,0),s:q.length+" ondas",c}}));
+ $("#gals").innerHTML=bars(visG().map((k,i)=>{const q=prod(all).filter(w=>w.gal===k);
+  const v0=q.reduce((s,w)=>s+w.qty,0),m=S.metas[k];return{k,v:v0,s:(m?"meta "+fmt(m)+" · "+Math.round(v0/m*100)+"% · ":"")+q.length+" ondas · "+new Set(q.map(w=>w.op)).size+" pessoas",c:["var(--g)","var(--v)","var(--a)","var(--t)"][i%4]}}));
+ const Dg=durs(L);
+ $("#tmp").innerHTML=TY.map(([n,c])=>{const d=Dg.filter(x=>x.w.ty===n).map(x=>x.d);
+  return`<div class="gal"><div class="r"><b>${n}</b><span>${d.length?mm(avg(d)):"—"} <small style="color:var(--mut)">${d.length} medições</small></span></div><div class="bar"><b style="width:${d.length?Math.min(avg(d)/((S.cfg.gap||30)*6e4)*100,100):0}%;--c:${c}"></b></div></div>`}).join("")
+  +`<div class="legend">Medido pelo intervalo entre ondas concluídas do mesmo operador, ignorando pausas acima de ${S.cfg.gap||30} min.</div>`;
+}
+
+/* ===================== OPERAÇÃO ===================== */
+function segs(){$("#types_b").innerHTML=TY.map(([n,c])=>`<button data-ty="${n}" style="--c:${c}" class="${n===ty?"on":""}"><span>${n}</span></button>`).join("");}
+function goStep(n){
+ [1,2,3].forEach(i=>{const e=$("#s"+i);if(i===n){e.classList.remove("hide","stp");void e.offsetWidth;e.classList.add("stp")}else e.classList.add("hide")});
+ $$("[data-sp]").forEach(s=>{const k=+s.dataset.sp;s.classList.toggle("on",k===n);s.classList.toggle("done",k<n)});
+ $("#pbar").style.width=((n-1)/2*100)+"%";
+ const o=findOp($("#opIn").value),info=o?esc(o.n)+" · "+o.m+" · "+o.t+"º turno":"";
+ $("#sum").innerHTML=info+" · <b>"+ty+"</b>";$("#sum2").innerHTML=info;
+ if(n===3)renderRows()}
+function renderRows(){const lim=S.cfg.lim[ty];
+ $("#rowsL").innerHTML=rows.map((r,i)=>`<div class="wrow">
+   <label>Nº da onda (WN)<input data-wn="${i}" value="${esc(r.wn)}" inputmode="numeric" placeholder="ex.: 1024" autocomplete="off"></label>
+   <label>Quantidade <small style="font-weight:400">máx. ${fmt(lim)}</small><input data-q="${i}" type="number" inputmode="numeric" min="1" value="${esc(r.q)}" placeholder="0"></label>
+   ${rows.length>1?`<button class="x" data-rmrow="${i}" aria-label="Remover onda">×</button>`:"<span></span>"}</div>`).join("")}
+let rows=[{wn:"",q:""}];
+function curOp(){const o=findOp($("#opIn").value);
+ $("#opName").innerHTML=o?esc(o.n)+' · '+o.m+' <span class="tag'+(o.t===2?" t2":"")+'">'+o.t+"º turno</span>"+(o.g?' <span class="tag">'+esc(o.g)+"</span>":""):"";return o}
+function track(o){if(!tim.op||tim.op!==o.m)tim={op:o.m,n:o.n,t0:Date.now()}}
+function mk(o,q,s,wn){return{id:uid(),wn:wn||"",op:o.m,opn:o.n,gal:o.g||S.gal,ty,qty:q,st:s,ts:Date.now(),fin:s===0?Date.now():null,sync:online()?1:0}}
+function commit(list){S.waves.push(...list);save();segs();renderAll();
+ toast(online()?"Onda salva ✓"+(list.some(isOT)?" · hora extra":""):"Salva offline · aguardando sincronização")}
+function check(){const o=curOp();if(!o){toast("Identifique um operador cadastrado");return}return o}
+function opRows(list,ctl){const canR=!S.ges.length||(me&&me.pR);
+ return list.length?`<table><tr><th>Operador</th><th>Tipo</th><th>Qtd</th><th>Status</th><th>Hora</th>${ctl?"<th>Tempo</th><th>Ação</th>":"<th>Sync</th>"}</tr>`+list.map(w=>{const o=opOf(w.op);
+ return`<tr><td>${esc(w.opn)}<br><small style="color:var(--mut)">${w.op} · WN ${esc(w.wn||"—")} · ${esc(w.gal)}${o?" · "+o.t+"ºT":""}</small></td><td>${w.ty}</td><td><b>${fmt(w.qty)}</b></td><td><span class="st ${SC[w.st]}">${ST[w.st]}</span>${isOT(w)?' <span class="pill ot">extra</span>':""}</td><td>${new Date(w.ts).toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"})}</td>${ctl?`<td class="num" data-el="${w.ts}">${mm(Date.now()-w.ts)}</td><td><a href="#" data-fin="${w.id}" class="pill">Concluir</a> <a href="#" data-sd="${w.id}" class="pill warn">Difícil</a>${canR?` <a href="#" data-del="${w.id}" class="pill off">Excluir</a>`:""}</td>`:`<td>${w.sync?"✓":"<span class='pill warn'>pendente</span>"}</td>`}</tr>`}).join("")+"</table>":'<div class="empty">Nenhum registro ainda.</div>'}
+function operacao(){const L=dayWaves().slice().reverse();$("#cnt").textContent=L.length+" hoje";$("#last").innerHTML=opRows(L.slice(0,8));
+ $("#opl").innerHTML=S.ops.map(o=>`<option value="${o.m}">${esc(o.n)} · ${o.t}º turno</option>`).join("");
+ $("#subCtl").classList.toggle("hide",!S.cfg.and);
+ const open=S.waves.filter(w=>w.st!==0&&inView(w)&&(!$("#fOp").value||w.op===$("#fOp").value)&&(!$("#fTy").value||w.ty===$("#fTy").value)&&(!$("#fSt").value||w.st==$("#fSt").value));
+ $("#ctlList").innerHTML=open.length?opRows(open.reverse(),1):'<div class="empty">Nenhuma onda em andamento.</div>'}
+function filters(){const f=(id,h,o)=>{const e=$(id),v=e.value;e.innerHTML=`<option value="">${h}</option>`+o.map(([a,b])=>`<option value="${a}">${esc(b)}</option>`).join("");e.value=v};
+ f("#fOp","Operador",S.ops.map(o=>[o.m,o.n]));f("#fTy","Tipo",TY.map(t=>[t[0],t[0]]));f("#fSt","Status",[[1,"Procurando"],[2,"Difícil acesso"]])}
+function tick(){const a=$("#tauto");
+ if(view==="op"){if(!tim.op)a.innerHTML='<div class="empty">Identifique um operador na aba Registro para iniciar.</div>';
+  else{const d=Date.now()-tim.t0,w=5*6e4,inW=d<w;a.innerHTML=`<div style="font-weight:600">${esc(tim.n)} · ${tim.op}</div><div class="big" style="color:${inW?"var(--a)":"var(--g)"}">${inW?mm(w-d):mm(d-w)}</div><span class="pill ${inW?"warn":""}">${inW?"Janela de agrupamento":"Tempo efetivo da onda"}</span>`}
+  const m=S.man;$("#tman").innerHTML=`<div style="font-weight:600">${esc(m.n||"Sem operador")}</div><div class="big">${mm((m.acc||0)+(m.run?Date.now()-m.run:0))}</div><span class="pill ${m.run?"":"off"}">${m.run?"Em andamento":"Parado"}</span>`;
+  $("#mLog").innerHTML=m.log.slice(-3).map(l=>"• "+esc(l)).join("<br>")}
+ $$("[data-el]").forEach(e=>e.textContent=mm(Date.now()-e.dataset.el))}
+
+/* ===================== ACOMPANHAMENTO INDIVIDUAL ===================== */
+function individual(){
+ const sel=$("#iOp"),v=sel.value,per=+$("#iPer").value||1;
+ sel.innerHTML='<option value="">Todos os operadores</option>'+S.ops.map(o=>`<option value="${o.m}">${esc(o.n)} · ${o.m}</option>`).join("");sel.value=v;
+ const L=rangeWaves(per),P=prod(L);
+ if(!S.ops.length){$("#iBody").innerHTML='<div class="empty">Cadastre operadores em Configurações → Usuários.</div>';return}
+ if(!v){ /* visão geral da equipe */
+  const per_op=S.ops.map(o=>{const q=P.filter(w=>w.op===o.m);return{o,qt:q.reduce((s,w)=>s+w.qty,0),on:q.length,ot:q.filter(isOT).length}}).sort((a,b)=>b.qt-a.qt);
+  $("#iBody").innerHTML=`<div class="card"><h3>Equipe · ${per===1?"dia selecionado":"últimos "+per+" dias"}</h3><div class="tw"><table><tr><th>Operador</th><th>Turno</th><th>Unidades</th><th>Ondas</th><th>Un./onda</th><th>Tempo médio</th><th>Hora extra</th></tr>`+
+   per_op.map(x=>{const d=durs(L.filter(w=>w.op===x.o.m)).map(z=>z.d);
+    return`<tr><td><a href="#" data-pick="${x.o.m}" style="color:var(--g);font-weight:600;text-decoration:none">${esc(x.o.n)}</a><br><small style="color:var(--mut)">${x.o.m}</small></td><td><span class="tag${x.o.t===2?" t2":""}">${x.o.t}º</span></td><td><b>${fmt(x.qt)}</b></td><td>${x.on}</td><td>${x.on?fmt(x.qt/x.on):"0"}</td><td>${d.length?mm(avg(d)):"—"}</td><td>${x.ot?'<span class="pill ot">'+x.ot+" ondas</span>":"—"}</td></tr>`}).join("")+
+   "</table></div><div class='legend'>Clique em um nome para abrir as estatísticas individuais.</div></div>";return}
+ const o=opOf(v);if(!o){sel.value="";return individual()}
+ const mine=P.filter(w=>w.op===v),qt=mine.reduce((s,w)=>s+w.qty,0),on=mine.length,
+  D=durs(L.filter(w=>w.op===v)).map(z=>z.d),md=avg(D),
+  ot=mine.filter(isOT),otq=ot.reduce((s,w)=>s+w.qty,0),
+  ts=mine.map(w=>w.fin||w.ts),span=ts.length?Math.max(...ts)-Math.min(...ts):0,
+  byH={},byT={};mine.forEach(w=>{const h=new Date(w.fin||w.ts).getHours();byH[h]=(byH[h]||0)+w.qty;byT[w.ty]=(byT[w.ty]||0)+w.qty});
+ const bestH=Object.entries(byH).sort((a,b)=>b[1]-a[1])[0],bestT=Object.entries(byT).sort((a,b)=>b[1]-a[1])[0],
+  team=S.ops.map(x=>prod(L).filter(w=>w.op===x.m).reduce((s,w)=>s+w.qty,0)).filter(x=>x>0),
+  mediaEq=avg(team),rank=team.filter(x=>x>qt).length+1,
+  t=turnoOf(o),hTurno=((t.fim>t.ini?t.fim-t.ini:24-t.ini+t.fim)),
+  ritmo=span>36e5?qt/(span/36e5):qt/Math.max(hTurno,1),
+  dias=new Set(mine.map(w=>dk(w.ts))).size||1;
+ const IC2={un:"M3 8l9-5 9 5v8l-9 5-9-5zM3 8l9 5 9-5M12 13v8",on:"M2 9c3-4 5 4 10 0s7 4 10 0M2 16c3-4 5 4 10 0s7 4 10 0",tm:"M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zM12 7v5l3 2",rt:"M4 20V11M10 20V5M16 20v-6M2 20h20",ex:"M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zM12 7v5l3 2M19 3l2 2",rk:"M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0z"};
+ const K=(t,v,s,c,i,hero)=>`<div class="card kpi${hero?" hero":""}" style="--c:${c}"><span class="ki"><svg viewBox="0 0 24 24"><path d="${IC2[i]}"/></svg></span><h3>${t}</h3><div class="num">${v}</div><small>${s}</small></div>`;
+ const ins=[];
+ if(ot.length)ins.push(["⏱","<b>Hora extra detectada:</b> "+ot.length+" onda(s) e "+fmt(otq)+" unidades fora da janela do "+o.t+"º turno ("+t.ini+"h às "+t.fim+"h). Primeiro registro extra às "+new Date(Math.min(...ot.map(w=>w.fin||w.ts))).toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"})+"."]);
+ else ins.push(["✓","Nenhum registro fora da janela do "+o.t+"º turno no período."]);
+ if(mediaEq)ins.push([rank===1?"🏅":"≈",qt>=mediaEq?"Produção <b>"+(mediaEq?((qt/mediaEq-1)*100).toFixed(0):0)+"% acima</b> da média da equipe ("+fmt(mediaEq)+" un.).":"Produção <b>"+((1-qt/mediaEq)*100).toFixed(0)+"% abaixo</b> da média da equipe ("+fmt(mediaEq)+" un.).","pos"]);
+ if(bestH)ins.push(["📈","Hora mais produtiva: <b>"+bestH[0]+"h</b> com "+fmt(bestH[1])+" unidades."]);
+ if(bestT)ins.push(["📦","Tipo predominante: <b>"+bestT[0]+"</b> com "+fmt(bestT[1])+" unidades."]);
+ if(D.length>=3){const r=D.slice(-3),ini=D.slice(0,3);ins.push(["🔁",avg(r)<avg(ini)?"Ritmo <b>acelerando</b>: últimas ondas em "+mm(avg(r))+" contra "+mm(avg(ini))+" no início.":"Ritmo <b>desacelerando</b>: últimas ondas em "+mm(avg(r))+" contra "+mm(avg(ini))+" no início."])}
+ if(per>1)ins.push(["🗓","Média de <b>"+fmt(qt/dias)+" unidades por dia</b> em "+dias+" dia(s) com registro."]);
+ $("#iBody").innerHTML=`<div class="grid k5">`+
+  K("Produção",fmt(qt),esc(o.n)+" · "+o.m,"var(--g)","un",1)+
+  K("Ondas",fmt(on),on?fmt(qt/on)+" un. por onda":"sem ondas","var(--g)","on")+
+  K("Tempo médio de onda",D.length?mm(md):"—",D.length+" intervalos","var(--a)","tm")+
+  K("Ritmo",fmt(ritmo),"unidades por hora","var(--t)","rt")+
+  K("Hora extra",fmt(otq),ot.length+" ondas fora do turno","var(--r)","ex")+
+  K("Posição",rank+"º",team.length+" com produção","var(--v)","rk")+
+ `</div>
+ <div class="grid two" style="margin-top:12px">
+  <div class="card"><h3>Estatísticas inteligentes</h3><div class="ins">`+ins.map(i=>`<div><span class="ic">${i[0]}</span><span>${i[1]}</span></div>`).join("")+`</div></div>
+  <div class="card"><h3>Produção por tipo</h3>`+bars(TY.map(([n,c])=>({k:n,v:byT[n]||0,s:mine.filter(w=>w.ty===n).length+" ondas",c})))+`</div>
+ </div>
+ <div class="grid two" style="margin-top:12px">
+  <div class="card"><h3>Jornada registrada</h3><div class="ins">
+   <div><span class="ic">🕐</span><span>Primeiro registro: <b>${ts.length?new Date(Math.min(...ts)).toLocaleString("pt-BR",{day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"}):"—"}</b></span></div>
+   <div><span class="ic">🕙</span><span>Último registro: <b>${ts.length?new Date(Math.max(...ts)).toLocaleString("pt-BR",{day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"}):"—"}</b></span></div>
+   <div><span class="ic">⌛</span><span>Intervalo entre o primeiro e o último: <b>${ts.length?hh(span):"—"}</b></span></div>
+   <div><span class="ic">🏭</span><span>Turno cadastrado: <b>${o.t}º turno · ${t.ini}h às ${t.fim}h</b> · Galpão ${esc(o.g||S.gal)}</span></div>
+  </div></div>
+  <div class="card"><h3>Últimas ondas</h3><div class="tw">`+opRows(mine.slice().reverse().slice(0,8))+`</div></div>
+ </div>`;
+}
+
+/* ===================== CONFIG ===================== */
+function cfgOp(){
+ $("#lims").innerHTML=TY.map(([n])=>`<label>${n}<input type="number" min="1" data-lim="${n}" value="${S.cfg.lim[n]}"></label>`).join("");
+ $("#turnos").innerHTML=[1,2].map(t=>`<label>${t}º turno — início<input type="number" min="0" max="23" data-tn="${t}" data-k="ini" value="${S.cfg.turnos[t].ini}"></label><label>${t}º turno — fim<input type="number" min="1" max="24" data-tn="${t}" data-k="fim" value="${S.cfg.turnos[t].fim}"></label>`).join("");
+ $("#and").checked=!!S.cfg.and;$("#gap").value=S.cfg.gap;$("#tol").value=S.cfg.tol}
+function cfgUsers(){
+ $("#nextCode").textContent="próximo: "+nextCode();
+ $("#uT").innerHTML=[1,2].map(t=>`<button data-ut="${t}" class="${uT===t?"on":""}" style="--c:${t===1?"var(--g)":"var(--v)"}">${t}º turno</button>`).join("");
+ $("#uG").innerHTML=S.gals.map(g=>`<option>${esc(g)}</option>`).join("");
+ $("#uCnt").textContent=S.ops.length+" cadastrados";
+ $("#uL").innerHTML=S.ops.length?`<table><tr><th>Código</th><th>Nome</th><th>Turno</th><th>Galpão</th><th>Ondas</th><th></th></tr>`+
+  S.ops.slice().sort((a,b)=>a.m.localeCompare(b.m)).map(o=>{const n=S.waves.filter(w=>w.op===o.m).length;
+   return`<tr><td><b>${o.m}</b></td><td>${esc(o.n)}</td><td><select data-ut2="${o.m}"><option value="1"${o.t===1?" selected":""}>1º turno</option><option value="2"${o.t===2?" selected":""}>2º turno</option></select></td><td><select data-ug2="${o.m}">${S.gals.map(g=>`<option${g===o.g?" selected":""}>${esc(g)}</option>`).join("")}</select></td><td>${n}</td><td><button class="btn d sm" data-udel="${o.m}">Excluir</button></td></tr>`}).join("")+"</table>"
+  :'<div class="empty">Nenhum usuário cadastrado.</div>'}
+function cfgGals(){
+ $("#gL").innerHTML=`<table><tr><th>Galpão</th><th>Meta diária</th><th>Registros</th><th></th></tr>`+S.gals.map((g,i)=>{const n=S.waves.filter(w=>w.gal===g).length;
+  return`<tr><td><input data-gre="${i}" value="${esc(g)}"></td><td><input type="number" min="0" data-gmeta="${esc(g)}" value="${S.metas[g]||""}" placeholder="sem meta" style="width:130px"></td><td>${n}</td><td><button class="btn d sm" data-gdel="${i}"${S.gals.length<2?" disabled style='opacity:.4'":""}>Excluir</button></td></tr>`}).join("")+"</table>"}
+function cfgGes(){
+ $("#mG").innerHTML=S.gals.map(g=>`<option>${esc(g)}</option>`).join("");
+ $("#mL").innerHTML=S.ges.length?`<table><tr><th>Gestor</th><th>Login</th><th>Permissões</th><th></th></tr>`+S.ges.map((m,i)=>
+  `<tr><td>${esc(m.n)}<br><small style="color:var(--mut)">${esc(m.g||"sem galpão")}</small>${m.adm?' <span class="tag">admin</span>':""}</td><td>${esc(m.u)}${m.p?' <span class="tag">senha</span>':' <span class="tag t2">sem senha</span>'}</td><td style="font-size:12px">${[m.pC&&"config",m.pI&&"individual",m.pR&&"registros"].filter(Boolean).join(" · ")||"—"}</td><td><button class="btn d sm" data-mdel="${i}">Excluir</button></td></tr>`).join("")+"</table>"
+  :'<div class="empty">Nenhum gestor cadastrado. Configurações e Individual estão abertos.</div>'}
+function cfgRender(){cfgOp();cfgUsers();cfgGals();cfgGes()}
+
+/* ===================== acesso ===================== */
+const needAuth=k=>S.ges.length>0&&!(me&&(k==="cfg"?me.pC:me.pI));
+function authUI(){$("#who").textContent=me?"Gestor: "+me.n:"";$("#logtx").textContent=me?"Sair":"Entrar"}
+function go(t){
+ if((t==="cfg"||t==="ind")&&needAuth(t)){$("#login").classList.remove("hide");$("#lU").focus();pend=t;return}
+ view=t;["painel","op","ind","cfg"].forEach(s=>$("#"+s).classList.toggle("hide",s!==t));
+ $$(".tab[data-t]").forEach(b=>b.classList.toggle("on",b.dataset.t===t));
+ $("#ttl").textContent={painel:"Painel",op:"Operação",ind:"Acompanhamento individual",cfg:"Configurações"}[t];
+ if(t==="cfg")cfgRender();if(t==="ind")individual();renderAll()}
+let pend=null;
+$("#logbtn").onclick=()=>{if(me){me=null;authUI();toast("Sessão encerrada");go("painel");return}$("#login").classList.remove("hide");$("#lU").focus()};
+$("#lX").onclick=()=>{$("#login").classList.add("hide");pend=null};
+$("#lB").onclick=()=>{const u=$("#lU").value.trim().toLowerCase(),p=$("#lP").value,
+ g=S.ges.find(x=>x.u.toLowerCase()===u);
+ if(!g||(g.p&&g.p!==h32(p))){toast("Usuário ou senha inválidos");return}
+ me=g;$("#login").classList.add("hide");$("#lP").value="";if(g.g&&S.gals.includes(g.g)){S.gal=g.g;save()}authUI();toast("Bem-vindo, "+g.n);const t=pend||"cfg";pend=null;go(t)};
+$("#lP").onkeydown=e=>{if(e.key==="Enter")$("#lB").click()};
+
+/* ===================== render geral ===================== */
+function netUI(){const n=$("#net"),o=online(),p=S.waves.filter(w=>!w.sync).length;n.className="pill"+(o?"":" off");n.textContent=o?"● Online":"● Offline · "+p+" pendente(s)"}
+const myG=()=>(me&&me.g&&S.gals.includes(me.g))?me.g:S.gal;
+const restricted=()=>S.ges.length>0&&!(me&&me.adm);
+const inView=w=>!restricted()||w.gal===myG();
+const visG=()=>restricted()?[myG()]:S.gals;
+const inTurno=w=>{const f=$("#turnoF").value;if(!f)return true;const o=opOf(w.op);return!!o&&String(o.t)===f};
+function galSel(){const e=$("#gal"),v=e.value;e.innerHTML=(restricted()?"":'<option value="__all">Visão geral</option>')+visG().map(g=>`<option>${esc(g)}</option>`).join("");
+ if(restricted()){S.gal=myG();e.value=myG();e.disabled=true}else{e.value=S.gals.includes(v)||v==="__all"?v:S.gal;e.disabled=false}}
+function renderAll(){netUI();galSel();painel();operacao();filters();
+ $("#sub2").textContent=new Date($("#day").value+"T12:00").toLocaleDateString("pt-BR",{weekday:"long",day:"numeric",month:"long",year:"numeric"})+" · "+($("#gal").value==="__all"?"todos os galpões":$("#gal").value);
+ if(view==="ind")individual()}
+
+/* ===================== eventos ===================== */
+$("#day").value=dk(Date.now());galSel();$("#gal").value=S.gal;
+$("#gal").onchange=e=>{if(e.target.value!=="__all"){S.gal=e.target.value;save()}renderAll()};
+$("#day").onchange=renderAll;$("#turnoF").onchange=renderAll;
+$("#net").onclick=()=>{S.off=!S.off;save();if(online())flush();renderAll()};
+addEventListener("online",()=>{flush();renderAll()});addEventListener("offline",renderAll);
+$("#theme").onclick=()=>{const r=document.documentElement,d=getComputedStyle(r).getPropertyValue("--bg").trim()==="#0b1426";r.dataset.theme=d?"light":"dark"};
+$$(".tab[data-t]").forEach(b=>b.onclick=()=>go(b.dataset.t));
+$("#sub").onclick=e=>{const s=e.target.dataset.s;if(!s)return;$$("#sub button").forEach(b=>b.classList.toggle("on",b===e.target));["reg","ctl","ace"].forEach(x=>$("#"+x).classList.toggle("hide",x!==s));tick()};
+$("#csub").onclick=e=>{const c=e.target.dataset.c;if(!c)return;csub=c;$$("#csub button").forEach(b=>b.classList.toggle("on",b===e.target));["cop","cus","cga","cge"].forEach(x=>$("#"+x).classList.toggle("hide",x!==c))};
+$("#iOp").onchange=individual;$("#iPer").onchange=individual;
+
+document.addEventListener("click",e=>{const d=e.target.dataset,t=e.target;
+ if(d.ty){ty=d.ty;segs();setTimeout(()=>goStep(3),260)}
+ if(d.st!==undefined&&t.matches("[data-st]")){st=+d.st;segs()}
+ if(d.ut){uT=+d.ut;cfgUsers()}
+ if(d.pick){e.preventDefault();$("#iOp").value=d.pick;individual()}
+ if(d.fin||d.sd){e.preventDefault();const w=S.waves.find(x=>x.id===(d.fin||d.sd));
+  if(w){if(d.fin){w.st=0;w.fin=Date.now()}else w.st=2;w.sync=online()?1:0;save();renderAll()}}
+ if(d.del){e.preventDefault();if(S.ges.length&&!(me&&me.pR)){toast("Sem permissão para excluir registros");return}
+  S.waves=S.waves.filter(x=>x.id!==d.del);save();renderAll();toast("Registro excluído")}
+ if(d.udel){const o=opOf(d.udel),n=S.waves.filter(w=>w.op===d.udel).length;
+  if(!confirm("Excluir "+o.n+" ("+o.m+")?"+(n?"\n\nOs "+n+" registro(s) já lançados são mantidos no histórico.":"")+"\n\nO código "+o.m+" volta a ficar disponível."))return;
+  S.ops=S.ops.filter(x=>x.m!==d.udel);save();cfgUsers();renderAll();toast("Usuário excluído · código "+o.m+" liberado")}
+ if(d.gdel){const g=S.gals[+d.gdel];if(S.gals.length<2)return;
+  if(!confirm("Excluir o galpão "+g+"?\n\nOs registros já lançados mantêm o nome antigo."))return;
+  S.gals.splice(+d.gdel,1);delete S.metas[g];S.ops.forEach(o=>{if(o.g===g)o.g=S.gals[0]});S.ges.forEach(x=>{if(x.g===g)x.g=null});if(S.gal===g)S.gal=S.gals[0];
+  save();cfgGals();cfgUsers();renderAll();toast("Galpão excluído")}
+ if(d.mdel){const g=S.ges[+d.mdel];if(!confirm("Excluir o gestor "+g.n+"?"))return;
+  S.ges.splice(+d.mdel,1);if(me===g)me=null;authUI();save();cfgGes();toast("Gestor excluído")}
+});
+$("#opIn").oninput=()=>{const o=curOp();if(!o)return;track(o);
+ setTimeout(()=>{if(!$("#s1").classList.contains("hide")&&findOp($("#opIn").value)===o)goStep(2)},150)};
+function qtyOk(){const q=Math.floor(+$("#qty").value);if(!q||q<1){toast("Informe a quantidade");return}
+ if(q>S.cfg.lim[ty]){toast("Limite de "+fmt(S.cfg.lim[ty])+" excedido para "+ty);return}return q}
+$("#n1").onclick=()=>{const o=curOp();if(!o){toast("Identifique um operador cadastrado");$("#opIn").focus();return}track(o);goStep(2)};
+$("#opIn").onkeydown=e=>{if(e.key==="Enter"){e.preventDefault();$("#n1").click()}};
+$("#b2").onclick=()=>goStep(1);
+$("#b3").onclick=()=>goStep(2);
+$("#addRow").onclick=()=>{rows.push({wn:"",q:""});renderRows();setTimeout(()=>{const a=$$("[data-wn]");if(a.length)a[a.length-1].focus()},60)};
+$("#rowsL").oninput=e=>{const d=e.target.dataset;if(d.wn!==undefined)rows[+d.wn].wn=e.target.value;if(d.q!==undefined)rows[+d.q].q=e.target.value};
+$("#rowsL").onchange=e=>{const d=e.target.dataset;if(d.q===undefined&&d.wn===undefined)return;
+ const last=rows[rows.length-1];
+ if(last&&(last.wn||"").trim()&&Number(last.q)>0){rows.push({wn:"",q:""});renderRows();setTimeout(()=>{const a=$$("[data-wn]");if(a.length)a[a.length-1].focus()},40)}};
+$("#rowsL").onclick=e=>{const i=e.target.dataset.rmrow;if(i!==undefined){rows.splice(+i,1);if(!rows.length)rows.push({wn:"",q:""});renderRows()}};
+$("#save").onclick=()=>{const o=findOp($("#opIn").value);
+ if(!o){toast("Identifique o operador");goStep(1);return}
+ const bad={},list=[];
+ rows.forEach((r,i)=>{const wn=(r.wn||"").trim(),q=Math.floor(+r.q);
+  if(!wn&&!r.q)return;
+  if(!wn){bad[i]="Informe o número da onda";return}
+  if(S.waves.some(w=>w.wn===wn)||rows.some((x,j)=>j<i&&(x.wn||"").trim()===wn)){bad[i]="A onda "+wn+" já foi registrada";return}
+  if(!q||q<1){bad[i]="Informe a quantidade";return}
+  if(q>S.cfg.lim[ty]){bad[i]="Acima do limite de "+fmt(S.cfg.lim[ty]);return}
+  list.push({wn,q})});
+ $$(".wrow").forEach((el,i)=>el.classList.toggle("err",i in bad));
+ const k=Object.keys(bad);if(k.length){toast(bad[k[0]]);return}
+ if(!list.length){toast("Informe pelo menos uma onda");return}
+ track(o);commit(list.map(x=>mk(o,x.q,0,x.wn)));
+ rows=[{wn:"",q:""}];$("#opIn").value="";$("#opName").textContent="";goStep(1)};
+["#fOp","#fTy","#fSt"].forEach(i=>$(i).onchange=operacao);
+$("#mS").onclick=()=>{const o=findOp($("#opIn").value),m=S.man;if(!m.run){if(o)m.n=o.n;m.run=Date.now();m.log.push((m.n||"—")+" iniciou "+new Date().toLocaleTimeString("pt-BR"));save();tick()}};
+$("#mP").onclick=()=>{const m=S.man;if(m.run){m.acc=(m.acc||0)+Date.now()-m.run;m.run=0;m.log.push("pausa "+new Date().toLocaleTimeString("pt-BR"));save();tick()}};
+$("#mE").onclick=()=>{const m=S.man;m.acc=(m.acc||0)+(m.run?Date.now()-m.run:0);m.log.push((m.n||"—")+" encerrou: "+mm(m.acc));S.man={log:m.log};save();tick()};
+
+/* cadastros */
+$("#uB").onclick=()=>{const n=$("#uN").value.trim().replace(/\s+/g," ");
+ if(n.length<2){toast("Informe o nome");return}
+ if(S.ops.some(o=>o.n.toLowerCase()===n.toLowerCase())){toast("Já existe um usuário com esse nome");return}
+ const m=nextCode();S.ops.push({m,n,t:uT,g:$("#uG").value});$("#uN").value="";save();cfgUsers();renderAll();
+ toast("Usuário "+n+" criado · "+m+" · "+uT+"º turno")};
+$("#uN").onkeydown=e=>{if(e.key==="Enter")$("#uB").click()};
+$("#gB").onclick=()=>{const n=$("#gN").value.trim();if(!n){toast("Informe o nome do galpão");return}
+ if(S.gals.some(g=>g.toLowerCase()===n.toLowerCase())){toast("Galpão já existe");return}
+ S.gals.push(n);const mv=+$("#gM").value;if(mv>0)S.metas[n]=mv;$("#gM").value="";$("#gN").value="";save();cfgGals();cfgUsers();renderAll();toast("Galpão criado")};
+$("#gN").onkeydown=e=>{if(e.key==="Enter")$("#gB").click()};
+$("#mB").onclick=()=>{const n=$("#mN").value.trim(),u=$("#mU").value.trim(),p=$("#mP2").value;
+ if(!n||!u){toast("Informe nome e usuário de login");return}
+ const gg=$("#mG").value;if(!gg){toast("Selecione o galpão do gestor");return}
+ if(S.ges.some(g=>g.u.toLowerCase()===u.toLowerCase())){toast("Usuário de login já existe");return}
+ S.ges.push({n,u,g:gg,adm:$("#mA").checked,p:p?h32(p):"",pC:$("#mC").checked,pI:$("#mI").checked,pR:$("#mR").checked});
+ $("#mN").value=$("#mU").value=$("#mP2").value="";save();cfgGes();authUI();
+ toast("Gestor criado"+(p?" com senha":" sem senha"))};
+
+/* config: alterações */
+document.addEventListener("change",e=>{const d=e.target.dataset,id=e.target.id;let r=false;
+ if(d.lim){S.cfg.lim[d.lim]=Math.max(1,+e.target.value||1);r=true}
+ if(d.tn){S.cfg.turnos[d.tn][d.k]=Math.max(0,Math.min(24,+e.target.value||0));r=true}
+ if(id==="and"){S.cfg.and=e.target.checked;
+  if(!S.cfg.and){let n=0;S.waves.forEach(w=>{if(w.st!==0){w.st=0;w.fin=Date.now();w.auto=1;w.sync=online()?1:0;n++}});toast(n+" onda(s) finalizada(s) automaticamente")}r=true}
+ if(id==="gap"){S.cfg.gap=Math.max(1,+e.target.value||30);r=true}
+ if(id==="tol"){S.cfg.tol=Math.max(0,+e.target.value||0);r=true}
+ if(d.ut2){const o=opOf(d.ut2);if(o){o.t=+e.target.value;r=true;toast(o.n+" → "+o.t+"º turno")}}
+ if(d.ug2){const o=opOf(d.ug2);if(o){o.g=e.target.value;r=true}}
+ if(d.gre!==undefined){const i=+d.gre,old=S.gals[i],nv=e.target.value.trim();
+  if(!nv||S.gals.some((g,j)=>j!==i&&g.toLowerCase()===nv.toLowerCase())){toast("Nome inválido ou repetido");cfgGals();return}
+  S.gals[i]=nv;if(S.metas[old]!=null){S.metas[nv]=S.metas[old];delete S.metas[old]}S.waves.forEach(w=>{if(w.gal===old)w.gal=nv});S.ops.forEach(o=>{if(o.g===old)o.g=nv});S.ges.forEach(x=>{if(x.g===old)x.g=nv});
+  if(S.gal===old)S.gal=nv;r=true;toast("Galpão renomeado")}
+ if(d.gmeta!==undefined){const v=Math.floor(+e.target.value);if(v>0)S.metas[d.gmeta]=v;else delete S.metas[d.gmeta];r=true;toast(v>0?"Meta de "+d.gmeta+": "+fmt(v):"Meta removida")}
+ if(r){save();if(view==="cfg")cfgRender();renderAll()}});
+
+authUI();segs();goStep(1);go("painel");setInterval(tick,1000);setInterval(()=>{if(view==="painel")painel()},60000);
+
+/* ===================== PWA (instalação) ===================== */
+(function(){try{
+const mkIcon=P=>{const c=document.createElement("canvas");c.width=c.height=P;const x=c.getContext("2d");
+ x.fillStyle="#1d5fd6";x.beginPath();x.roundRect(0,0,P,P,P*.22);x.fill();x.strokeStyle="#fff";x.lineWidth=P*.065;x.lineCap="round";
+ [.4,.62].forEach(y=>{x.beginPath();for(let t=0;t<=80;t++){const px=P*.2+P*.6*t/80,py=P*y+Math.sin(t/80*Math.PI*4)*P*.07;t?x.lineTo(px,py):x.moveTo(px,py)}x.stroke()});
+ x.fillStyle="#e5484d";x.beginPath();x.arc(P*.78,P*.22,P*.05,0,7);x.fill();return c.toDataURL("image/png")};
+const a=mkIcon(192),b=mkIcon(512),u=location.href.split("#")[0];
+const m={name:"RC Ondas",short_name:"RC Ondas",lang:"pt-BR",start_url:u,display:"standalone",background_color:"#f4f7fc",theme_color:"#0b2a5b",
+ icons:[{src:a,sizes:"192x192",type:"image/png"},{src:b,sizes:"512x512",type:"image/png"}]};
+const l=document.createElement("link");l.rel="manifest";l.href="data:application/manifest+json,"+encodeURIComponent(JSON.stringify(m));document.head.appendChild(l);
+const ic=document.createElement("link");ic.rel="icon";ic.href=a;document.head.appendChild(ic);
+}catch(e){}})();
+let dp;addEventListener("beforeinstallprompt",e=>{e.preventDefault();dp=e});
+addEventListener("appinstalled",()=>$("#inst").classList.add("hide"));
+if(matchMedia("(display-mode:standalone)").matches||navigator.standalone)$("#inst").classList.add("hide");
+$("#inst").onclick=async()=>{if(dp){dp.prompt();await dp.userChoice;dp=null;return}
+ toast("Chrome: menu ⋮ › Transmitir, salvar e compartilhar › Instalar página como app. Edge: menu ··· › Aplicativos › Instalar este site como um aplicativo.",9000)};
+</script>
+</body>
+</html>
