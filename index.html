@@ -285,8 +285,10 @@ function isOT(w){const o=opOf(w.op);if(!o)return false;const t=turnoOf(o),d=new 
  return h<t.ini-tol&&h>t.fim+tol}
 
 /* ===================== seleções de dados ===================== */
-function dayWaves(d){d=d||$("#day").value;return S.waves.filter(w=>dk(w.ts)===d&&inView(w))}
-function rangeWaves(days){if(days<=1)return dayWaves();const end=new Date($("#day").value+"T12:00"),out=[];
+/* o seletor de data só aparece no Painel; nas outras abas vale o dia de hoje */
+const selDay=()=>view==="painel"?$("#day").value:dk(Date.now());
+function dayWaves(d){d=d||selDay();return S.waves.filter(w=>dk(w.ts)===d&&inView(w))}
+function rangeWaves(days){if(days<=1)return dayWaves();const end=new Date(selDay()+"T12:00"),out=[];
  for(let i=0;i<days;i++){const d=new Date(end);d.setDate(d.getDate()-i);out.push(dk(d))}
  const set=new Set(out);return S.waves.filter(w=>set.has(dk(w.ts))&&inView(w))}
 const prod=l=>l.filter(w=>w.st===0);
