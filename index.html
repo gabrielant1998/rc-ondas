@@ -124,6 +124,7 @@ section:not(.hide){animation:fd .28s ease}@keyframes fd{from{opacity:0;transform
   <select id="turnoF" aria-label="Turno"><option value="">Todos os turnos</option><option value="1">1º turno</option><option value="2">2º turno</option></select>
   <select id="gal" aria-label="Galpão da sessão"></select>
   <input type="date" id="day" aria-label="Data">
+  <span class="pill warn hide" id="stor" role="status"></span>
   <button class="pill" id="net" title="Clique para simular queda de internet"></button>
  </div>
 </header>
@@ -194,6 +195,7 @@ section:not(.hide){animation:fd .28s ease}@keyframes fd{from{opacity:0;transform
   <div class="card"><h2>Limite por onda</h2><div class="f" id="lims"></div></div>
   <div class="card"><h2>Turnos</h2><div class="f" id="turnos"></div><div class="legend">Registros fora da janela do turno do operador são marcados como hora extra.</div></div>
   <div class="card"><h2>Ondas</h2><div class="f">
+   <div id="storInfo" style="font-size:13px;color:var(--mut)"></div>
    <label class="row"><input type="checkbox" id="and" style="min-height:auto"> Modo de ondas em andamento</label>
    <label>Intervalo máximo entre ondas do mesmo operador para contar como tempo de onda (min)<input type="number" id="gap" min="1" max="120"></label>
    <label>Tolerância de hora extra (min)<input type="number" id="tol" min="0" max="120"></label></div></div>
@@ -247,6 +249,9 @@ const LS="rcondas.v2",$=s=>document.querySelector(s),$$=s=>[...document.querySel
 const DEF={cfg:{lim:{"Vários":1000,"Múltiplos":1000,"Itens Únicos":100,"Maiores/Pesados":10},and:true,gap:30,tol:15,
  turnos:{1:{ini:7,fim:16},2:{ini:16,fim:23}}},gals:["Galpão 1","Galpão 2","Galpão 3"],ops:[],ges:[],waves:[],gal:"Galpão 1",off:false,man:{log:[]}};
 let S;try{S=JSON.parse(localStorage.getItem(LS))}catch(e){}
+/* formato compacto: ondas como listas, cabe ~2x mais no aparelho */
+if(S&&S.wv){S.waves=S.wv.map(a=>{const w={id:a[0],wn:a[1],op:a[2],opn:a[3],gal:a[4],ty:(TY[a[5]]||TY[0])[0],qty:a[6],st:a[7],ts:a[8],fin:a[9]<0?null:a[8]+a[9],sync:a[10]};if(a[11])w.auto=1;return w});delete S.wv}
+const LIM_STORE=5.2e6;
 if(!S){ /* migra base antiga, se existir */
  let old=null;try{old=JSON.parse(localStorage.getItem("rcondas.v1"))}catch(e){}
  S=JSON.parse(JSON.stringify(DEF));
@@ -261,7 +266,11 @@ if(!S.metas)S.metas={};
 if(!S.gals.length)S.gals=["Galpão 1"];
 if(!S.gals.includes(S.gal))S.gal=S.gals[0];
 let ty="Vários",st=0,draft=[],tim={op:null,t0:0},view="painel",me=null,uT=1,csub="cop";
-const save=()=>{try{localStorage.setItem(LS,JSON.stringify(S))}catch(e){}};
+const ser=()=>{const o=Object.assign({},S);delete o.waves;o.wv=S.waves.map(w=>[w.id,w.wn,w.op,w.opn,w.gal,Math.max(0,TY.findIndex(t=>t[0]===w.ty)),w.qty,w.st,w.ts,w.fin==null?-1:w.fin-w.ts,w.sync?1:0,w.auto?1:0]);return JSON.stringify(o)};
+let storeLen=0,storeWarned=false;
+const save=()=>{try{const s=ser();localStorage.setItem(LS,s);storeLen=s.length;
+  if(storeLen>LIM_STORE*.8&&!storeWarned){storeWarned=true;setTimeout(()=>toast("Atenção: memória do aparelho em "+Math.round(storeLen/LIM_STORE*100)+"%. Ligue um banco de dados antes que encha.",9000),2600)}
+  return true}catch(e){toast("Não foi possível gravar no aparelho: armazenamento cheio. Nada foi salvo.",9000);return false}};
 const online=()=>!S.off&&navigator.onLine;
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const dk=t=>{const d=new Date(t);return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")};
@@ -364,16 +373,17 @@ function rowHtml(r,i){const lim=S.cfg.lim[ty];return`<div class="wrow">
    <button class="x" data-rmrow="${i}" aria-label="Remover onda ${i+1}">×</button></div>`}
 function renderRows(){$("#rowsL").innerHTML=rows.map(rowHtml).join("")}
 let rows=[{wn:"",q:""}];
+const normWN=s=>{s=String(s==null?"":s).replace(/\s+/g,"");return /^\d+$/.test(s)?s.replace(/^0+(?=\d)/,""):s.toUpperCase()};
 function curOp(){const o=findOp($("#opIn").value);
  $("#opName").innerHTML=o?esc(o.n)+' · '+o.m+' <span class="tag'+(o.t===2?" t2":"")+'">'+o.t+"º turno</span>"+(o.g?' <span class="tag">'+esc(o.g)+"</span>":""):"";return o}
 function track(o){if(!tim.op||tim.op!==o.m)tim={op:o.m,n:o.n,t0:Date.now()}}
 function mk(o,q,s,wn){return{id:uid(),wn:wn||"",op:o.m,opn:o.n,gal:o.g||S.gal,ty,qty:q,st:s,ts:Date.now(),fin:s===0?Date.now():null,sync:online()?1:0}}
-function commit(list){S.waves.push(...list);save();segs();renderAll();
+function commit(list){S.waves.push(...list);if(!save()){S.waves.splice(S.waves.length-list.length,list.length);return false}segs();renderAll();
  toast(online()?"Onda salva ✓"+(list.some(isOT)?" · hora extra":""):"Salva offline · aguardando sincronização")}
 function check(){const o=curOp();if(!o){toast("Identifique um operador cadastrado");return}return o}
 function opRows(list,ctl){const canR=!S.ges.length||(me&&me.pR);
  return list.length?`<table><tr><th>Operador</th><th>WN</th><th>Tipo</th><th>Qtd</th><th>Status</th><th>Hora</th>${ctl?"<th>Tempo</th><th>Ação</th>":""}</tr>`+list.map(w=>{const o=opOf(w.op);
- return`<tr><td>${esc(w.opn)}<br><small style="color:var(--mut)">${w.op} · ${esc(w.gal)}${o?" · "+o.t+"ºT":""}</small></td><td><b>${esc(w.wn||"—")}</b></td><td>${w.ty}</td><td><b>${fmt(w.qty)}</b></td><td><span class="st ${SC[w.st]}">${ST[w.st]}</span>${isOT(w)?' <span class="st so">extra</span>':""}</td><td style="white-space:nowrap">${new Date(w.ts).toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"})}${ctl?"":(w.sync?' <span title="Sincronizado" aria-label="Sincronizado" style="color:var(--gx)">✓</span>':' <span class="st s1">pendente</span>')}</td>${ctl?`<td class="num" data-el="${w.ts}">${mm(Date.now()-w.ts)}</td><td><a href="#" data-fin="${w.id}" class="pill">Concluir</a> <a href="#" data-sd="${w.id}" class="pill warn">Difícil</a>${canR?` <a href="#" data-del="${w.id}" class="pill off">Excluir</a>`:""}</td>`:""}</tr>`}).join("")+"</table>":'<div class="empty">Nenhum registro ainda.</div>'}
+ return`<tr><td>${esc(w.opn)}<br><small style="color:var(--mut)">${esc(w.op.split("~")[0])}${w.op.includes("~")?" (excluído)":""} · ${esc(w.gal)}${o?" · "+o.t+"ºT":""}</small></td><td><b>${esc(w.wn||"—")}</b></td><td>${w.ty}</td><td><b>${fmt(w.qty)}</b></td><td><span class="st ${SC[w.st]}">${ST[w.st]}</span>${isOT(w)?' <span class="st so">extra</span>':""}</td><td style="white-space:nowrap">${new Date(w.ts).toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"})}${ctl?"":(w.sync?' <span title="Sincronizado" aria-label="Sincronizado" style="color:var(--gx)">✓</span>':' <span class="st s1">pendente</span>')}</td>${ctl?`<td class="num" data-el="${w.ts}">${mm(Date.now()-w.ts)}</td><td><a href="#" data-fin="${w.id}" class="pill">Concluir</a> <a href="#" data-sd="${w.id}" class="pill warn">Difícil</a>${canR?` <a href="#" data-del="${w.id}" class="pill off">Excluir</a>`:""}</td>`:""}</tr>`}).join("")+"</table>":'<div class="empty">Nenhum registro ainda.</div>'}
 function operacao(){const L=dayWaves().slice().reverse();$("#cnt").textContent=L.length+" hoje";$("#last").innerHTML=opRows(L.slice(0,8));
  $("#opl").innerHTML=S.ops.map(o=>`<option value="${o.m}">${esc(o.n)} · ${o.t}º turno</option>`).join("");
  $("#subCtl").classList.toggle("hide",!S.cfg.and);
@@ -447,6 +457,7 @@ function individual(){
 
 /* ===================== CONFIG ===================== */
 function cfgOp(){
+ $("#storInfo").innerHTML="Memória do aparelho: <b style='color:var(--ink)'>"+(storeLen/1048576).toLocaleString("pt-BR",{maximumFractionDigits:1})+" MB</b> de ~5 MB ("+Math.round(storeLen/LIM_STORE*100)+"%) · "+fmt(S.waves.length)+" ondas";
  $("#lims").innerHTML=TY.map(([n])=>`<label>${n}<input type="number" min="1" data-lim="${n}" value="${S.cfg.lim[n]}"></label>`).join("");
  $("#turnos").innerHTML=[1,2].map(t=>`<label>${t}º turno — início<input type="number" min="0" max="23" data-tn="${t}" data-k="ini" value="${S.cfg.turnos[t].ini}"></label><label>${t}º turno — fim<input type="number" min="1" max="24" data-tn="${t}" data-k="fim" value="${S.cfg.turnos[t].fim}"></label>`).join("");
  $("#and").checked=!!S.cfg.and;$("#gap").value=S.cfg.gap;$("#tol").value=S.cfg.tol}
@@ -490,7 +501,8 @@ $("#lB").onclick=()=>{const u=$("#lU").value.trim().toLowerCase(),p=$("#lP").val
 $("#lP").onkeydown=e=>{if(e.key==="Enter")$("#lB").click()};
 
 /* ===================== render geral ===================== */
-function netUI(){const n=$("#net"),o=online(),p=S.waves.filter(w=>!w.sync).length;n.className="pill"+(o?"":" off");n.textContent=o?"● Online":"● Offline · "+p+" pendente(s)"}
+function netUI(){const n=$("#net"),o=online(),p=S.waves.filter(w=>!w.sync).length;n.className="pill"+(o?"":" off");n.textContent=o?"● Online":"● Offline · "+p+" pendente(s)";
+ const pc=Math.round(storeLen/LIM_STORE*100),e=$("#stor");e.classList.toggle("hide",pc<70);e.className="pill "+(pc>=90?"off":"warn")+(pc<70?" hide":"");e.textContent="Memória "+pc+"%";e.title="Uso do armazenamento deste aparelho"}
 const myG=()=>(me&&me.g&&S.gals.includes(me.g))?me.g:S.gal;
 const restricted=()=>S.ges.length>0&&!(me&&me.adm);
 const inView=w=>!restricted()||w.gal===myG();
@@ -525,7 +537,7 @@ document.addEventListener("click",e=>{const d=e.target.dataset,t=e.target;
   S.waves=S.waves.filter(x=>x.id!==d.del);save();renderAll();toast("Registro excluído")}
  if(d.udel){const o=opOf(d.udel),n=S.waves.filter(w=>w.op===d.udel).length;
   if(!confirm("Excluir "+o.n+" ("+o.m+")?"+(n?"\n\nOs "+n+" registro(s) já lançados são mantidos no histórico.":"")+"\n\nO código "+o.m+" volta a ficar disponível."))return;
-  S.ops=S.ops.filter(x=>x.m!==d.udel);save();cfgUsers();renderAll();toast("Usuário excluído · código "+o.m+" liberado")}
+  const tag=d.udel+"~"+Date.now().toString(36);S.waves.forEach(w=>{if(w.op===d.udel)w.op=tag});S.ops=S.ops.filter(x=>x.m!==d.udel);save();cfgUsers();renderAll();toast("Usuário excluído · código "+o.m+" liberado")}
  if(d.gdel){const g=S.gals[+d.gdel];if(S.gals.length<2)return;
   if(!confirm("Excluir o galpão "+g+"?\n\nOs registros já lançados mantêm o nome antigo."))return;
   S.gals.splice(+d.gdel,1);delete S.metas[g];S.ops.forEach(o=>{if(o.g===g)o.g=S.gals[0]});S.ges.forEach(x=>{if(x.g===g)x.g=null});if(S.gal===g)S.gal=S.gals[0];
@@ -552,17 +564,18 @@ $("#rowsL").onclick=e=>{const i=e.target.dataset.rmrow;if(i!==undefined){rows.sp
 $("#save").onclick=()=>{const o=findOp($("#opIn").value);
  if(!o){toast("Identifique o operador");goStep(1);return}
  const bad={},list=[];
- rows.forEach((r,i)=>{const wn=(r.wn||"").trim(),q=Math.floor(+r.q);
+ rows.forEach((r,i)=>{const wn=normWN(r.wn),q=Number(String(r.q).replace(",","."));
   if(!wn&&!r.q)return;
   if(!wn){bad[i]="Informe o número da onda";return}
-  if(S.waves.some(w=>w.wn===wn)||rows.some((x,j)=>j<i&&(x.wn||"").trim()===wn)){bad[i]="A onda "+wn+" já foi registrada";return}
-  if(!q||q<1){bad[i]="Informe a quantidade";return}
+  if(S.waves.some(w=>normWN(w.wn)===wn)||rows.some((x,j)=>j<i&&normWN(x.wn)===wn)){bad[i]="A onda "+wn+" já foi registrada";return}
+  if(r.q===""||r.q==null){bad[i]="Informe a quantidade";return}
+  if(!Number.isInteger(q)||q<1){bad[i]="Quantidade deve ser um número inteiro maior que zero";return}
   if(q>S.cfg.lim[ty]){bad[i]="Acima do limite de "+fmt(S.cfg.lim[ty]);return}
   list.push({wn,q})});
  $$(".wrow").forEach((el,i)=>{const b=i in bad;el.classList.toggle("err",b);if(b)el.dataset.err=bad[i];else delete el.dataset.err;el.querySelectorAll("input").forEach(x=>x.setAttribute("aria-invalid",b?"true":"false"))});
  const k=Object.keys(bad);if(k.length){toast(bad[k[0]]);return}
  if(!list.length){toast("Informe pelo menos uma onda");return}
- track(o);commit(list.map(x=>mk(o,x.q,0,x.wn)));
+ track(o);if(commit(list.map(x=>mk(o,x.q,0,x.wn)))===false)return;
  rows=[{wn:"",q:""}];$("#opIn").value="";$("#opName").textContent="";goStep(1)};
 ["#fOp","#fTy","#fSt"].forEach(i=>$(i).onchange=operacao);
 $("#mS").onclick=()=>{const o=findOp($("#opIn").value),m=S.man;if(!m.run){if(o)m.n=o.n;m.run=Date.now();m.log.push((m.n||"—")+" iniciou "+new Date().toLocaleTimeString("pt-BR"));save();tick()}};
@@ -605,6 +618,7 @@ document.addEventListener("change",e=>{const d=e.target.dataset,id=e.target.id;l
  if(d.gmeta!==undefined){const v=Math.floor(+e.target.value);if(v>0)S.metas[d.gmeta]=v;else delete S.metas[d.gmeta];r=true;toast(v>0?"Meta de "+d.gmeta+": "+fmt(v):"Meta removida")}
  if(r){save();if(view==="cfg")cfgRender();renderAll()}});
 
+try{storeLen=(localStorage.getItem(LS)||"").length}catch(e){}
 authUI();segs();goStep(1);go("painel");setInterval(tick,1000);setInterval(()=>{if(view==="painel")painel()},60000);
 
 /* ===================== PWA (instalação) ===================== */
