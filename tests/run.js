@@ -17,9 +17,10 @@ async function page(b,state,opts={}){const ctx=await b.newContext({viewport:opts
  await ctx.addInitScript(([s])=>{if(!sessionStorage.__seeded){sessionStorage.__seeded=1;localStorage.clear();if(s)localStorage.setItem("rcondas.v2",s)}},[state?JSON.stringify(state):null]);
  await p.route(/fonts\.(googleapis|gstatic)\.com/,r=>r.abort());
  await p.goto(FILE);await p.waitForTimeout(150);return p}
-const TYN=["Vários","Múltiplos","Itens Únicos","Maiores/Pesados"];
+const TYN=["Vários artigos","Múltiplas quantidades","Itens Únicos","Maiores/Pesados","Retrabalho","Pacote do mesmo"];
+const NEWTY={"Vários":"Vários artigos","Múltiplos":"Múltiplas quantidades"};
 const st=async p=>{const s=await p.evaluate(()=>JSON.parse(localStorage.getItem("rcondas.v2")));if(s&&s.wv){s.waves=s.wv.map(a=>({id:a[0],wn:a[1],op:a[2],opn:a[3],gal:a[4],ty:TYN[a[5]],qty:a[6],st:a[7],ts:a[8],fin:a[9]<0?null:a[8]+a[9],sync:a[10],auto:a[11]}))}return s};
-async function openReg(p,op,ty){await p.click('.tab[data-t="op"]');await p.waitForTimeout(120);await p.fill('#opIn','');await p.type('#opIn',op);await p.waitForTimeout(250);
+async function openReg(p,op,ty){ty=NEWTY[ty]||ty;await p.click('.tab[data-t="op"]');await p.waitForTimeout(120);await p.fill('#opIn','');await p.type('#opIn',op);await p.waitForTimeout(250);
  await p.click(`[data-ty="${ty}"] span`);await p.waitForTimeout(400)}
 async function typeRows(p,rows){for(const [wn,q] of rows){await p.keyboard.type(String(wn));await p.keyboard.press('Enter');await p.keyboard.type(String(q));await p.keyboard.press('Enter')}}
 async function T(name,fn){const t0=Date.now();try{const info=await fn();R.push(["PASS",name,(info||"")+` (${Date.now()-t0}ms)`])}catch(e){R.push(["FALHA",name,e.message.split("\n")[0]])}}
@@ -170,6 +171,26 @@ await T("28 Indicador de memória aparece quando passa de 70%",async()=>{const S
 await T("29 Registros antigos (formato anterior) continuam abrindo",async()=>{const S=base({waves:[{id:"a",wn:"1",op:"CL001",opn:"Ana Souza",gal:"Galpão 1",ty:"Itens Únicos",qty:12,st:0,ts:Date.now(),fin:Date.now(),sync:1}]});
  const p=await page(b,S);ok((await p.textContent('#kpis .num')).trim()==="12","não leu o formato antigo");
  await p.evaluate(()=>save());const s=await st(p);ok(s.wv&&s.waves[0].ty==="Itens Únicos","não converteu")});
+
+await T("30 Dados antigos: 'Vários' e 'Múltiplos' viram os nomes novos, com limites preservados",async()=>{const S=base({waves:[
+  {id:"a",wn:"1",op:"CL001",opn:"Ana Souza",gal:"Galpão 1",ty:"Vários",qty:3,st:0,ts:Date.now(),fin:Date.now(),sync:1},
+  {id:"b",wn:"2",op:"CL001",opn:"Ana Souza",gal:"Galpão 1",ty:"Múltiplos",qty:4,st:0,ts:Date.now(),fin:Date.now(),sync:1}]});S.cfg.lim["Vários"]=777;
+ const p=await page(b,S);const r=await p.evaluate(()=>({t:S.waves.map(w=>w.ty),lim:S.cfg.lim,txt:document.querySelector("#chT").textContent}));
+ ok(r.t.join()==="Vários artigos,Múltiplas quantidades","tipos: "+r.t);ok(r.lim["Vários artigos"]===777&&r.lim["Vários"]===undefined,"limite: "+JSON.stringify(r.lim));
+ ok(r.lim["Retrabalho"]===1000&&r.lim["Pacote do mesmo"]===1000,"limites novos ausentes");ok(!/Vários\b(?! artigos)/.test(r.txt),"painel ainda mostra nome antigo")});
+
+await T("31 Retrabalho e Pacote do mesmo: registram, aparecem no Painel e respeitam limite",async()=>{const S=base();S.cfg.lim["Retrabalho"]=50;const p=await page(b,S);
+ await openReg(p,"CL001","Retrabalho");await typeRows(p,[[7101,51]]);await p.click('#save');await p.waitForTimeout(150);ok(!(await st(p))||(await st(p)).waves.length===0,"aceitou acima do limite");
+ await p.fill('[data-q="0"]','50');await p.click('#save');await p.waitForTimeout(200);
+ await openReg(p,"CL002","Pacote do mesmo");await typeRows(p,[[7102,8],[7103,9]]);await p.click('#save');await p.waitForTimeout(200);
+ const s=await st(p);ok(s.waves.map(w=>w.ty).join()==="Retrabalho,Pacote do mesmo,Pacote do mesmo","tipos gravados: "+s.waves.map(w=>w.ty));
+ const txt=await p.evaluate(()=>{go("painel");return document.querySelector("#chT").textContent.replace(/\s+/g," ")});
+ ok(/Retrabalho\s*50/.test(txt)&&/Pacote do mesmo\s*17/.test(txt),"painel: "+txt);
+ await p.reload();await p.waitForTimeout(200);ok((await p.evaluate(()=>S.waves.map(w=>w.ty).join()))==="Retrabalho,Pacote do mesmo,Pacote do mesmo","perdeu o tipo ao recarregar");return txt.slice(0,160)});
+
+await T("32 Tela de tipos: 6 botões cabem no celular e no computador",async()=>{for(const vp of [{width:390,height:844},{width:1366,height:900}]){const p=await page(b,base(),{vp});await p.click('.tab[data-t="op"]');await p.type('#opIn','CL001');await p.waitForTimeout(400);
+  const r=await p.evaluate(()=>{const bs=[...document.querySelectorAll("#types_b button")];return{n:bs.length,minW:Math.min(...bs.map(b=>b.getBoundingClientRect().width)),over:bs.some(b=>b.scrollWidth>b.clientWidth+1),sw:document.documentElement.scrollWidth}});
+  ok(r.n===6&&r.minW>=120&&!r.over&&r.sw<=vp.width+2,JSON.stringify(r))}});
 
 await b.close();
 const w=Math.max(...R.map(r=>r[1].length));for(const r of R)console.log((r[0]==="PASS"?"✅":"❌")+" "+r[1].padEnd(w)+"  "+r[2]);

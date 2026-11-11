@@ -7,9 +7,9 @@
 <meta name="description" content="Painel de produção e operação de ondas">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#f4f7fc;--card:#fff;--ink:#0f1d36;--mut:#5d6b85;--line:#dce4f0;--side:#0b2a5b;--g:#1d5fd6;--a:#3b82f6;--r:#e5484d;--v:#0b3d91;--t:#4a90e2;--gx:#1d5fd6;--rx:#b42318;--ox:#8a4b0b;--field:#7d8ca8;--sh:0 1px 2px rgba(15,40,90,.05),0 1px 8px rgba(15,40,90,.04);box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
-@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0b1426;--card:#121e36;--ink:#e7eefc;--mut:#93a4c4;--line:#22324f;--side:#071327;--sh:none;--a:#5aa0f2;--t:#7db3f5;--v:#93abff;--gx:#8ab4ff;--rx:#ff8a8a;--ox:#fbbf24;--field:#5a7099}}
-:root[data-theme="dark"]{--bg:#0b1426;--card:#121e36;--ink:#e7eefc;--mut:#93a4c4;--line:#22324f;--side:#071327;--sh:none;--a:#5aa0f2;--t:#7db3f5;--v:#93abff;--gx:#8ab4ff;--rx:#ff8a8a;--ox:#fbbf24;--field:#5a7099}
+:root{--bg:#f4f7fc;--card:#fff;--ink:#0f1d36;--mut:#5d6b85;--line:#dce4f0;--side:#0b2a5b;--g:#1d5fd6;--a:#3b82f6;--r:#e5484d;--v:#0b3d91;--t:#4a90e2;--gx:#1d5fd6;--rx:#b42318;--ox:#8a4b0b;--field:#7d8ca8;--o:#c2610c;--k:#0d8a7a;--sh:0 1px 2px rgba(15,40,90,.05),0 1px 8px rgba(15,40,90,.04);box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0b1426;--card:#121e36;--ink:#e7eefc;--mut:#93a4c4;--line:#22324f;--side:#071327;--sh:none;--a:#5aa0f2;--t:#7db3f5;--v:#93abff;--gx:#8ab4ff;--rx:#ff8a8a;--ox:#fbbf24;--field:#5a7099;--o:#fbbf24;--k:#34d0b8}}
+:root[data-theme="dark"]{--bg:#0b1426;--card:#121e36;--ink:#e7eefc;--mut:#93a4c4;--line:#22324f;--side:#071327;--sh:none;--a:#5aa0f2;--t:#7db3f5;--v:#93abff;--gx:#8ab4ff;--rx:#ff8a8a;--ox:#fbbf24;--field:#5a7099;--o:#fbbf24;--k:#34d0b8}
 *{box-sizing:border-box}html{scroll-padding-top:env(safe-area-inset-top,0px)}
 body{margin:0;background:radial-gradient(1100px 480px at 100% -10%,color-mix(in srgb,var(--g) 10%,transparent),transparent 60%),var(--bg);background-attachment:fixed;color:var(--ink);font:14px/1.45 Inter,system-ui,sans-serif}
 h1,h2,h3,.num{font-family:Inter,system-ui,sans-serif;margin:0;font-variant-numeric:tabular-nums;letter-spacing:-.015em}
@@ -49,7 +49,7 @@ svg.ch{width:100%;height:auto;display:block}svg text{fill:var(--mut);font:600 13
 .seg{display:flex;flex-wrap:wrap;gap:8px}.seg button{all:unset;cursor:pointer;flex:1 1 120px;text-align:center;padding:12px 8px;border:1px solid var(--line);border-radius:8px;font-weight:600;font-size:13px;background:var(--card);min-height:44px;transition:border-color .15s,background .15s}
 .seg button.on{border-color:var(--c,var(--g));box-shadow:inset 0 0 0 1px var(--c,var(--g));background:color-mix(in srgb,var(--c,var(--g)) 14%,var(--card));color:var(--ink)}
 .seg button.on span:before{content:"✓ "}
-#types_b{display:grid;grid-template-columns:1fr 1fr;gap:10px}#types_b button{min-height:64px;font-size:14px}
+#types_b{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}#types_b button{min-height:64px;font-size:14px;line-height:1.25;padding:10px 8px}
 .seg button:hover{border-color:color-mix(in srgb,var(--g) 45%,var(--line))}
 .f{display:grid;gap:10px}.f label{font-size:12px;color:var(--mut);font-weight:600;display:grid;gap:4px}
 .f label.row{display:flex;gap:8px;align-items:center;flex-direction:row;color:var(--ink);font-weight:500}
@@ -243,10 +243,12 @@ section:not(.hide){animation:fd .28s ease}@keyframes fd{from{opacity:0;transform
 
 <script>
 /* ===================== estado ===================== */
-const TY=[["Vários","var(--g)"],["Múltiplos","var(--v)"],["Itens Únicos","var(--a)"],["Maiores/Pesados","var(--r)"]];
+/* a ordem importa: o formato compacto grava a posição do tipo. Tipos novos entram sempre no fim. */
+const TY=[["Vários artigos","var(--g)"],["Múltiplas quantidades","var(--v)"],["Itens Únicos","var(--a)"],["Maiores/Pesados","var(--r)"],["Retrabalho","var(--o)"],["Pacote do mesmo","var(--k)"]];
+const TYREN={"Vários":"Vários artigos","Múltiplos":"Múltiplas quantidades"};
 const ST=["Concluído","Procurando","Difícil acesso"],SC=["s0","s1","s2"];
 const LS="rcondas.v2",$=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
-const DEF={cfg:{lim:{"Vários":1000,"Múltiplos":1000,"Itens Únicos":100,"Maiores/Pesados":10},and:true,gap:30,tol:15,
+const DEF={cfg:{lim:{"Vários artigos":1000,"Múltiplas quantidades":1000,"Itens Únicos":100,"Maiores/Pesados":10,"Retrabalho":1000,"Pacote do mesmo":1000},and:true,gap:30,tol:15,
  turnos:{1:{ini:7,fim:16},2:{ini:16,fim:23}}},gals:["Galpão 1","Galpão 2","Galpão 3"],ops:[],ges:[],waves:[],gal:"Galpão 1",off:false,man:{log:[]}};
 let S;try{S=JSON.parse(localStorage.getItem(LS))}catch(e){}
 /* formato compacto: ondas como listas, cabe ~2x mais no aparelho */
@@ -263,9 +265,13 @@ if(!S){ /* migra base antiga, se existir */
 ["cfg","gals","ops","ges","waves","man"].forEach(k=>{if(S[k]==null)S[k]=JSON.parse(JSON.stringify(DEF[k]))});
 Object.keys(DEF.cfg).forEach(k=>{if(S.cfg[k]==null)S.cfg[k]=JSON.parse(JSON.stringify(DEF.cfg[k]))});
 if(!S.metas)S.metas={};
+/* nomes antigos de tipo -> nomes novos, sem perder registros nem limites */
+S.waves.forEach(w=>{if(TYREN[w.ty])w.ty=TYREN[w.ty]});
+Object.keys(TYREN).forEach(k=>{if(S.cfg.lim[k]!=null){if(S.cfg.lim[TYREN[k]]==null)S.cfg.lim[TYREN[k]]=S.cfg.lim[k];delete S.cfg.lim[k]}});
+TY.forEach(([n])=>{if(S.cfg.lim[n]==null)S.cfg.lim[n]=DEF.cfg.lim[n]||1000});
 if(!S.gals.length)S.gals=["Galpão 1"];
 if(!S.gals.includes(S.gal))S.gal=S.gals[0];
-let ty="Vários",st=0,draft=[],tim={op:null,t0:0},view="painel",me=null,uT=1,csub="cop";
+let ty=TY[0][0],st=0,draft=[],tim={op:null,t0:0},view="painel",me=null,uT=1,csub="cop";
 const ser=()=>{const o=Object.assign({},S);delete o.waves;o.wv=S.waves.map(w=>[w.id,w.wn,w.op,w.opn,w.gal,Math.max(0,TY.findIndex(t=>t[0]===w.ty)),w.qty,w.st,w.ts,w.fin==null?-1:w.fin-w.ts,w.sync?1:0,w.auto?1:0]);return JSON.stringify(o)};
 let storeLen=0,storeWarned=false;
 const save=()=>{try{const s=ser();localStorage.setItem(LS,s);storeLen=s.length;

@@ -6,7 +6,7 @@ Os dados ficam salvos no navegador de cada aparelho (localStorage). Não há ban
 
 ## Testes
 
-Bateria com 32 cenários (volume de 60 mil ondas, WN repetido, quantidades inválidas, offline, hora extra, virada do dia, permissões, XSS, celular).
+Bateria com 35 cenários (volume de 60 mil ondas, WN repetido, quantidades inválidas, offline, hora extra, virada do dia, permissões, XSS, celular).
 
 ```bash
 npm i -D playwright
