@@ -36,7 +36,7 @@ header.top{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end;justify-con
 header.top h1{font:700 34px/1 var(--fd)}
 .sub2{color:var(--mut);font-size:14px;margin-top:4px}.sub2:first-letter{text-transform:uppercase}
 .ctl{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
-.grid{display:grid;gap:14px}.two{grid-template-columns:repeat(auto-fit,minmax(300px,1fr))}.g21{grid-template-columns:repeat(auto-fit,minmax(300px,1fr))}
+.grid{display:grid;gap:14px}#painel .two{align-items:start}.two{grid-template-columns:repeat(auto-fit,minmax(300px,1fr))}.g21{grid-template-columns:repeat(auto-fit,minmax(300px,1fr))}
 @media(min-width:1100px){.g21{grid-template-columns:2fr 1fr}}
 #reg{align-items:start}
 @media(min-width:1100px){#reg{grid-template-columns:5fr 7fr}}
@@ -66,7 +66,7 @@ td .pill{min-height:36px;padding:6px 12px;margin:2px 0}
 .legend{display:flex;gap:14px;font-size:13px;color:var(--mut);margin-top:10px;flex-wrap:wrap;line-height:1.45}
 .legend i{display:inline-block;width:10px;height:10px;margin-right:5px}
 .legend i.ln{background:none;height:0;width:16px;border-top:2px solid var(--v);vertical-align:middle}.legend i.ln.ds{border-top:2px dashed var(--r)}
-.empty{color:var(--mut);padding:14px 0}
+
 
 /* placar do turno: o único elemento forte da tela */
 .placar{display:grid;grid-template-columns:auto 1fr;gap:36px;align-items:end;background:var(--band);color:#fff;border-radius:6px 6px 0 0;padding:22px 24px 20px}
@@ -127,6 +127,29 @@ svg.ch{width:100%;height:auto;display:block}svg text{fill:var(--mut);font:600 12
 .wrow.err:after{content:attr(data-err);grid-column:1/-1;color:var(--rx);font-size:13.5px;font-weight:600}
 .ctl2{display:flex;gap:8px;margin-top:14px;justify-content:space-between;align-items:center}.ctl2 .btn{flex:0 0 auto}
 .big{font:700 44px/1 var(--fd);font-variant-numeric:tabular-nums;padding:10px 0 12px}
+
+/* pictogramas, crachá e avatar */
+.ti{width:26px;height:26px;stroke:currentColor;fill:none;stroke-width:1.6;stroke-linejoin:round;stroke-linecap:round;flex:none}
+#types_b button{gap:6px;min-height:84px}
+#types_b button .ti{color:var(--c);width:28px;height:28px}#types_b button.on .ti{color:#fff}
+.av{width:34px;height:34px;border-radius:50%;background:var(--bg);border:1px solid var(--line);display:inline-grid;place-items:center;font:700 14px/1 var(--fd);color:var(--ink);flex:none;letter-spacing:.02em}
+.who2{display:flex;gap:10px;align-items:center}.who2 small{color:var(--mut)}
+.cracha{display:flex;gap:12px;align-items:center;padding:12px 14px;border:1px solid var(--line);border-left:4px solid var(--g);border-radius:4px;background:var(--bg);animation:rowIn .25s ease both}
+.cracha .av{width:44px;height:44px;font-size:18px;background:var(--card)}
+.cracha b{display:block;font:600 17px/1.2 var(--fb)}.cracha small{color:var(--mut);font-size:13.5px}
+#opIn{font:600 20px var(--fd);min-height:54px;padding-left:48px;letter-spacing:.02em;
+ background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238792a6' stroke-width='2' stroke-linecap='round'%3E%3Cpath d='M4 6v12M8 6v12M11 6v12M15 6v12M18 6v12M20.5 6v12'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:12px center;background-size:26px}
+#opIn::placeholder{font:400 15px var(--fb);letter-spacing:0}
+.hint{font-size:13px;color:var(--mut);font-weight:400}
+/* tipos de onda no painel */
+.stack{display:flex;height:14px;gap:2px;margin-bottom:16px}.stack i{display:block;min-width:3px;background:var(--c)}.stack.vazio{background:var(--line)}
+.trow{display:grid;grid-template-columns:22px 1fr auto;gap:10px;align-items:center;padding:8px 0;border-top:1px solid var(--line)}
+.trow:first-of-type{border-top:0}.trow .ti{width:20px;height:20px;color:var(--c)}
+.trow b{font-weight:500;font-size:14.5px}.trow .v{text-align:right;line-height:1.15}.trow .num{font-size:19px;display:block}.trow small{color:var(--mut);font-size:12.5px}
+.dbar{height:4px;background:var(--line);margin-top:5px;max-width:140px}.dbar i{display:block;height:100%;background:var(--g)}
+.empty{display:grid;justify-items:center;gap:10px;padding:30px 12px;text-align:center;color:var(--mut)}
+.empty:before{content:"";width:44px;height:44px;background:var(--field);opacity:.7;-webkit-mask:var(--ic-vazio) center/contain no-repeat;mask:var(--ic-vazio) center/contain no-repeat}
+:root{--ic-vazio:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.5' stroke-linejoin='round' stroke-linecap='round'%3E%3Cpath d='M3 13l3-8h12l3 8v6H3zM3 13h5l1.5 2.5h5L16 13h5'/%3E%3C/svg%3E")}
 
 /* tabelas */
 table{width:100%;border-collapse:collapse;font-size:14.5px}
@@ -202,7 +225,7 @@ a[data-pick]{display:inline-block;padding:8px 0 2px;color:var(--gx);font-weight:
   <div class="card"><h2>Nova onda</h2>
    <div class="prog"><div class="pbar"><b id="pbar"></b></div><div class="plab"><span data-sp="1">Operador</span><span data-sp="2">Tipo</span><span data-sp="3">Ondas</span></div></div>
    <div class="stp" id="s1"><div class="f">
-    <label>Operador (nome ou código)<input id="opIn" list="opl" placeholder="CL001 ou nome" autocomplete="off"></label><datalist id="opl"></datalist>
+    <label>Operador <span class="hint">Bipe o crachá ou digite o nome</span><input id="opIn" list="opl" placeholder="CL001 ou nome" autocomplete="off"></label><datalist id="opl"></datalist>
     <div id="opName"></div>
     <div class="ctl2"><span></span><button class="btn sm" id="n1">Continuar</button></div>
    </div></div>
@@ -297,6 +320,13 @@ a[data-pick]{display:inline-block;padding:8px 0 2px;color:var(--gx);font-weight:
 /* ===================== estado ===================== */
 /* a ordem importa: o formato compacto grava a posição do tipo. Tipos novos entram sempre no fim. */
 const TY=[["Vários artigos","var(--g)"],["Múltiplas quantidades","var(--v)"],["Itens Únicos","var(--a)"],["Maiores/Pesados","var(--mut)"],["Retrabalho","var(--o)"],["Pacote do mesmo","var(--k)"]];
+const TI={"Vários artigos":'<rect x="3" y="3" width="8" height="8" rx="1"/><circle cx="17" cy="7" r="4"/><path d="M12 14l5 7H7z"/>',
+ "Múltiplas quantidades":'<rect x="3" y="13" width="8" height="8" rx="1"/><rect x="13" y="13" width="8" height="8" rx="1"/><rect x="8" y="3" width="8" height="8" rx="1"/>',
+ "Itens Únicos":'<path d="M3 8l9-5 9 5v8l-9 5-9-5zM3 8l9 5 9-5M12 13v8"/>',
+ "Maiores/Pesados":'<path d="M5 21l2-11h10l2 11zM9 10a3 3 0 1 1 6 0M10 15.5h4"/>',
+ "Retrabalho":'<path d="M20 12a8 8 0 1 1-2.6-5.9M20 3.5v4.5h-4.5"/>',
+ "Pacote do mesmo":'<rect x="3" y="8" width="18" height="12" rx="1"/><path d="M12 8v12M3 13h18M12 8c-1-5-7-3-4 0M12 8c1-5 7-3 4 0"/>'};
+const ico=n=>`<svg class="ti" viewBox="0 0 24 24" aria-hidden="true">${TI[n]||TI["Itens Únicos"]}</svg>`;
 const TYREN={"Vários":"Vários artigos","Múltiplos":"Múltiplas quantidades"};
 const ST=["Concluído","Procurando","Difícil acesso"],SC=["s0","s1","s2"];
 const LS="rcondas.v2",$=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
@@ -330,6 +360,7 @@ const save=()=>{try{const s=ser();localStorage.setItem(LS,s);storeLen=s.length;
   if(storeLen>LIM_STORE*.8&&!storeWarned){storeWarned=true;setTimeout(()=>toast("Atenção: memória do aparelho em "+Math.round(storeLen/LIM_STORE*100)+"%. Ligue um banco de dados antes que encha.",9000),2600)}
   return true}catch(e){toast("Não foi possível gravar no aparelho: armazenamento cheio. Nada foi salvo.",9000);return false}};
 const online=()=>!S.off&&navigator.onLine;
+const av=n=>{const p=String(n||"?").trim().split(/\s+/);return'<span class="av" aria-hidden="true">'+esc((p[0][0]||"")+(p.length>1?p[p.length-1][0]:"")).toUpperCase()+"</span>"};
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const dk=t=>{const d=new Date(t);return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")};
 const fmt=n=>Math.round(n).toLocaleString("pt-BR");
@@ -370,17 +401,18 @@ function durs(list){const by={},out=[];
 const avg=a=>a.length?a.reduce((s,v)=>s+v,0)/a.length:0;
 
 /* ===================== gráficos ===================== */
+const nice=v=>{const e=Math.pow(10,Math.floor(Math.log10(v))),m=v/e;return[1,1.2,1.5,2,2.5,3,4,5,6,8,10].find(x=>m<=x)*e};
 function barsSvg(a,i0,i1,ov){ov=ov||{};const lab=[],v=[];for(let i=i0;i<=i1;i++){lab.push(i);v.push(a[i])}
- const W=innerWidth<760?380:600,H=innerWidth<760?200:170,p=innerWidth<760?8:22,mx=Math.max(...v,ov.need||0,ov.avg||0,1),bw=(W-p*2)/v.length,hi=v.indexOf(Math.max(...v)),act=v.filter(x=>x>0),lo=act.length>1?v.indexOf(Math.min(...act)):-1;
- let s=`<svg class="ch" viewBox="0 0 ${W} ${H}" role="img" aria-label="Produção por hora">`+[0,1,2].map(i=>`<line x1="${p}" x2="${W-p}" y1="${H-24-i*(H-44)/2}" y2="${H-24-i*(H-44)/2}" stroke="var(--line)"/>`).join("");
+ const W=innerWidth<760?380:600,H=innerWidth<760?200:170,p=innerWidth<760?30:38,mx=nice(Math.max(...v,ov.need||0,ov.avg||0,1)),bw=(W-p*2)/v.length,hi=v.indexOf(Math.max(...v)),act=v.filter(x=>x>0),lo=act.length>1?v.indexOf(Math.min(...act)):-1;
+ let s=`<svg class="ch" viewBox="0 0 ${W} ${H}" role="img" aria-label="Produção por hora">`+[0,1,2].map(i=>`<line x1="${p}" x2="${W-p}" y1="${H-24-i*(H-44)/2}" y2="${H-24-i*(H-44)/2}" stroke="var(--line)"/>${i?`<text x="${p-6}" y="${H-20-i*(H-44)/2}" text-anchor="end">${fmt(mx*i/2)}</text>`:""}`).join("");
  v.forEach((q,i)=>{const h=q/mx*(H-44),x=p+i*bw+4,c=q&&i===hi?"var(--g)":i===lo?"var(--r)":"var(--t)";
-  s+=`<rect x="${x}" y="${H-24-h}" width="${Math.max(bw-8,2)}" height="${h}" rx="1" fill="${c}" opacity="${q?1:.15}"/>${q?`<text x="${x+(bw-8)/2}" y="${H-28-h}" text-anchor="middle" style="fill:var(--ink)">${fmt(q)}</text>`:""}<text x="${x+(bw-8)/2}" y="${H-8}" text-anchor="middle">${lab[i]}h</text>`});
+  s+=`<rect x="${x}" y="${H-24-h}" width="${Math.max(bw-8,2)}" height="${h}" rx="1" fill="${c}" opacity="${q?1:.15}"><title>${lab[i]}h: ${fmt(q)} unidades</title></rect>${q?`<text x="${x+(bw-8)/2}" y="${H-28-h}" text-anchor="middle" style="fill:var(--ink)">${fmt(q)}</text>`:""}<text x="${x+(bw-8)/2}" y="${H-8}" text-anchor="middle">${lab[i]}h</text>`});
  const Y=val=>H-24-val/mx*(H-44);
  if(ov.avg)s+=`<line x1="${p}" x2="${W-p}" y1="${Y(ov.avg)}" y2="${Y(ov.avg)}" stroke="var(--v)" stroke-width="2"/><text x="${W-p}" y="${Y(ov.avg)-5}" text-anchor="end" style="fill:var(--v)">média ${fmt(ov.avg)}/h</text>`;
  if(ov.need)s+=`<line x1="${p}" x2="${W-p}" y1="${Y(ov.need)}" y2="${Y(ov.need)}" stroke="var(--r)" stroke-width="2" stroke-dasharray="6 5"/><text x="${W-p}" y="${Y(ov.need)-5}" text-anchor="end" style="fill:var(--r)">necessário ${fmt(ov.need)}/h</text>`;
  return s+"</svg><div class='legend'><span><i style='background:var(--g)'></i>Pico</span><span><i style='background:var(--r)'></i>Menor</span><span><i style='background:var(--t)'></i>Demais</span><span><i class='ln'></i>Média</span><span><i class='ln ds'></i>Necessário p/ meta</span></div>"}
 function bars(items){const mx=Math.max(...items.map(i=>i.v),1);
- return items.map(i=>`<div class="gal"><div class="r"><b>${esc(i.k)}</b><span>${fmt(i.v)}${i.s?' <small style="color:var(--mut)">'+esc(i.s)+"</small>":""}</span></div><div class="bar"><b style="width:${i.v/mx*100}%;--c:${i.c||"var(--g)"}"></b></div></div>`).join("")||'<div class="empty">Sem registros.</div>'}
+ return items.map(i=>`<div class="gal"><div class="r"><b>${esc(i.k)}</b><span>${fmt(i.v)}${i.s?' <small style="color:var(--mut)">'+esc(i.s)+"</small>":""}</span></div><div class="bar"><b style="width:${i.p!=null?i.p:i.v/mx*100}%;--c:${i.c||"var(--g)"}"></b></div></div>`).join("")||'<div class="empty">Sem registros.</div>'}
 
 /* ===================== PAINEL (só produção) ===================== */
 function painel(){
@@ -412,9 +444,11 @@ function painel(){
  $("#chH").innerHTML=barsSvg(a,i0,i1,{need:need,avg:avgH});
  $("#pace").innerHTML=metaT&&isNow&&faltam>0&&remain>0?"Para bater a meta é preciso fazer <b>"+fmt(need)+" unidades por hora</b>"+(upw?", perto de "+ondH.toLocaleString("pt-BR",{maximumFractionDigits:1})+" ondas por hora":"")+". A média até agora é de "+fmt(avgH)+" por hora.":"";
  $("#peak").textContent=mx?"pico "+a.indexOf(mx)+"h":"";
- $("#chT").innerHTML=bars(TY.map(([n,c])=>{const q=P.filter(w=>w.ty===n);return{k:n,v:q.reduce((s,w)=>s+w.qty,0),s:q.length+" ondas",c}}));
+ {const tv=TY.map(([n,c])=>{const q=P.filter(w=>w.ty===n);return{n,c,v:q.reduce((s,w)=>s+w.qty,0),k:q.length}});
+  $("#chT").innerHTML=`<div class="stack${tot?"":" vazio"}" role="img" aria-label="Participação de cada tipo de onda">`+tv.filter(x=>x.v).map(x=>`<i style="--c:${x.c};flex:${x.v}" title="${x.n}: ${fmt(x.v)}"></i>`).join("")+"</div>"+
+   tv.map(x=>`<div class="trow" style="--c:${x.c}">${ico(x.n)}<b>${x.n}</b><span class="v"><span class="num">${fmt(x.v)}</span><small>${x.k} ${x.k===1?"onda":"ondas"}${tot&&x.v?", "+Math.round(x.v/tot*100)+"%":""}</small></span></div>`).join("")}
  $("#gals").innerHTML=bars(visG().map((k,i)=>{const q=prod(all).filter(w=>w.gal===k);
-  const v0=q.reduce((s,w)=>s+w.qty,0),m=S.metas[k];return{k,v:v0,s:(m?Math.round(v0/m*100)+"% da meta de "+fmt(m)+", ":"")+q.length+" ondas, "+(new Set(q.map(w=>w.op)).size===1?"1 pessoa":new Set(q.map(w=>w.op)).size+" pessoas"),c:["var(--g)","var(--v)","var(--a)","var(--t)"][i%4]}}));
+  const v0=q.reduce((s,w)=>s+w.qty,0),m=S.metas[k];return{k,v:v0,p:m?Math.min(v0/m*100,100):null,s:(m?Math.round(v0/m*100)+"% da meta de "+fmt(m)+", ":"")+q.length+" ondas, "+(new Set(q.map(w=>w.op)).size===1?"1 pessoa":new Set(q.map(w=>w.op)).size+" pessoas"),c:["var(--g)","var(--v)","var(--a)","var(--t)"][i%4]}}));
  const Dg=durs(L);
  $("#tmp").innerHTML=TY.map(([n,c])=>{const d=Dg.filter(x=>x.w.ty===n).map(x=>x.d);
   return`<div class="gal"><div class="r"><b>${n}</b><span>${d.length?mm(avg(d)):"—"} <small style="color:var(--mut)">${d.length} medições</small></span></div><div class="bar"><b style="width:${d.length?Math.min(avg(d)/((S.cfg.gap||30)*6e4)*100,100):0}%;--c:${c}"></b></div></div>`}).join("")
@@ -422,7 +456,7 @@ function painel(){
 }
 
 /* ===================== OPERAÇÃO ===================== */
-function segs(){$("#types_b").innerHTML=TY.map(([n,c])=>`<button data-ty="${n}" style="--c:${c}" class="${n===ty?"on":""}"><span>${n}</span></button>`).join("");}
+function segs(){$("#types_b").innerHTML=TY.map(([n,c])=>`<button data-ty="${n}" style="--c:${c}" class="${n===ty?"on":""}">${ico(n)}<span>${n}</span></button>`).join("");}
 function goStep(n){
  [1,2,3].forEach(i=>{const e=$("#s"+i);if(i===n){e.classList.remove("hide","stp");void e.offsetWidth;e.classList.add("stp")}else e.classList.add("hide")});
  $$("[data-sp]").forEach(s=>{const k=+s.dataset.sp;s.classList.toggle("on",k===n);s.classList.toggle("done",k<n)});
@@ -440,7 +474,7 @@ function renderRows(){$("#rowsL").innerHTML=rows.map(rowHtml).join("")}
 let rows=[{wn:"",q:""}];
 const normWN=s=>{s=String(s==null?"":s).replace(/\s+/g,"");return /^\d+$/.test(s)?s.replace(/^0+(?=\d)/,""):s.toUpperCase()};
 function curOp(){const o=findOp($("#opIn").value);
- $("#opName").innerHTML=o?esc(o.n)+' <span class="tag">'+o.m+", "+o.t+"º turno"+(o.g?", "+esc(o.g):"")+"</span>":"";return o}
+ $("#opName").innerHTML=o?'<div class="cracha">'+av(o.n)+"<div><b>"+esc(o.n)+"</b><small>"+o.m+", "+o.t+"º turno"+(o.g?", "+esc(o.g):"")+"</small></div></div>":"";return o}
 function track(o){if(!tim.op||tim.op!==o.m)tim={op:o.m,n:o.n,t0:Date.now()}}
 function mk(o,q,s,wn){return{id:uid(),wn:wn||"",op:o.m,opn:o.n,gal:o.g||S.gal,ty,qty:q,st:s,ts:Date.now(),fin:s===0?Date.now():null,sync:online()?1:0}}
 function commit(list){S.waves.push(...list);if(!save()){S.waves.splice(S.waves.length-list.length,list.length);return false}segs();renderAll();
@@ -448,7 +482,7 @@ function commit(list){S.waves.push(...list);if(!save()){S.waves.splice(S.waves.l
 function check(){const o=curOp();if(!o){toast("Identifique um operador cadastrado");return}return o}
 function opRows(list,ctl){const canR=!S.ges.length||(me&&me.pR);
  return list.length?`<table><tr><th>Operador</th><th>WN</th><th>Tipo</th><th>Qtd</th><th>Status</th><th>Hora</th>${ctl?"<th>Tempo</th><th>Ação</th>":""}</tr>`+list.map(w=>{const o=opOf(w.op);
- return`<tr><td>${esc(w.opn)}<br><small style="color:var(--mut)">${esc(w.op.split("~")[0])}${w.op.includes("~")?" (excluído)":""}, ${esc(w.gal)}${o?", "+o.t+"ºT":""}</small></td><td><b>${esc(w.wn||"—")}</b></td><td>${w.ty}</td><td><b>${fmt(w.qty)}</b></td><td><span class="st ${SC[w.st]}">${ST[w.st]}</span>${isOT(w)?' <span class="st so">extra</span>':""}</td><td style="white-space:nowrap">${new Date(w.ts).toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"})}${ctl?"":(w.sync?' <span title="Sincronizado" aria-label="Sincronizado" style="color:var(--gx)">✓</span>':' <span class="st s1">pendente</span>')}</td>${ctl?`<td class="num" data-el="${w.ts}">${mm(Date.now()-w.ts)}</td><td><a href="#" data-fin="${w.id}" class="pill">Concluir</a> <a href="#" data-sd="${w.id}" class="pill warn">Difícil</a>${canR?` <a href="#" data-del="${w.id}" class="pill off">Excluir</a>`:""}</td>`:""}</tr>`}).join("")+"</table>":'<div class="empty">Nenhum registro ainda.</div>'}
+ return`<tr><td><div class="who2">${av(w.opn)}<div>${esc(w.opn)}<br><small>${esc(w.op.split("~")[0])}${w.op.includes("~")?" (excluído)":""}, ${esc(w.gal)}${o?", "+o.t+"ºT":""}</small></div></div></td><td><b>${esc(w.wn||"—")}</b></td><td>${w.ty}</td><td><b>${fmt(w.qty)}</b></td><td><span class="st ${SC[w.st]}">${ST[w.st]}</span>${isOT(w)?' <span class="st so">extra</span>':""}</td><td style="white-space:nowrap">${new Date(w.ts).toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"})}${ctl?"":(w.sync?' <span title="Sincronizado" aria-label="Sincronizado" style="color:var(--gx)">✓</span>':' <span class="st s1">pendente</span>')}</td>${ctl?`<td class="num" data-el="${w.ts}">${mm(Date.now()-w.ts)}</td><td><a href="#" data-fin="${w.id}" class="pill">Concluir</a> <a href="#" data-sd="${w.id}" class="pill warn">Difícil</a>${canR?` <a href="#" data-del="${w.id}" class="pill off">Excluir</a>`:""}</td>`:""}</tr>`}).join("")+"</table>":'<div class="empty">Nenhuma onda registrada.</div>'}
 function operacao(){const L=dayWaves().slice().reverse();$("#cnt").textContent=L.length+" hoje";$("#last").innerHTML=opRows(L.slice(0,8));
  $("#opl").innerHTML=S.ops.map(o=>`<option value="${o.m}">${esc(o.n)}, ${o.t}º turno</option>`).join("");
  $("#subCtl").classList.toggle("hide",!S.cfg.and);
@@ -468,12 +502,12 @@ function individual(){
  const sel=$("#iOp"),v=sel.value,per=+$("#iPer").value||1;
  sel.innerHTML='<option value="">Todos os operadores</option>'+S.ops.map(o=>`<option value="${o.m}">${esc(o.n)}, ${o.m}</option>`).join("");sel.value=v;
  const L=rangeWaves(per),P=prod(L);
- if(!S.ops.length){$("#iBody").innerHTML='<div class="empty">Cadastre operadores em Configurações → Usuários.</div>';return}
+ if(!S.ops.length){$("#iBody").innerHTML='<div class="card"><div class="empty">Nenhum operador cadastrado.<button class="btn sm" data-goto="cus">Cadastrar operador</button></div></div>';return}
  if(!v){ /* visão geral da equipe */
   const per_op=S.ops.map(o=>{const q=P.filter(w=>w.op===o.m);return{o,qt:q.reduce((s,w)=>s+w.qty,0),on:q.length,ot:q.filter(isOT).length}}).sort((a,b)=>b.qt-a.qt);
   $("#iBody").innerHTML=`<div class="card"><h2>${per===1?"Equipe no dia selecionado":"Equipe nos últimos "+per+" dias"}</h2><div class="tw"><table><tr><th>Operador</th><th>Turno</th><th>Unidades</th><th>Ondas</th><th>Un./onda</th><th>Tempo médio</th><th>Hora extra</th></tr>`+
    per_op.map(x=>{const d=durs(L.filter(w=>w.op===x.o.m)).map(z=>z.d);
-    return`<tr><td><a href="#" data-pick="${x.o.m}" >${esc(x.o.n)}</a><br><small style="color:var(--mut)">${x.o.m}</small></td><td><span class="tag${x.o.t===2?" t2":""}">${x.o.t}º</span></td><td><b>${fmt(x.qt)}</b></td><td>${x.on}</td><td>${x.on?fmt(x.qt/x.on):"0"}</td><td>${d.length?mm(avg(d)):"—"}</td><td>${x.ot?'<span class="pill ot">'+x.ot+" ondas</span>":"—"}</td></tr>`}).join("")+
+    return`<tr><td><div class="who2">${av(x.o.n)}<div><a href="#" data-pick="${x.o.m}">${esc(x.o.n)}</a><br><small>${x.o.m}</small></div></div></td><td><span class="tag${x.o.t===2?" t2":""}">${x.o.t}º</span></td><td><b>${fmt(x.qt)}</b><div class="dbar"><i style="width:${x.qt/Math.max(per_op[0].qt,1)*100}%"></i></div></td><td>${x.on}</td><td>${x.on?fmt(x.qt/x.on):"0"}</td><td>${d.length?mm(avg(d)):"—"}</td><td>${x.ot?'<span class="pill ot">'+x.ot+" ondas</span>":"—"}</td></tr>`}).join("")+
    "</table></div><div class='legend'>Clique em um nome para abrir as estatísticas individuais.</div></div>";return}
  const o=opOf(v);if(!o){sel.value="";return individual()}
  const mine=P.filter(w=>w.op===v),qt=mine.reduce((s,w)=>s+w.qty,0),on=mine.length,
@@ -504,6 +538,7 @@ function individual(){
   K("Hora extra",fmt(otq),"unidades em "+ot.length+" ondas")+
   K("Posição na equipe",rank+"º","entre "+team.length+" com produção")+
  `</dl>
+ <div class="card" style="margin-top:14px"><h2>Produção por hora do dia</h2>${(()=>{const aH=Array(24).fill(0);Object.entries(byH).forEach(([k,q])=>aH[+k]=q);const[x0,x1]=hourWindow(aH);return barsSvg(aH,x0,x1)})()}</div>
  <div class="grid two" style="margin-top:14px">
   <div class="card"><h2>Estatísticas inteligentes</h2><ul class="ins">`+ins.map(i=>`<li>${i[1]}</li>`).join("")+`</ul></div>
   <div class="card"><h2>Produção por tipo</h2>`+bars(TY.map(([n,c])=>({k:n,v:byT[n]||0,s:mine.filter(w=>w.ty===n).length+" ondas",c})))+`</div>
@@ -594,6 +629,7 @@ document.addEventListener("click",e=>{const d=e.target.dataset,t=e.target;
  const tyB=t.closest&&t.closest("[data-ty]");if(tyB){ty=tyB.dataset.ty;segs();setTimeout(()=>goStep(3),260)}
  if(d.st!==undefined&&t.matches("[data-st]")){st=+d.st;segs()}
  if(d.ut){uT=+d.ut;cfgUsers()}
+ if(d.goto){go("cfg");const b=document.querySelector('[data-c="'+d.goto+'"]');if(b)b.click()}
  if(d.pick){e.preventDefault();$("#iOp").value=d.pick;individual()}
  if(d.fin||d.sd){e.preventDefault();const w=S.waves.find(x=>x.id===(d.fin||d.sd));
   if(w){if(d.fin){w.st=0;w.fin=Date.now()}else w.st=2;w.sync=online()?1:0;save();renderAll()}}
