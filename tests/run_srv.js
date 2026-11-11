@@ -15,7 +15,7 @@ function banco(){return{down:false,expiresIn:3600,calls:{rpc:0,refresh:0},seq:1,
  gestores:[{email:'adm@x.com',nome:'Admin',galpao_id:null,admin:true,pode_config:true,pode_individual:true,pode_registros:true},
            {email:'g2@x.com',nome:'Gestor G2',galpao_id:G2,admin:false,pode_config:true,pode_individual:true,pode_registros:true}],
  users:{'adm@x.com':{pw:'senha1234',ok:true},'g2@x.com':{pw:'senha1234',ok:true},'fora@x.com':{pw:'senha1234',ok:true},'novo@x.com':{pw:'senha1234',ok:false}},
- tokens:{},refs:{},ondas:[]}}
+ tokens:{},refs:{},ondas:[],pedidos:[]}}
 function fake(db){const cors={'access-control-allow-origin':'*','access-control-allow-headers':'*','access-control-allow-methods':'GET,POST,PATCH,PUT,DELETE,OPTIONS'};
  const J=(route,status,body)=>route.fulfill({status,headers:Object.assign({'content-type':'application/json'},cors),body:body===undefined?'':JSON.stringify(body)});
  const sessao=email=>{const n=db.seq++;db.tokens['tok'+n]=email;db.refs['ref'+n]=email;return{access_token:'tok'+n,refresh_token:'ref'+n,expires_in:db.expiresIn,user:{email}}};
@@ -70,6 +70,11 @@ function fake(db){const cors={'access-control-allow-origin':'*','access-control-
   if(t==='gestores'&&m==='DELETE'){const o=db.gestores.find(x=>x.email===eq('email'));if(!o||!(g&&g.admin))return J(route,200,[]);db.gestores=db.gestores.filter(x=>x!==o);return J(route,200,[o])}
   if(t==='ondas'&&(m==='PATCH'||m==='DELETE')){const alvo=db.ondas.filter(o=>(eq('id')?o.id===eq('id'):o.status!==0)&&g&&g.pode_registros&&escopo(o.galpao_id));
    if(m==='DELETE')db.ondas=db.ondas.filter(o=>!alvo.includes(o));else alvo.forEach(o=>Object.assign(o,body));return J(route,200,alvo)}
+  if(t==='rpc/solicitar_acesso'&&m==='POST'){if(!email)return J(route,401,{message:'sem sessao'});if(!db.gestores.some(x=>x.email===email)&&!db.pedidos.includes(email))db.pedidos.push(email);return route.fulfill({status:204,headers:cors})}
+  if(t==='rpc/aceitar_solicitacao'&&m==='POST'){if(!(g&&g.admin))return J(route,403,{code:'42501',message:'Sem permissao'});db.gestores.push({email:body.p_email,nome:body.p_nome,galpao_id:body.p_galpao,admin:body.p_admin,pode_config:body.p_pc,pode_individual:body.p_pi,pode_registros:body.p_pr});db.pedidos=db.pedidos.filter(x=>x!==body.p_email);return route.fulfill({status:204,headers:cors})}
+  if(t==='solicitacoes_gestor'){if(!(g&&g.admin))return J(route,200,[]);
+   if(m==='GET')return J(route,200,db.pedidos.map(e=>({email:e,criado_em:'2026-11-11T20:12:00Z'})));
+   if(m==='DELETE'){const e=eq('email'),had=db.pedidos.includes(e);db.pedidos=db.pedidos.filter(x=>x!==e);return J(route,200,had?[{email:e}]:[])}}
   return J(route,404,{message:'rota não simulada: '+m+' '+p})}}
 async function page(b,db,opts={}){const ctx=await b.newContext({viewport:opts.vp||{width:1366,height:900}});const p=await ctx.newPage();
  p.errors=[];p.on('pageerror',e=>p.errors.push(e.message));p.on('dialog',d=>d.accept());
@@ -115,10 +120,10 @@ await T('S06 WN que já existe no banco (de outro aparelho) vira "recusada" e n�
  ok(/^7001:A onda 7001 já foi registrada$/.test(r.err),'err: '+r.err);ok(r.prod===11,'produção local '+r.prod);ok(/recusada/.test(r.txt),'lista não mostra recusada');
  await p.click('#last [data-del]');await p.waitForTimeout(150);ok((await p.evaluate(()=>S.waves.length))===1,'não removeu a recusada')});
 
-await T('S07 Senha errada, e-mail sem confirmação e e-mail que não é gestor não entram',async()=>{const p=await page(b,banco());
+await T('S07 Senha errada, e-mail sem confirmação e e-mail que não é gestor não entram',async()=>{const db=banco();const p=await page(b,db);
  await login(p,'adm@x.com','errada');ok(!(await p.isHidden('#login')),'entrou com senha errada');ok(/inválidos/.test(await p.textContent('#toast')),await p.textContent('#toast'));
  await p.fill('#lU','novo@x.com');await p.fill('#lP','senha1234');await p.click('#lB');await p.waitForTimeout(400);ok(/Confirme o e-mail/.test(await p.textContent('#toast')),await p.textContent('#toast'));
- await p.fill('#lU','fora@x.com');await p.click('#lB');await p.waitForTimeout(500);ok(/não está cadastrado como gestor/.test(await p.textContent('#toast')),await p.textContent('#toast'));
+ await p.fill('#lU','fora@x.com');await p.click('#lB');await p.waitForTimeout(500);ok(/Pedido enviado/.test(await p.textContent('#toast'))&&db.pedidos.includes('fora@x.com'),await p.textContent('#toast'));
  ok((await p.evaluate(()=>me===null&&sess===null)),'ficou sessão aberta')});
 
 await T('S08 Admin vê todos os galpões; gestor comum vê só o dele',async()=>{const db=banco();const agora=new Date().toISOString();
@@ -146,6 +151,11 @@ await T('S11 Gestor comum: não altera limites nem cria operador em outro galpã
  await p.click('[data-c="cus"]');await p.fill('#uN','Fulano G1');await p.selectOption('#uG','Galpão 1');await p.click('#uB');await p.waitForTimeout(450);
  ok(!db.operadores.some(o=>o.nome==='Fulano G1'),'criou em outro galpão')});
 
+await T('S18 Admin libera pedido de acesso: aparece em Pedidos, aceita com galpão e o gestor passa a entrar',async()=>{const db=banco();db.pedidos.push('fora@x.com');db.users['fora@x.com'].ok=true;const p=await page(b,db);await login(p,'adm@x.com','senha1234');await p.click('.tab[data-t="cfg"]');
+ await p.click('[data-c="cge"]');await p.waitForTimeout(500);const visto=(await p.textContent('#pedL')).includes('fora@x.com');
+await p.fill('#mN','Fora Gestora');await p.click('[data-sacc="fora@x.com"]');await p.waitForTimeout(600);
+ const criado=db.gestores.find(x=>x.email==='fora@x.com');const sumiu=!db.pedidos.includes('fora@x.com');
+ ok(visto&&criado&&criado.galpao_id===G1&&criado.nome==='Fora Gestora'&&sumiu,'visto '+visto+', criado '+!!criado+', pedido apagado '+sumiu);});
 await T('S12 Admin: galpão, meta, limite, turno e gestor gravam no banco',async()=>{const db=banco();const p=await page(b,db);await login(p,'adm@x.com','senha1234');await p.click('.tab[data-t="cfg"]');
  await p.fill('[data-lim="Itens Únicos"]','250');await p.press('[data-lim="Itens Únicos"]','Tab');await p.waitForTimeout(400);
  await p.fill('[data-tn="1"][data-k="fim"]','17');await p.press('[data-tn="1"][data-k="fim"]','Tab');await p.waitForTimeout(400);

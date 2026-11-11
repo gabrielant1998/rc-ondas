@@ -305,6 +305,7 @@ a[data-pick]{display:inline-block;padding:8px 0 2px;color:var(--gx);font-weight:
    <label class="row"><input type="checkbox" id="mR" checked style="min-height:auto"> Pode alterar e excluir registros</label>
    <label class="row"><input type="checkbox" id="mA" style="min-height:auto"> Administrador (vê todos os galpões)</label>
    <button class="btn" id="mB">Criar gestor</button></div></div>
+  <div class="card"><h2>Pedidos de acesso</h2><div class="tw" id="pedL"></div><div class="legend">Para liberar, preencha nome, galpão e permissões no formulário ao lado e clique em Aceitar.</div></div>
   <div class="card"><h2>Gestores</h2><div class="tw" id="mL"></div><div class="legend">Enquanto não existir nenhum gestor, Configurações e Individual ficam abertos. Depois do primeiro gestor, passam a exigir login.</div></div>
  </div>
 </section>
@@ -379,7 +380,7 @@ function toast(m,ms){const t=$("#toast");t.textContent=m;t.classList.add("on");c
 function flush(){if(ON){push();return}let n=0;S.waves.forEach(w=>{if(!w.sync){w.sync=1;n++}});if(n){save();toast(n+" registro(s) sincronizado(s)")}}
 
 /* ===================== servidor (Supabase) ===================== */
-let sess=null,GID={},GN={},OPSALL={},pushing=false,recMode=false;
+let sess=null,GID={},GN={},OPSALL={},pushing=false,recMode=false,SOL=[];
 const CFGP="/rest/v1/config?id=eq.true";
 function setSess(s){sess=s;try{s?localStorage.setItem("rcondas.sess",JSON.stringify(s)):localStorage.removeItem("rcondas.sess")}catch(e){}}
 function tok(j){return{access_token:j.access_token,refresh_token:j.refresh_token,exp:Date.now()+(+j.expires_in||3600)*1000,email:((j.user&&j.user.email)||(sess&&sess.email)||"").toLowerCase()}}
@@ -422,9 +423,9 @@ async function pull(){
   const g=await api("/rest/v1/gestores?select=*&order=nome");
   S.ges=g.map(x=>({n:x.nome,u:x.email,g:x.galpao_id?GN[x.galpao_id]:null,adm:x.admin,pC:x.pode_config,pI:x.pode_individual,pR:x.pode_registros}));
   me=S.ges.find(x=>x.u===sess.email)||null;
-  if(!me){S.ges=[];setSess(null);toast("Este e-mail não está cadastrado como gestor. Peça ao administrador.",7000)}
-  else if(me.g)S.gal=me.g}
- else{S.ges=[];me=null}
+  if(!me){S.ges=[];SOL=[];try{await api("/rest/v1/rpc/solicitar_acesso",{method:"POST",body:{}})}catch(e){}setSess(null);toast("Ainda sem acesso. Pedido enviado ao administrador: quando ele liberar, entre de novo.",8000)}
+  else{if(me.g)S.gal=me.g;SOL=[];if(me.adm)try{SOL=await api("/rest/v1/solicitacoes_gestor?select=email,criado_em&order=criado_em")}catch(e){}}}
+ else{S.ges=[];me=null;SOL=[]}
  const mine=S.waves.filter(w=>!w.srv);
  if(me){const de=new Date(Date.now()-35*864e5).toISOString(),srv=[];
   for(let off=0;;off+=1000){const p=await api("/rest/v1/ondas?select=id,wn,operador_id,galpao_id,tipo,quantidade,status,registrada_em,concluida_em,encerrada_auto&registrada_em=gte."+encodeURIComponent(de)+"&order=registrada_em.asc&limit=1000&offset="+off);
@@ -743,6 +744,8 @@ function cfgGals(){
   return`<tr><td><input data-gre="${i}" value="${esc(g)}" aria-label="Nome do galpão"></td><td><input type="number" min="0" data-gmeta="${esc(g)}" aria-label="Meta diária de ${esc(g)}" value="${S.metas[g]||""}" placeholder="sem meta" style="width:130px"></td><td>${n}</td><td><button class="btn d sm" data-gdel="${i}"${S.gals.length<2?" disabled style='opacity:.4'":""}>Excluir</button></td></tr>`}).join("")+"</table>"}
 function cfgGes(){
  $("#mG").innerHTML=S.gals.map(g=>`<option>${esc(g)}</option>`).join("");
+ $("#pedL").innerHTML=SOL.length?`<table><tr><th>E-mail</th><th></th></tr>`+SOL.map(s=>`<tr><td>${esc(s.email)}<br><small style="color:var(--mut)">pediu em ${new Date(s.criado_em).toLocaleDateString("pt-BR")}</small></td><td style="white-space:nowrap"><button class="btn sm" data-sacc="${esc(s.email)}">Aceitar</button> <button class="btn d sm" data-srec="${esc(s.email)}">Recusar</button></td></tr>`).join("")+"</table>"
+  :'<div class="empty">Nenhum pedido de acesso pendente.</div>';
  $("#mL").innerHTML=S.ges.length?`<table><tr><th>Gestor</th><th>Login</th><th>Permissões</th><th></th></tr>`+S.ges.map((m,i)=>
   `<tr><td>${esc(m.n)}<br><small style="color:var(--mut)">${esc(m.g||"sem galpão")}</small>${m.adm?' <span class="tag">admin</span>':""}</td><td>${esc(m.u)}${ON?"":m.p?' <span class="tag">senha</span>':' <span class="tag t2">sem senha</span>'}</td><td style="font-size:12px">${[m.pC&&"config",m.pI&&"individual",m.pR&&"registros"].filter(Boolean).join(", ")||"—"}</td><td><button class="btn d sm" data-mdel="${i}">Excluir</button></td></tr>`).join("")+"</table>"
   :'<div class="empty">Nenhum gestor cadastrado. Configurações e Individual estão abertos.</div>'}
@@ -793,7 +796,7 @@ addEventListener("online",()=>{flush();renderAll();if(ON)pull().then(renderAll).
 $("#theme").onclick=()=>{const r=document.documentElement,d=getComputedStyle(r).getPropertyValue("--bg").trim()==="#0e1726";r.dataset.theme=d?"light":"dark"};
 $$(".tab[data-t]").forEach(b=>b.onclick=()=>go(b.dataset.t));
 $("#sub").onclick=e=>{const s=e.target.dataset.s;if(!s)return;$$("#sub button").forEach(b=>b.classList.toggle("on",b===e.target));["reg","ctl","ace"].forEach(x=>$("#"+x).classList.toggle("hide",x!==s));tick()};
-$("#csub").onclick=e=>{const c=e.target.dataset.c;if(!c)return;csub=c;$$("#csub button").forEach(b=>b.classList.toggle("on",b===e.target));["cop","cus","cga","cge"].forEach(x=>$("#"+x).classList.toggle("hide",x!==c))};
+$("#csub").onclick=e=>{const c=e.target.dataset.c;if(!c)return;csub=c;$$("#csub button").forEach(b=>b.classList.toggle("on",b===e.target));["cop","cus","cga","cge"].forEach(x=>$("#"+x).classList.toggle("hide",x!==c));if(c==="cge"&&ON&&me&&me.adm)pull().then(()=>cfgGes()).catch(()=>{})};
 $("#iOp").onchange=individual;$("#iPer").onchange=individual;
 
 document.addEventListener("click",e=>{const d=e.target.dataset,t=e.target;
@@ -817,6 +820,12 @@ document.addEventListener("click",e=>{const d=e.target.dataset,t=e.target;
   if(ON){rem(()=>mut("/rest/v1/galpoes?id=eq."+GID[g],"DELETE"),"Galpão excluído");return}
   S.gals.splice(+d.gdel,1);delete S.metas[g];S.ops.forEach(o=>{if(o.g===g)o.g=S.gals[0]});S.ges.forEach(x=>{if(x.g===g)x.g=null});if(S.gal===g)S.gal=S.gals[0];
   save();cfgGals();cfgUsers();renderAll();toast("Galpão excluído")}
+ if(d.sacc){const em=d.sacc,n=$("#mN").value.trim(),adm=$("#mA").checked,gg=$("#mG").value;
+  if(n.length<2){toast("Digite o nome do gestor no formulário ao lado e clique em Aceitar de novo.",6000);$("#mN").focus();return}
+  if(!adm&&!gg){toast("Selecione o galpão do gestor");return}
+  rem(()=>mut("/rest/v1/rpc/aceitar_solicitacao","POST",{p_email:em,p_nome:n,p_galpao:adm?null:(GID[gg]||null),p_admin:adm,p_pc:$("#mC").checked,p_pi:$("#mI").checked,p_pr:$("#mR").checked}),"Acesso liberado para "+em).then(ok=>{if(ok)$("#mN").value=""});return}
+ if(d.srec){const em=d.srec;if(!confirm("Recusar o pedido de "+em+"?"))return;
+  rem(()=>mut("/rest/v1/solicitacoes_gestor?email=eq."+encodeURIComponent(em),"DELETE"),"Pedido recusado");return}
  if(d.mdel){const g=S.ges[+d.mdel];if(!confirm("Excluir o gestor "+g.n+"?"))return;
   if(ON){rem(()=>mut("/rest/v1/gestores?email=eq."+encodeURIComponent(g.u),"DELETE"),"Gestor excluído");return}
   S.ges.splice(+d.mdel,1);if(me===g)me=null;authUI();save();cfgGes();toast("Gestor excluído")}
