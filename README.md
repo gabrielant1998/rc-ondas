@@ -2,7 +2,7 @@
 
 Sistema de painel e operação de ondas. Hospedado com GitHub Pages.
 
-Os dados ficam salvos no navegador de cada aparelho (localStorage). Não há banco de dados ainda.
+No GitHub Pages os dados ficam no Supabase, com fila offline no aparelho. Veja `docs/BACKEND.md`.
 
 ## Testes
 
@@ -14,6 +14,6 @@ python3 -m http.server 8765 --bind 127.0.0.1 &   # na raiz do repositório
 node tests/run.js
 ```
 
-## Limite atual
+## Limites
 
-Os dados ficam no navegador de cada aparelho (cerca de 5 MB, perto de 60 mil ondas). Para uso contínuo, é preciso ligar um banco de dados.
+O plano gratuito do Supabase pausa o projeto após uma semana sem uso. A fila do aparelho guarda os registros enquanto isso.

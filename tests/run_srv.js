@@ -1,0 +1,194 @@
+// Testes do modo servidor do RC Ondas, com um Supabase de mentira (em memória).
+// As regras reais do banco são testadas em supabase/tests/rls_test.sql.
+const {chromium}=require('playwright');
+const PAGE='http://127.0.0.1:8765/'+(process.argv[2]||'index.html')+'?srv=1';
+const HOST='https://fiqintmclivzckmfjeml.supabase.co';
+const R=[];const ok=(c,m)=>{if(!c)throw new Error(m)};
+const G1='00000000-0000-4000-8000-0000000000a1',G2='00000000-0000-4000-8000-0000000000a2';
+const normWN=s=>{s=String(s).replace(/\s+/g,'');return /^\d+$/.test(s)?s.replace(/^0+(?=\d)/,''):s.toUpperCase()};
+function banco(){return{down:false,expiresIn:3600,calls:{rpc:0,refresh:0},seq:1,
+ galpoes:[{id:G1,nome:'Galpão 1',meta_diaria:2000},{id:G2,nome:'Galpão 2',meta_diaria:null}],
+ tipos:[['Vários artigos',1000],['Múltiplas quantidades',1000],['Itens Únicos',100],['Maiores/Pesados',10],['Retrabalho',1000],['Pacote do mesmo',1000]].map((t,i)=>({nome:t[0],limite:t[1],ordem:i+1})),
+ config:[{id:true,turno1_ini:7,turno1_fim:16,turno2_ini:16,turno2_fim:23,intervalo_max_min:30,tolerancia_min:15,ondas_em_andamento:true}],
+ operadores:[{id:'00000000-0000-4000-8000-0000000000b1',codigo:'CL001',nome:'Ana Souza',turno:1,galpao_id:G1,excluido_em:null},
+             {id:'00000000-0000-4000-8000-0000000000b2',codigo:'CL002',nome:'Carla Dias',turno:2,galpao_id:G2,excluido_em:null}],
+ gestores:[{email:'adm@x.com',nome:'Admin',galpao_id:null,admin:true,pode_config:true,pode_individual:true,pode_registros:true},
+           {email:'g2@x.com',nome:'Gestor G2',galpao_id:G2,admin:false,pode_config:true,pode_individual:true,pode_registros:true}],
+ users:{'adm@x.com':{pw:'senha1234',ok:true},'g2@x.com':{pw:'senha1234',ok:true},'fora@x.com':{pw:'senha1234',ok:true},'novo@x.com':{pw:'senha1234',ok:false}},
+ tokens:{},refs:{},ondas:[]}}
+function fake(db){const cors={'access-control-allow-origin':'*','access-control-allow-headers':'*','access-control-allow-methods':'GET,POST,PATCH,PUT,DELETE,OPTIONS'};
+ const J=(route,status,body)=>route.fulfill({status,headers:Object.assign({'content-type':'application/json'},cors),body:body===undefined?'':JSON.stringify(body)});
+ const sessao=email=>{const n=db.seq++;db.tokens['tok'+n]=email;db.refs['ref'+n]=email;return{access_token:'tok'+n,refresh_token:'ref'+n,expires_in:db.expiresIn,user:{email}}};
+ return async route=>{const req=route.request(),u=new URL(req.url()),m=req.method();
+  if(m==='OPTIONS')return route.fulfill({status:204,headers:cors});
+  if(db.down)return J(route,500,{message:'servidor fora do ar'});
+  const bearer=(req.headers()['authorization']||'').replace('Bearer ','');
+  const email=db.tokens[bearer]||null;if(/^tok/.test(bearer)&&!email)return J(route,401,{message:'JWT expired',code:'PGRST301'});
+  const g=email?db.gestores.find(x=>x.email===email):null;
+  const body=req.postData()?JSON.parse(req.postData()):null,p=u.pathname,q=u.searchParams;
+  const eq=k=>{const v=q.get(k);return v&&v.startsWith('eq.')?v.slice(3):null};
+  const escopo=gal=>g&&(g.admin||g.galpao_id===gal);
+  // ---- auth
+  if(p==='/auth/v1/token'){
+   if(q.get('grant_type')==='refresh_token'){db.calls.refresh++;const e=db.refs[body.refresh_token];if(!e)return J(route,400,{error_code:'refresh_token_not_found',msg:'Invalid Refresh Token'});delete db.refs[body.refresh_token];return J(route,200,sessao(e))}
+   const us=db.users[body.email];if(!us||us.pw!==body.password)return J(route,400,{error_code:'invalid_credentials',msg:'Invalid login credentials'});
+   if(!us.ok)return J(route,400,{error_code:'email_not_confirmed',msg:'Email not confirmed'});return J(route,200,sessao(body.email))}
+  if(p==='/auth/v1/signup'){db.users[body.email]=db.users[body.email]||{pw:body.password,ok:false};return J(route,200,{id:'u',email:body.email})}
+  if(p==='/auth/v1/recover')return J(route,200,{});
+  if(p==='/auth/v1/logout'){delete db.tokens[bearer];return route.fulfill({status:204,headers:cors})}
+  if(p==='/auth/v1/user')return email?J(route,200,{email}):J(route,401,{msg:'no'});
+  // ---- rest
+  const t=p.replace('/rest/v1/','');
+  if(t==='rpc/registrar_ondas'){db.calls.rpc++;return J(route,200,body.lote.map(o=>{
+    if(db.ondas.some(x=>x.id===o.id))return{id:o.id,resultado:'ja_existia',detalhe:null};
+    if(db.ondas.some(x=>normWN(x.wn)===normWN(o.wn)))return{id:o.id,resultado:'wn_repetido',detalhe:'A onda '+o.wn+' já foi registrada'};
+    const op=db.operadores.find(x=>x.id===o.operador_id&&!x.excluido_em);if(!op)return{id:o.id,resultado:'recusada',detalhe:'Operador não encontrado ou excluído'};
+    const lim=(db.tipos.find(x=>x.nome===o.tipo)||{}).limite;if(!lim||o.quantidade>lim)return{id:o.id,resultado:'recusada',detalhe:'Quantidade '+o.quantidade+' acima do limite de '+lim+' para '+o.tipo};
+    db.ondas.push({id:o.id,wn:o.wn,operador_id:o.operador_id,galpao_id:op.galpao_id,tipo:o.tipo,quantidade:o.quantidade,status:o.status||0,registrada_em:o.registrada_em,concluida_em:o.concluida_em,encerrada_auto:false});
+    return{id:o.id,resultado:'ok',detalhe:null}}))}
+  if(m==='GET'){
+   if(t==='galpoes')return J(route,200,db.galpoes.slice().sort((a,b)=>a.nome.localeCompare(b.nome)));
+   if(t==='tipos_onda')return J(route,200,db.tipos);
+   if(t==='config')return J(route,200,db.config);
+   if(t==='operadores')return J(route,200,db.operadores.filter(o=>!o.excluido_em||escopo(o.galpao_id)).sort((a,b)=>a.codigo.localeCompare(b.codigo)));
+   if(t==='gestores')return J(route,200,!g?[]:g.admin?db.gestores:[g]);
+   if(t==='ondas'){if(!email)return J(route,401,{message:'permission denied for table ondas',code:'42501'});
+    const de=(q.get('registrada_em')||'gte.').slice(4),off=+q.get('offset')||0,lim=+q.get('limit')||1000;
+    return J(route,200,db.ondas.filter(o=>escopo(o.galpao_id)&&o.registrada_em>=de).sort((a,b)=>a.registrada_em<b.registrada_em?-1:1).slice(off,off+lim))}}
+  const podeC=gal=>g&&g.pode_config&&(g.admin||g.galpao_id===gal);
+  if(t==='operadores'&&m==='POST'){if(!podeC(body.galpao_id))return J(route,403,{code:'42501',message:'new row violates row-level security policy'});
+   if(db.operadores.some(o=>!o.excluido_em&&(o.codigo===body.codigo||o.nome.toLowerCase()===body.nome.toLowerCase())))return J(route,409,{code:'23505',message:'duplicate key value'});
+   const row=Object.assign({id:'00000000-0000-4000-8000-'+String(db.seq++).padStart(12,'0'),excluido_em:null},body);db.operadores.push(row);return J(route,201,[row])}
+  if(t==='operadores'&&m==='PATCH'){const o=db.operadores.find(x=>x.id===eq('id'));if(!o||!podeC(o.galpao_id))return J(route,200,[]);Object.assign(o,body);return J(route,200,[o])}
+  if(t==='galpoes'&&m==='POST'){if(!(g&&g.admin))return J(route,403,{code:'42501',message:'rls'});const row=Object.assign({id:'00000000-0000-4000-8000-'+String(db.seq++).padStart(12,'0')},body);db.galpoes.push(row);return J(route,201,[row])}
+  if(t==='galpoes'&&m==='PATCH'){const o=db.galpoes.find(x=>x.id===eq('id'));if(!o||!(g&&(g.admin||(g.pode_config&&g.galpao_id===o.id))))return J(route,200,[]);Object.assign(o,body);return J(route,200,[o])}
+  if(t==='galpoes'&&m==='DELETE'){const o=db.galpoes.find(x=>x.id===eq('id'));if(!o||!(g&&g.admin))return J(route,200,[]);
+   if(db.operadores.some(x=>x.galpao_id===o.id)||db.ondas.some(x=>x.galpao_id===o.id))return J(route,409,{code:'23503',message:'violates foreign key constraint'});db.galpoes=db.galpoes.filter(x=>x!==o);return J(route,200,[o])}
+  if(t==='tipos_onda'&&m==='PATCH'){const o=db.tipos.find(x=>x.nome===eq('nome'));if(!o||!(g&&g.admin))return J(route,200,[]);Object.assign(o,body);return J(route,200,[o])}
+  if(t==='config'&&m==='PATCH'){if(!(g&&g.admin))return J(route,200,[]);Object.assign(db.config[0],body);return J(route,200,db.config)}
+  if(t==='gestores'&&m==='POST'){if(!(g&&g.admin))return J(route,403,{code:'42501',message:'rls'});if(db.gestores.some(x=>x.email===body.email))return J(route,409,{code:'23505',message:'dup'});db.gestores.push(body);return J(route,201,[body])}
+  if(t==='gestores'&&m==='DELETE'){const o=db.gestores.find(x=>x.email===eq('email'));if(!o||!(g&&g.admin))return J(route,200,[]);db.gestores=db.gestores.filter(x=>x!==o);return J(route,200,[o])}
+  if(t==='ondas'&&(m==='PATCH'||m==='DELETE')){const alvo=db.ondas.filter(o=>(eq('id')?o.id===eq('id'):o.status!==0)&&g&&g.pode_registros&&escopo(o.galpao_id));
+   if(m==='DELETE')db.ondas=db.ondas.filter(o=>!alvo.includes(o));else alvo.forEach(o=>Object.assign(o,body));return J(route,200,alvo)}
+  return J(route,404,{message:'rota não simulada: '+m+' '+p})}}
+async function page(b,db,opts={}){const ctx=await b.newContext({viewport:opts.vp||{width:1366,height:900}});const p=await ctx.newPage();
+ p.errors=[];p.on('pageerror',e=>p.errors.push(e.message));p.on('dialog',d=>d.accept());
+ await p.route(/fonts\.(googleapis|gstatic)\.com/,r=>r.abort());await p.route(HOST+'/**',fake(db));
+ if(opts.antigo)await ctx.addInitScript(s=>{if(!sessionStorage.__a){sessionStorage.__a=1;localStorage.setItem('rcondas.v2',s)}},JSON.stringify(opts.antigo));
+ await p.goto(PAGE);await p.waitForTimeout(450);return p}
+async function reg(p,op,ty,rows){await p.click('.tab[data-t="op"]');await p.waitForTimeout(100);await p.fill('#opIn','');await p.type('#opIn',op);await p.waitForTimeout(260);
+ await p.click(`[data-ty="${ty}"] span`);await p.waitForTimeout(420);
+ for(const [wn,q] of rows){await p.keyboard.type(String(wn));await p.keyboard.press('Enter');await p.keyboard.type(String(q));await p.keyboard.press('Enter')}
+ await p.click('#save');await p.waitForTimeout(450)}
+async function login(p,email,pw){await p.click('#logbtn');await p.fill('#lU',email);await p.fill('#lP',pw);await p.click('#lB');await p.waitForTimeout(600)}
+const num=p=>p.evaluate(()=>(document.querySelector('#kpis .num')||{}).textContent);
+async function T(name,fn){const t0=Date.now();try{const i=await fn();R.push(['PASS',name,(i||'')+` (${Date.now()-t0}ms)`])}catch(e){R.push(['FALHA',name,e.message.split('\n')[0]])}}
+(async()=>{const b=await chromium.launch();
+
+await T('S01 Público: carrega cadastros do banco e abre na Operação',async()=>{const db=banco();const p=await page(b,db);
+ const r=await p.evaluate(()=>({ops:S.ops.map(o=>o.m).join(),gals:S.gals.join(),view,temId:!!S.ops[0].id}));
+ ok(r.ops==='CL001,CL002'&&r.gals==='Galpão 1,Galpão 2'&&r.view==='op'&&r.temId,JSON.stringify(r));ok(p.errors.length===0,p.errors.join(';'))});
+
+await T('S02 Público: Painel, Individual e Config pedem login',async()=>{const p=await page(b,banco());
+ for(const t of['painel','ind','cfg']){await p.click(`.tab[data-t="${t}"]`);await p.waitForTimeout(120);ok(!(await p.isHidden('#login')),t+' abriu sem login');await p.click('#lX')}
+ ok((await p.evaluate(()=>view))==='op','saiu da operação')});
+
+await T('S03 Público registra 3 ondas e elas chegam ao banco',async()=>{const db=banco();const p=await page(b,db);await reg(p,'CL001','Vários artigos',[[5001,10],[5002,20],[5003,30]]);
+ ok(db.ondas.length===3,'banco tem '+db.ondas.length);ok(db.ondas.every(o=>o.galpao_id===G1&&/^[0-9a-f-]{36}$/.test(o.id)),'galpão/id errado');
+ const s=await p.evaluate(()=>S.waves.map(w=>w.sync+':'+(w.err||'')).join());ok(s==='1:,1:,1:','local: '+s);return (await p.textContent('#net')).trim()});
+
+await T('S04 Sem internet: guarda na fila e envia quando volta, sem duplicar',async()=>{const db=banco();const p=await page(b,db);await p.click('#net');
+ await reg(p,'CL001','Retrabalho',[[6001,5],[6002,6]]);ok(db.ondas.length===0,'enviou offline');ok(/2 pendentes/.test(await p.textContent('#net')),'indicador: '+await p.textContent('#net'));
+ await p.reload();await p.waitForTimeout(500);ok((await p.evaluate(()=>S.waves.filter(w=>!w.sync).length))===2,'fila perdida ao recarregar');
+ await p.click('#net');await p.waitForTimeout(600);ok(db.ondas.length===2,'banco tem '+db.ondas.length);
+ await p.evaluate(()=>{S.waves.forEach(w=>w.sync=0);return push()});await p.waitForTimeout(300);ok(db.ondas.length===2,'duplicou no reenvio: '+db.ondas.length);
+ ok((await p.evaluate(()=>S.waves.filter(w=>!w.sync||w.err).length))===0,'ficou pendente ou com erro após reenvio')});
+
+await T('S05 Servidor fora do ar: nada se perde e reenvia depois',async()=>{const db=banco();const p=await page(b,db);db.down=true;
+ await reg(p,'CL001','Vários artigos',[[6101,7]]);ok(db.ondas.length===0,'?');ok((await p.evaluate(()=>S.waves.filter(w=>!w.sync).length))===1,'saiu da fila sem enviar');
+ db.down=false;await p.evaluate(()=>push());await p.waitForTimeout(300);ok(db.ondas.length===1,'não reenviou')});
+
+await T('S06 WN que já existe no banco (de outro aparelho) vira "recusada" e não conta',async()=>{const db=banco();
+ db.ondas.push({id:'x1',wn:'07001',operador_id:db.operadores[1].id,galpao_id:G2,tipo:'Vários artigos',quantidade:9,status:0,registrada_em:new Date().toISOString(),concluida_em:new Date().toISOString()});
+ const p=await page(b,db);await reg(p,'CL001','Vários artigos',[[7001,10],[7002,11]]);ok(db.ondas.length===2,'banco tem '+db.ondas.length);
+ const r=await p.evaluate(()=>({err:S.waves.filter(w=>w.err).map(w=>w.wn+':'+w.err).join(),prod:prod(S.waves).reduce((a,w)=>a+w.qty,0),txt:document.querySelector('#last').textContent}));
+ ok(/^7001:A onda 7001 já foi registrada$/.test(r.err),'err: '+r.err);ok(r.prod===11,'produção local '+r.prod);ok(/recusada/.test(r.txt),'lista não mostra recusada');
+ await p.click('#last [data-del]');await p.waitForTimeout(150);ok((await p.evaluate(()=>S.waves.length))===1,'não removeu a recusada')});
+
+await T('S07 Senha errada, e-mail sem confirmação e e-mail que não é gestor não entram',async()=>{const p=await page(b,banco());
+ await login(p,'adm@x.com','errada');ok(!(await p.isHidden('#login')),'entrou com senha errada');ok(/inválidos/.test(await p.textContent('#toast')),await p.textContent('#toast'));
+ await p.fill('#lU','novo@x.com');await p.fill('#lP','senha1234');await p.click('#lB');await p.waitForTimeout(400);ok(/Confirme o e-mail/.test(await p.textContent('#toast')),await p.textContent('#toast'));
+ await p.fill('#lU','fora@x.com');await p.click('#lB');await p.waitForTimeout(500);ok(/não está cadastrado como gestor/.test(await p.textContent('#toast')),await p.textContent('#toast'));
+ ok((await p.evaluate(()=>me===null&&sess===null)),'ficou sessão aberta')});
+
+await T('S08 Admin vê todos os galpões; gestor comum vê só o dele',async()=>{const db=banco();const agora=new Date().toISOString();
+ db.ondas.push({id:'a',wn:'1',operador_id:db.operadores[0].id,galpao_id:G1,tipo:'Vários artigos',quantidade:100,status:0,registrada_em:agora,concluida_em:agora},
+               {id:'b',wn:'2',operador_id:db.operadores[1].id,galpao_id:G2,tipo:'Retrabalho',quantidade:7,status:0,registrada_em:agora,concluida_em:agora});
+ const p=await page(b,db);await login(p,'g2@x.com','senha1234');const g2=await num(p),dis=await p.$eval('#gal',e=>e.disabled+':'+e.value);
+ await p.click('#logbtn');await p.waitForTimeout(200);ok((await p.evaluate(()=>S.waves.length))===0,'ondas do servidor ficaram no aparelho após sair');
+ await login(p,'adm@x.com','senha1234');await p.evaluate(()=>{$('#gal').value='__all';renderAll()});const all=await num(p);
+ ok(g2.trim()==='7'&&dis==='true:Galpão 2','gestor: '+g2+' '+dis);ok(all.trim()==='107','admin: '+all);return `gestor ${g2.trim()}, admin ${all.trim()}`});
+
+await T('S09 Sessão continua após recarregar e renova quando o acesso vence',async()=>{const db=banco();db.expiresIn=30;const p=await page(b,db);await login(p,'adm@x.com','senha1234');
+ await p.reload();await p.waitForTimeout(700);ok((await p.evaluate(()=>me&&me.adm&&view==='painel')),'sessão não voltou');ok(db.calls.refresh>=1,'não renovou o acesso vencido')});
+
+await T('S10 Admin cadastra operador; excluir libera o código para o próximo',async()=>{const db=banco();const p=await page(b,db);await login(p,'adm@x.com','senha1234');
+ await p.click('.tab[data-t="cfg"]');await p.click('[data-c="cus"]');await p.fill('#uN','Diego Rocha');await p.click('#uB');await p.waitForTimeout(500);
+ ok(db.operadores.some(o=>o.nome==='Diego Rocha'&&o.codigo==='CL003'),'não criou CL003');
+ await p.click('[data-udel="CL001"]');await p.waitForTimeout(500);ok(db.operadores.find(o=>o.nome==='Ana Souza').excluido_em,'não excluiu');
+ await p.fill('#uN','Eva Lima');await p.click('#uB');await p.waitForTimeout(500);ok(db.operadores.some(o=>o.nome==='Eva Lima'&&o.codigo==='CL001'),'código CL001 não foi reaproveitado');
+ ok(p.errors.length===0,p.errors.join(';'))});
+
+await T('S11 Gestor comum: não altera limites nem cria operador em outro galpão',async()=>{const db=banco();const p=await page(b,db);await login(p,'g2@x.com','senha1234');
+ await p.click('.tab[data-t="cfg"]');await p.fill('[data-lim="Retrabalho"]','5');await p.press('[data-lim="Retrabalho"]','Tab');await p.waitForTimeout(450);
+ ok(db.tipos.find(t=>t.nome==='Retrabalho').limite===1000,'alterou limite');ok(/Sem permissão/.test(await p.textContent('#toast')),await p.textContent('#toast'));
+ ok((await p.$eval('[data-lim="Retrabalho"]',e=>e.value))==='1000','campo ficou com valor que não foi salvo');
+ await p.click('[data-c="cus"]');await p.fill('#uN','Fulano G1');await p.selectOption('#uG','Galpão 1');await p.click('#uB');await p.waitForTimeout(450);
+ ok(!db.operadores.some(o=>o.nome==='Fulano G1'),'criou em outro galpão')});
+
+await T('S12 Admin: galpão, meta, limite, turno e gestor gravam no banco',async()=>{const db=banco();const p=await page(b,db);await login(p,'adm@x.com','senha1234');await p.click('.tab[data-t="cfg"]');
+ await p.fill('[data-lim="Itens Únicos"]','250');await p.press('[data-lim="Itens Únicos"]','Tab');await p.waitForTimeout(400);
+ await p.fill('[data-tn="1"][data-k="fim"]','17');await p.press('[data-tn="1"][data-k="fim"]','Tab');await p.waitForTimeout(400);
+ await p.click('[data-c="cga"]');await p.fill('#gN','Galpão Norte');await p.fill('#gM','5000');await p.click('#gB');await p.waitForTimeout(450);
+ await p.fill('[data-gmeta="Galpão 2"]','3000');await p.press('[data-gmeta="Galpão 2"]','Tab');await p.waitForTimeout(450);
+ await p.click('[data-gdel="0"]');await p.waitForTimeout(450);const tg=await p.textContent('#toast');
+ await p.click('[data-c="cge"]');await p.fill('#mN','Nova Gestora');await p.fill('#mU','Nova@X.com');await p.click('#mB');await p.waitForTimeout(450);
+ ok(db.tipos.find(t=>t.nome==='Itens Únicos').limite===250,'limite');ok(db.config[0].turno1_fim===17,'turno');
+ ok(db.galpoes.some(g=>g.nome==='Galpão Norte'&&g.meta_diaria===5000),'galpão novo');ok(db.galpoes.find(g=>g.id===G2).meta_diaria===3000,'meta');
+ ok(db.galpoes.some(g=>g.id===G1)&&/Não dá para excluir/.test(tg),'excluiu galpão com operadores: '+tg);
+ ok(db.gestores.some(g=>g.email==='nova@x.com'&&!g.admin&&g.galpao_id),'gestor: '+JSON.stringify(db.gestores.slice(-1)));
+ ok(await p.isHidden('#mP2'),'campo de senha do gestor aparece');ok(p.errors.length===0,p.errors.join(';'))});
+
+await T('S13 Gestor exclui onda do banco; ondas somem do Painel',async()=>{const db=banco();const agora=new Date().toISOString();
+ db.ondas.push({id:'00000000-0000-4000-8000-0000000000d1',wn:'1',operador_id:db.operadores[1].id,galpao_id:G2,tipo:'Retrabalho',quantidade:7,status:1,registrada_em:agora,concluida_em:null});
+ const p=await page(b,db);await login(p,'g2@x.com','senha1234');await p.click('.tab[data-t="op"]');await p.click('[data-s="ctl"]');await p.waitForTimeout(150);
+ await p.click('#ctlList [data-fin]');await p.waitForTimeout(450);ok(db.ondas[0].status===0&&db.ondas[0].concluida_em,'não concluiu no banco');
+ await p.evaluate(()=>go('painel'));ok((await num(p)).trim()==='7','painel '+await num(p))});
+
+await T('S14 Primeiro acesso e Esqueci a senha chamam o serviço certo',async()=>{const db=banco();const p=await page(b,db);await p.click('#logbtn');
+ await p.fill('#lU','gestora@x.com');await p.fill('#lP','curta');await p.click('#lNew');await p.waitForTimeout(200);ok(!db.users['gestora@x.com'],'aceitou senha curta');
+ await p.fill('#lP','senhaforte1');await p.click('#lNew');await p.waitForTimeout(400);ok(db.users['gestora@x.com']&&/link de confirmação/.test(await p.textContent('#toast')),await p.textContent('#toast'));
+ await p.click('#lRec');await p.waitForTimeout(300);ok(/enviamos um link/.test(await p.textContent('#toast')),await p.textContent('#toast'))});
+
+await T('S15 Dados antigos do aparelho: admin envia para o banco, e repetir não duplica',async()=>{const db=banco();const t=Date.now()-36e5;
+ const antigo={gals:['Galpão 1','Galpão Sul'],metas:{'Galpão Sul':900},ops:[{m:'CL001',n:'Ana Souza',t:1,g:'Galpão 1'},{m:'CL002',n:'Zeca Antigo',t:2,g:'Galpão Sul'}],
+  waves:[{id:'w1',wn:'8001',op:'CL001',opn:'Ana Souza',gal:'Galpão 1',ty:'Vários',qty:10,st:0,ts:t,fin:t},{id:'w2',wn:'8002',op:'CL002',opn:'Zeca Antigo',gal:'Galpão Sul',ty:'Itens Únicos',qty:5,st:0,ts:t,fin:t},{id:'w3',wn:'8003',op:'CL009~x',opn:'Sumiu',gal:'Galpão 1',ty:'Vários artigos',qty:1,st:0,ts:t,fin:t}]};
+ const p=await page(b,db,{antigo});await login(p,'adm@x.com','senha1234');await p.click('.tab[data-t="cfg"]');await p.waitForTimeout(150);
+ await p.click('#impB');await p.waitForTimeout(1500);const t1=await p.textContent('#toast');
+ ok(db.galpoes.some(g=>g.nome==='Galpão Sul'&&g.meta_diaria===900),'galpão antigo não criado');const z=db.operadores.find(o=>o.nome==='Zeca Antigo');ok(z&&z.codigo==='CL003','Zeca: '+JSON.stringify(z));
+ ok(db.ondas.length===2&&db.ondas.some(o=>o.wn==='8001'&&o.tipo==='Vários artigos'),'ondas: '+JSON.stringify(db.ondas.map(o=>o.wn+o.tipo)));
+ await p.click('#impB');await p.waitForTimeout(1500);ok(db.ondas.length===2&&db.operadores.length===3,'duplicou ao repetir');
+ ok((await p.evaluate(()=>!!localStorage.getItem('rcondas.v2'))),'apagou os dados antigos do aparelho');return t1});
+
+await T('S16 Lote grande: 250 ondas offline sobem em 3 envios',async()=>{const db=banco();const p=await page(b,db);
+ await p.evaluate(()=>{S.off=true;const o=S.ops[0];for(let i=0;i<250;i++)S.waves.push({id:crypto.randomUUID(),oid:o.id,wn:String(90000+i),op:o.m,opn:o.n,gal:o.g,ty:'Vários artigos',qty:1+i%9,st:0,ts:Date.now(),fin:Date.now(),sync:0});save();S.off=false;return push()});
+ await p.waitForTimeout(500);ok(db.ondas.length===250&&db.calls.rpc===3,'ondas '+db.ondas.length+' em '+db.calls.rpc+' envios');
+ ok((await p.evaluate(()=>S.waves.every(w=>w.sync&&!w.err))),'sobrou pendente')});
+
+await T('S17 Celular: registro público funciona e não há erro de JavaScript',async()=>{const db=banco();const p=await page(b,db,{vp:{width:390,height:844}});
+ await reg(p,'CL002','Pacote do mesmo',[[9501,4]]);ok(db.ondas.length===1&&db.ondas[0].galpao_id===G2,'não chegou');ok(p.errors.length===0,p.errors.join(';'));
+ ok((await p.evaluate(()=>document.documentElement.scrollWidth))<=392,'rolagem lateral')});
+
+await b.close();
+const w=Math.max(...R.map(r=>r[1].length));for(const r of R)console.log((r[0]==='PASS'?'✅':'❌')+' '+r[1].padEnd(w)+'  '+r[2]);
+console.log(`\n${R.filter(r=>r[0]==='PASS').length}/${R.length} passaram`)})();

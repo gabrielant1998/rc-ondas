@@ -312,9 +312,10 @@ a[data-pick]{display:inline-block;padding:8px 0 2px;color:var(--gx);font-weight:
 </div>
 <div class="toast" id="toast" role="status" aria-live="polite"></div><div class="sr" id="sr" aria-live="polite"></div>
 <div class="mask hide" id="login" role="dialog" aria-modal="true" aria-labelledby="lT"><div class="card"><h2 id="lT">Entrar como gestor</h2><div class="f">
- <label>Usuário<input id="lU" autocomplete="username"></label>
- <label>Senha<input id="lP" type="password" autocomplete="current-password"></label>
- <div class="grid" style="grid-template-columns:1fr 1fr"><button class="btn" id="lB">Entrar</button><button class="btn alt" id="lX">Cancelar</button></div></div></div></div>
+ <label><span id="lUl">Usuário</span><input id="lU" autocomplete="username"></label>
+ <label><span id="lPl">Senha</span><input id="lP" type="password" autocomplete="current-password"></label>
+ <div class="grid" style="grid-template-columns:1fr 1fr"><button class="btn" id="lB">Entrar</button><button class="btn alt" id="lX">Cancelar</button></div>
+ <div class="ctl2 hide" id="lExtra"><button class="btn alt sm" id="lNew">Primeiro acesso</button><button class="btn alt sm" id="lRec">Esqueci a senha</button></div></div></div></div>
 
 <script>
 /* ===================== estado ===================== */
@@ -329,15 +330,22 @@ const TI={"Vários artigos":'<rect x="3" y="3" width="8" height="8" rx="1"/><cir
 const ico=n=>`<svg class="ti" viewBox="0 0 24 24" aria-hidden="true">${TI[n]||TI["Itens Únicos"]}</svg>`;
 const TYREN={"Vários":"Vários artigos","Múltiplos":"Múltiplas quantidades"};
 const ST=["Concluído","Procurando","Difícil acesso"],SC=["s0","s1","s2"];
-const LS="rcondas.v2",$=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
+/* Banco de dados: a chave abaixo é pública por definição (só permite o que as regras do banco deixam). */
+const SRV=(()=>{let f=null;try{f=localStorage.getItem("rcondas.srv")}catch(e){}
+ const q=new URLSearchParams(location.search).get("srv");if(q==="0"||q==="1"){f=q;try{localStorage.setItem("rcondas.srv",q)}catch(e){}}
+ const liga=f==="1"||(f!=="0"&&/\.github\.io$/.test(location.hostname));
+ return liga?{url:(window.__RC_SRV_URL||"https://fiqintmclivzckmfjeml.supabase.co"),key:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZpcWludG1jbGl2emNrbWZqZW1sIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTQ0MzM3MDcsImV4cCI6MjExMDAwOTcwN30.Aj8AGWwytOLEKm3P4I9nB-9u1FxZDI4fYJoWOUOs0AE"}:null})();
+const ON=!!SRV;
+const LS=ON?"rcondas.srv1":"rcondas.v2",$=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
 const DEF={cfg:{lim:{"Vários artigos":1000,"Múltiplas quantidades":1000,"Itens Únicos":100,"Maiores/Pesados":10,"Retrabalho":1000,"Pacote do mesmo":1000},and:true,gap:30,tol:15,
  turnos:{1:{ini:7,fim:16},2:{ini:16,fim:23}}},gals:["Galpão 1","Galpão 2","Galpão 3"],ops:[],ges:[],waves:[],gal:"Galpão 1",off:false,man:{log:[]}};
 let S;try{S=JSON.parse(localStorage.getItem(LS))}catch(e){}
 /* formato compacto: ondas como listas, cabe ~2x mais no aparelho */
-if(S&&S.wv){S.waves=S.wv.map(a=>{const w={id:a[0],wn:a[1],op:a[2],opn:a[3],gal:a[4],ty:(TY[a[5]]||TY[0])[0],qty:a[6],st:a[7],ts:a[8],fin:a[9]<0?null:a[8]+a[9],sync:a[10]};if(a[11])w.auto=1;return w});delete S.wv}
+if(S&&S.wv){S.waves=S.wv.map(a=>{const w={id:a[0],wn:a[1],op:a[2],opn:a[3],gal:a[4],ty:(TY[a[5]]||TY[0])[0],qty:a[6],st:a[7],ts:a[8],fin:a[9]<0?null:a[8]+a[9],sync:a[10]};if(a[11])w.auto=1;if(a[12])w.oid=a[12];if(a[13])w.err=a[13];return w});delete S.wv}
 const LIM_STORE=5.2e6;
 if(!S){ /* migra base antiga, se existir */
- let old=null;try{old=JSON.parse(localStorage.getItem("rcondas.v1"))}catch(e){}
+ let old=null;try{old=ON?null:JSON.parse(localStorage.getItem("rcondas.v1"))}catch(e){}
+ if(ON)DEF.gals=[];
  S=JSON.parse(JSON.stringify(DEF));
  if(old){S.waves=old.waves||[];S.gals=Object.keys(old.cfg&&old.cfg.metas||{}).length?Object.keys(old.cfg.metas):S.gals;
   S.ops=(old.ops||[]).map(o=>({m:(o.m||"").replace(/\s|^CL0*/g,"")?"CL"+String(+(o.m||"").replace(/\D/g,"")).padStart(3,"0"):o.m,n:o.n,t:1,g:S.gals[0]}));
@@ -351,10 +359,10 @@ if(!S.metas)S.metas={};
 S.waves.forEach(w=>{if(TYREN[w.ty])w.ty=TYREN[w.ty]});
 Object.keys(TYREN).forEach(k=>{if(S.cfg.lim[k]!=null){if(S.cfg.lim[TYREN[k]]==null)S.cfg.lim[TYREN[k]]=S.cfg.lim[k];delete S.cfg.lim[k]}});
 TY.forEach(([n])=>{if(S.cfg.lim[n]==null)S.cfg.lim[n]=DEF.cfg.lim[n]||1000});
-if(!S.gals.length)S.gals=["Galpão 1"];
+if(!ON&&!S.gals.length)S.gals=["Galpão 1"];
 if(!S.gals.includes(S.gal))S.gal=S.gals[0];
 let ty=TY[0][0],st=0,draft=[],tim={op:null,t0:0},view="painel",me=null,uT=1,csub="cop";
-const ser=()=>{const o=Object.assign({},S);delete o.waves;o.wv=S.waves.map(w=>[w.id,w.wn,w.op,w.opn,w.gal,Math.max(0,TY.findIndex(t=>t[0]===w.ty)),w.qty,w.st,w.ts,w.fin==null?-1:w.fin-w.ts,w.sync?1:0,w.auto?1:0]);return JSON.stringify(o)};
+const ser=()=>{const o=Object.assign({},S);delete o.waves;o.wv=(ON?S.waves.filter(w=>!w.srv):S.waves).map(w=>{const a=[w.id,w.wn,w.op,w.opn,w.gal,Math.max(0,TY.findIndex(t=>t[0]===w.ty)),w.qty,w.st,w.ts,w.fin==null?-1:w.fin-w.ts,w.sync?1:0,w.auto?1:0];if(w.oid||w.err)a.push(w.oid||0);if(w.err)a.push(w.err);return a});return JSON.stringify(o)};
 let storeLen=0,storeWarned=false;
 const save=()=>{try{const s=ser();localStorage.setItem(LS,s);storeLen=s.length;
   if(storeLen>LIM_STORE*.8&&!storeWarned){storeWarned=true;setTimeout(()=>toast("Atenção: memória do aparelho em "+Math.round(storeLen/LIM_STORE*100)+"%. Ligue um banco de dados antes que encha.",9000),2600)}
@@ -366,9 +374,168 @@ const dk=t=>{const d=new Date(t);return d.getFullYear()+"-"+String(d.getMonth()+
 const fmt=n=>Math.round(n).toLocaleString("pt-BR");
 const mm=ms=>{ms=Math.max(0,ms)/1e3|0;const h=ms/3600|0,m=(ms%3600)/60|0,s=ms%60;return(h?h+":":"")+String(m).padStart(2,"0")+":"+String(s).padStart(2,"0")};
 const hh=ms=>{const m=Math.round(Math.max(0,ms)/6e4);return(m/60|0)+"h"+String(m%60).padStart(2,"0")};
-const uid=()=>"w"+Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+const uid=()=>crypto.randomUUID?crypto.randomUUID():"10000000-1000-4000-8000-100000000000".replace(/[018]/g,c=>(+c^crypto.getRandomValues(new Uint8Array(1))[0]&15>>+c/4).toString(16));
 function toast(m,ms){const t=$("#toast");t.textContent=m;t.classList.add("on");clearTimeout(toast.h);toast.h=setTimeout(()=>t.classList.remove("on"),ms||2400)}
-function flush(){let n=0;S.waves.forEach(w=>{if(!w.sync){w.sync=1;n++}});if(n){save();toast(n+" registro(s) sincronizado(s)")}}
+function flush(){if(ON){push();return}let n=0;S.waves.forEach(w=>{if(!w.sync){w.sync=1;n++}});if(n){save();toast(n+" registro(s) sincronizado(s)")}}
+
+/* ===================== servidor (Supabase) ===================== */
+let sess=null,GID={},GN={},OPSALL={},pushing=false,recMode=false;
+const CFGP="/rest/v1/config?id=eq.true";
+function setSess(s){sess=s;try{s?localStorage.setItem("rcondas.sess",JSON.stringify(s)):localStorage.removeItem("rcondas.sess")}catch(e){}}
+function tok(j){return{access_token:j.access_token,refresh_token:j.refresh_token,exp:Date.now()+(+j.expires_in||3600)*1000,email:((j.user&&j.user.email)||(sess&&sess.email)||"").toLowerCase()}}
+async function raw(path,o){o=o||{};
+ const h={apikey:SRV.key,Authorization:"Bearer "+(o.auth!==false&&sess?sess.access_token:SRV.key),"Content-Type":"application/json"};if(o.prefer)h.Prefer=o.prefer;
+ const r=await fetch(SRV.url+path,{method:o.method||"GET",headers:h,body:o.body==null?undefined:JSON.stringify(o.body)});
+ const t=await r.text();let j=null;try{j=t?JSON.parse(t):null}catch(e){}
+ if(!r.ok){const e=new Error((j&&(j.message||j.msg||j.error_description||j.error))||("Erro "+r.status));e.status=r.status;e.code=j&&(j.code||j.error_code);throw e}
+ return j}
+let refP=null;
+function refresh(){ /* uma renovação por vez: várias chamadas juntas esperam a mesma */
+ if(!refP)refP=(async()=>{try{setSess(tok(await raw("/auth/v1/token?grant_type=refresh_token",{method:"POST",auth:false,body:{refresh_token:sess.refresh_token}})))}
+  catch(e){if(e.status){setSess(null);me=null;authUI();toast("Sua sessão expirou. Entre de novo.")}throw e}})().finally(()=>{refP=null});
+ return refP}
+async function api(path,o){if(sess&&sess.exp<Date.now()+60000)await refresh();
+ try{return await raw(path,o)}catch(e){if(e.status===401&&sess){await refresh();return raw(path,o)}throw e}}
+async function mut(path,method,body){const r=await api(path,{method,body,prefer:"return=representation"});
+ if(Array.isArray(r)&&!r.length){const e=new Error("Sem permissão para esta alteração");e.status=403;throw e}return r}
+function errMsg(e){if(!e.status)return"Sem conexão com o servidor. Tente de novo.";
+ const c=String(e.code||"");
+ if(c==="23505")return"Já existe um cadastro igual a este.";
+ if(c==="23503")return"Não dá para excluir: há operadores ou registros ligados a este item.";
+ if(c==="invalid_credentials"||/invalid login/i.test(e.message))return"E-mail ou senha inválidos.";
+ if(c==="email_not_confirmed")return"Confirme o e-mail pelo link que enviamos antes de entrar.";
+ if(c==="weak_password")return"Senha fraca. Use pelo menos 8 caracteres.";
+ if(c==="over_email_send_rate_limit")return"Muitos pedidos seguidos. Espere um minuto e tente de novo.";
+ if(c==="42501"||e.status===401||e.status===403)return"Sem permissão para esta ação.";
+ return e.message}
+/* traz cadastros e, para gestor, as ondas dos últimos 35 dias */
+async function pull(){
+ const [gs,ts,cf,os]=await Promise.all([api("/rest/v1/galpoes?select=*&order=nome"),api("/rest/v1/tipos_onda?select=*&order=ordem"),api("/rest/v1/config?select=*"),api("/rest/v1/operadores?select=*&order=codigo")]);
+ GID={};GN={};gs.forEach(g=>{GID[g.nome]=g.id;GN[g.id]=g.nome});
+ S.gals=gs.map(g=>g.nome);S.metas={};gs.forEach(g=>{if(g.meta_diaria)S.metas[g.nome]=g.meta_diaria});
+ ts.forEach(t=>{S.cfg.lim[t.nome]=t.limite});
+ const c=cf[0];if(c){S.cfg.turnos={1:{ini:c.turno1_ini,fim:c.turno1_fim},2:{ini:c.turno2_ini,fim:c.turno2_fim}};S.cfg.gap=c.intervalo_max_min;S.cfg.tol=c.tolerancia_min;S.cfg.and=c.ondas_em_andamento}
+ OPSALL={};os.forEach(o=>{OPSALL[o.id]=o});
+ S.ops=os.filter(o=>!o.excluido_em).map(o=>({id:o.id,m:o.codigo,n:o.nome,t:o.turno,g:GN[o.galpao_id]}));
+ if(!S.gals.includes(S.gal))S.gal=S.gals[0];
+ if(sess){
+  const g=await api("/rest/v1/gestores?select=*&order=nome");
+  S.ges=g.map(x=>({n:x.nome,u:x.email,g:x.galpao_id?GN[x.galpao_id]:null,adm:x.admin,pC:x.pode_config,pI:x.pode_individual,pR:x.pode_registros}));
+  me=S.ges.find(x=>x.u===sess.email)||null;
+  if(!me){S.ges=[];setSess(null);toast("Este e-mail não está cadastrado como gestor. Peça ao administrador.",7000)}
+  else if(me.g)S.gal=me.g}
+ else{S.ges=[];me=null}
+ const mine=S.waves.filter(w=>!w.srv);
+ if(me){const de=new Date(Date.now()-35*864e5).toISOString(),srv=[];
+  for(let off=0;;off+=1000){const p=await api("/rest/v1/ondas?select=id,wn,operador_id,galpao_id,tipo,quantidade,status,registrada_em,concluida_em,encerrada_auto&registrada_em=gte."+encodeURIComponent(de)+"&order=registrada_em.asc&limit=1000&offset="+off);
+   p.forEach(x=>{const o=OPSALL[x.operador_id];srv.push({id:x.id,wn:x.wn,oid:x.operador_id,op:o?(o.excluido_em?o.codigo+"~"+o.id.slice(0,6):o.codigo):"—",opn:o?o.nome:"Operador removido",gal:GN[x.galpao_id]||"—",ty:x.tipo,qty:x.quantidade,st:x.status,ts:Date.parse(x.registrada_em),fin:x.concluida_em?Date.parse(x.concluida_em):null,sync:1,srv:1,auto:x.encerrada_auto?1:0})});
+   if(p.length<1000||off>=59000)break}
+  const ids=new Set(srv.map(w=>w.id));S.waves=srv.concat(mine.filter(w=>!ids.has(w.id)))}
+ else{const corte=Date.now()-3*864e5;S.waves=mine.filter(w=>!w.sync||w.err||w.ts>corte)}
+ save();authUI()}
+/* fila de envio: cada onda tem id próprio, então reenviar nunca duplica */
+async function push(){
+ if(!ON||pushing||!online())return;
+ const pend=S.waves.filter(w=>!w.sync&&!w.err&&!w.srv);if(!pend.length)return;
+ pushing=true;let rej=0;
+ try{for(let i=0;i<pend.length;i+=100){const lote=pend.slice(i,i+100),by={};lote.forEach(w=>{by[w.id]=w});
+   const res=await api("/rest/v1/rpc/registrar_ondas",{method:"POST",body:{lote:lote.map(w=>({id:w.id,wn:w.wn,operador_id:w.oid||null,tipo:w.ty,quantidade:w.qty,status:w.st,registrada_em:new Date(w.ts).toISOString(),concluida_em:w.fin?new Date(w.fin).toISOString():null}))}});
+   (res||[]).forEach((r,k)=>{const w=by[r.id]||lote[k];if(!w)return;w.sync=1;if(r.resultado!=="ok"&&r.resultado!=="ja_existia"){w.err=r.detalhe||"Recusada pelo servidor";rej++}});
+   save()}
+  if(rej)toast(rej===1?"1 onda foi recusada pelo servidor. Veja o motivo em Últimos registros.":rej+" ondas foram recusadas pelo servidor. Veja o motivo em Últimos registros.",8000)}
+ catch(e){}
+ finally{pushing=false;renderAll()}}
+/* cadastros: grava no servidor, recarrega e só então mostra */
+async function rem(fn,msg){
+ if(!online()){toast("Sem internet. Cadastros e alterações precisam de conexão.",5000);if(view==="cfg")cfgRender();return false}
+ try{await fn();await pull();if(view==="cfg")cfgRender();renderAll();if(msg)toast(msg);return true}
+ catch(e){toast(errMsg(e),6000);if(view==="cfg")cfgRender();return false}}
+function remChange(e){const d=e.target.dataset,id=e.target.id,v=e.target.value;
+ if(d.lim)return rem(()=>mut("/rest/v1/tipos_onda?nome=eq."+encodeURIComponent(d.lim),"PATCH",{limite:Math.max(1,Math.floor(+v)||1)}),"Limite atualizado");
+ if(d.tn)return rem(()=>mut(CFGP,"PATCH",{["turno"+d.tn+"_"+d.k]:Math.max(0,Math.min(24,Math.floor(+v)||0))}),"Turno atualizado");
+ if(id==="gap")return rem(()=>mut(CFGP,"PATCH",{intervalo_max_min:Math.max(1,Math.floor(+v)||30)}),"Configuração atualizada");
+ if(id==="tol")return rem(()=>mut(CFGP,"PATCH",{tolerancia_min:Math.max(0,Math.floor(+v)||0)}),"Configuração atualizada");
+ if(id==="and"){const on=e.target.checked;return rem(async()=>{await mut(CFGP,"PATCH",{ondas_em_andamento:on});
+   if(!on)await api("/rest/v1/ondas?status=neq.0",{method:"PATCH",body:{status:0,concluida_em:new Date().toISOString(),encerrada_auto:true},prefer:"return=minimal"})},on?"Ondas em andamento ligadas":"Ondas em aberto foram concluídas")}
+ if(d.ut2){const o=opOf(d.ut2);if(o)return rem(()=>mut("/rest/v1/operadores?id=eq."+o.id,"PATCH",{turno:+v}),o.n+" agora no "+v+"º turno")}
+ if(d.ug2){const o=opOf(d.ug2);if(o)return rem(()=>mut("/rest/v1/operadores?id=eq."+o.id,"PATCH",{galpao_id:GID[v]}),o.n+" agora no "+v)}
+ if(d.gre!==undefined){const old=S.gals[+d.gre],nv=v.trim();if(!nv){cfgGals();return}
+  return rem(()=>mut("/rest/v1/galpoes?id=eq."+GID[old],"PATCH",{nome:nv}),"Galpão renomeado")}
+ if(d.gmeta!==undefined){const n=Math.floor(+v);return rem(()=>mut("/rest/v1/galpoes?id=eq."+GID[d.gmeta],"PATCH",{meta_diaria:n>0?n:null}),n>0?"Meta atualizada":"Meta removida")}}
+function remWave(d){const id=d.fin||d.sd||d.del,w=S.waves.find(x=>x.id===id);if(!w)return;
+ if(!w.srv){
+  if(d.del){if(w.sync&&!w.err){toast("Esta onda já foi enviada. Entre como gestor para excluir.");return}S.waves=S.waves.filter(x=>x!==w)}
+  else if(!w.sync){if(d.fin){w.st=0;w.fin=Date.now()}else w.st=2}
+  else{toast("Esta onda já foi enviada. Entre como gestor para alterar.");return}
+  save();renderAll();return}
+ if(d.del)return rem(()=>mut("/rest/v1/ondas?id=eq."+id,"DELETE"),"Registro excluído");
+ return rem(()=>mut("/rest/v1/ondas?id=eq."+id,"PATCH",d.fin?{status:0,concluida_em:new Date().toISOString()}:{status:2,concluida_em:null}),d.fin?"Onda concluída":"Onda marcada como difícil acesso")}
+/* entrada de gestores */
+const voltaPara=()=>encodeURIComponent(location.origin+location.pathname);
+async function entrar(){const email=$("#lU").value.trim().toLowerCase(),pw=$("#lP").value;
+ if(recMode){if(pw.length<8){toast("Use pelo menos 8 caracteres.");return}
+  try{await api("/auth/v1/user",{method:"PUT",body:{password:pw}});recMode=false;loginUI();$("#login").classList.add("hide");$("#lP").value="";toast("Senha criada. Você já está dentro.");await pull();go("painel")}catch(e){toast(errMsg(e),6000)}return}
+ if(!email||!pw){toast("Informe e-mail e senha.");return}
+ try{setSess(tok(await raw("/auth/v1/token?grant_type=password",{method:"POST",auth:false,body:{email,password:pw}})));sess.email=email;setSess(sess);
+  await pull();if(!me)return;
+  $("#login").classList.add("hide");$("#lP").value="";toast("Bem-vindo, "+me.n);const t=pend||"painel";pend=null;go(t)}
+ catch(e){if(e.status)setSess(null);toast(errMsg(e),6000)}}
+async function primeiroAcesso(){const email=$("#lU").value.trim().toLowerCase(),pw=$("#lP").value;
+ if(!email||pw.length<8){toast("Informe seu e-mail e uma senha com pelo menos 8 caracteres.",5000);return}
+ try{const j=await raw("/auth/v1/signup?redirect_to="+voltaPara(),{method:"POST",auth:false,body:{email,password:pw}});
+  if(j&&j.access_token){setSess(tok(j));sess.email=email;setSess(sess);await pull();if(me){$("#login").classList.add("hide");go(pend||"painel")}}
+  else toast("Enviamos um link de confirmação para "+email+". Abra o e-mail, confirme e depois entre aqui.",10000)}
+ catch(e){toast(errMsg(e),6000)}}
+async function esqueci(){const email=$("#lU").value.trim().toLowerCase();if(!email){toast("Informe seu e-mail no campo acima.");return}
+ try{await raw("/auth/v1/recover?redirect_to="+voltaPara(),{method:"POST",auth:false,body:{email}});toast("Se o e-mail estiver cadastrado, enviamos um link para criar nova senha.",9000)}
+ catch(e){toast(errMsg(e),6000)}}
+async function sair(){try{await raw("/auth/v1/logout",{method:"POST"})}catch(e){}
+ setSess(null);me=null;S.ges=[];S.waves=S.waves.filter(w=>!w.srv);save();authUI();toast("Sessão encerrada");go("op")}
+function loginUI(){$("#lT").textContent=recMode?"Criar nova senha":"Entrar como gestor";$("#lUl").textContent="E-mail";$("#lPl").textContent=recMode?"Nova senha":"Senha";
+ $("#lU").closest("label").classList.toggle("hide",recMode);$("#lExtra").classList.toggle("hide",recMode);$("#lB").textContent=recMode?"Salvar senha":"Entrar";$("#lU").type="email"}
+/* volta do link de e-mail (confirmação ou nova senha) */
+async function lerRetorno(){const h=location.hash.slice(1);if(!/access_token=|error_description=/.test(h))return;
+ const q=new URLSearchParams(h);history.replaceState(null,"",location.pathname+location.search);
+ if(q.get("error_description")){toast(q.get("error_description").replace(/\+/g," "),8000);return}
+ setSess({access_token:q.get("access_token"),refresh_token:q.get("refresh_token"),exp:Date.now()+(+q.get("expires_in")||3600)*1000,email:""});
+ try{const u=await raw("/auth/v1/user");sess.email=(u.email||"").toLowerCase();setSess(sess)}catch(e){setSess(null);return}
+ if(q.get("type")==="recovery"){recMode=true;loginUI();$("#login").classList.remove("hide");$("#lP").focus()}
+ else toast("E-mail confirmado.")}
+/* dados antigos deste aparelho (de antes do banco) */
+function antigos(){try{const L=JSON.parse(localStorage.getItem("rcondas.v2"));if(!L)return null;
+  if(L.wv)L.waves=L.wv.map(a=>({id:a[0],wn:a[1],op:a[2],opn:a[3],gal:a[4],ty:(TY[a[5]]||TY[0])[0],qty:a[6],st:a[7],ts:a[8],fin:a[9]<0?null:a[8]+a[9]}));
+  L.waves=L.waves||[];L.ops=L.ops||[];L.gals=L.gals||[];return L.waves.length||L.ops.length?L:null}catch(e){return null}}
+async function uuidDe(txt){const b=new Uint8Array(await crypto.subtle.digest("SHA-256",new TextEncoder().encode("rcondas-antigo:"+txt))).slice(0,16);
+ b[6]=b[6]&15|80;b[8]=b[8]&63|128;const x=[...b].map(v=>v.toString(16).padStart(2,"0")).join("");
+ return x.slice(0,8)+"-"+x.slice(8,12)+"-"+x.slice(12,16)+"-"+x.slice(16,20)+"-"+x.slice(20)}
+async function importar(){const L=antigos();if(!L||!(me&&me.adm))return;
+ if(!online()){toast("Sem internet. Tente de novo quando voltar.");return}
+ const b=$("#impB");if(b){b.disabled=true;b.textContent="Enviando"}
+ const tot={ok:0,ja_existia:0,wn_repetido:0,recusada:0,sem_operador:0};
+ try{
+  for(const g of L.gals)if(!S.gals.some(x=>x.toLowerCase()===String(g).toLowerCase()))await mut("/rest/v1/galpoes","POST",{nome:g,meta_diaria:(L.metas&&L.metas[g])||null});
+  await pull();
+  for(const o of L.ops){if(S.ops.some(x=>x.n.toLowerCase()===o.n.toLowerCase()))continue;
+   const livre=!S.ops.some(x=>x.m===o.m)&&/^CL\d{3}$/.test(o.m);
+   await mut("/rest/v1/operadores","POST",{codigo:livre?o.m:nextCode(),nome:o.n,turno:o.t===2?2:1,galpao_id:GID[o.g]||GID[S.gals[0]]});await pull()}
+  const porCod={};L.ops.forEach(o=>{const s=S.ops.find(x=>x.n.toLowerCase()===o.n.toLowerCase());if(s)porCod[o.m]=s.id});
+  const fila=[];for(const w of L.waves){const oid=porCod[w.op];if(!oid){tot.sem_operador++;continue}
+   fila.push({id:await uuidDe(w.id),wn:w.wn||String(w.id),operador_id:oid,tipo:TYREN[w.ty]||w.ty,quantidade:w.qty,status:w.st||0,registrada_em:new Date(w.ts).toISOString(),concluida_em:(w.st||0)===0?new Date(w.fin||w.ts).toISOString():null})}
+  for(let i=0;i<fila.length;i+=100){const r=await api("/rest/v1/rpc/registrar_ondas",{method:"POST",body:{lote:fila.slice(i,i+100)}});(r||[]).forEach(x=>{tot[x.resultado]=(tot[x.resultado]||0)+1})}
+  try{localStorage.setItem("rcondas.antigos.enviado",new Date().toISOString())}catch(e){}
+  await pull();cfgRender();renderAll();
+  toast("Dados antigos: "+(tot.ok+tot.ja_existia)+" ondas no banco, "+(tot.wn_repetido+tot.recusada+tot.sem_operador)+" não entraram.",10000)}
+ catch(e){toast("Envio interrompido: "+errMsg(e)+" Pode tentar de novo, nada duplica.",9000);cfgRender()}}
+async function bootSrv(){
+ $("#lExtra").classList.remove("hide");loginUI();
+ $("#mP2").closest("label").classList.add("hide");$("#mU").placeholder="nome@empresa.com";$("#mU").type="email";$("#mU").closest("label").firstChild.textContent="E-mail do gestor";
+ const lg=$("#cge .legend");if(lg)lg.textContent="O gestor cria a própria senha em Entrar, Primeiro acesso, usando este e-mail.";
+ try{sess=JSON.parse(localStorage.getItem("rcondas.sess"))}catch(e){sess=null}
+ go("op");await lerRetorno();
+ try{await pull()}catch(e){if(e.status)toast(errMsg(e),6000)}
+ authUI();renderAll();if(me&&!recMode)go("painel");push();
+ setInterval(push,15000);
+ setInterval(()=>{if(online()&&document.visibilityState==="visible"&&!pushing)pull().then(renderAll).catch(()=>{})},60000)}
 
 /* ===================== usuários / códigos ===================== */
 function nextCode(){const used=new Set(S.ops.map(o=>o.m));for(let i=1;i<1000;i++){const c="CL"+String(i).padStart(3,"0");if(!used.has(c))return c}return"CL999"}
@@ -387,7 +554,7 @@ function dayWaves(d){d=d||$("#day").value;return S.waves.filter(w=>dk(w.ts)===d&
 function rangeWaves(days){if(days<=1)return dayWaves();const end=new Date($("#day").value+"T12:00"),out=[];
  for(let i=0;i<days;i++){const d=new Date(end);d.setDate(d.getDate()-i);out.push(dk(d))}
  const set=new Set(out);return S.waves.filter(w=>set.has(dk(w.ts))&&inView(w))}
-const prod=l=>l.filter(w=>w.st===0);
+const prod=l=>l.filter(w=>w.st===0&&!w.err);
 function hourly(list,gal){const H=24,a=Array(H).fill(0),o=Array(H).fill(0);
  prod(list).filter(w=>!gal||w.gal===gal).forEach(w=>{const h=new Date(w.fin||w.ts).getHours();a[h]+=w.qty;o[h]++});return{a,o}}
 function hourWindow(a){let f=a.findIndex(v=>v>0),l=-1;a.forEach((v,i)=>{if(v>0)l=i});
@@ -476,13 +643,13 @@ const normWN=s=>{s=String(s==null?"":s).replace(/\s+/g,"");return /^\d+$/.test(s
 function curOp(){const o=findOp($("#opIn").value);
  $("#opName").innerHTML=o?'<div class="cracha">'+av(o.n)+"<div><b>"+esc(o.n)+"</b><small>"+o.m+", "+o.t+"º turno"+(o.g?", "+esc(o.g):"")+"</small></div></div>":"";return o}
 function track(o){if(!tim.op||tim.op!==o.m)tim={op:o.m,n:o.n,t0:Date.now()}}
-function mk(o,q,s,wn){return{id:uid(),wn:wn||"",op:o.m,opn:o.n,gal:o.g||S.gal,ty,qty:q,st:s,ts:Date.now(),fin:s===0?Date.now():null,sync:online()?1:0}}
-function commit(list){S.waves.push(...list);if(!save()){S.waves.splice(S.waves.length-list.length,list.length);return false}segs();renderAll();
+function mk(o,q,s,wn){return{id:uid(),oid:o.id,wn:wn||"",op:o.m,opn:o.n,gal:o.g||S.gal,ty,qty:q,st:s,ts:Date.now(),fin:s===0?Date.now():null,sync:ON?0:(online()?1:0)}}
+function commit(list){S.waves.push(...list);if(!save()){S.waves.splice(S.waves.length-list.length,list.length);return false}segs();renderAll();if(ON)setTimeout(push,0);
  toast(online()?"Onda salva ✓"+(list.some(isOT)?", hora extra":""):"Salva offline, aguardando sincronização")}
 function check(){const o=curOp();if(!o){toast("Identifique um operador cadastrado");return}return o}
 function opRows(list,ctl){const canR=!S.ges.length||(me&&me.pR);
  return list.length?`<table><tr><th>Operador</th><th>WN</th><th>Tipo</th><th>Qtd</th><th>Status</th><th>Hora</th>${ctl?"<th>Tempo</th><th>Ação</th>":""}</tr>`+list.map(w=>{const o=opOf(w.op);
- return`<tr><td><div class="who2">${av(w.opn)}<div>${esc(w.opn)}<br><small>${esc(w.op.split("~")[0])}${w.op.includes("~")?" (excluído)":""}, ${esc(w.gal)}${o?", "+o.t+"ºT":""}</small></div></div></td><td><b>${esc(w.wn||"—")}</b></td><td>${w.ty}</td><td><b>${fmt(w.qty)}</b></td><td><span class="st ${SC[w.st]}">${ST[w.st]}</span>${isOT(w)?' <span class="st so">extra</span>':""}</td><td style="white-space:nowrap">${new Date(w.ts).toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"})}${ctl?"":(w.sync?' <span title="Sincronizado" aria-label="Sincronizado" style="color:var(--gx)">✓</span>':' <span class="st s1">pendente</span>')}</td>${ctl?`<td class="num" data-el="${w.ts}">${mm(Date.now()-w.ts)}</td><td><a href="#" data-fin="${w.id}" class="pill">Concluir</a> <a href="#" data-sd="${w.id}" class="pill warn">Difícil</a>${canR?` <a href="#" data-del="${w.id}" class="pill off">Excluir</a>`:""}</td>`:""}</tr>`}).join("")+"</table>":'<div class="empty">Nenhuma onda registrada.</div>'}
+ return`<tr><td><div class="who2">${av(w.opn)}<div>${esc(w.opn)}<br><small>${esc(w.op.split("~")[0])}${w.op.includes("~")?" (excluído)":""}, ${esc(w.gal)}${o?", "+o.t+"ºT":""}</small></div></div></td><td><b>${esc(w.wn||"—")}</b></td><td>${w.ty}</td><td><b>${fmt(w.qty)}</b></td><td><span class="st ${SC[w.st]}">${ST[w.st]}</span>${isOT(w)?' <span class="st so">extra</span>':""}${w.err?'<br><span class="st s2" title="'+esc(w.err)+'">recusada</span> <a href="#" data-del="'+w.id+'" class="pill off">Remover</a><br><small>'+esc(w.err)+"</small>":""}</td><td style="white-space:nowrap">${new Date(w.ts).toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"})}${ctl?"":(w.err?"":w.sync?' <span title="Sincronizado" aria-label="Sincronizado" style="color:var(--gx)">✓</span>':' <span class="st s1">pendente</span>')}</td>${ctl?`<td class="num" data-el="${w.ts}">${mm(Date.now()-w.ts)}</td><td><a href="#" data-fin="${w.id}" class="pill">Concluir</a> <a href="#" data-sd="${w.id}" class="pill warn">Difícil</a>${canR?` <a href="#" data-del="${w.id}" class="pill off">Excluir</a>`:""}</td>`:""}</tr>`}).join("")+"</table>":'<div class="empty">Nenhuma onda registrada.</div>'}
 function operacao(){const L=dayWaves().slice().reverse();$("#cnt").textContent=L.length+" hoje";$("#last").innerHTML=opRows(L.slice(0,8));
  $("#opl").innerHTML=S.ops.map(o=>`<option value="${o.m}">${esc(o.n)}, ${o.t}º turno</option>`).join("");
  $("#subCtl").classList.toggle("hide",!S.cfg.and);
@@ -557,6 +724,8 @@ function individual(){
 /* ===================== CONFIG ===================== */
 function cfgOp(){
  $("#storInfo").innerHTML="Memória do aparelho: <b style='color:var(--ink)'>"+(storeLen/1048576).toLocaleString("pt-BR",{maximumFractionDigits:1})+" MB</b> de ~5 MB ("+Math.round(storeLen/LIM_STORE*100)+"%), "+fmt(S.waves.length)+" ondas";
+ if(ON&&me&&me.adm){const L=antigos();let ja="";try{ja=localStorage.getItem("rcondas.antigos.enviado")||""}catch(e){}
+  if(L)$("#storInfo").innerHTML+="<br>Dados antigos neste aparelho: "+fmt(L.waves.length)+" ondas e "+L.ops.length+" operadores"+(ja?", já enviados":"")+'. <button class="btn alt sm" id="impB" style="margin-top:6px">'+(ja?"Enviar de novo":"Enviar para o banco")+"</button>"}
  $("#lims").innerHTML=TY.map(([n])=>`<label>${n}<input type="number" min="1" data-lim="${n}" value="${S.cfg.lim[n]}"></label>`).join("");
  $("#turnos").innerHTML=[1,2].map(t=>`<label>Início do ${t}º turno (hora)<input type="number" min="0" max="23" data-tn="${t}" data-k="ini" value="${S.cfg.turnos[t].ini}"></label><label>Fim do ${t}º turno (hora)<input type="number" min="1" max="24" data-tn="${t}" data-k="fim" value="${S.cfg.turnos[t].fim}"></label>`).join("");
  $("#and").checked=!!S.cfg.and;$("#gap").value=S.cfg.gap;$("#tol").value=S.cfg.tol}
@@ -575,41 +744,43 @@ function cfgGals(){
 function cfgGes(){
  $("#mG").innerHTML=S.gals.map(g=>`<option>${esc(g)}</option>`).join("");
  $("#mL").innerHTML=S.ges.length?`<table><tr><th>Gestor</th><th>Login</th><th>Permissões</th><th></th></tr>`+S.ges.map((m,i)=>
-  `<tr><td>${esc(m.n)}<br><small style="color:var(--mut)">${esc(m.g||"sem galpão")}</small>${m.adm?' <span class="tag">admin</span>':""}</td><td>${esc(m.u)}${m.p?' <span class="tag">senha</span>':' <span class="tag t2">sem senha</span>'}</td><td style="font-size:12px">${[m.pC&&"config",m.pI&&"individual",m.pR&&"registros"].filter(Boolean).join(", ")||"—"}</td><td><button class="btn d sm" data-mdel="${i}">Excluir</button></td></tr>`).join("")+"</table>"
+  `<tr><td>${esc(m.n)}<br><small style="color:var(--mut)">${esc(m.g||"sem galpão")}</small>${m.adm?' <span class="tag">admin</span>':""}</td><td>${esc(m.u)}${ON?"":m.p?' <span class="tag">senha</span>':' <span class="tag t2">sem senha</span>'}</td><td style="font-size:12px">${[m.pC&&"config",m.pI&&"individual",m.pR&&"registros"].filter(Boolean).join(", ")||"—"}</td><td><button class="btn d sm" data-mdel="${i}">Excluir</button></td></tr>`).join("")+"</table>"
   :'<div class="empty">Nenhum gestor cadastrado. Configurações e Individual estão abertos.</div>'}
 function cfgRender(){cfgOp();cfgUsers();cfgGals();cfgGes()}
 
 /* ===================== acesso ===================== */
-const needAuth=k=>S.ges.length>0&&!(me&&(k==="cfg"?me.pC:me.pI));
+const needAuth=k=>ON?!me:S.ges.length>0&&!(me&&(k==="cfg"?me.pC:me.pI));
 function authUI(){$("#who").textContent=me?"Gestor: "+me.n:"";$("#logtx").textContent=me?"Sair":"Entrar"}
 function go(t){
- if((t==="cfg"||t==="ind")&&needAuth(t)){$("#login").classList.remove("hide");$("#lU").focus();pend=t;return}
+ if((t==="cfg"||t==="ind"||(ON&&t==="painel"))&&needAuth(t)){$("#login").classList.remove("hide");$("#lU").focus();pend=t;return}
+ if(ON&&me&&((t==="cfg"&&!me.pC)||(t==="ind"&&!me.pI))){toast("Seu acesso não inclui esta área.");return}
  view=t;["painel","op","ind","cfg"].forEach(s=>$("#"+s).classList.toggle("hide",s!==t));
  $$(".tab[data-t]").forEach(b=>b.classList.toggle("on",b.dataset.t===t));
  $("#ttl").textContent={painel:"Painel",op:"Operação",ind:"Acompanhamento individual",cfg:"Configurações"}[t];
  if(t==="cfg")cfgRender();if(t==="ind")individual();renderAll();
  if(t==="op"&&!$("#s1").classList.contains("hide"))setTimeout(()=>$("#opIn").focus({preventScroll:true}),60)}
 let pend=null;
-$("#logbtn").onclick=()=>{if(me){me=null;authUI();toast("Sessão encerrada");go("painel");return}$("#login").classList.remove("hide");$("#lU").focus()};
-$("#lX").onclick=()=>{$("#login").classList.add("hide");pend=null;$("#logbtn").focus()};
+$("#logbtn").onclick=()=>{if(ON&&(me||sess)){sair();return}if(me){me=null;authUI();toast("Sessão encerrada");go("painel");return}$("#login").classList.remove("hide");$("#lU").focus()};
+$("#lX").onclick=()=>{if(recMode){recMode=false;loginUI()}$("#login").classList.add("hide");pend=null;$("#logbtn").focus()};
 $("#login").onkeydown=e=>{if(e.key==="Escape")$("#lX").click()};
-$("#lB").onclick=()=>{const u=$("#lU").value.trim().toLowerCase(),p=$("#lP").value,
+$("#lNew").onclick=primeiroAcesso;$("#lRec").onclick=esqueci;
+$("#lB").onclick=()=>{if(ON){entrar();return}const u=$("#lU").value.trim().toLowerCase(),p=$("#lP").value,
  g=S.ges.find(x=>x.u.toLowerCase()===u);
  if(!g||(g.p&&g.p!==h32(p))){toast("Usuário ou senha inválidos");return}
  me=g;$("#login").classList.add("hide");$("#lP").value="";if(g.g&&S.gals.includes(g.g)){S.gal=g.g;save()}authUI();toast("Bem-vindo, "+g.n);const t=pend||"cfg";pend=null;go(t)};
 $("#lP").onkeydown=e=>{if(e.key==="Enter")$("#lB").click()};
 
 /* ===================== render geral ===================== */
-function netUI(){const n=$("#net"),o=online(),p=S.waves.filter(w=>!w.sync).length;n.className="pill"+(o?"":" off");n.textContent=o?"Online":"Offline, "+p+(p===1?" pendente":" pendentes");
+function netUI(){const n=$("#net"),o=online(),p=S.waves.filter(w=>!w.sync).length;n.className="pill"+(o?"":" off");n.textContent=o?(ON&&p?"Online, "+p+" a enviar":"Online"):"Offline, "+p+(p===1?" pendente":" pendentes");
  const pc=Math.round(storeLen/LIM_STORE*100),e=$("#stor");e.classList.toggle("hide",pc<70);e.className="pill "+(pc>=90?"off":"warn")+(pc<70?" hide":"");e.textContent="Memória "+pc+"%";e.title="Uso do armazenamento deste aparelho"}
 const myG=()=>(me&&me.g&&S.gals.includes(me.g))?me.g:S.gal;
-const restricted=()=>S.ges.length>0&&!(me&&me.adm);
-const inView=w=>!restricted()||w.gal===myG();
+const restricted=()=>ON?!(me&&me.adm):S.ges.length>0&&!(me&&me.adm);
+const inView=w=>!restricted()||(ON&&!me)||w.gal===myG();
 const visG=()=>restricted()?[myG()]:S.gals;
 const inTurno=w=>{const f=$("#turnoF").value;if(!f)return true;const o=opOf(w.op);return!!o&&String(o.t)===f};
 function galSel(){const e=$("#gal"),v=e.value;e.innerHTML=(restricted()?"":'<option value="__all">Visão geral</option>')+visG().map(g=>`<option>${esc(g)}</option>`).join("");
  if(restricted()){S.gal=myG();e.value=myG();e.disabled=true}else{e.value=S.gals.includes(v)||v==="__all"?v:S.gal;e.disabled=false}}
-function renderAll(){netUI();galSel();painel();operacao();filters();
+function renderAll(){netUI();galSel();if(ON)["#turnoF","#gal","#day"].forEach(x=>$(x).classList.toggle("hide",!me));painel();operacao();filters();
  $("#sub2").textContent=new Date($("#day").value+"T12:00").toLocaleDateString("pt-BR",{weekday:"long",day:"numeric",month:"long",year:"numeric"});
  if(view==="ind")individual()}
 
@@ -618,7 +789,7 @@ $("#day").value=dk(Date.now());galSel();$("#gal").value=S.gal;
 $("#gal").onchange=e=>{if(e.target.value!=="__all"){S.gal=e.target.value;save()}renderAll()};
 $("#day").onchange=renderAll;$("#turnoF").onchange=renderAll;
 $("#net").onclick=()=>{S.off=!S.off;save();if(online())flush();renderAll()};
-addEventListener("online",()=>{flush();renderAll()});addEventListener("offline",renderAll);
+addEventListener("online",()=>{flush();renderAll();if(ON)pull().then(renderAll).catch(()=>{})});addEventListener("offline",renderAll);
 $("#theme").onclick=()=>{const r=document.documentElement,d=getComputedStyle(r).getPropertyValue("--bg").trim()==="#0e1726";r.dataset.theme=d?"light":"dark"};
 $$(".tab[data-t]").forEach(b=>b.onclick=()=>go(b.dataset.t));
 $("#sub").onclick=e=>{const s=e.target.dataset.s;if(!s)return;$$("#sub button").forEach(b=>b.classList.toggle("on",b===e.target));["reg","ctl","ace"].forEach(x=>$("#"+x).classList.toggle("hide",x!==s));tick()};
@@ -631,18 +802,23 @@ document.addEventListener("click",e=>{const d=e.target.dataset,t=e.target;
  if(d.ut){uT=+d.ut;cfgUsers()}
  if(d.goto){go("cfg");const b=document.querySelector('[data-c="'+d.goto+'"]');if(b)b.click()}
  if(d.pick){e.preventDefault();$("#iOp").value=d.pick;individual()}
+ if(t.id==="impB"){importar();return}
+ if(ON&&(d.fin||d.sd||d.del)){e.preventDefault();remWave(d);return}
  if(d.fin||d.sd){e.preventDefault();const w=S.waves.find(x=>x.id===(d.fin||d.sd));
   if(w){if(d.fin){w.st=0;w.fin=Date.now()}else w.st=2;w.sync=online()?1:0;save();renderAll()}}
  if(d.del){e.preventDefault();if(S.ges.length&&!(me&&me.pR)){toast("Sem permissão para excluir registros");return}
   S.waves=S.waves.filter(x=>x.id!==d.del);save();renderAll();toast("Registro excluído")}
  if(d.udel){const o=opOf(d.udel),n=S.waves.filter(w=>w.op===d.udel).length;
   if(!confirm("Excluir "+o.n+" ("+o.m+")?"+(n?"\n\nOs "+n+" registro(s) já lançados são mantidos no histórico.":"")+"\n\nO código "+o.m+" volta a ficar disponível."))return;
+  if(ON){rem(()=>mut("/rest/v1/operadores?id=eq."+o.id,"PATCH",{excluido_em:new Date().toISOString()}),"Usuário excluído, código "+o.m+" liberado");return}
   const tag=d.udel+"~"+Date.now().toString(36);S.waves.forEach(w=>{if(w.op===d.udel)w.op=tag});S.ops=S.ops.filter(x=>x.m!==d.udel);save();cfgUsers();renderAll();toast("Usuário excluído, código "+o.m+" liberado")}
- if(d.gdel){const g=S.gals[+d.gdel];if(S.gals.length<2)return;
+ if(d.gdel){const g=S.gals[+d.gdel];if(!ON&&S.gals.length<2)return;
   if(!confirm("Excluir o galpão "+g+"?\n\nOs registros já lançados mantêm o nome antigo."))return;
+  if(ON){rem(()=>mut("/rest/v1/galpoes?id=eq."+GID[g],"DELETE"),"Galpão excluído");return}
   S.gals.splice(+d.gdel,1);delete S.metas[g];S.ops.forEach(o=>{if(o.g===g)o.g=S.gals[0]});S.ges.forEach(x=>{if(x.g===g)x.g=null});if(S.gal===g)S.gal=S.gals[0];
   save();cfgGals();cfgUsers();renderAll();toast("Galpão excluído")}
  if(d.mdel){const g=S.ges[+d.mdel];if(!confirm("Excluir o gestor "+g.n+"?"))return;
+  if(ON){rem(()=>mut("/rest/v1/gestores?email=eq."+encodeURIComponent(g.u),"DELETE"),"Gestor excluído");return}
   S.ges.splice(+d.mdel,1);if(me===g)me=null;authUI();save();cfgGes();toast("Gestor excluído")}
 });
 $("#opIn").oninput=()=>{const o=curOp();if(!o)return;track(o);
@@ -686,14 +862,21 @@ $("#mE").onclick=()=>{const m=S.man;m.acc=(m.acc||0)+(m.run?Date.now()-m.run:0);
 $("#uB").onclick=()=>{const n=$("#uN").value.trim().replace(/\s+/g," ");
  if(n.length<2){toast("Informe o nome");return}
  if(S.ops.some(o=>o.n.toLowerCase()===n.toLowerCase())){toast("Já existe um usuário com esse nome");return}
+ if(ON){const g=$("#uG").value;if(!g){toast("Crie um galpão antes de cadastrar operadores.");return}
+  const cod=nextCode();rem(()=>mut("/rest/v1/operadores","POST",{codigo:cod,nome:n,turno:uT,galpao_id:GID[g]}),"Usuário "+n+" criado com o código "+cod).then(ok=>{if(ok)$("#uN").value=""});return}
  const m=nextCode();S.ops.push({m,n,t:uT,g:$("#uG").value});$("#uN").value="";save();cfgUsers();renderAll();
  toast("Usuário "+n+" criado, "+m+", "+uT+"º turno")};
 $("#uN").onkeydown=e=>{if(e.key==="Enter")$("#uB").click()};
 $("#gB").onclick=()=>{const n=$("#gN").value.trim();if(!n){toast("Informe o nome do galpão");return}
  if(S.gals.some(g=>g.toLowerCase()===n.toLowerCase())){toast("Galpão já existe");return}
+ if(ON){const mv0=Math.floor(+$("#gM").value);rem(()=>mut("/rest/v1/galpoes","POST",{nome:n,meta_diaria:mv0>0?mv0:null}),"Galpão criado").then(ok=>{if(ok){$("#gN").value="";$("#gM").value=""}});return}
  S.gals.push(n);const mv=+$("#gM").value;if(mv>0)S.metas[n]=mv;$("#gM").value="";$("#gN").value="";save();cfgGals();cfgUsers();renderAll();toast("Galpão criado")};
 $("#gN").onkeydown=e=>{if(e.key==="Enter")$("#gB").click()};
 $("#mB").onclick=()=>{const n=$("#mN").value.trim(),u=$("#mU").value.trim(),p=$("#mP2").value;
+ if(ON){const em=u.toLowerCase(),adm=$("#mA").checked,gg0=$("#mG").value;
+  if(n.length<2||!/^\S+@\S+\.\S+$/.test(em)){toast("Informe o nome e um e-mail válido.");return}
+  if(!adm&&!gg0){toast("Crie um galpão antes de cadastrar gestores.");return}
+  rem(()=>mut("/rest/v1/gestores","POST",{email:em,nome:n,galpao_id:GID[gg0]||null,admin:adm,pode_config:$("#mC").checked,pode_individual:$("#mI").checked,pode_registros:$("#mR").checked}),"Gestor cadastrado. Peça para ele usar Primeiro acesso com este e-mail.").then(ok=>{if(ok)$("#mN").value=$("#mU").value=""});return}
  if(!n||!u){toast("Informe nome e usuário de login");return}
  const gg=$("#mG").value;if(!gg){toast("Selecione o galpão do gestor");return}
  if(S.ges.some(g=>g.u.toLowerCase()===u.toLowerCase())){toast("Usuário de login já existe");return}
@@ -703,6 +886,7 @@ $("#mB").onclick=()=>{const n=$("#mN").value.trim(),u=$("#mU").value.trim(),p=$(
 
 /* config: alterações */
 document.addEventListener("change",e=>{const d=e.target.dataset,id=e.target.id;let r=false;
+ if(ON){remChange(e);return}
  if(d.lim){S.cfg.lim[d.lim]=Math.max(1,+e.target.value||1);r=true}
  if(d.tn){S.cfg.turnos[d.tn][d.k]=Math.max(0,Math.min(24,+e.target.value||0));r=true}
  if(id==="and"){S.cfg.and=e.target.checked;
@@ -719,7 +903,7 @@ document.addEventListener("change",e=>{const d=e.target.dataset,id=e.target.id;l
  if(r){save();if(view==="cfg")cfgRender();renderAll()}});
 
 try{storeLen=(localStorage.getItem(LS)||"").length}catch(e){}
-authUI();segs();goStep(1);go("painel");setInterval(tick,1000);setInterval(()=>{if(view==="painel")painel()},60000);
+authUI();segs();goStep(1);if(ON)bootSrv();else go("painel");setInterval(tick,1000);setInterval(()=>{if(view==="painel")painel()},60000);
 
 /* ===================== PWA (instalação) ===================== */
 (function(){try{

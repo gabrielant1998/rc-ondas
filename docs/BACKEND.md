@@ -1,6 +1,6 @@
 # RC Ondas: desenho do banco de dados (Supabase)
 
-Estado: esquema escrito e testado em PostgreSQL 16 local (48 testes). Ainda não aplicado em um projeto Supabase.
+Estado: esquema aplicado no projeto Supabase `rc-ondas` e testado em PostgreSQL 16 local (48 testes). O aplicativo usa o banco quando roda no GitHub Pages; em outros endereços continua gravando só no aparelho (use `?srv=1` para ligar e `?srv=0` para desligar).
 
 ## 1. Contexto
 Página estática que fala direto com o banco pela API do Supabase. Não há servidor próprio, então toda regra fica no banco.
@@ -37,13 +37,21 @@ A entrada de ondas é a função `registrar_ondas(lote)`. Ela recebe até 200 on
 ## 6. Acompanhamento
 `criada_em` (chegada ao servidor) contra `registrada_em` (hora do aparelho) mostra o atraso de sincronização. O aparelho mostra quantas ondas estão pendentes.
 
-## Decisões em aberto
-1. **Painel público ou com login.** O esquema atual não deixa o público ler ondas, porque sem login não há como limitar por galpão. Se o painel precisar ficar aberto, basta uma regra de leitura a mais, e aí qualquer pessoa com o link vê todos os galpões.
-2. **Abuso da tela pública.** Qualquer pessoa com o link pode registrar ondas. O banco valida operador, tipo, limite, data e WN, mas não limita a quantidade de envios.
+## Decisões tomadas
+1. **Painel só com login.** O público registra ondas, mas não lê. Gestor vê o próprio galpão e o administrador vê todos.
+2. **Tela pública de registro.** Qualquer pessoa com o link pode registrar ondas. O banco valida operador, tipo, limite, data e WN, mas não limita a quantidade de envios.
+
+## Entrada de gestores
+O administrador cadastra o e-mail do gestor em Config, Gestores. O gestor cria a própria senha em Entrar, Primeiro acesso, e confirma pelo link que chega por e-mail. Só e-mail confirmado e cadastrado como gestor tem acesso.
+
+No painel do Supabase, em Authentication, URL Configuration, o Site URL precisa ser o endereço do site, para os links de confirmação voltarem ao lugar certo.
 
 ## Como testar
 ```bash
 createdb rc
 psql -d rc -f supabase/tests/shim_supabase.sql -f supabase/migrations/0001_rc_ondas.sql
 psql -d rc -f supabase/tests/rls_test.sql
+
+# aplicativo no modo servidor, com banco simulado (17 cenários)
+node tests/run_srv.js
 ```
