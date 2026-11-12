@@ -1115,7 +1115,7 @@ const isI=t=>t==="ind"||t==="his";
 function podeVer(t){if(t==="op"||t==="painel"||t==="prs")return true;if(ON)return !!me&&(isI(t)?!!me.pI:!!me.pC);if(t==="painel")return true;return !needAuth(t)}
 function updTabs(){$$(".tab[data-t]").forEach(b=>{b.style.display=podeVer(b.dataset.t)?"":"none"});$$('#csub [data-c="cga"]').forEach(b=>{b.textContent=soMeta()?"Meta do dia":"Galpões"});$$('#csub [data-c="cge"]').forEach(b=>{b.style.display=soMeta()?"none":""});$$('#csub [data-c="cma"]').forEach(b=>{b.style.display=(!ON||(me&&me.adm))?"":"none"});if(!podeVer(view)){view="op";["painel","op","prs","ind","his","cfg"].forEach(s=>$("#"+s).classList.toggle("hide",s!=="op"));$$(".tab[data-t]").forEach(b=>b.classList.toggle("on",b.dataset.t==="op"))}}
 let hWho="";
-function authUI(){const w=me?me.n+"|"+(me.g||"")+"|"+(me.adm?1:0):"";if(w!==hWho){hWho=w;hKey="";HW=null;HPW=null}$("#who").textContent=me?"Gestor: "+me.n:"";$("#logtx").textContent=me?"Sair":"Entrar";updTabs()}
+function authUI(){const w=me?me.n+"|"+(me.g||"")+"|"+(me.adm?1:0):"";if(w!==hWho){hWho=w;hKey="";HW=null;HPW=null}$("#who").textContent=me?"Gestor: "+me.n:"";const pub=ON&&!me;["#turnoF","#gal","#day"].forEach(i=>$(i).classList.toggle("hide",pub));if(pub){$("#turnoF").value="";$("#day").value=dk(Date.now())}$("#logtx").textContent=me?"Sair":"Entrar";updTabs()}
 function go(t){
  updTabs();
  if((t==="cfg"||isI(t))&&needAuth(t)){$("#login").classList.remove("hide");$("#lU").focus();pend=t;return}

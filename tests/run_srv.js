@@ -291,6 +291,11 @@ await T('S25 Gestor comum: Usuários só do galpão dele, cria usuário nele e a
  const n=db.operadores.find(o=>o.nome==='Novo Op');ok(n&&n.galpao_id===G2,JSON.stringify(n));
  await p.click('#logbtn');await login(p,'adm@x.com','senha1234');await p.click('.tab[data-t="cfg"]');await p.click('[data-c="cus"]');
  const a=await ver();ok(a.lista.includes('Ana Souza')&&a.lista.includes('Carla Dias')&&!a.sel&&a.ges!=='none',JSON.stringify(a))});
+await T('S29 Site público: turno, galpão e data escondidos sem login; gestor vê',async()=>{const db=banco();const p=await page(b,db);
+ await p.waitForTimeout(300);
+ for(const i of ['#turnoF','#gal','#day'])ok(!(await p.isVisible(i)),i+' visível no público');
+ await login(p,'g2@x.com','senha1234');await p.waitForTimeout(300);
+ for(const i of ['#turnoF','#gal','#day'])ok(await p.isVisible(i),i+' deveria aparecer para gestor')});
 await T('S26 Histórico no servidor: gestor do galpão vê só o dele; aba exige login',async()=>{const db=banco();const p=await page(b,db);
  const t=(d,h)=>{const x=new Date();x.setDate(x.getDate()-d);x.setHours(h,0,0,0);return x.toISOString()};
  [[1,G1,100],[2,G1,120],[3,G1,90],[1,G2,7],[2,G2,9]].forEach(([d,g,q],i)=>db.ondas.push({id:'hs'+i,wn:'HS'+i,operador_id:db.operadores.find(o=>o.galpao_id===g).id,galpao_id:g,tipo:'Vários artigos',quantidade:q,status:0,registrada_em:t(d,9),concluida_em:t(d,9),encerrada_auto:false}));
