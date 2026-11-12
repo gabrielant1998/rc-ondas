@@ -200,6 +200,15 @@ await T("33 Gestão: falta sem bipagem e hora extra estimada",async()=>{const no
  ok(r.txt.includes('Bruno Lima')&&r.txt.includes('Faltas a conferir'),'sem tabela de faltas');ok(r.extra.ms===15*60000,'extra '+r.extra.ms);ok(r.ref===10000,'meta '+r.ref);
  await p.evaluate(()=>{$('#iOp').value='CL002';individual()});ok((await p.textContent('#iBody')).includes('Falta: sem bipagem (conferir)'),'falta não sinalizada');
 });
+
+await T("40 Configurações: cartões da Operação recolhem e expandem",async()=>{const p=await page(b,base());await p.click('.tab[data-t="cfg"]');
+ const cartoes=await p.evaluate(()=>document.querySelectorAll('#cop > .card').length);
+ await p.click('#cop > .card:nth-child(1) .ch');await p.waitForTimeout(100);
+ const recolheu=await p.isHidden('#lims');
+ await p.click('#cop > .card:nth-child(1) .ch');await p.waitForTimeout(100);
+ const abriu=await p.isVisible('#lims');
+ ok(cartoes===3&&recolheu&&abriu,'cartões '+cartoes+', recolheu '+recolheu+', abriu '+abriu)});
+
 await T("34 Gestão: meta coletiva soma produção uma vez e mantém tipos",async()=>{const now=Date.now(),waves=[{id:'a',wn:'a',op:'CL001',opn:'Ana Souza',gal:'Galpão 1',ty:'Vários artigos',qty:10,st:0,ts:now,fin:now,sync:1},{id:'b',wn:'b',op:'CL002',opn:'Bruno Lima',gal:'Galpão 1',ty:'Retrabalho',qty:20,st:0,ts:now,fin:now,sync:1}];
  const p=await page(b,base({waves}));await p.evaluate(()=>{go('ind');document.querySelector('[data-gs="mc"]').click()});const txt=await p.textContent('#coBody');ok(txt.includes('30')&&txt.includes('10.000')&&txt.includes('Retrabalho'),'coletiva: '+txt);
 });

@@ -62,6 +62,10 @@ td .pill{min-height:36px;padding:6px 12px;margin:2px 0}
 /* painéis */
 .card{background:var(--card);border:1px solid var(--line);border-radius:6px;padding:18px}
 .card h2{font:600 17px/1.3 var(--fb);margin-bottom:14px;display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.card .ch{all:unset;box-sizing:border-box;width:100%;min-height:36px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:8px;font:600 17px/1.3 var(--fb);color:inherit}
+.card .ch svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none;transition:transform .2s}
+.card.min .ch svg{transform:rotate(-90deg)}.card.min .cbody{display:none}.card.min h2{margin-bottom:0}
+.card .ch:focus-visible{outline:2px solid var(--a);outline-offset:2px;border-radius:4px}
 .card h2 span,.tag{font:500 13px var(--fb);color:var(--mut)}
 .legend{display:flex;gap:14px;font-size:13px;color:var(--mut);margin-top:10px;flex-wrap:wrap;line-height:1.45}
 .legend i{display:inline-block;width:10px;height:10px;margin-right:5px}
@@ -812,6 +816,23 @@ function cfgGes(){
   `<tr><td>${esc(m.n)}<br><small style="color:var(--mut)">${esc(m.g||"sem galpão")}</small>${m.adm?' <span class="tag">admin</span>':""}</td><td>${esc(m.u)}${ON?"":m.p?' <span class="tag">senha</span>':' <span class="tag t2">sem senha</span>'}</td><td style="font-size:12px">${[m.pC&&"config",m.pI&&"individual",m.pR&&"registros"].filter(Boolean).join(", ")||"—"}</td><td><button class="btn d sm" data-mdel="${i}">Excluir</button></td></tr>`).join("")+"</table>"
   :'<div class="empty">Nenhum gestor cadastrado. Configurações e Individual estão abertos.</div>'}
 function cfgRender(){cfgOp();cfgUsers();cfgGals();cfgGes()}
+/* cartões da Operação podem ser recolhidos; a escolha fica guardada neste aparelho */
+(function(){
+ let M={};try{M=JSON.parse(localStorage.getItem("rcondas.min")||"{}")}catch(e){}
+ const put=()=>{try{localStorage.setItem("rcondas.min",JSON.stringify(M))}catch(e){}};
+ $$("#cop > .card").forEach(c=>{
+  const h=c.querySelector("h2");if(!h)return;const key=h.textContent.trim();
+  const body=document.createElement("div");body.className="cbody";
+  while(h.nextSibling)body.appendChild(h.nextSibling);
+  c.appendChild(body);
+  const b=document.createElement("button");b.type="button";b.className="ch";
+  b.innerHTML='<span>'+esc(key)+'</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>';
+  h.textContent="";h.appendChild(b);
+  const set=on=>{c.classList.toggle("min",on);b.setAttribute("aria-expanded",String(!on));M[key]=on;put()};
+  set(!!M[key]);
+  b.onclick=()=>set(!c.classList.contains("min"));
+ });
+})();
 
 /* ===================== acesso ===================== */
 const needAuth=k=>ON?!me:S.ges.length>0&&!(me&&(k==="cfg"?me.pC:me.pI));
