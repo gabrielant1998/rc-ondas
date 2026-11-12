@@ -317,17 +317,19 @@ await T("74 Cards de destaque chamativos: ícone, troféu, iniciais, pódio com 
  const r=await p.evaluate(()=>({n:document.querySelectorAll('.hlg .hl').length,t:document.querySelectorAll('.hl .hlc').length,av:document.querySelector('.hl .hlav').textContent,rk:document.querySelectorAll('.hl2 i').length,ic:document.querySelectorAll('.hl .hli svg').length}));
  ok(r.n===11&&r.t>=3&&r.av==='AS'&&r.rk>=1&&r.ic===11,'cards: '+JSON.stringify(r));
  await p.screenshot({path:'/tmp/claude-0/-home-claude/1b46621a-564c-549a-8cc9-448283bd574c/scratchpad/cards.png',clip:{x:200,y:150,width:1166,height:560}})});
-await T("75 Meta batida: placar dourado e festa em tela cheia uma vez por dia; botão comemora de novo",async()=>{
- const p=await page(b,base({waves:[WV('a','1','Vários artigos',30,HR(9,0)),WV('b','2','Vários artigos',30,HR(9,10))]}),{festa:true});
- await p.evaluate(()=>{MT()['Galpão 1']=50;save();go('painel');renderAll()});await p.waitForTimeout(1500);
- ok(await p.isVisible('#mb'),'festa não apareceu');ok((await p.textContent('#mb')).includes('Meta batida'),'texto');
+await T("75 Meta batida: placar dourado e a festa só aparece ao apertar o botão",async()=>{
+ const W=[WV('a','1','Vários artigos',30,HR(9,0)),WV('b','2','Vários artigos',30,HR(9,10)),WV('c','3','Itens Únicos',25,HR(9,20),'CL002','Bruno Lima'),WV('d','4','Itens Únicos',12,HR(9,30),'CL003','Carla Dias')];
+ const p=await page(b,base({waves:W}),{festa:true});
+ await p.evaluate(()=>{MT()['Galpão 1']=50;save();go('painel');renderAll()});await p.waitForTimeout(900);
+ ok(!(await p.$('#mb')),'festa abriu sozinha');ok(await p.$eval('#kpis .placar',e=>e.classList.contains('win')),'placar dourado');
+ await p.click('.mbBadge');await p.waitForTimeout(4200);ok(await p.isVisible('#mb'),'botão não comemora');
+ const t=await p.textContent('#mb');ok(t.includes('BATIDA!')&&t.includes('Ana Souza')&&t.includes('Bruno Lima')&&t.includes('hora da virada'),'conteúdo: '+t);
+ const px=await p.$eval('#mb .fx',c=>{const d=c.getContext('2d').getImageData(0,0,c.width,c.height).data;let n=0;for(let i=3;i<d.length;i+=4)if(d[i]>20)n++;return n});ok(px>200,'fogos não desenharam: '+px);
  await p.screenshot({path:'/tmp/claude-0/-home-claude/1b46621a-564c-549a-8cc9-448283bd574c/scratchpad/festa.png'});
- await p.click('#mb .go');await p.waitForTimeout(700);ok(!(await p.$('#mb')),'não fechou');
- ok(await p.$eval('#kpis .placar',e=>e.classList.contains('win')),'placar dourado');
- await p.screenshot({path:'/tmp/claude-0/-home-claude/1b46621a-564c-549a-8cc9-448283bd574c/scratchpad/placar.png',clip:{x:200,y:0,width:1166,height:330}});
- await p.evaluate(()=>renderAll());await p.waitForTimeout(400);ok(!(await p.$('#mb')),'repetiu a festa no mesmo dia');
- await p.click('.mbBadge');await p.waitForTimeout(300);ok(await p.isVisible('#mb'),'botão não comemora');await p.keyboard.press('Escape');await p.waitForTimeout(700);ok(!(await p.$('#mb')),'Esc não fecha');
- await p.evaluate(()=>{MT()['Galpão 1']=500;renderAll()});ok(!(await p.$eval('#kpis .placar',e=>e.classList.contains('win'))),'dourado sem bater meta')});
+ await p.waitForTimeout(1800);await p.screenshot({path:'/tmp/claude-0/-home-claude/1b46621a-564c-549a-8cc9-448283bd574c/scratchpad/festa2.png'});
+ await p.keyboard.press('Escape');await p.waitForTimeout(800);ok(!(await p.$('#mb')),'Esc não fecha');
+ await p.evaluate(()=>renderAll());await p.waitForTimeout(300);ok(!(await p.$('#mb')),'abriu sozinha depois');
+ await p.evaluate(()=>{MT()['Galpão 1']=500;renderAll()});ok(!(await p.$eval('#kpis .placar',e=>e.classList.contains('win')))&&!(await p.$('.mbBadge')),'dourado sem bater meta')});
 await T("51 Operador: nomes aparecem em cartões a partir da primeira letra, sem lista nativa",async()=>{
  const p=await page(b,base());await p.evaluate(()=>go('op'));
  ok(!(await p.$eval('#opIn',e=>e.hasAttribute('list'))),'ainda usa a lista nativa');
