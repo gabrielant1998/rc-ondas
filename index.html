@@ -236,7 +236,7 @@ a[data-pick]{display:inline-block;padding:8px 0 2px;color:var(--gx);font-weight:
   <div class="card"><h2>Nova onda</h2>
    <div class="prog"><div class="pbar"><b id="pbar"></b></div><div class="plab"><span data-sp="1">Operador</span><span data-sp="2">Tipo</span><span data-sp="3">Ondas</span></div></div>
    <div class="stp" id="s1"><div class="f">
-    <label>Operador<input id="opIn" autocomplete="off" role="combobox" aria-expanded="false" aria-controls="opSug" autocomplete="off"></label><datalist id="opl"></datalist>
+    <label>Operador<input id="opIn" placeholder="Digite o nome" autocomplete="off" role="combobox" aria-expanded="false" aria-controls="opSug" autocomplete="off"></label><datalist id="opl"></datalist>
     <div id="opName"></div><div id="opSug" role="listbox" aria-label="Operadores encontrados"></div>
     <div class="ctl2"><span></span><button class="btn sm" id="n1">Continuar</button></div>
    </div></div>
@@ -732,7 +732,7 @@ function goStep(n){
  $("#sr").textContent="Etapa "+n+" de 3: "+["operador","tipo de onda","número e quantidade das ondas"][n-1];
  setTimeout(()=>{if($("#op").classList.contains("hide"))return;const f=n===1?$("#opIn"):n===2?($("#types_b button.on")||$("#types_b button")):$$("[data-wn]").pop();if(f)f.focus({preventScroll:true})},60)}
 function rowHtml(r,i){const lim=S.cfg.lim[ty];return`<div class="wrow">
-   <label><span>Nº da onda</span><input data-wn="${i}" value="${esc(r.wn)}" inputmode="numeric" autocomplete="off" enterkeyhint="next"></label>
+   <label><span>Nº da onda</span><input data-wn="${i}" value="${esc(r.wn)}" placeholder="Bipe a onda" inputmode="numeric" autocomplete="off" enterkeyhint="next"></label>
    <label><span>Quantidade</span><input data-q="${i}" type="number" inputmode="numeric" min="1" value="${esc(r.q)}" placeholder="0" enterkeyhint="next"></label>
    <button class="x" data-rmrow="${i}" aria-label="Remover onda ${i+1}">×</button></div>`}
 function renderRows(){$("#rowsL").innerHTML=rows.map(rowHtml).join("")}
