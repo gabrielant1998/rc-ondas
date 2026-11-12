@@ -20,5 +20,3 @@ create policy metas_alterar on public.metas_diarias for update to authenticated
 create policy metas_excluir on public.metas_diarias for delete to authenticated
   using ((select private.g_pode('config')) and ((select private.g_admin()) or galpao_id = (select private.g_galpao())));
 
--- a meta fixa por galpão deixa de existir: a meta agora é por dia
-alter table public.galpoes drop column meta_diaria;
