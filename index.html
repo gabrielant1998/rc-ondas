@@ -380,6 +380,7 @@ if(!S){ /* migra base antiga, se existir */
 Object.keys(DEF.cfg).forEach(k=>{if(S.cfg[k]==null)S.cfg[k]=JSON.parse(JSON.stringify(DEF.cfg[k]))});
 if(!S.metasDia)S.metasDia={};
 function hoje(){const d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")}
+function MI(){S.metasInd=S.metasInd||{};return S.metasInd}
 function MT(){S.metasDia=S.metasDia||{};const k=hoje();if(!S.metasDia[k]){S.metasDia[k]={};Object.keys(S.metasDia).sort().slice(0,-60).forEach(x=>{if(x!==k)delete S.metasDia[x]})}return S.metasDia[k]}
 /* nomes antigos de tipo -> nomes novos, sem perder registros nem limites */
 S.waves.forEach(w=>{if(TYREN[w.ty])w.ty=TYREN[w.ty]});
@@ -439,7 +440,7 @@ function errMsg(e){if(!e.status)return"Sem conexão com o servidor. Tente de nov
 async function pull(){
  const [gs,ts,cf,os]=await Promise.all([api("/rest/v1/galpoes?select=*&order=nome"),api("/rest/v1/tipos_onda?select=*&order=ordem"),api("/rest/v1/config?select=*"),api("/rest/v1/operadores?select=*&order=codigo")]);
  GID={};GN={};gs.forEach(g=>{GID[g.nome]=g.id;GN[g.id]=g.nome});
- S.gals=gs.map(g=>g.nome);
+ S.gals=gs.map(g=>g.nome);S.metasInd={};gs.forEach(g=>{if(g.meta_ind_ondas||g.meta_ind_qtd)S.metasInd[g.nome]={o:g.meta_ind_ondas||0,q:g.meta_ind_qtd||0}});
  ts.forEach(t=>{S.cfg.lim[t.nome]=t.limite});
  const c=cf[0];if(c){S.cfg.turnos={1:{ini:c.turno1_ini,fim:c.turno1_fim},2:{ini:c.turno2_ini,fim:c.turno2_fim}};S.cfg.gap=c.intervalo_max_min;S.cfg.tol=c.tolerancia_min;S.cfg.and=c.ondas_em_andamento}
  OPSALL={};os.forEach(o=>{OPSALL[o.id]=o});
@@ -490,6 +491,7 @@ function remChange(e){const d=e.target.dataset,id=e.target.id,v=e.target.value;
  if(d.ug2){const o=opOf(d.ug2);if(o)return rem(()=>mut("/rest/v1/operadores?id=eq."+o.id,"PATCH",{galpao_id:GID[v]}),o.n+" agora no "+v)}
  if(d.gre!==undefined){const old=S.gals[+d.gre],nv=v.trim();if(!nv){cfgGals();return}
   return rem(()=>mut("/rest/v1/galpoes?id=eq."+GID[old],"PATCH",{nome:nv}),"Galpão renomeado")}
+ if(d.gmo!==undefined||d.gmq!==undefined){const campo=d.gmo!==undefined?"meta_ind_ondas":"meta_ind_qtd",gn=d.gmo!==undefined?d.gmo:d.gmq,n=Math.floor(+v),gid=GID[gn];return rem(()=>mut("/rest/v1/galpoes?id=eq."+gid,"PATCH",{[campo]:n>0?n:null}),"Meta individual salva")}
  if(d.gmeta!==undefined){const n=Math.floor(+v),gid=GID[d.gmeta];return rem(()=>n>0?api("/rest/v1/metas_diarias?on_conflict=galpao_id,data",{method:"POST",body:{galpao_id:gid,data:hoje(),meta:n},prefer:"resolution=merge-duplicates,return=representation"}):api("/rest/v1/metas_diarias?galpao_id=eq."+gid+"&data=eq."+hoje(),{method:"DELETE"}),n>0?"Meta de hoje salva":"Meta de hoje removida")}}
 function remWave(d){const id=d.fin||d.sd||d.del,w=S.waves.find(x=>x.id===id);if(!w)return;
  if(!w.srv){
@@ -633,11 +635,11 @@ function desenhaPainelPublico(x,g,t){
  const K=(a,b,c)=>`<div class="kpi"><dt>${a}</dt><dd class="num">${b}</dd><dd class="sm">${c||''}</dd></div>`;
  const metaTxt=t?'Meta diária do galpão completo':meta?'Meta diária: '+fmt(meta)+' unidades':'Meta diária não cadastrada';
  $("#kpis").innerHTML=`<div class="placar"><div><div class="num">${fmt(tot)}</div><div class="un">unidades produzidas</div></div><div class="regua"><div class="hd"><span>${metaTxt}</span><b>${!t&&meta?fmt(tot/meta*100)+'% da meta':''}</b></div><div class="trk"><b style="width:${!t&&meta?Math.min(100,tot/meta*100):0}%"></b></div></div></div><dl class="stats">`+
- K('Ondas concluídas',fmt(n),'')+K('Pessoas',fmt(pes),'com produção')+K('Tempo médio de onda',x.dur_n?mm(x.dur_ms/x.dur_n):'—',x.dur_n?fmt(x.dur_n)+' intervalos':'sem medições')+K('Unidades por onda',n?fmt(tot/n):'0','em média')+K('Produção fora do turno',fmt(x.extra_un||0),'unidades em '+fmt(x.extra_ondas||0)+' ondas')+'</dl>';
+ K('Ondas concluídas',fmt(n),'')+K('Pessoas',fmt(pes),'com produção')+K('Tempo médio de onda',x.dur_n?mm(x.dur_ms/x.dur_n):'—',x.dur_n?fmt(x.dur_n)+' intervalos':'sem medições')+K('Unidades por onda',n?fmt(tot/n):'0','em média')+K('Procurando',fmt((x.procurando||{}).ondas||0),fmt((x.procurando||{}).qtd||0)+' unidades')+K('Produção fora do turno',fmt(x.extra_un||0),'unidades em '+fmt(x.extra_ondas||0)+' ondas')+'</dl>';
  const a=Array(24).fill(0);(x.horas||[]).forEach(z=>a[z.hora]=+z.qtd);const [i0,i1]=hourWindow(a);$("#chH").innerHTML=barsSvg(a,i0,i1);$("#peak").textContent=tot?'pico '+a.indexOf(Math.max(...a))+'h':'';
  const types=x.tipos||[];$("#chT").innerHTML=TY.map(([name,c])=>{const z=types.find(v=>v.tipo===name)||{};return `<div class="trow" style="--c:${c}">${ico(name)}<b>${name}</b><span class="v"><span class="num">${fmt(z.qtd||0)}</span><small>${fmt(z.ondas||0)} ondas</small></span></div>`}).join('');
  $("#gals").innerHTML=bars((x.galpoes||[]).map(z=>({k:z.nome,v:+z.qtd||0,s:fmt(z.ondas)+' ondas, '+fmt(z.pessoas)+' pessoas',c:'var(--g)'})));
- const dt=x.dur_tipos||[];$("#tmp").innerHTML=TY.map(([name,c])=>{const z=dt.find(v=>v.tipo===name)||{},n=+z.n||0,ms=n?(+z.ms||0)/n:0;return `<div class="gal"><div class="r"><b>${name}</b><span>${n?mm(ms):'—'} <small style="color:var(--mut)">${n} medições</small></span></div><div class="bar"><b style="width:${n?Math.min(ms/((S.cfg.gap||30)*6e4)*100,100):0}%;--c:${c}"></b></div></div>`}).join('')+`<div class="legend">Intervalos entre ondas concluídas do mesmo operador, até ${S.cfg.gap||30} min.</div>`;
+ const dt=x.dur_tipos||[];const rk=v=>{const z=dt.find(q=>q.tipo===v)||{};return +z.n?(+z.ms)/(+z.n):0},TYR=TY.slice().sort((a,b)=>rk(b[0])-rk(a[0]));$("#tmp").innerHTML=TYR.map(([name,c])=>{const z=dt.find(v=>v.tipo===name)||{},n=+z.n||0,ms=n?(+z.ms||0)/n:0;return `<div class="gal"><div class="r"><b>${n?(TYR.findIndex(q=>q[0]===name)+1)+'º ':''}${name}</b><span>${n?mm(ms):'—'} <small style="color:var(--mut)">${n} medições</small></span></div><div class="bar"><b style="width:${n?Math.min(ms/((S.cfg.gap||30)*6e4)*100,100):0}%;--c:${c}"></b></div></div>`}).join('')+`<div class="legend">Intervalos entre ondas concluídas do mesmo operador, até ${S.cfg.gap||30} min.</div>`;
  $("#pace").innerHTML='<span class="legend">Painel público com totais consolidados. Registros ainda offline aparecem após a sincronização.</span>';
 }
 
@@ -659,6 +661,7 @@ function painel(){
  let tk="";for(let x=TW.ini;x<=F;x+=passo)tk+=`<span style="left:${(x-TW.ini)/vao*100}%">${x%24}h</span>`;
  const msg=!metaT?"Meta de hoje não definida. Cadastre em Configurações, Galpões.":faltam<=0?"Meta batida":!isNow?"Faltaram "+fmt(faltam)+" para a meta":nf>F?"Turno encerrado, faltaram "+fmt(faltam):nf<TW.ini?"O turno ainda não começou":dif>=0?fmt(dif)+" à frente do ritmo":fmt(-dif)+" atrás do ritmo",
   ruim=metaT&&faltam>0&&(!isNow||nf>F||(nf>=TW.ini&&dif<0));
+ const PR=S.waves.filter(w=>w.st===1&&inView(w)&&(!g||w.gal===g));
  const K=(t,v,s)=>`<div class="kpi"><dt>${t}</dt><dd class="num">${v}</dd>${s?`<dd class="sm">${s}</dd>`:""}</div>`;
  $("#kpis").innerHTML=`<div class="placar"><div><div class="num">${fmt(tot)}</div><div class="un">unidades produzidas</div></div>
   <div class="regua"><div class="hd"><span>${metaT?Math.round(tot/metaT*100)+"% da meta de "+fmt(metaT):"Produção do turno"}</span><b class="${ruim?"bad":""}">${msg}</b></div>
@@ -668,6 +671,7 @@ function painel(){
   K("Pessoas",fmt(pes),"com produção")+
   K("Tempo médio de onda",D.length?mm(md):"—",D.length?"em "+D.length+" intervalos":"sem medições")+
   K("Unidades por onda",ond?fmt(tot/ond):"0","em média")+
+  K("Procurando",fmt(PR.length),fmt(PR.reduce((a,w)=>a+w.qty,0))+" unidades")+
   K("Hora extra",fmt(ot.reduce((s,w)=>s+w.qty,0)),"unidades em "+ot.length+" ondas")+"</dl>";
  $("#chH").innerHTML=barsSvg(a,i0,i1,{need:need,avg:avgH});
  $("#pace").innerHTML=metaT&&isNow&&faltam>0&&remain>0?"Para bater a meta é preciso fazer <b>"+fmt(need)+" unidades por hora</b>"+(upw?", perto de "+ondH.toLocaleString("pt-BR",{maximumFractionDigits:1})+" ondas por hora":"")+". A média até agora é de "+fmt(avgH)+" por hora.":"";
@@ -678,8 +682,9 @@ function painel(){
  $("#gals").innerHTML=bars(visG().map((k,i)=>{const q=prod(all).filter(w=>w.gal===k);
   const v0=q.reduce((s,w)=>s+w.qty,0),m=MT()[k];return{k,v:v0,p:m?Math.min(v0/m*100,100):null,s:(m?Math.round(v0/m*100)+"% da meta de "+fmt(m)+", ":"")+q.length+" ondas, "+(new Set(q.map(w=>w.op)).size===1?"1 pessoa":new Set(q.map(w=>w.op)).size+" pessoas"),c:["var(--g)","var(--v)","var(--a)","var(--t)"][i%4]}}));
  const Dg=durs(L);
- $("#tmp").innerHTML=TY.map(([n,c])=>{const d=Dg.filter(x=>x.w.ty===n).map(x=>x.d);
-  return`<div class="gal"><div class="r"><b>${n}</b><span>${d.length?mm(avg(d)):"—"} <small style="color:var(--mut)">${d.length} medições</small></span></div><div class="bar"><b style="width:${d.length?Math.min(avg(d)/((S.cfg.gap||30)*6e4)*100,100):0}%;--c:${c}"></b></div></div>`}).join("")
+ const TYR=TY.slice().sort((a,b)=>avg(Dg.filter(x=>x.w.ty===b[0]).map(x=>x.d))-avg(Dg.filter(x=>x.w.ty===a[0]).map(x=>x.d)));
+ $("#tmp").innerHTML=TYR.map(([n,c])=>{const d=Dg.filter(x=>x.w.ty===n).map(x=>x.d);
+  return`<div class="gal"><div class="r"><b>${d.length?(TYR.findIndex(z=>z[0]===n)+1)+"º ":""}${n}</b><span>${d.length?mm(avg(d)):"—"} <small style="color:var(--mut)">${d.length} medições</small></span></div><div class="bar"><b style="width:${d.length?Math.min(avg(d)/((S.cfg.gap||30)*6e4)*100,100):0}%;--c:${c}"></b></div></div>`}).join("")
   +`<div class="legend">Medido pelo intervalo entre ondas concluídas do mesmo operador, ignorando pausas acima de ${S.cfg.gap||30} min.</div>`;
 }
 
@@ -773,6 +778,8 @@ function mgExtra(o,d,L){
  return {ms,count:times.filter(x=>x<start||x>end).length};
 }
 function mgReference(o,data){let sum=0,has=false;for(const d of data.days){const own=data.byOpDay.get(d+'|'+o.m)||[],people=data.byGalDay.get(d+'|'+o.g),meta=+MT()[o.g]||0;if(own.length&&people&&people.size&&meta){sum+=meta/people.size;has=true}}return has?sum:null}
+function metaInd(o,L){const m=MI()[o.g]||{},dias=Math.max(new Set(prod(L).map(w=>dk(w.ts))).size,1);return{o:m.o?m.o*dias:0,q:m.q?m.q*dias:0}}
+const vsMeta=(v,m)=>m?`${fmt(v)} / ${fmt(m)} <small>${Math.round(v/m*100)}%</small>`:"—";
 const mgK=(t,v,sub)=>`<div class="kpi"><dt>${t}</dt><dd class="num">${v}</dd><dd class="sm">${sub||''}</dd></div>`;
 function mgHistory(list){return list.length?`<table><tr><th>Data e hora</th><th>Onda (WN)</th><th>Tipo</th><th>Quantidade</th><th>Situação</th></tr>`+list.map(w=>`<tr><td>${new Date(w.ts).toLocaleString('pt-BR')}</td><td>${esc(w.wn||'—')}</td><td>${esc(w.ty)}</td><td>${fmt(w.qty)}</td><td>${esc(ST[w.st]||'—')}${!w.sync?' · pendente':''}</td></tr>`).join('')+'</table>':'<div class="empty">Nenhuma onda registrada.</div>'}
 function individual(){
@@ -783,10 +790,10 @@ function individual(){
  if(!ops.length){$("#iBody").innerHTML='<div class="card"><div class="empty">Nenhum operador para os filtros selecionados.</div></div>';return}
  const selected=ops.find(o=>o.m===sel.value);
  if(!selected){
-  const rows=ops.map(o=>{const L=data.days.flatMap(d=>data.byOpDay.get(d+'|'+o.m)||[]),P=prod(L),days=data.days.map(d=>mgStatus(o,d,data.byOpDay.get(d+'|'+o.m)||[],data)),extra=data.days.map(d=>mgExtra(o,d,data.byOpDay.get(d+'|'+o.m)||[]));return{o,qty:P.reduce((s,w)=>s+w.qty,0),n:P.length,ref:mgReference(o,data),miss:days.filter(x=>x.startsWith('Falta')).length,ms:extra.reduce((s,x)=>s+x.ms,0),ot:extra.reduce((s,x)=>s+x.count,0)}});
-  $("#iBody").innerHTML=`<div class="card"><h2>Equipe no período</h2><div class="tw"><table><tr><th>Operador</th><th>Turno</th><th>Unidades</th><th>Ondas concluídas</th><th>Referência individual</th><th>Faltas a conferir</th><th>Hora extra estimada</th></tr>`+
-   rows.map(x=>`<tr><td><a href="#" data-pick="${esc(x.o.m)}">${esc(x.o.n)}</a><br><small>${esc(x.o.m.split('~')[0])}</small></td><td>${x.o.t}º</td><td><b>${fmt(x.qty)}</b></td><td>${x.n}</td><td>${x.ref===null?'Sem meta':fmt(x.ref)+' un.'}</td><td>${x.miss}</td><td>${x.ms?hh(x.ms):x.ot?'Sem medição':'—'}</td></tr>`).join('')+
-   `</table></div><div class="legend">A referência divide a meta diária atual do galpão entre as pessoas com bipagem no dia. É uma referência ajustável pelo movimento, não um ranking. Falta indica ausência de bipagem em dia com operação no turno; confirme folgas, afastamentos e outras atividades. Hora extra é estimada pelos intervalos entre bipagens, respeitando o intervalo máximo configurado.</div></div>`;return;
+  const rows=ops.map(o=>{const L=data.days.flatMap(d=>data.byOpDay.get(d+'|'+o.m)||[]),P=prod(L),days=data.days.map(d=>mgStatus(o,d,data.byOpDay.get(d+'|'+o.m)||[],data)),extra=data.days.map(d=>mgExtra(o,d,data.byOpDay.get(d+'|'+o.m)||[]));return{o,qty:P.reduce((s,w)=>s+w.qty,0),n:P.length,ref:mgReference(o,data),mi:metaInd(o,L),miss:days.filter(x=>x.startsWith('Falta')).length,ms:extra.reduce((s,x)=>s+x.ms,0),ot:extra.reduce((s,x)=>s+x.count,0)}});
+  $("#iBody").innerHTML=`<div class="card"><h2>Equipe no período</h2><div class="tw"><table><tr><th>Operador</th><th>Turno</th><th>Unidades / meta</th><th>Ondas / meta</th><th>Referência individual</th><th>Faltas a conferir</th><th>Hora extra estimada</th></tr>`+
+   rows.map(x=>`<tr><td><a href="#" data-pick="${esc(x.o.m)}">${esc(x.o.n)}</a><br><small>${esc(x.o.m.split('~')[0])}</small></td><td>${x.o.t}º</td><td><b>${x.mi.q?vsMeta(x.qty,x.mi.q):fmt(x.qty)}</b></td><td>${x.mi.o?vsMeta(x.n,x.mi.o):x.n}</td><td>${x.ref===null?'Sem meta':fmt(x.ref)+' un.'}</td><td>${x.miss}</td><td>${x.ms?hh(x.ms):x.ot?'Sem medição':'—'}</td></tr>`).join('')+
+   `</table></div><div class="legend">As metas individuais (ondas e unidades por dia) vêm de Configurações, Galpões e valem para cada dia com bipagem. A referência divide a meta diária atual do galpão entre as pessoas com bipagem no dia. É uma referência ajustável pelo movimento, não um ranking. Falta indica ausência de bipagem em dia com operação no turno; confirme folgas, afastamentos e outras atividades. Hora extra é estimada pelos intervalos entre bipagens, respeitando o intervalo máximo configurado.</div></div>`;return;
  }
  const o=selected,L=data.days.flatMap(d=>data.byOpDay.get(d+'|'+o.m)||[]),P=prod(L),qty=P.reduce((s,w)=>s+w.qty,0),ref=mgReference(o,data);
  const daily=data.days.slice().reverse().filter(d=>mgEligible(o,d)).map(d=>{const w=data.byOpDay.get(d+'|'+o.m)||[],p=prod(w),x=mgExtra(o,d,w);return{d,w,p,x,status:mgStatus(o,d,w,data)}}),miss=daily.filter(x=>x.status.startsWith('Falta')).length,extra=daily.reduce((s,x)=>s+x.x.ms,0),ot=daily.reduce((s,x)=>s+x.x.count,0);
@@ -794,7 +801,7 @@ function individual(){
  const history=L.slice().sort((a,b)=>b.ts-a.ts);
  $("#iBody").innerHTML=`<dl class="stats solo">`+
  mgK('Produção de '+esc(o.n),fmt(qty),'unidades concluídas')+mgK('Ondas concluídas',fmt(P.length),fmt(L.length)+' registros no total')+
- mgK('Referência individual',ref===null?'—':fmt(ref),ref===null?'defina a meta do galpão':fmt(qty/ref*100)+'% da referência')+
+ mgK('Meta individual: unidades',MI()[o.g]&&MI()[o.g].q?vsMeta(qty,metaInd(o,L).q):'—',MI()[o.g]&&MI()[o.g].q?'por dia com bipagem':'defina em Configurações')+mgK('Meta individual: ondas',MI()[o.g]&&MI()[o.g].o?vsMeta(P.length,metaInd(o,L).o):'—',MI()[o.g]&&MI()[o.g].o?'por dia com bipagem':'defina em Configurações')+mgK('Referência individual',ref===null?'—':fmt(ref),ref===null?'defina a meta do galpão':fmt(qty/ref*100)+'% da referência')+
  mgK('Faltas a conferir',fmt(miss),'dias sem bipagem')+mgK('Hora extra estimada',extra?hh(extra):ot?'—':'0h00',ot?ot+' bipagem(ns) fora do turno':'sem bipagens fora do turno')+`</dl>
  <div class="grid two" style="margin-top:14px"><div class="card"><h2>Produção por tipo</h2>${bars(types)}</div><div class="card"><h2>Como calcular</h2><div class="legend">A referência é a meta diária atual do galpão dividida entre as pessoas que biparam no dia. Os tipos de onda têm dificuldades diferentes; o valor serve apenas para acompanhamento. A hora extra soma intervalos entre bipagens fora do turno, até o intervalo máximo configurado. Uma bipagem isolada não permite calcular horas. Não substitui o controle de ponto.</div></div></div>
  <div class="card" style="margin-top:14px"><h2>Resumo por dia</h2><div class="tw"><table><tr><th>Data</th><th>Situação</th><th>Unidades</th><th>Ondas</th><th>Primeira / última</th><th>Extra estimada</th></tr>`+
@@ -802,6 +809,9 @@ function individual(){
  `</table></div><div class="legend">Falta: sem bipagem no dia após o fim do turno, quando houve operação registrada no mesmo galpão e turno. Verifique folga, afastamento, falha de sincronização ou atividade sem bipagem.</div></div>
  <div class="card" style="margin-top:14px"><h2>Histórico das ondas · ${fmt(history.length)} registros</h2><div class="tw">${mgHistory(history.slice(0,mgShown))}</div>${history.length>mgShown?'<button class="btn alt sm" id="mgMore">Mostrar mais registros</button>':''}</div>`;
 }
+function coTipos(W,P,people){const D=durs(W),pp=Math.max(people,1);
+ return`<table><tr><th>Tipo</th><th>Ondas</th><th>Unidades</th><th>Tempo médio entre ondas</th><th>Ondas por pessoa</th><th>Tempo por pessoa</th></tr>`+TY.map(([n])=>{const q=P.filter(w=>w.ty===n),d=D.filter(x=>x.w.ty===n).map(x=>x.d),sum=d.reduce((a,v)=>a+v,0);
+  return`<tr><td><b>${esc(n)}</b></td><td>${fmt(q.length)}</td><td>${fmt(q.reduce((a,w)=>a+w.qty,0))}</td><td>${d.length?mm(avg(d)):"—"}</td><td>${(q.length/pp).toLocaleString("pt-BR",{maximumFractionDigits:1})}</td><td>${d.length?mm(sum/pp):"—"}</td></tr>`}).join("")+"</table>"}
 function coletiva(){
  const target=$("#coBody");if(ON&&me&&MGW===null){target.innerHTML='<div class="card"><div class="empty">'+esc(mgState||'Carregando histórico…')+'</div></div>';return}
  const data=mgData(),g=$("#gal").value,t=$("#turnoF").value,opmap=new Map(data.ops.map(o=>[o.m,o]));
@@ -809,8 +819,9 @@ function coletiva(){
  const gals=(g==='__all'?visG():[g]).filter(Boolean),active=data.days.flatMap(d=>gals.filter(k=>d===dk(Date.now())||data.byGalDay.has(d+'|'+k)).map(k=>({d,k}))),missing=gals.filter(k=>!(+MT()[k]>0));
  const configured=active.reduce((sum,x)=>sum+(+MT()[x.k]||0),0),canCompare=!t&&!missing.length&&configured>0;
  const types=TY.map(([n,c])=>({k:n,v:P.filter(w=>w.ty===n).reduce((s,w)=>s+w.qty,0),s:P.filter(w=>w.ty===n).length+' ondas',c}));
- target.innerHTML=`<dl class="stats solo">`+mgK('Produção coletiva',fmt(total),'unidades concluídas')+mgK('Pessoas com bipagem',fmt(people),'no período')+mgK('Ondas concluídas',fmt(P.length),'compartilhadas pela equipe')+mgK('Meta coletiva',canCompare?fmt(configured):'—',t?'disponível em todos os turnos':missing.length?'configure a meta dos galpões':'dias com operação')+mgK('Atingimento',canCompare?fmt(total/configured*100)+'%':'—',canCompare?'da meta coletiva':'sem comparação disponível')+`</dl>
+ target.innerHTML=`<dl class="stats solo">`+mgK('Produção coletiva',fmt(total),'unidades concluídas')+mgK('Pessoas com bipagem',fmt(people),'no período')+mgK('Ondas concluídas',fmt(P.length),'compartilhadas pela equipe')+mgK('Procurando',fmt(W.filter(w=>w.st===1).length),fmt(W.filter(w=>w.st===1).reduce((a,w)=>a+w.qty,0))+' unidades')+mgK('Meta coletiva',canCompare?fmt(configured):'—',t?'disponível em todos os turnos':missing.length?'configure a meta dos galpões':'dias com operação')+mgK('Atingimento',canCompare?fmt(total/configured*100)+'%':'—',canCompare?'da meta coletiva':'sem comparação disponível')+`</dl>
  <div class="grid two" style="margin-top:14px"><div class="card"><h2>Produção por tipo de onda</h2>${bars(types)}</div><div class="card"><h2>Critério da meta coletiva</h2><div class="ins"><div>Somamos as unidades concluídas da equipe, sem ranking de pessoas.</div><div>A meta é a soma da meta diária atual dos galpões nos dias com bipagem registrada e no dia de hoje.</div><div>A meta cadastrada cobre o dia inteiro. Por isso, a comparação aparece somente com todos os turnos selecionados.</div><div>Faltas e horas extras não geram descontos automáticos. Os tipos são mostrados separadamente porque têm dificuldades diferentes. No histórico usamos a meta e os turnos atualmente cadastrados.</div></div></div></div>
+ <div class="card" style="margin-top:14px"><h2>Total por tipo e tempo entre ondas</h2><div class="tw">${coTipos(W,P,people)}</div><div class="legend">Tempo entre ondas: intervalo entre bipagens do mesmo operador, ignorando pausas acima de ${S.cfg.gap||30} min. A média por pessoa divide o total pelas ${fmt(people)} pessoas com bipagem no período.</div></div>
  ${missing.length?`<div class="legend">Galpões sem meta diária: ${missing.map(esc).join(', ')}. Cadastre em Config → Galpões.</div>`:''}`;
 }
 
@@ -835,8 +846,8 @@ function cfgUsers(){
 function soMeta(){return ON&&!!me&&!me.adm}
 function cfgGals(){const gest=soMeta();$("#gNovo").classList.toggle("hide",gest);
  $("#gL").previousElementSibling.textContent=gest?"Meta de hoje":"Galpões";$("#gLeg").textContent=gest?"A meta vale só para hoje: cada dia começa sem meta e você preenche de novo.":"A meta vale só para o dia de hoje: cada dia começa sem meta e você preenche de novo. Os dias anteriores ficam salvos. Renomear um galpão atualiza os registros já lançados.";
- $("#gL").innerHTML=`<table><tr><th>Galpão</th><th>Meta de hoje</th>${gest?"":"<th>Registros</th><th></th>"}</tr>`+S.gals.map((g,i)=>[g,i]).filter(x=>!gest||x[0]===me.g).map(([g,i])=>{const n=S.waves.filter(w=>w.gal===g).length;
-  return`<tr><td>${gest?`<b>${esc(g)}</b>`:`<input data-gre="${i}" value="${esc(g)}" aria-label="Nome do galpão">`}</td><td><input type="number" min="0" data-gmeta="${esc(g)}" aria-label="Meta de hoje de ${esc(g)}" value="${MT()[g]||""}" placeholder="sem meta" style="width:130px"></td>${gest?"":`<td>${n}</td><td><button class="btn d sm" data-gdel="${i}"${S.gals.length<2?" disabled style='opacity:.4'":""}>Excluir</button></td>`}</tr>`}).join("")+"</table>"}
+ $("#gL").innerHTML=`<table><tr><th>Galpão</th><th>Meta de hoje</th><th>Meta individual: ondas/dia</th><th>Meta individual: unidades/dia</th>${gest?"":"<th>Registros</th><th></th>"}</tr>`+S.gals.map((g,i)=>[g,i]).filter(x=>!gest||x[0]===me.g).map(([g,i])=>{const n=S.waves.filter(w=>w.gal===g).length;
+  return`<tr><td>${gest?`<b>${esc(g)}</b>`:`<input data-gre="${i}" value="${esc(g)}" aria-label="Nome do galpão">`}</td><td><input type="number" min="0" data-gmeta="${esc(g)}" aria-label="Meta de hoje de ${esc(g)}" value="${MT()[g]||""}" placeholder="sem meta" style="width:130px"></td><td><input type="number" min="0" data-gmo="${esc(g)}" aria-label="Meta individual de ondas por dia em ${esc(g)}" value="${(MI()[g]||{}).o||""}" placeholder="sem meta" style="width:110px"></td><td><input type="number" min="0" data-gmq="${esc(g)}" aria-label="Meta individual de unidades por dia em ${esc(g)}" value="${(MI()[g]||{}).q||""}" placeholder="sem meta" style="width:110px"></td>${gest?"":`<td>${n}</td><td><button class="btn d sm" data-gdel="${i}"${S.gals.length<2?" disabled style='opacity:.4'":""}>Excluir</button></td>`}</tr>`}).join("")+"</table>"}
 function cfgGes(){
  $("#mG").innerHTML=S.gals.map(g=>`<option>${esc(g)}</option>`).join("");
  $("#pedL").innerHTML=SOL.length?`<table><tr><th>E-mail</th><th></th></tr>`+SOL.map(s=>`<tr><td><b>${esc(s.nome||"Sem nome")}</b><br>${esc(s.email)}<br><small style="color:var(--mut)">${esc((s.galpao_id&&GN[s.galpao_id])||"sem galpão")}, pediu em ${new Date(s.criado_em).toLocaleDateString("pt-BR")}</small></td><td style="white-space:nowrap"><button class="btn sm" data-sacc="${esc(s.email)}">Aceitar</button> <button class="btn d sm" data-srec="${esc(s.email)}">Recusar</button></td></tr>`).join("")+"</table>"
@@ -1080,6 +1091,7 @@ document.addEventListener("change",e=>{const d=e.target.dataset,id=e.target.id;l
   if(!nv||S.gals.some((g,j)=>j!==i&&g.toLowerCase()===nv.toLowerCase())){toast("Nome inválido ou repetido");cfgGals();return}
   S.gals[i]=nv;const mt0=MT();if(mt0[old]!=null){mt0[nv]=mt0[old];delete mt0[old]}S.waves.forEach(w=>{if(w.gal===old)w.gal=nv});S.ops.forEach(o=>{if(o.g===old)o.g=nv});S.ges.forEach(x=>{if(x.g===old)x.g=nv});
   if(S.gal===old)S.gal=nv;r=true;toast("Galpão renomeado")}
+ if(d.gmo!==undefined||d.gmq!==undefined){const k=d.gmo!==undefined?"o":"q",gn=d.gmo!==undefined?d.gmo:d.gmq,v=Math.floor(+e.target.value)||0,m=MI()[gn]=MI()[gn]||{o:0,q:0};m[k]=v>0?v:0;if(!m.o&&!m.q)delete MI()[gn];r=true;toast("Meta individual salva")}
  if(d.gmeta!==undefined){const v=Math.floor(+e.target.value);if(v>0)MT()[d.gmeta]=v;else delete MT()[d.gmeta];r=true;toast(v>0?"Meta de "+d.gmeta+": "+fmt(v):"Meta removida")}
  if(r){save();if(view==="cfg")cfgRender();renderAll()}});
 

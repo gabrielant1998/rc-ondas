@@ -223,6 +223,43 @@ await T("42 Adicionar outra onda aparece só em Pacote do mesmo",async()=>{const
 await T("34 Gestão: meta coletiva soma produção uma vez e mantém tipos",async()=>{const now=Date.now(),waves=[{id:'a',wn:'a',op:'CL001',opn:'Ana Souza',gal:'Galpão 1',ty:'Vários artigos',qty:10,st:0,ts:now,fin:now,sync:1},{id:'b',wn:'b',op:'CL002',opn:'Bruno Lima',gal:'Galpão 1',ty:'Retrabalho',qty:20,st:0,ts:now,fin:now,sync:1}];
  const p=await page(b,base({waves}));await p.evaluate(()=>{go('ind');document.querySelector('[data-gs="mc"]').click()});const txt=await p.textContent('#coBody');ok(txt.includes('30')&&txt.includes('10.000')&&txt.includes('Retrabalho'),'coletiva: '+txt);
 });
+
+const HR=(h,m)=>{const d=new Date();d.setHours(h,m,0,0);return d.getTime()};
+const WV=(id,wn,ty,qty,t,op='CL001',opn='Ana Souza',st=0)=>({id,wn,op,opn,gal:'Galpão 1',ty,qty,st,ts:t,fin:st===0?t:null,sync:1});
+await T("43 Procurando: bipar onda existente pede SKU, tira da produção e Encontrada devolve",async()=>{
+ const p=await page(b,base({waves:[WV('a','00123','Vários artigos',10,HR(9,0)),WV('b','456','Vários artigos',20,HR(9,10))]}));
+ await p.evaluate(()=>go('op'));await p.click('#sub [data-s="pro"]');
+ await p.fill('#prBip','123');await p.press('#prBip','Enter');ok(await p.isVisible('#prSku'),'formulário não abriu');
+ await p.press('#prSku','Enter');ok((await p.textContent('#toast')).includes('SKU'),'deixou salvar sem SKU');
+ await p.fill('#prNome','Maria');await p.fill('#prSku','SKU-9');await p.fill('#prLoc','A-01');await p.press('#prLoc','Enter');
+ const lista=await p.textContent('#prList');ok(lista.includes('123')&&lista.includes('SKU-9')&&lista.includes('A-01')&&lista.includes('Maria'),'lista: '+lista);
+ await p.evaluate(()=>go('painel'));const k=await p.textContent('#kpis');ok(/Procurando\s*1/.test(k.replace(/\s+/g,' ')),'painel não mostra 1 procurando: '+k.replace(/\s+/g,' ').slice(0,300));
+ const prod=await p.evaluate(()=>prod(S.waves).reduce((a,w)=>a+w.qty,0));ok(prod===20,'produção deveria ser 20, é '+prod);
+ await p.reload();const w=await p.evaluate(()=>S.waves.find(x=>x.id==='a'));ok(w.st===1&&w.sku==='SKU-9'&&w.loc==='A-01'&&w.pn==='Maria','não persistiu: '+JSON.stringify(w));
+ await p.evaluate(()=>go('op'));await p.click('#sub [data-s="pro"]');await p.click('[data-prf="a"]');
+ const w2=(await st(p)).waves.find(x=>x.id==='a');ok(w2.st===0&&w2.fin,'não voltou ao status 0');
+ const prod2=await p.evaluate(()=>prod(S.waves).reduce((a,w)=>a+w.qty,0));ok(prod2===30,'produção deveria voltar a 30, é '+prod2)});
+await T("44 Procurando: WN inexistente e onda em difícil acesso não abrem formulário",async()=>{
+ const p=await page(b,base({waves:[WV('a','900','Vários artigos',10,HR(9,0),'CL001','Ana Souza',2)]}));
+ await p.evaluate(()=>go('op'));await p.click('#sub [data-s="pro"]');
+ await p.fill('#prBip','777');await p.press('#prBip','Enter');ok(!(await p.isVisible('#prSku')),'abriu para WN inexistente');
+ await p.fill('#prBip','900');await p.press('#prBip','Enter');ok(!(await p.isVisible('#prSku')),'abriu para difícil acesso')});
+await T("45 Meta individual: configurar ondas e unidades aparece no Individual com percentual",async()=>{
+ const p=await page(b,base({waves:[WV('a','1','Vários artigos',10,HR(9,0)),WV('b','2','Vários artigos',20,HR(9,10))]}));
+ await p.evaluate(()=>go('cfg'));await p.click('[data-c="cga"]');
+ await p.fill('[data-gmo="Galpão 1"]','4');await p.press('[data-gmo="Galpão 1"]','Tab');await p.fill('[data-gmq="Galpão 1"]','60');await p.press('[data-gmq="Galpão 1"]','Tab');
+ await p.evaluate(()=>go('ind'));const t=(await p.textContent('#iBody')).replace(/\s+/g,' ');
+ ok(t.includes('30 / 60')&&t.includes('2 / 4')&&t.includes('50%'),'tabela: '+t.slice(0,400));
+ await p.selectOption('#iOp','CL001');const t2=(await p.textContent('#iBody')).replace(/\s+/g,' ');ok(t2.includes('30 / 60')&&t2.includes('2 / 4'),'individual: '+t2.slice(0,300))});
+await T("46 Coletiva: total por tipo com tempo entre ondas e média por pessoa",async()=>{
+ const p=await page(b,base({waves:[WV('a','1','Vários artigos',10,HR(9,0)),WV('b','2','Vários artigos',20,HR(9,10)),WV('c','3','Itens Únicos',5,HR(9,40),'CL002','Bruno Lima'),WV('d','4','Itens Únicos',5,HR(9,50),'CL002','Bruno Lima')]}));
+ await p.evaluate(()=>{go('ind');document.querySelector('[data-gs="mc"]').click()});const t=(await p.textContent('#coBody')).replace(/\s+/g,' ');
+ ok(t.includes('Total por tipo e tempo entre ondas'),'sem card');const linha=t.match(/Vários artigos230(\d\d:\d\d)([\d,]+)(\d\d:\d\d)/);
+ ok(linha&&linha[1]==='10:00'&&linha[2]==='1'&&linha[3]==='05:00','Vários: '+(linha&&linha.slice(1).join('|'))+' | '+t.slice(t.indexOf('Total por tipo'),t.indexOf('Total por tipo')+500))});
+await T("47 Painel: ranking de tipos pelo tempo, maior primeiro",async()=>{
+ const p=await page(b,base({waves:[WV('a','1','Vários artigos',10,HR(9,0)),WV('b','2','Vários artigos',10,HR(9,10)),WV('c','3','Itens Únicos',10,HR(9,12))]}));
+ await p.evaluate(()=>go('painel'));const t=(await p.textContent('#tmp')).replace(/\s+/g,' ');
+ ok(t.indexOf('1º Vários artigos')>=0&&t.indexOf('2º Itens Únicos')>=0&&t.indexOf('1º Vários artigos')<t.indexOf('2º Itens Únicos'),t.slice(0,300))});
 await b.close();
 const w=Math.max(...R.map(r=>r[1].length));for(const r of R)console.log((r[0]==="PASS"?"✅":"❌")+" "+r[1].padEnd(w)+"  "+r[2]);
 console.log(`\n${R.filter(r=>r[0]==="PASS").length}/${R.length} passaram`)})();

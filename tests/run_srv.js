@@ -85,6 +85,12 @@ function fake(db){const cors={'access-control-allow-origin':'*','access-control-
    if(m==='GET')return J(route,200,!g?[]:db.metas.filter(x=>x.data===eq('data')&&escopo(x.galpao_id)));
    if(m==='POST'){if(!podeC(body.galpao_id))return J(route,403,{code:'42501',message:'rls'});const i=db.metas.findIndex(x=>x.galpao_id===body.galpao_id&&x.data===body.data);if(i>=0)db.metas[i]=body;else db.metas.push(body);return J(route,201,[body])}
    if(m==='DELETE'){const gid=eq('galpao_id'),dt=eq('data');if(!podeC(gid))return J(route,200,[]);const had=db.metas.filter(x=>x.galpao_id===gid&&x.data===dt);db.metas=db.metas.filter(x=>!had.includes(x));return J(route,200,had)}}
+  if(t==='rpc/marcar_procurando'&&m==='POST'){const n=x=>String(x).replace(/^0+/,'');const o=db.ondas.find(x=>n(x.wn)===n(body.p_wn));
+   if(!body.p_sku||!String(body.p_sku).trim())return J(route,400,{code:'22023',message:'Informe o SKU (até 40 caracteres)'});
+   if(!o)return J(route,404,{code:'P0002',message:'Onda '+body.p_wn+' não está registrada'});
+   Object.assign(o,{status:1,concluida_em:null,procura_sku:body.p_sku,procura_local:body.p_local,procura_nome:body.p_nome,procura_em:new Date().toISOString()});
+   return J(route,200,{id:o.id,wn:o.wn,tipo:o.tipo,quantidade:o.quantidade,galpao_id:o.galpao_id,operador_id:o.operador_id,registrada_em:o.registrada_em,procura_em:o.procura_em})}
+  if(t==='rpc/encontrar_procurando'&&m==='POST'){const o=db.ondas.find(x=>x.wn===body.p_wn&&x.status===1);if(o){o.status=0;o.concluida_em=new Date().toISOString()}return J(route,200,!!o)}
   if(t==='rpc/apagar_ondas'&&m==='POST'){if(!(g&&g.admin))return J(route,403,{code:'42501',message:'Somente o administrador pode apagar registros'});
    const ini=Date.parse(body.p_de+'T00:00:00-03:00'),fim=Date.parse(body.p_ate+'T00:00:00-03:00')+864e5;
    const alvo=db.ondas.filter(o=>{const t0=Date.parse(o.registrada_em);return t0>=ini&&t0<fim&&(!body.p_galpao||o.galpao_id===body.p_galpao)});
@@ -242,6 +248,31 @@ await T('S17 Celular: registro público funciona e não há erro de JavaScript',
  await reg(p,'CL002','Pacote do mesmo',[[9501,4]]);ok(db.ondas.length===1&&db.ondas[0].galpao_id===G2,'não chegou');ok(p.errors.length===0,p.errors.join(';'));
  ok((await p.evaluate(()=>document.documentElement.scrollWidth))<=392,'rolagem lateral')});
 
+
+await T('S22 Gestor comum vê só "Meta do dia" e não cria nem lista galpões; admin vê tudo',async()=>{const db=banco();const p=await page(b,db);
+ await login(p,'g2@x.com','senha1234');await p.click('.tab[data-t="cfg"]');
+ const g=await p.evaluate(()=>({tab:document.querySelector('#csub [data-c="cga"]').textContent,novo:document.querySelector('#gNovo').classList.contains('hide'),nomes:document.querySelectorAll('#gL [data-gre]').length,linhas:document.querySelectorAll('#gL tr').length,txt:document.querySelector('#gL').textContent}));
+ ok(g.tab==='Meta do dia'&&g.novo&&g.nomes===0&&g.linhas===2&&g.txt.includes('Galpão 2')&&!g.txt.includes('Galpão 1'),JSON.stringify(g));
+ await p.click('#logbtn');await login(p,'adm@x.com','senha1234');await p.click('.tab[data-t="cfg"]');
+ const a=await p.evaluate(()=>({tab:document.querySelector('#csub [data-c="cga"]').textContent,novo:document.querySelector('#gNovo').classList.contains('hide'),nomes:document.querySelectorAll('#gL [data-gre]').length}));
+ ok(a.tab==='Galpões'&&!a.novo&&a.nomes===2,JSON.stringify(a))});
+await T('S23 Procurando no servidor: operador sem login marca com SKU e encontra; WN desconhecido avisa',async()=>{const db=banco();
+ db.ondas.push({id:'x1',wn:'555',operador_id:db.operadores[0].id,galpao_id:G1,tipo:'Vários artigos',quantidade:40,status:0,registrada_em:new Date().toISOString(),concluida_em:new Date().toISOString()});
+ const p=await page(b,db);await p.click('.tab[data-t="op"]');await p.click('#sub [data-s="pro"]');
+ await p.fill('#prBip','999');await p.press('#prBip','Enter');await p.fill('#prSku','S1');await p.press('#prSku','Enter');await p.waitForTimeout(400);
+ ok((await p.textContent('#toast')).includes('não está registrada'),'toast: '+await p.textContent('#toast'));
+ await p.fill('#prBip','0555');await p.press('#prBip','Enter');await p.fill('#prSku','SKU-7');await p.fill('#prLoc','B-02');await p.press('#prLoc','Enter');await p.waitForTimeout(500);
+ ok(db.ondas[0].status===1&&db.ondas[0].procura_sku==='SKU-7'&&db.ondas[0].procura_local==='B-02','banco: '+JSON.stringify(db.ondas[0]));
+ ok((await p.textContent('#prList')).includes('SKU-7'),'lista sem a onda');
+ await p.click('[data-prf="x1"]');await p.waitForTimeout(500);ok(db.ondas[0].status===0,'banco não voltou a 0');
+ ok((await p.textContent('#prList')).includes('Nenhuma'),'lista não esvaziou')});
+await T('S24 Meta individual grava no galpão (admin) e é recusada para outro galpão (gestor)',async()=>{const db=banco();const p=await page(b,db);
+ await login(p,'adm@x.com','senha1234');await p.click('.tab[data-t="cfg"]');await p.click('[data-c="cga"]');
+ await p.fill('[data-gmo="Galpão 1"]','30');await p.press('[data-gmo="Galpão 1"]','Tab');await p.waitForTimeout(450);
+ await p.fill('[data-gmq="Galpão 1"]','900');await p.press('[data-gmq="Galpão 1"]','Tab');await p.waitForTimeout(450);
+ const g1=db.galpoes.find(x=>x.id===G1);ok(g1.meta_ind_ondas===30&&g1.meta_ind_qtd===900,JSON.stringify(g1));
+ await p.fill('[data-gmo="Galpão 1"]','');await p.press('[data-gmo="Galpão 1"]','Tab');await p.waitForTimeout(450);
+ ok(g1.meta_ind_ondas===null,'não removeu: '+g1.meta_ind_ondas)});
 await b.close();
 const w=Math.max(...R.map(r=>r[1].length));for(const r of R)console.log((r[0]==='PASS'?'✅':'❌')+' '+r[1].padEnd(w)+'  '+r[2]);
 console.log(`\n${R.filter(r=>r[0]==='PASS').length}/${R.length} passaram`)})();
