@@ -849,11 +849,12 @@ function cfgOp(){
 function cfgUsers(){
  $("#nextCode").textContent="próximo: "+nextCode();
  $("#uT").innerHTML=[1,2].map(t=>`<button data-ut="${t}" class="${uT===t?"on":""}" style="--c:${t===1?"var(--g)":"var(--v)"}">${t}º turno</button>`).join("");
- $("#uG").innerHTML=S.gals.map(g=>`<option>${esc(g)}</option>`).join("");
- $("#uCnt").textContent=S.ops.length+" cadastrados";
- $("#uL").innerHTML=S.ops.length?`<table><tr><th>Código</th><th>Nome</th><th>Turno</th><th>Galpão</th><th>Ondas</th><th></th></tr>`+
-  S.ops.slice().sort((a,b)=>a.m.localeCompare(b.m)).map(o=>{const n=S.waves.filter(w=>w.op===o.m).length;
-   return`<tr><td><b>${o.m}</b></td><td>${esc(o.n)}</td><td><select data-ut2="${o.m}" aria-label="Turno de ${esc(o.n)}"><option value="1"${o.t===1?" selected":""}>1º turno</option><option value="2"${o.t===2?" selected":""}>2º turno</option></select></td><td><select data-ug2="${o.m}" aria-label="Galpão de ${esc(o.n)}">${S.gals.map(g=>`<option${g===o.g?" selected":""}>${esc(g)}</option>`).join("")}</select></td><td>${n}</td><td><button class="btn d sm" data-udel="${o.m}">Excluir</button></td></tr>`}).join("")+"</table>"
+ const lim=ON&&restricted(),GS=lim?[myG()]:S.gals,OPS=lim?S.ops.filter(o=>o.g===myG()):S.ops;
+ $("#uG").innerHTML=GS.map(g=>`<option>${esc(g)}</option>`).join("");$("#uG").closest("label").classList.toggle("hide",lim);
+ $("#uCnt").textContent=OPS.length+" cadastrados";
+ $("#uL").innerHTML=OPS.length?`<table><tr><th>Código</th><th>Nome</th><th>Turno</th><th>Galpão</th><th>Ondas</th><th></th></tr>`+
+  OPS.slice().sort((a,b)=>a.m.localeCompare(b.m)).map(o=>{const n=S.waves.filter(w=>w.op===o.m).length;
+   return`<tr><td><b>${o.m}</b></td><td>${esc(o.n)}</td><td><select data-ut2="${o.m}" aria-label="Turno de ${esc(o.n)}"><option value="1"${o.t===1?" selected":""}>1º turno</option><option value="2"${o.t===2?" selected":""}>2º turno</option></select></td><td>${lim?esc(o.g):`<select data-ug2="${o.m}" aria-label="Galpão de ${esc(o.n)}">${S.gals.map(g=>`<option${g===o.g?" selected":""}>${esc(g)}</option>`).join("")}</select>`}</td><td>${n}</td><td><button class="btn d sm" data-udel="${o.m}">Excluir</button></td></tr>`}).join("")+"</table>"
   :'<div class="empty">Nenhum usuário cadastrado.</div>'}
 function soMeta(){return ON&&!!me&&!me.adm}
 function cfgGals(){const gest=soMeta();$("#gNovo").classList.toggle("hide",gest);
@@ -911,7 +912,7 @@ $("#xCon").oninput=()=>{$("#xDel").disabled=$("#xCon").value!=="APAGAR"};
 const needAuth=k=>ON?!me:S.ges.length>0&&!(me&&(k==="cfg"?me.pC:me.pI));
 /* aba só aparece se o perfil atual pode abri-la; o que não é acessível fica oculto */
 function podeVer(t){if(t==="op"||t==="painel")return true;if(ON)return !!me&&(t==="ind"?!!me.pI:!!me.pC);if(t==="painel")return true;return !needAuth(t)}
-function updTabs(){$$(".tab[data-t]").forEach(b=>{b.style.display=podeVer(b.dataset.t)?"":"none"});$$('#csub [data-c="cga"]').forEach(b=>{b.textContent=soMeta()?"Meta do dia":"Galpões"});$$('#csub [data-c="cma"]').forEach(b=>{b.style.display=(!ON||(me&&me.adm))?"":"none"});if(!podeVer(view)){view="op";["painel","op","ind","cfg"].forEach(s=>$("#"+s).classList.toggle("hide",s!=="op"));$$(".tab[data-t]").forEach(b=>b.classList.toggle("on",b.dataset.t==="op"))}}
+function updTabs(){$$(".tab[data-t]").forEach(b=>{b.style.display=podeVer(b.dataset.t)?"":"none"});$$('#csub [data-c="cga"]').forEach(b=>{b.textContent=soMeta()?"Meta do dia":"Galpões"});$$('#csub [data-c="cge"]').forEach(b=>{b.style.display=soMeta()?"none":""});$$('#csub [data-c="cma"]').forEach(b=>{b.style.display=(!ON||(me&&me.adm))?"":"none"});if(!podeVer(view)){view="op";["painel","op","ind","cfg"].forEach(s=>$("#"+s).classList.toggle("hide",s!=="op"));$$(".tab[data-t]").forEach(b=>b.classList.toggle("on",b.dataset.t==="op"))}}
 function authUI(){$("#who").textContent=me?"Gestor: "+me.n:"";$("#logtx").textContent=me?"Sair":"Entrar";updTabs()}
 function go(t){
  updTabs();

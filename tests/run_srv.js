@@ -174,7 +174,7 @@ await T('S11 Gestor comum: não altera limites nem cria operador em outro galpã
  await p.click('.tab[data-t="cfg"]');await p.fill('[data-lim="Retrabalho"]','5');await p.press('[data-lim="Retrabalho"]','Tab');await p.waitForTimeout(450);
  ok(db.tipos.find(t=>t.nome==='Retrabalho').limite===1000,'alterou limite');ok(/Sem permissão/.test(await p.textContent('#toast')),await p.textContent('#toast'));
  ok((await p.$eval('[data-lim="Retrabalho"]',e=>e.value))==='1000','campo ficou com valor que não foi salvo');
- await p.click('[data-c="cus"]');await p.fill('#uN','Fulano G1');await p.selectOption('#uG','Galpão 1');await p.click('#uB');await p.waitForTimeout(450);
+ await p.click('[data-c="cus"]');await p.evaluate(()=>{const o=document.querySelector('#uG');o.innerHTML='<option>Galpão 1</option>';o.value='Galpão 1'});await p.fill('#uN','Fulano G1');await p.click('#uB');await p.waitForTimeout(450);
  ok(!db.operadores.some(o=>o.nome==='Fulano G1'),'criou em outro galpão')});
 
 await T('S18 Admin libera pedido de acesso: aparece em Pedidos, aceita com galpão e o gestor passa a entrar',async()=>{const db=banco();db.pedidos.push('fora@x.com');db.users['fora@x.com'].ok=true;const p=await page(b,db);await login(p,'adm@x.com','senha1234');await p.click('.tab[data-t="cfg"]');
@@ -282,6 +282,14 @@ await T('S24 Meta individual grava no galpão (admin) e é recusada para outro g
  const g1=db.galpoes.find(x=>x.id===G1);ok(g1.meta_ind_ondas===30&&g1.meta_ind_qtd===900,JSON.stringify(g1));
  await p.fill('[data-gmo="Galpão 1"]','');await p.press('[data-gmo="Galpão 1"]','Tab');await p.waitForTimeout(450);
  ok(g1.meta_ind_ondas===null,'não removeu: '+g1.meta_ind_ondas)});
+await T('S25 Gestor comum: Usuários só do galpão dele, cria usuário nele e a aba Gestores some; admin vê tudo',async()=>{const db=banco();const p=await page(b,db);
+ const ver=()=>p.evaluate(()=>({lista:document.querySelector('#uL').textContent,sel:document.querySelector('#uG').closest('label').classList.contains('hide'),ges:getComputedStyle(document.querySelector('#csub [data-c="cge"]')).display}));
+ await login(p,'g2@x.com','senha1234');await p.click('.tab[data-t="cfg"]');await p.click('[data-c="cus"]');
+ const x=await ver();ok(x.lista.includes('Carla Dias')&&!x.lista.includes('Ana Souza')&&x.sel&&x.ges==='none',JSON.stringify(x));
+ await p.fill('#uN','Novo Op');await p.click('#uB');await p.waitForTimeout(500);
+ const n=db.operadores.find(o=>o.nome==='Novo Op');ok(n&&n.galpao_id===G2,JSON.stringify(n));
+ await p.click('#logbtn');await login(p,'adm@x.com','senha1234');await p.click('.tab[data-t="cfg"]');await p.click('[data-c="cus"]');
+ const a=await ver();ok(a.lista.includes('Ana Souza')&&a.lista.includes('Carla Dias')&&!a.sel&&a.ges!=='none',JSON.stringify(a))});
 await b.close();
 const w=Math.max(...R.map(r=>r[1].length));for(const r of R)console.log((r[0]==='PASS'?'✅':'❌')+' '+r[1].padEnd(w)+'  '+r[2]);
 console.log(`\n${R.filter(r=>r[0]==='PASS').length}/${R.length} passaram`)})();
