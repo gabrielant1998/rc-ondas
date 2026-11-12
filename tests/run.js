@@ -266,10 +266,10 @@ await T("46 Coletiva: total por tipo com tempo entre ondas e média por pessoa",
  await p.evaluate(()=>{go('ind');document.querySelector('[data-gs="mc"]').click()});const t=(await p.textContent('#coBody')).replace(/\s+/g,' ');
  ok(t.includes('Total por tipo e tempo entre ondas'),'sem card');const linha=t.match(/Vários artigos230(\d\d:\d\d)([\d,]+)(\d\d:\d\d)/);
  ok(linha&&linha[1]==='10:00'&&linha[2]==='1'&&linha[3]==='05:00','Vários: '+(linha&&linha.slice(1).join('|'))+' | '+t.slice(t.indexOf('Total por tipo'),t.indexOf('Total por tipo')+500))});
-await T("47 Painel: ranking de tipos pelo tempo, maior primeiro",async()=>{
- const p=await page(b,base({waves:[WV('a','1','Vários artigos',10,HR(9,0)),WV('b','2','Vários artigos',10,HR(9,10)),WV('c','3','Itens Únicos',10,HR(9,12))]}));
+await T("47 Painel: ranking de tipos pela mediana do tempo, maior primeiro",async()=>{
+ const p=await page(b,base({waves:[WV('a','1','Vários artigos',10,HR(9,0)),WV('b','2','Itens Únicos',10,HR(9,10)),WV('c','3','Vários artigos',10,HR(9,12)),WV('d','4','Itens Únicos',10,HR(9,30))]}));
  await p.evaluate(()=>go('painel'));const t=(await p.textContent('#tmp')).replace(/\s+/g,' ');
- ok(t.indexOf('1º Vários artigos')>=0&&t.indexOf('2º Itens Únicos')>=0&&t.indexOf('1º Vários artigos')<t.indexOf('2º Itens Únicos'),t.slice(0,300))});
+ ok(t.indexOf('1º Vários artigos')>=0&&t.indexOf('2º Itens Únicos')>=0&&t.indexOf('1º Vários artigos')<t.indexOf('2º Itens Únicos')&&t.includes('14:00'),t.slice(0,300))});
 await T("48 Controle de Ondas: última bipagem de cada operador conta tempo ao vivo dentro do intervalo máximo",async()=>{const n=Date.now(),m=60000;
  const p=await page(b,base({waves:[WV('a','1','Vários artigos',10,n-50*m),WV('b','2','Vários artigos',20,n-5*m),WV('c','3','Itens Únicos',7,n-2*m,'CL002','Bruno Lima'),WV('d','4','Itens Únicos',3,n-45*m,'CL003','Carla Dias')]}));
  await p.evaluate(()=>go('op'));await p.click('#sub [data-s="ctl"]');await p.waitForTimeout(1200);
@@ -278,6 +278,19 @@ await T("48 Controle de Ondas: última bipagem de cada operador conta tempo ao v
  const el=await p.$$eval('#ctlLive [data-el]',a=>a.map(e=>e.textContent));ok(el.includes('05:01')||el.includes('05:02')||el.includes('05:00'),'tempos: '+el.join(','));
  await p.evaluate(()=>{S.waves.push({id:'z',wn:'9',op:'CL001',opn:'Ana Souza',gal:'Galpão 1',ty:'Retrabalho',qty:5,st:0,ts:Date.now()-1000,fin:Date.now()-1000,sync:1});renderAll()});
  const t2=(await p.textContent('#ctlLive')).replace(/\s+/g,' ');ok(t2.includes('Retrabalho')&&!t2.includes('Vários artigos'),'nova bipagem deveria substituir a anterior: '+t2)});
+const CJ=()=>{const b0=HR(9,0);return[WV('a','1','Itens Únicos',10,b0),WV('b','2','Vários artigos',50,b0+500),WV('c','3','Vários artigos',40,b0+1000),WV('d','4','Retrabalho',5,b0+26.5*60000),WV('e','5','Itens Únicos',7,b0+46*60000)]};
+await T("49 Conjuntos: ondas bipadas no mesmo instante contam uma vez, com um tempo só",async()=>{
+ const p=await page(b,base({waves:CJ()}));
+ const r=await p.evaluate(()=>durs(S.waves).map(c=>[c.w.ty,c.d,c.ondas,c.qty]));
+ ok(r.length===2,'esperava 2 conjuntos medidos, vieram '+JSON.stringify(r));
+ ok(r[0][0]==='Vários artigos'&&r[0][1]===26.5*60000-0&&r[0][2]===3&&r[0][3]===100,'conjunto 1: '+JSON.stringify(r[0]));
+ ok(r[1][0]==='Retrabalho'&&r[1][1]===19.5*60000&&r[1][2]===1,'conjunto 2: '+JSON.stringify(r[1]))});
+await T("50 Individual: tempo por tipo (mais rápido) e lista de conjuntos com tempo em minutos",async()=>{
+ const p=await page(b,base({waves:CJ()}));
+ await p.evaluate(()=>go('ind'));await p.selectOption('#iOp','CL001');const t=(await p.textContent('#iBody')).replace(/\s+/g,' ');
+ ok(t.includes('Tempo por tipo de onda')&&t.includes('Conjuntos de ondas'),'sem cards');
+ ok(t.includes('26 min 30 s')&&t.includes('19 min 30 s'),'sem tempos: '+t.slice(t.indexOf('Tempo por tipo'),t.indexOf('Tempo por tipo')+700));
+ ok(/Retrabalho\d+19 min 30 s\d+mais rápido/.test(t),'Retrabalho deveria ser o mais rápido: '+t.slice(t.indexOf('Tempo por tipo'),t.indexOf('Tempo por tipo')+500))});
 await b.close();
 const w=Math.max(...R.map(r=>r[1].length));for(const r of R)console.log((r[0]==="PASS"?"✅":"❌")+" "+r[1].padEnd(w)+"  "+r[2]);
 console.log(`\n${R.filter(r=>r[0]==="PASS").length}/${R.length} passaram`)})();
