@@ -192,6 +192,16 @@ await T("32 Tela de tipos: 6 botões cabem no celular e no computador",async()=>
   const r=await p.evaluate(()=>{const bs=[...document.querySelectorAll("#types_b button")];return{n:bs.length,minW:Math.min(...bs.map(b=>b.getBoundingClientRect().width)),over:bs.some(b=>b.scrollWidth>b.clientWidth+1),sw:document.documentElement.scrollWidth}});
   ok(r.n===6&&r.minW>=120&&!r.over&&r.sw<=vp.width+2,JSON.stringify(r))}});
 
+await T("33 Gestão: falta sem bipagem e hora extra estimada",async()=>{const now=new Date(),d=new Date(now);d.setDate(d.getDate()-1);d.setHours(0,0,0,0);const baseT=d.getTime();
+ const make=(id,op,h,qty)=>({id,wn:id,op,opn:op==='CL001'?'Ana Souza':'Bruno Lima',gal:'Galpão 1',ty:'Vários artigos',qty,st:0,ts:baseT+h*36e5,fin:baseT+h*36e5,sync:1});
+ const p=await page(b,base({waves:[make('a','CL001',16.5,10),make('b','CL001',16.75,15)]}));
+ const r=await p.evaluate(t=>{$('#day').value=dk(t);go('ind');return{txt:$('#iBody').textContent,extra:mgExtra(S.ops[0],dk(t),S.waves),ref:mgReference(S.ops[0],mgData())}},baseT);
+ ok(r.txt.includes('Bruno Lima')&&r.txt.includes('Faltas a conferir'),'sem tabela de faltas');ok(r.extra.ms===15*60000,'extra '+r.extra.ms);ok(r.ref===10000,'meta '+r.ref);
+ await p.evaluate(()=>{$('#iOp').value='CL002';individual()});ok((await p.textContent('#iBody')).includes('Falta: sem bipagem (conferir)'),'falta não sinalizada');
+});
+await T("34 Gestão: meta coletiva soma produção uma vez e mantém tipos",async()=>{const now=Date.now(),waves=[{id:'a',wn:'a',op:'CL001',opn:'Ana Souza',gal:'Galpão 1',ty:'Vários artigos',qty:10,st:0,ts:now,fin:now,sync:1},{id:'b',wn:'b',op:'CL002',opn:'Bruno Lima',gal:'Galpão 1',ty:'Retrabalho',qty:20,st:0,ts:now,fin:now,sync:1}];
+ const p=await page(b,base({waves}));await p.evaluate(()=>{go('ind');document.querySelector('[data-gs="mc"]').click()});const txt=await p.textContent('#coBody');ok(txt.includes('30')&&txt.includes('10.000')&&txt.includes('Retrabalho'),'coletiva: '+txt);
+});
 await b.close();
 const w=Math.max(...R.map(r=>r[1].length));for(const r of R)console.log((r[0]==="PASS"?"✅":"❌")+" "+r[1].padEnd(w)+"  "+r[2]);
 console.log(`\n${R.filter(r=>r[0]==="PASS").length}/${R.length} passaram`)})();

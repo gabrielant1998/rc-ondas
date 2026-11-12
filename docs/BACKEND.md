@@ -25,7 +25,7 @@ Página estática que fala direto com o banco pela API do Supabase. Não há ser
 ## 4. Permissões
 | Quem | Pode |
 |---|---|
-| Público, sem login | Ler galpões, tipos, configuração e operadores ativos. Registrar ondas pela função `registrar_ondas`. Não lê ondas. |
+| Público, sem login | Ler galpões, tipos, configuração e operadores ativos. Registrar ondas pela função `registrar_ondas`. O painel consulta apenas totais agregados; não lê as ondas individuais. |
 | Gestor comum | Ler e, se tiver permissão, alterar ondas do próprio galpão. Cadastrar operadores do próprio galpão. |
 | Administrador | Tudo, em todos os galpões: tipos, configuração, galpões e gestores. |
 
@@ -38,7 +38,7 @@ A entrada de ondas é a função `registrar_ondas(lote)`. Ela recebe até 200 on
 `criada_em` (chegada ao servidor) contra `registrada_em` (hora do aparelho) mostra o atraso de sincronização. O aparelho mostra quantas ondas estão pendentes.
 
 ## Decisões tomadas
-1. **Painel só com login.** O público registra ondas, mas não lê. Gestor vê o próprio galpão e o administrador vê todos.
+1. **Painel público.** A função `painel_publico` retorna totais por dia, tipo, hora e galpão, sem WN nem detalhes de operador. A tabela de ondas continua restrita a gestores: cada gestor vê o próprio galpão e o administrador vê todos.
 2. **Tela pública de registro.** Qualquer pessoa com o link pode registrar ondas. O banco valida operador, tipo, limite, data e WN, mas não limita a quantidade de envios.
 
 ## Entrada de gestores
@@ -55,3 +55,12 @@ psql -d rc -f supabase/tests/rls_test.sql
 # aplicativo no modo servidor, com banco simulado (17 cenários)
 node tests/run_srv.js
 ```
+
+## Gestão operacional
+
+- A área continua restrita a gestores com permissão de acompanhamento individual. A consulta do histórico é feita conforme o período selecionado.
+- A referência individual divide a meta diária **atual** de cada galpão entre as pessoas com alguma bipagem naquele dia. A referência muda quando novas bipagens são sincronizadas e não considera diferenças de dificuldade entre tipos.
+- A meta coletiva soma as metas diárias atuais dos galpões nos dias com atividade e no dia de hoje; é comparada com as unidades concluídas da equipe somente quando todos os turnos estão selecionados. O sistema não desconta faltas ou horas extras automaticamente.
+- Uma pessoa sem bipagem é sinalizada como **falta a conferir** somente depois do fim do seu turno e quando houve alguma atividade registrada no mesmo galpão e turno. Dias anteriores ao cadastro, futuros ou sem operação identificada não contam como falta. A ausência de bipagem não comprova ausência ao trabalho.
+- A hora extra estimada soma apenas os intervalos entre bipagens fora do turno e da tolerância configurada, quando esses intervalos não ultrapassam o intervalo máximo. Uma bipagem isolada ou uma pausa maior não permite calcular a duração. Não é controle de ponto.
+- O histórico usa as metas e os turnos **atuais**, pois o sistema não mantém versões anteriores dessas configurações.

@@ -39,6 +39,11 @@ function fake(db){const cors={'access-control-allow-origin':'*','access-control-
   if(p==='/auth/v1/user')return email?J(route,200,{email}):J(route,401,{msg:'no'});
   // ---- rest
   const t=p.replace('/rest/v1/','');
+  if(t==='rpc/painel_publico'){
+   const selected=db.ondas.filter(w=>w.status===0&&(!body.p_galpao||w.galpao_id===body.p_galpao)&&(!body.p_turno||db.operadores.find(o=>o.id===w.operador_id)?.turno===body.p_turno)&&[new Date(w.registrada_em).getFullYear(),String(new Date(w.registrada_em).getMonth()+1).padStart(2,'0'),String(new Date(w.registrada_em).getDate()).padStart(2,'0')].join('-')===body.p_dia);
+   const group=(key,more)=>Object.values(selected.reduce((a,w)=>{const k=key(w);if(!a[k])a[k]=more(w);a[k].qtd+=w.quantidade;a[k].ondas++;return a},{}));
+   const tipos=group(w=>w.tipo,w=>({tipo:w.tipo,qtd:0,ondas:0})),gals=group(w=>w.galpao_id,w=>({nome:db.galpoes.find(g=>g.id===w.galpao_id).nome,qtd:0,ondas:0,pessoas:0}));
+   return J(route,200,{total:selected.reduce((n,w)=>n+w.quantidade,0),ondas:selected.length,pessoas:new Set(selected.map(w=>w.operador_id)).size,extra_un:0,extra_ondas:0,dur_ms:0,dur_n:0,dur_tipos:[],horas:[],tipos,galpoes:gals})}
   if(t==='rpc/registrar_ondas'){db.calls.rpc++;return J(route,200,body.lote.map(o=>{
     if(db.ondas.some(x=>x.id===o.id))return{id:o.id,resultado:'ja_existia',detalhe:null};
     if(db.ondas.some(x=>normWN(x.wn)===normWN(o.wn)))return{id:o.id,resultado:'wn_repetido',detalhe:'A onda '+o.wn+' já foi registrada'};
@@ -90,13 +95,14 @@ const num=p=>p.evaluate(()=>(document.querySelector('#kpis .num')||{}).textConte
 async function T(name,fn){const t0=Date.now();try{const i=await fn();R.push(['PASS',name,(i||'')+` (${Date.now()-t0}ms)`])}catch(e){R.push(['FALHA',name,e.message.split('\n')[0]])}}
 (async()=>{const b=await chromium.launch();
 
-await T('S01 Público: carrega cadastros do banco e abre na Operação',async()=>{const db=banco();const p=await page(b,db);
+await T('S01 Público: carrega cadastros do banco e abre no Painel',async()=>{const db=banco();const p=await page(b,db);
  const r=await p.evaluate(()=>({ops:S.ops.map(o=>o.m).join(),gals:S.gals.join(),view,temId:!!S.ops[0].id}));
- ok(r.ops==='CL001,CL002'&&r.gals==='Galpão 1,Galpão 2'&&r.view==='op'&&r.temId,JSON.stringify(r));ok(p.errors.length===0,p.errors.join(';'))});
+ ok(r.ops==='CL001,CL002'&&r.gals==='Galpão 1,Galpão 2'&&r.view==='painel'&&r.temId,JSON.stringify(r));ok(p.errors.length===0,p.errors.join(';'))});
 
-await T('S02 Público: Painel, Individual e Config pedem login',async()=>{const p=await page(b,banco());
- for(const t of['painel','ind','cfg']){await p.click(`.tab[data-t="${t}"]`);await p.waitForTimeout(120);ok(!(await p.isHidden('#login')),t+' abriu sem login');await p.click('#lX')}
- ok((await p.evaluate(()=>view))==='op','saiu da operação')});
+await T('S02 Público: Painel aberto e gestão exige login',async()=>{const db=banco(),agora=new Date().toISOString();db.ondas.push({id:'a',wn:'123',operador_id:db.operadores[0].id,galpao_id:G1,tipo:'Vários artigos',quantidade:31,status:0,registrada_em:agora,concluida_em:agora});const p=await page(b,db);
+ await p.click('.tab[data-t="painel"]');ok(await p.isHidden('#login'),'painel pediu login');ok((await num(p)).trim()==='31','painel não trouxe o total');ok((await p.evaluate(()=>S.waves.filter(w=>w.srv).length))===0,'expôs ondas individuais');
+ for(const t of['ind','cfg']){await p.click(`.tab[data-t="${t}"]`);await p.waitForTimeout(120);ok(!(await p.isHidden('#login')),t+' abriu sem login');await p.click('#lX')}
+ ok((await p.evaluate(()=>view))==='painel','saiu do painel')});
 
 await T('S03 Público registra 3 ondas e elas chegam ao banco',async()=>{const db=banco();const p=await page(b,db);await reg(p,'CL001','Vários artigos',[[5001,10],[5002,20],[5003,30]]);
  ok(db.ondas.length===3,'banco tem '+db.ondas.length);ok(db.ondas.every(o=>o.galpao_id===G1&&/^[0-9a-f-]{36}$/.test(o.id)),'galpão/id errado');
