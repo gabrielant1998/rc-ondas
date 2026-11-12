@@ -233,7 +233,7 @@ await T("43 Procurando em 3 etapas: pendente com SKU, encontrada vai ao históri
  await p.fill('#prBip','123');await p.press('#prBip','Enter');ok(await p.isVisible('#prSku'),'formulário não abriu');
  await p.press('#prSku','Enter');ok((await p.textContent('#toast')).includes('SKU'),'deixou salvar sem SKU');
  await p.fill('#prSku','SKU-9');await p.fill('#prLoc','A-01');await p.press('#prLoc','Enter');
- const lista=await p.textContent('#prList');ok(lista.includes('123')&&lista.includes('SKU-9')&&lista.includes('A-01')&&lista.includes('Ana Souza'),'pendentes: '+lista);
+ await p.waitForTimeout(300);const lista=await p.textContent('#prList');ok(lista.includes('123')&&lista.includes('SKU-9')&&lista.includes('A-01')&&lista.includes('Ana Souza'),'pendentes: '+lista);
  await p.evaluate(()=>go('painel'));const k=(await p.textContent('#kpis')).replace(/\s+/g,' ');ok(/Procurando1/.test(k),'painel não mostra 1 procurando: '+k.slice(0,300));
  ok(await prod()===20,'produção deveria ser 20, é '+await prod());
  await p.reload();const w=await p.evaluate(()=>S.waves.find(x=>x.id==='a'));ok(w.st===1&&w.sku==='SKU-9'&&w.loc==='A-01'&&w.hist.length===1,'não persistiu: '+JSON.stringify(w));
@@ -311,6 +311,12 @@ await T("73 Mini abas na lateral: aparecem sob a aba ativa e abrem de forma inde
  await p.evaluate(()=>go('prs'));await p.waitForTimeout(200);ok((await p.$$('.ssub')).length===1&&(await p.$$eval('.ssub button',a=>a.length))===3,'só as abas da área ativa aparecem');
  await p.click('.ssub [data-v="sku"]');await p.waitForTimeout(150);ok(await p.isVisible('#prSku')||true,'abre SKU');
  const m=await page(b,base(),{vp:{width:390,height:800},sidebarSubs:true});await m.evaluate(()=>go('his'));await m.waitForTimeout(200);ok(!(await m.isVisible('.ssub')),'no celular fica a barra interna');ok(await m.isVisible('#hsub'),'barra interna no celular')});
+await T("74 Cards de destaque chamativos: ícone, troféu, iniciais, pódio com barras",async()=>{
+ const b0=HR(9,0);const W=[WV('d1','D1','Vários artigos',100,b0),WV('d2','D2','Itens Únicos',40,b0+10*60000),WV('d3','D3','Vários artigos',60,b0+20*60000),WV('d4','D4','Vários artigos',60,b0+30*60000),WV('e1','E1','Itens Únicos',10,b0,'CL002','Bruno Lima'),WV('e2','E2','Itens Únicos',10,b0+20*60000,'CL002','Bruno Lima'),WV('e3','E3','Itens Únicos',5,b0+40*60000,'CL002','Bruno Lima')];
+ const p=await page(b,base({waves:W}));await p.evaluate(()=>go('ind'));await p.waitForTimeout(250);
+ const r=await p.evaluate(()=>({n:document.querySelectorAll('.hlg .hl').length,t:document.querySelectorAll('.hl .hlc').length,av:document.querySelector('.hl .hlav').textContent,rk:document.querySelectorAll('.hl2 i').length,ic:document.querySelectorAll('.hl .hli svg').length}));
+ ok(r.n===11&&r.t>=3&&r.av==='AS'&&r.rk>=1&&r.ic===11,'cards: '+JSON.stringify(r));
+ await p.screenshot({path:'/tmp/claude-0/-home-claude/1b46621a-564c-549a-8cc9-448283bd574c/scratchpad/cards.png',clip:{x:200,y:150,width:1166,height:560}})});
 await T("51 Operador: nomes aparecem em cartões a partir da primeira letra, sem lista nativa",async()=>{
  const p=await page(b,base());await p.evaluate(()=>go('op'));
  ok(!(await p.$eval('#opIn',e=>e.hasAttribute('list'))),'ainda usa a lista nativa');
