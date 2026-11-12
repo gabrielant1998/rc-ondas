@@ -216,9 +216,9 @@ await T("41 Manutenção local: apaga só o período escolhido, depois de digita
  const restam=await p.evaluate(()=>S.waves.map(w=>w.id));
  ok(res.includes('1 registro')&&restam.join()==='b','contou: '+res+' | restam: '+restam.join())});
 
-await T("42 Adicionar outra onda aparece só em Pacote do mesmo",async()=>{const p=await page(b,base());
- const r=await p.evaluate(()=>{const f=n=>{document.querySelector(`[data-ty="${n}"]`).click();return document.querySelector('#addRow').style.display};return [f('Vários artigos'),f('Pacote do mesmo'),f('Retrabalho')]});
- ok(r[0]==='none'&&r[1]==='block'&&r[2]==='none',r.join(' | '))});
+await T("42 Adicionar outra linha aparece em Pacote do mesmo, Maiores/Pesados e Retrabalho",async()=>{const p=await page(b,base());
+ const r=await p.evaluate(()=>{const f=n=>{document.querySelector(`[data-ty="${n}"]`).click();return document.querySelector('#addRow').style.display};return [f('Vários artigos'),f('Pacote do mesmo'),f('Maiores/Pesados'),f('Retrabalho'),f('Itens Únicos')]});
+ ok(r[0]==='none'&&r[1]==='block'&&r[2]==='block'&&r[3]==='block'&&r[4]==='none',r.join(' | '))});
 
 await T("34 Gestão: meta coletiva soma produção uma vez e mantém tipos",async()=>{const now=Date.now(),waves=[{id:'a',wn:'a',op:'CL001',opn:'Ana Souza',gal:'Galpão 1',ty:'Vários artigos',qty:10,st:0,ts:now,fin:now,sync:1},{id:'b',wn:'b',op:'CL002',opn:'Bruno Lima',gal:'Galpão 1',ty:'Retrabalho',qty:20,st:0,ts:now,fin:now,sync:1}];
  const p=await page(b,base({waves}));await p.evaluate(()=>{go('ind');document.querySelector('[data-gs="mc"]').click()});const txt=await p.textContent('#coBody');ok(txt.includes('30')&&txt.includes('10.000')&&txt.includes('Retrabalho'),'coletiva: '+txt);
@@ -276,21 +276,21 @@ await T("48 Controle de Ondas: última bipagem de cada operador conta tempo ao v
  const t=(await p.textContent('#ctlLive')).replace(/\s+/g,' ');
  ok(t.includes('Ana Souza')&&t.includes('Bruno Lima')&&!t.includes('Carla Dias'),'operadores: '+t);
  const el=await p.$$eval('#ctlLive [data-el]',a=>a.map(e=>e.textContent));ok(el.includes('05:01')||el.includes('05:02')||el.includes('05:00'),'tempos: '+el.join(','));
- await p.evaluate(()=>{S.waves.push({id:'z',wn:'9',op:'CL001',opn:'Ana Souza',gal:'Galpão 1',ty:'Retrabalho',qty:5,st:0,ts:Date.now()-1000,fin:Date.now()-1000,sync:1});renderAll()});
- const t2=(await p.textContent('#ctlLive')).replace(/\s+/g,' ');ok(t2.includes('Retrabalho')&&!t2.includes('Vários artigos'),'nova bipagem deveria substituir a anterior: '+t2)});
-const CJ=()=>{const b0=HR(9,0);return[WV('a','1','Itens Únicos',10,b0),WV('b','2','Vários artigos',50,b0+500),WV('c','3','Vários artigos',40,b0+1000),WV('d','4','Retrabalho',5,b0+26.5*60000),WV('e','5','Itens Únicos',7,b0+46*60000)]};
+ await p.evaluate(()=>{S.waves.push({id:'z',wn:'9',op:'CL001',opn:'Ana Souza',gal:'Galpão 1',ty:'Maiores/Pesados',qty:5,st:0,ts:Date.now()-1000,fin:Date.now()-1000,sync:1});renderAll()});
+ const t2=(await p.textContent('#ctlLive')).replace(/\s+/g,' ');ok(t2.includes('Maiores/Pesados')&&!t2.includes('Vários artigos'),'nova bipagem deveria substituir a anterior: '+t2)});
+const CJ=()=>{const b0=HR(9,0);return[WV('a','1','Itens Únicos',10,b0),WV('b','2','Vários artigos',50,b0+500),WV('c','3','Vários artigos',40,b0+1000),WV('d','4','Maiores/Pesados',5,b0+26.5*60000),WV('e','5','Itens Únicos',7,b0+46*60000)]};
 await T("49 Conjuntos: ondas bipadas no mesmo instante contam uma vez, com um tempo só",async()=>{
  const p=await page(b,base({waves:CJ()}));
  const r=await p.evaluate(()=>durs(S.waves).map(c=>[c.w.ty,c.d,c.ondas,c.qty]));
  ok(r.length===2,'esperava 2 conjuntos medidos, vieram '+JSON.stringify(r));
  ok(r[0][0]==='Vários artigos'&&r[0][1]===26.5*60000-0&&r[0][2]===3&&r[0][3]===100,'conjunto 1: '+JSON.stringify(r[0]));
- ok(r[1][0]==='Retrabalho'&&r[1][1]===19.5*60000&&r[1][2]===1,'conjunto 2: '+JSON.stringify(r[1]))});
+ ok(r[1][0]==='Maiores/Pesados'&&r[1][1]===19.5*60000&&r[1][2]===1,'conjunto 2: '+JSON.stringify(r[1]))});
 await T("50 Individual: tempo por tipo (mais rápido) e lista de conjuntos com tempo em minutos",async()=>{
  const p=await page(b,base({waves:CJ()}));
  await p.evaluate(()=>go('ind'));await p.selectOption('#iOp','CL001');const t=(await p.textContent('#iBody')).replace(/\s+/g,' ');
  ok(t.includes('Tempo por tipo de onda')&&t.includes('Conjuntos de ondas'),'sem cards');
  ok(t.includes('26 min 30 s')&&t.includes('19 min 30 s'),'sem tempos: '+t.slice(t.indexOf('Tempo por tipo'),t.indexOf('Tempo por tipo')+700));
- ok(/Retrabalho\d+19 min 30 s\d+mais rápido/.test(t),'Retrabalho deveria ser o mais rápido: '+t.slice(t.indexOf('Tempo por tipo'),t.indexOf('Tempo por tipo')+500))});
+ ok(/Maiores\/Pesados\d+19 min 30 s\d+mais rápido/.test(t),'Maiores/Pesados deveria ser o mais rápido: '+t.slice(t.indexOf('Tempo por tipo'),t.indexOf('Tempo por tipo')+500))});
 await T("51 Operador: nomes aparecem em cartões a partir da primeira letra, sem lista nativa",async()=>{
  const p=await page(b,base());await p.evaluate(()=>go('op'));
  ok(!(await p.$eval('#opIn',e=>e.hasAttribute('list'))),'ainda usa a lista nativa');
@@ -426,6 +426,19 @@ await T("66 Zerar tempo: sai da contagem ao vivo e das medianas, mas as unidades
  const dep=await p.evaluate(()=>({d:durs(S.waves).length,u:prod(S.waves).reduce((a,w)=>a+w.qty,0),zt:S.waves.filter(w=>w.zt).length,live:liveWaves().length}));
  ok(dep.u===antes.u&&dep.u===60,'unidades mudaram: '+JSON.stringify(dep));ok(dep.zt>=1&&dep.live===0,'não saiu da contagem ao vivo: '+JSON.stringify(dep));
  await p.reload();ok(await p.evaluate(()=>S.waves.some(w=>w.zt)),'não persistiu')});
+await T("67 Retrabalho pede SKU, aceita várias linhas e não entra na contagem de tempo",async()=>{
+ const p=await page(b,base());await openReg(p,"CL001","Retrabalho");
+ ok((await p.textContent('#rowsL')).includes('SKU'),'rótulo SKU');ok(!(await p.$eval('[data-wn="0"]',e=>e.hasAttribute('inputmode'))),'SKU não deve ser só numérico');
+ await p.keyboard.type('ab-123');await p.keyboard.press('Enter');await p.keyboard.type('5');await p.keyboard.press('Enter');await p.waitForTimeout(100);
+ await p.keyboard.type('ab-123');await p.keyboard.press('Enter');await p.keyboard.type('7');await p.keyboard.press('Enter');await p.waitForTimeout(100);
+ await p.click('#save');await p.waitForTimeout(200);
+ const w=await p.evaluate(()=>S.waves.map(x=>({wn:x.wn,ty:x.ty,q:x.qty,show:wnS(x)})));
+ ok(w.length===2&&w.every(x=>x.ty==='Retrabalho'&&x.show==='AB-123')&&w[0].wn!==w[1].wn,'registros: '+JSON.stringify(w));
+ const t=await p.evaluate(()=>({c:conjuntos(S.waves).length,d:durs(S.waves).length,u:prod(S.waves).reduce((a,x)=>a+x.qty,0)}));
+ ok(t.c===0&&t.d===0&&t.u===12,'sem timing: '+JSON.stringify(t))});
+await T("68 Maiores/Pesados aceita várias ondas de uma vez",async()=>{
+ const p=await page(b,base());await openReg(p,"CL001","Maiores/Pesados");await typeRows(p,[[8001,3],[8002,4]]);await p.click('#save');await p.waitForTimeout(200);
+ const w=await p.evaluate(()=>S.waves.map(x=>x.wn+':'+x.qty).join());ok(w.includes('8001:3')&&w.includes('8002:4'),'registros: '+w)});
 await b.close();
 const w=Math.max(...R.map(r=>r[1].length));for(const r of R)console.log((r[0]==="PASS"?"✅":"❌")+" "+r[1].padEnd(w)+"  "+r[2]);
 console.log(`\n${R.filter(r=>r[0]==="PASS").length}/${R.length} passaram`)})();

@@ -633,7 +633,7 @@ function hourWindow(a){let f=a.findIndex(v=>v>0),l=-1;a.forEach((v,i)=>{if(v>0)l
 /* tempo de onda: intervalo entre ondas concluídas consecutivas do mesmo operador */
 /* conjuntos: ondas do mesmo operador bipadas no mesmo instante (até 3 s) contam como UM conjunto; o tempo dele vai da sua bipagem até a do conjunto seguinte */
 function conjuntos(list){const by={},out=[];
- prod(list).slice().sort((x,y)=>(x.fin||x.ts)-(y.fin||y.ts)).forEach(w=>{(by[w.op]=by[w.op]||[]).push(w)});
+ prod(list).filter(w=>w.ty!=="Retrabalho").slice().sort((x,y)=>(x.fin||x.ts)-(y.fin||y.ts)).forEach(w=>{(by[w.op]=by[w.op]||[]).push(w)});
  Object.values(by).forEach(a=>{const gs=[];a.forEach(w=>{const t=w.fin||w.ts,g=gs[gs.length-1];if(g&&t-g.t0<=3000)g.w.push(w);else gs.push({t0:t,w:[w]})});
   gs.forEach((g,i)=>{const dom=g.w.slice().sort((x,y)=>y.qty-x.qty)[0];out.push({op:dom.op,t:g.t0,zt:g.w.some(x=>x.zt),ondas:g.w.length,qty:g.w.reduce((q,w)=>q+w.qty,0),w:dom,tipos:[...new Set(g.w.map(x=>x.ty))],d:gs[i+1]?gs[i+1].t0-g.t0:null})})});return out}
 function durs(list){const gap=GAP()*6e4;return conjuntos(list).filter(c=>c.d!=null&&c.d>0&&c.d<=gap&&!c.zt)}
@@ -728,7 +728,9 @@ function painel(){
 }
 
 /* ===================== OPERAÇÃO ===================== */
-function multiOnda(){return ty==="Pacote do mesmo"}
+function multiOnda(){return ty==="Pacote do mesmo"||ty==="Maiores/Pesados"||ty==="Retrabalho"}
+const isRT=()=>ty==="Retrabalho";
+const wnS=w=>w&&w.ty==="Retrabalho"?String(w.wn||"").split("~")[0]:(w&&w.wn);
 function updMulti(){const b=$("#addRow");if(b)b.style.display=multiOnda()?"block":"none"}
 function segs(){updMulti();$("#types_b").innerHTML=TY.map(([n,c])=>`<button data-ty="${n}" style="--c:${c}" class="${n===ty?"on":""}">${ico(n)}<span>${n}</span></button>`).join("");}
 function goStep(n){
@@ -741,7 +743,7 @@ function goStep(n){
  $("#sr").textContent="Etapa "+n+" de 3: "+["operador","tipo de onda","número e quantidade das ondas"][n-1];
  setTimeout(()=>{if($("#op").classList.contains("hide"))return;const f=n===1?$("#opIn"):n===2?($("#types_b button.on")||$("#types_b button")):$$("[data-wn]").pop();if(f)f.focus({preventScroll:true})},60)}
 function rowHtml(r,i){const lim=S.cfg.lim[ty];return`<div class="wrow">
-   <label><span>Nº da onda</span><input data-wn="${i}" value="${esc(r.wn)}" placeholder="Bipe a onda" inputmode="numeric" autocomplete="off" enterkeyhint="next"></label>
+   <label><span>${isRT()?"SKU":"Nº da onda"}</span><input data-wn="${i}" value="${esc(r.wn)}" placeholder="${isRT()?"Digite ou bipe o SKU":"Bipe a onda"}" ${isRT()?'maxlength="24"':'inputmode="numeric"'} autocomplete="off" enterkeyhint="next"></label>
    <label><span>Quantidade</span><input data-q="${i}" type="number" inputmode="numeric" min="1" value="${esc(r.q)}" placeholder="0" enterkeyhint="next"></label>
    <button class="x" data-rmrow="${i}" aria-label="Remover onda ${i+1}">×</button></div>`}
 function renderRows(){$("#rowsL").innerHTML=rows.map(rowHtml).join("")}
@@ -756,14 +758,14 @@ function commit(list){S.waves.push(...list);if(!save()){S.waves.splice(S.waves.l
 function check(){const o=curOp();if(!o){toast("Identifique um operador cadastrado");return}return o}
 function opRows(list,ctl){const canR=!S.ges.length||(me&&me.pR);
  return list.length?`<table><tr><th>Operador</th><th>Onda</th><th>Tipo</th><th>Qtd</th><th>Status</th><th>Hora</th>${ctl?"<th>Tempo</th><th>Ação</th>":""}</tr>`+list.map(w=>{const o=opOf(w.op);
- return`<tr><td><div class="who2">${av(w.opn)}<div>${esc(w.opn)}<br><small>${esc(w.op.split("~")[0])}${w.op.includes("~")?" (excluído)":""}, ${esc(w.gal)}${o?", "+o.t+"ºT":""}</small></div></div></td><td><b>${esc(w.wn||"—")}</b></td><td>${w.ty}</td><td><b>${fmt(w.qty)}</b></td><td><span class="st ${SC[w.st]}">${ST[w.st]}</span>${isOT(w)?' <span class="st so">extra</span>':""}${w.err?'<br><span class="st s2" title="'+esc(w.err)+'">recusada</span> <a href="#" data-del="'+w.id+'" class="pill off">Remover</a><br><small>'+esc(w.err)+"</small>":""}</td><td style="white-space:nowrap">${new Date(w.ts).toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"})}${ctl?"":(w.err?"":w.sync?' <span title="Sincronizado" aria-label="Sincronizado" style="color:var(--gx)">✓</span>':' <span class="st s1">pendente</span>')}</td>${ctl?`<td class="num" data-el="${w.ts}">${mm(Date.now()-w.ts)}</td><td><a href="#" data-fin="${w.id}" class="pill">Concluir</a> <a href="#" data-sd="${w.id}" class="pill warn">Difícil</a>${canR?` <a href="#" data-del="${w.id}" class="pill off">Excluir</a>`:""}</td>`:""}</tr>`}).join("")+"</table>":'<div class="empty">Nenhuma onda registrada.</div>'}
+ return`<tr><td><div class="who2">${av(w.opn)}<div>${esc(w.opn)}<br><small>${esc(w.op.split("~")[0])}${w.op.includes("~")?" (excluído)":""}, ${esc(w.gal)}${o?", "+o.t+"ºT":""}</small></div></div></td><td><b>${esc(wnS(w)||"—")}</b></td><td>${w.ty}</td><td><b>${fmt(w.qty)}</b></td><td><span class="st ${SC[w.st]}">${ST[w.st]}</span>${isOT(w)?' <span class="st so">extra</span>':""}${w.err?'<br><span class="st s2" title="'+esc(w.err)+'">recusada</span> <a href="#" data-del="'+w.id+'" class="pill off">Remover</a><br><small>'+esc(w.err)+"</small>":""}</td><td style="white-space:nowrap">${new Date(w.ts).toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"})}${ctl?"":(w.err?"":w.sync?' <span title="Sincronizado" aria-label="Sincronizado" style="color:var(--gx)">✓</span>':' <span class="st s1">pendente</span>')}</td>${ctl?`<td class="num" data-el="${w.ts}">${mm(Date.now()-w.ts)}</td><td><a href="#" data-fin="${w.id}" class="pill">Concluir</a> <a href="#" data-sd="${w.id}" class="pill warn">Difícil</a>${canR?` <a href="#" data-del="${w.id}" class="pill off">Excluir</a>`:""}</td>`:""}</tr>`}).join("")+"</table>":'<div class="empty">Nenhuma onda registrada.</div>'}
 function operacao(){const L=dayWaves().slice().reverse();$("#cnt").textContent=L.length+" hoje";$("#last").innerHTML=opRows(L.slice(0,8));
  $("#opl").innerHTML=S.ops.map(o=>`<option value="${o.m}">${esc(o.n)}, ${o.t}º turno</option>`).join("");
  $("#subCtl").classList.toggle("hide",!S.cfg.and);
  const open=S.waves.filter(w=>w.st!==0&&inView(w)&&(!$("#fOp").value||w.op===$("#fOp").value)&&(!$("#fTy").value||w.ty===$("#fTy").value)&&(!$("#fSt").value||w.st==$("#fSt").value));
  $("#ctlList").innerHTML=open.length?'<div style="font-weight:600;margin:4px 0 8px">Procurando e difícil acesso</div>'+opRows(open.reverse(),1):'';ctlLive()}
 function liveWaves(){const gap=GAP()*6e4,now=Date.now(),by={};
- S.waves.filter(w=>w.st===0&&!w.err&&!w.zt&&inView(w)&&w.ts<=now&&now-w.ts<=gap&&(!$("#fOp").value||w.op===$("#fOp").value)&&(!$("#fTy").value||w.ty===$("#fTy").value)).forEach(w=>{(by[w.op]=by[w.op]||[]).push(w)});
+ S.waves.filter(w=>w.st===0&&!w.err&&!w.zt&&w.ty!=="Retrabalho"&&inView(w)&&w.ts<=now&&now-w.ts<=gap&&(!$("#fOp").value||w.op===$("#fOp").value)&&(!$("#fTy").value||w.ty===$("#fTy").value)).forEach(w=>{(by[w.op]=by[w.op]||[]).push(w)});
  return Object.values(by).map(a=>{a.sort((x,y)=>y.ts-x.ts);const u=a[0];return{u,g:a.filter(x=>u.ts-x.ts<=3000)}}).sort((x,y)=>y.u.ts-x.u.ts)}
 const CTLX=new Set();
 function ctlLive(){const el=$("#ctlLive");if(!el)return;let L=S.cfg.and?liveWaves():[];const q=nrm($("#ctlQ")?$("#ctlQ").value:"").trim(),all=L.length;
@@ -771,8 +773,8 @@ function ctlLive(){const el=$("#ctlLive");if(!el)return;let L=S.cfg.and?liveWave
  const hh=t=>new Date(t).toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit",second:"2-digit"});
  el.innerHTML='<div style="font-weight:600;margin:4px 0 8px">Contando tempo</div>'+(L.length?`<table><tr><th>Operador</th><th>Onda</th><th>Tipo</th><th>Qtd</th><th>Início</th><th>Tempo</th></tr>`+L.map(({u,g})=>{
   const open=CTLX.has(u.op)||(q&&g.length>1&&g.some(x=>nrm(String(x.wn||"")).includes(q))),hit=x=>q&&nrm(String(x.wn||"")).includes(q);
-  return`<tr><td><div class="who2">${av(u.opn)}<div>${esc(u.opn)}<br><small>${esc(u.op.split("~")[0])}, ${esc(u.gal)}</small></div></div></td><td><b>${esc(u.wn||"—")}</b>${g.length>1?`<br><button type="button" class="pill" data-x="${esc(u.op)}" aria-expanded="${open}" style="min-height:28px;padding:2px 8px;margin-top:4px">${open?"Ocultar":"Ver"} +${g.length-1} ${g.length-1===1?"onda":"ondas"} do mesmo lançamento</button>`:""}</td><td>${esc(u.ty)}</td><td><b>${fmt(g.reduce((a,x)=>a+x.qty,0))}</b></td><td>${new Date(u.ts).toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"})}</td><td><b data-el="${u.ts}">${mm(Date.now()-u.ts)}</b><br><button type="button" class="pill" data-zt="${esc(g.map(x=>x.id).join(","))}" style="min-height:28px;padding:2px 8px;margin-top:4px" title="Tira esta espera da contagem de tempo. As unidades continuam contando.">Zerar tempo</button></td></tr>`
-  +(open&&g.length>1?`<tr><td></td><td colspan="5"><table class="lanc"><tr><th>Onda</th><th>Tipo</th><th>Qtd</th><th>Hora</th></tr>${g.slice().sort((a,b)=>b.ts-a.ts).map(x=>`<tr${hit(x)?' style="background:var(--field)"':""}><td><b>${esc(x.wn||"—")}</b></td><td>${esc(x.ty)}</td><td>${fmt(x.qty)}</td><td>${hh(x.ts)}</td></tr>`).join("")}</table></td></tr>`:"")}).join("")+"</table>":`<div class="empty">${q&&all?"Nenhuma onda em andamento com essa onda ou nome.":"Nenhuma onda contando tempo agora."}</div>`)}
+  return`<tr><td><div class="who2">${av(u.opn)}<div>${esc(u.opn)}<br><small>${esc(u.op.split("~")[0])}, ${esc(u.gal)}</small></div></div></td><td><b>${esc(wnS(u)||"—")}</b>${g.length>1?`<br><button type="button" class="pill" data-x="${esc(u.op)}" aria-expanded="${open}" style="min-height:28px;padding:2px 8px;margin-top:4px">${open?"Ocultar":"Ver"} +${g.length-1} ${g.length-1===1?"onda":"ondas"} do mesmo lançamento</button>`:""}</td><td>${esc(u.ty)}</td><td><b>${fmt(g.reduce((a,x)=>a+x.qty,0))}</b></td><td>${new Date(u.ts).toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"})}</td><td><b data-el="${u.ts}">${mm(Date.now()-u.ts)}</b><br><button type="button" class="pill" data-zt="${esc(g.map(x=>x.id).join(","))}" style="min-height:28px;padding:2px 8px;margin-top:4px" title="Tira esta espera da contagem de tempo. As unidades continuam contando.">Zerar tempo</button></td></tr>`
+  +(open&&g.length>1?`<tr><td></td><td colspan="5"><table class="lanc"><tr><th>Onda</th><th>Tipo</th><th>Qtd</th><th>Hora</th></tr>${g.slice().sort((a,b)=>b.ts-a.ts).map(x=>`<tr${hit(x)?' style="background:var(--field)"':""}><td><b>${esc(wnS(x)||"—")}</b></td><td>${esc(x.ty)}</td><td>${fmt(x.qty)}</td><td>${hh(x.ts)}</td></tr>`).join("")}</table></td></tr>`:"")}).join("")+"</table>":`<div class="empty">${q&&all?"Nenhuma onda em andamento com essa onda ou nome.":"Nenhuma onda contando tempo agora."}</div>`)}
 function filters(){const f=(id,h,o)=>{const e=$(id),v=e.value;e.innerHTML=`<option value="">${h}</option>`+o.map(([a,b])=>`<option value="${a}">${esc(b)}</option>`).join("");e.value=v};
  f("#fOp","Operador",S.ops.map(o=>[o.m,o.n]));f("#fTy","Tipo",TY.map(t=>[t[0],t[0]]));f("#fSt","Status",[[1,"Procurando"],[2,"Difícil acesso"]])}
 function tick(){const a=$("#tauto");
@@ -839,7 +841,7 @@ function mgTempo(o,L){const gap=GAP()*6e4,now=Date.now(),C=conjuntos(L).sort((a,
  const rk=R.length?`<table><tr><th>Tipo</th><th>Conjuntos medidos</th><th>Tempo mediano</th><th>Unidades por hora</th><th></th></tr>`+R.map((x,i)=>`<tr><td><b>${esc(x.ty)}</b></td><td>${x.d.length}</td><td>${mn(x.m)}</td><td>${fmt(Math.round(x.uh))}</td><td>${i===0&&R.length>1?'<span class="tag">mais rápido</span>':''}</td></tr>`).join('')+'</table>':'<div class="empty">Sem conjuntos medidos neste período.</div>';
  const lt=C.length?`<table><tr><th>Início</th><th>Ondas</th><th>Tipo</th><th>Unidades</th><th>Tempo</th></tr>`+C.slice(0,40).map(c=>`<tr><td>${new Date(c.t).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit'})}</td><td>${c.ondas}</td><td>${c.tipos.map(esc).join(', ')}</td><td>${fmt(c.qty)}</td><td>${c.d==null?(now-c.t<=gap?'em andamento':'—'):c.d>gap?'pausa':mn(c.d)}</td></tr>`).join('')+'</table>':'<div class="empty">Nenhuma onda no período.</div>';
  return`<div class="grid two" style="margin-top:14px"><div class="card"><h2>Tempo por tipo de onda</h2><div class="tw">${rk}</div><div class="legend">Mediana do tempo de cada conjunto. Ondas bipadas no mesmo instante contam como um conjunto, com um tempo só. Pausas acima de ${GAP()} min ficam de fora.</div></div><div class="card"><h2>Conjuntos de ondas</h2><div class="tw">${lt}</div><div class="legend">Tempo da bipagem do conjunto até a bipagem do próximo. Mostra os 40 mais recentes.</div></div></div>`}
-function mgHistory(list){return list.length?`<table><tr><th>Data e hora</th><th>Onda</th><th>Tipo</th><th>Quantidade</th><th>Situação</th></tr>`+list.map(w=>`<tr><td>${new Date(w.ts).toLocaleString('pt-BR')}</td><td>${esc(w.wn||'—')}</td><td>${esc(w.ty)}</td><td>${fmt(w.qty)}</td><td>${esc(ST[w.st]||'—')}${!w.sync?' · pendente':''}</td></tr>`).join('')+'</table>':'<div class="empty">Nenhuma onda registrada.</div>'}
+function mgHistory(list){return list.length?`<table><tr><th>Data e hora</th><th>Onda</th><th>Tipo</th><th>Quantidade</th><th>Situação</th></tr>`+list.map(w=>`<tr><td>${new Date(w.ts).toLocaleString('pt-BR')}</td><td>${esc(wnS(w)||'—')}</td><td>${esc(w.ty)}</td><td>${fmt(w.qty)}</td><td>${esc(ST[w.st]||'—')}${!w.sync?' · pendente':''}</td></tr>`).join('')+'</table>':'<div class="empty">Nenhuma onda registrada.</div>'}
 function destaques(rows,data){
  const R=rows.map(x=>{const L=data.days.flatMap(d=>data.byOpDay.get(d+'|'+x.o.m)||[]),P=prod(L),C=durs(L),tm=C.reduce((s,c)=>s+c.d,0),cu=C.reduce((s,c)=>s+c.qty,0);
   return{o:x.o,L,P,C,qty:x.qty,n:x.n,rate:C.length>=3&&tm>0?cu/(tm/36e5):0,pr:L.filter(w=>w.st===1||(w.hist||[]).some(e=>e.e==='m')).length}});
@@ -1007,14 +1009,14 @@ function hisPessoas(P){HPBY={};P.forEach(w=>{(HPBY[w.op]=HPBY[w.op]||[]).push(w)
  ${L.map(p=>{const ty=TY.map(([n])=>[n,p.a.filter(w=>w.ty===n).length]).filter(x=>x[1]).map(x=>esc(x[0])+' '+x[1]).join(' · ');
   return`<details class="hp" data-hp="${esc(p.op)}"${HOPEN.has(p.op)?' open':''}><summary><b>${esc(p.n)}</b> <small>${esc(p.c)}</small><span class="hps">${fmt(p.a.length)} ondas · ${fmt(p.q)} un.</span><small class="hpt2">${ty}</small></summary><div class="hpb">${HOPEN.has(p.op)?hpBody(p.op):''}</div></details>`}).join('')}</div>`}
 function hpBody(op){const a=HPBY[op]||[],q=nrm(HPQ[op]||'').trim(),f=(q?a.filter(w=>nrm(String(w.wn||'')).includes(q)):a).slice().sort((x,y)=>(y.fin||y.ts)-(x.fin||x.ts)),lim=300;
- return`<input type="search" data-hpq="${esc(op)}" value="${esc(HPQ[op]||'')}" placeholder="Pesquisar número da onda" autocomplete="off" aria-label="Pesquisar número da onda"><div class="tw"><table><tr><th>Data e hora</th><th>Onda</th><th>Tipo</th><th>Qtd</th></tr>${f.slice(0,lim).map(w=>`<tr><td>${hDT(w.fin||w.ts)}</td><td><b>${esc(w.wn||'—')}</b></td><td>${esc(w.ty)}</td><td class="num">${fmt(w.qty)}</td></tr>`).join('')||'<tr><td colspan="4">Nenhuma onda com esse número.</td></tr>'}</table></div><div class="legend">${f.length>lim?'Mostrando '+lim+' de '+f.length+'. Pesquise pelo número para achar as demais.':f.length+' '+(f.length===1?'onda':'ondas')+'.'}</div>`}
+ return`<input type="search" data-hpq="${esc(op)}" value="${esc(HPQ[op]||'')}" placeholder="Pesquisar número da onda" autocomplete="off" aria-label="Pesquisar número da onda"><div class="tw"><table><tr><th>Data e hora</th><th>Onda</th><th>Tipo</th><th>Qtd</th></tr>${f.slice(0,lim).map(w=>`<tr><td>${hDT(w.fin||w.ts)}</td><td><b>${esc(wnS(w)||'—')}</b></td><td>${esc(w.ty)}</td><td class="num">${fmt(w.qty)}</td></tr>`).join('')||'<tr><td colspan="4">Nenhuma onda com esse número.</td></tr>'}</table></div><div class="legend">${f.length>lim?'Mostrando '+lim+' de '+f.length+'. Pesquise pelo número para achar as demais.':f.length+' '+(f.length===1?'onda':'ondas')+'.'}</div>`}
 async function hUniGo(raw){const q=raw.trim();HUQ=raw;const box=$("#hUniRes");
  if(q.length<9){HUR='<div class="legend">Digite o número da onda com pelo menos 9 caracteres e aperte Enter.</div>';box.innerHTML=HUR;return}
  box.innerHTML='<div class="legend">Buscando…</div>';let rows;
  try{if(ON){const arr=await api('/rest/v1/ondas?select=id,wn,operador_id,galpao_id,tipo,quantidade,status,registrada_em,concluida_em&wn=ilike.'+encodeURIComponent('*'+q.replace(/[*%,()]/g,'')+'*')+'&order=registrada_em.desc&limit=20');rows=arr.map(hRow)}
   else rows=S.waves.filter(w=>nrm(String(w.wn||'')).includes(nrm(q))&&visG().includes(w.gal)).map(w=>Object.assign({opc:String(w.op).split('~')[0]},w))}
  catch(e){HUR='<div class="legend">Não foi possível buscar agora. Confira a conexão.</div>';box.innerHTML=HUR;return}
- HUR=rows.length?`<div class="tw"><table><tr><th>Onda</th><th>Pessoa</th><th>Galpão</th><th>Tipo</th><th>Qtd</th><th>Situação</th><th>Data e hora</th></tr>${rows.map(w=>`<tr><td><b>${esc(w.wn||'—')}</b></td><td>${esc(w.opn)} <small>${esc(w.opc||'')}</small></td><td>${esc(w.gal)}</td><td>${esc(w.ty)}</td><td class="num">${fmt(w.qty)}</td><td>${hST[w.st]||''}</td><td>${hDT(w.fin||w.ts)}</td></tr>`).join('')}</table></div>`:'<div class="legend">Nenhuma onda encontrada com esse número.</div>';box.innerHTML=HUR}
+ HUR=rows.length?`<div class="tw"><table><tr><th>Onda</th><th>Pessoa</th><th>Galpão</th><th>Tipo</th><th>Qtd</th><th>Situação</th><th>Data e hora</th></tr>${rows.map(w=>`<tr><td><b>${esc(wnS(w)||'—')}</b></td><td>${esc(w.opn)} <small>${esc(w.opc||'')}</small></td><td>${esc(w.gal)}</td><td>${esc(w.ty)}</td><td class="num">${fmt(w.qty)}</td><td>${hST[w.st]||''}</td><td>${hDT(w.fin||w.ts)}</td></tr>`).join('')}</table></div>`:'<div class="legend">Nenhuma onda encontrada com esse número.</div>';box.innerHTML=HUR}
 let HPW=null,hBusy=false;
 async function hFetchAll(path){const out=[];for(let off=0;;off+=4000){const r=await Promise.all([0,1,2,3].map(k=>api(path+'&limit=1000&offset='+(off+k*1000))));let cut=false;for(const p of r){out.push(...p);if(p.length<1000){cut=true;break}}if(cut||off>=80000)break}return out}
 async function loadHis(force){
@@ -1219,11 +1221,11 @@ function procurando(){const q=($("#prQ")&&$("#prQ").value||"").trim().toLowerCas
  $("#prNomes").innerHTML=S.ops.map(o=>`<option value="${esc(o.n)}">`).join("");
  const P=S.waves.filter(w=>w.st===1&&inView(w)),L=P.filter(ok).sort((a,b)=>(a.pt||a.ts)-(b.pt||b.ts));
  $("#prCnt").textContent=P.length?P.length+" pendentes":"";$$("#psub [data-p=sku]").forEach(x=>x.textContent="SKU procurando"+(P.length?" ("+P.length+")":""));
- $("#prList").innerHTML=L.length?`<table><tr><th>SKU</th><th>Onda</th><th>Quantidade</th><th>Há</th><th></th></tr>`+L.map(w=>`<tr><td><b>${esc(w.sku||"—")}</b>${w.loc?`<br><small>${esc(w.loc)}</small>`:""}</td><td><b>${esc(w.wn||"—")}</b><br><small>${esc(w.ty)} · ${esc(w.opn||"—")}</small></td><td><b>${fmt(w.qty)}</b></td><td>${mm(Date.now()-(w.pt||w.ts))}</td><td><button class="btn sm" data-prf="${esc(w.id)}">Finalizar onda</button></td></tr>`).join("")+"</table>":`<div class="empty">${P.length?"Nada encontrado nesta pesquisa.":"Nenhuma onda pendente."}</div>`;
+ $("#prList").innerHTML=L.length?`<table><tr><th>SKU</th><th>Onda</th><th>Quantidade</th><th>Há</th><th></th></tr>`+L.map(w=>`<tr><td><b>${esc(w.sku||"—")}</b>${w.loc?`<br><small>${esc(w.loc)}</small>`:""}</td><td><b>${esc(wnS(w)||"—")}</b><br><small>${esc(w.ty)} · ${esc(w.opn||"—")}</small></td><td><b>${fmt(w.qty)}</b></td><td>${mm(Date.now()-(w.pt||w.ts))}</td><td><button class="btn sm" data-prf="${esc(w.id)}">Finalizar onda</button></td></tr>`).join("")+"</table>":`<div class="empty">${P.length?"Nada encontrado nesta pesquisa.":"Nenhuma onda pendente."}</div>`;
  const Hh=S.waves.filter(w=>inView(w)&&(prEtapa(w)==="a"||prEtapa(w)==="b")),H2=Hh.filter(ok).sort((a,b)=>Math.max(...prEv(b).map(e=>e.t),0)-Math.max(...prEv(a).map(e=>e.t),0)).slice(0,200);
  const aguardando=Hh.filter(w=>prEtapa(w)==="a").length;$("#prHCnt").textContent=Hh.length?Hh.length+" no histórico"+(aguardando?", "+aguardando+" aguardando baixa":""):"";
  $("#prHist").innerHTML=H2.length?`<table><tr><th>Data e hora</th><th>Tipo</th><th>Onda</th><th>SKU</th><th>Local</th><th>Quem fez a onda</th><th>Encontrada em</th><th>Baixa por</th></tr>`+H2.map(w=>{const b=prEv(w).find(e=>e.e==="b");
-  return`<tr><td>${prDH(prT(w,"m")||w.pt||w.ts)}</td><td>${esc(w.ty)}<br><small>${fmt(w.qty)} un.</small></td><td><b>${esc(w.wn||"—")}</b></td><td>${esc(w.sku||"—")}</td><td>${esc(w.loc||"—")}</td><td>${esc(w.opn||"—")}</td><td>${prDH(prT(w,"a"))}</td><td>${b?`<b>${esc(b.q)}</b><br><small>${prDH(b.t)}</small>`:`<button class="btn alt sm" data-prb="${esc(w.id)}">Dar baixa</button>`}</td></tr>`}).join("")+"</table>":`<div class="empty">${Hh.length?"Nada encontrado nesta pesquisa.":"Nenhuma onda no histórico ainda."}</div>`}
+  return`<tr><td>${prDH(prT(w,"m")||w.pt||w.ts)}</td><td>${esc(w.ty)}<br><small>${fmt(w.qty)} un.</small></td><td><b>${esc(wnS(w)||"—")}</b></td><td>${esc(w.sku||"—")}</td><td>${esc(w.loc||"—")}</td><td>${esc(w.opn||"—")}</td><td>${prDH(prT(w,"a"))}</td><td>${b?`<b>${esc(b.q)}</b><br><small>${prDH(b.t)}</small>`:`<button class="btn alt sm" data-prb="${esc(w.id)}">Dar baixa</button>`}</td></tr>`}).join("")+"</table>":`<div class="empty">${Hh.length?"Nada encontrado nesta pesquisa.":"Nenhuma onda no histórico ainda."}</div>`}
 $("#prs").addEventListener("keydown",e=>{if(e.key!=="Enter")return;const i=e.target.id;if(!["prBip","prSku","prLoc","prNome"].includes(i))return;e.preventDefault();
  if(i==="prBip")prBuscar();else if(i==="prNome")(prW&&prW.modo==="finalizar"?prFinalizar():prBaixar());else prSalvar()});
 $("#prQ").oninput=procurando;
@@ -1305,14 +1307,15 @@ $("#rowsL").onclick=e=>{const i=e.target.dataset.rmrow;if(i!==undefined){rows.sp
 $("#save").onclick=()=>{const o=findOp($("#opIn").value);
  if(!o){toast("Identifique o operador");goStep(1);return}
  const bad={},list=[];
- rows.forEach((r,i)=>{const wn=normWN(r.wn),q=Number(String(r.q).replace(",","."));
+ rows.forEach((r,i)=>{const rt=isRT(),wn=rt?String(r.wn||"").replace(/\s+/g,"").toUpperCase().replace(/~/g,""):normWN(r.wn),q=Number(String(r.q).replace(",","."));
   if(!wn&&!r.q)return;
-  if(!wn){bad[i]="Informe o número da onda";return}
-  if(S.waves.some(w=>normWN(w.wn)===wn)||rows.some((x,j)=>j<i&&normWN(x.wn)===wn)){bad[i]="A onda "+wn+" já foi registrada";return}
+  if(!wn){bad[i]=rt?"Informe o SKU":"Informe o número da onda";return}
+  if(rt&&wn.length>24){bad[i]="SKU com até 24 caracteres";return}
+  if(!rt&&(S.waves.some(w=>normWN(w.wn)===wn)||rows.some((x,j)=>j<i&&normWN(x.wn)===wn))){bad[i]="A onda "+wn+" já foi registrada";return}
   if(r.q===""||r.q==null){bad[i]="Informe a quantidade";return}
   if(!Number.isInteger(q)||q<1){bad[i]="Quantidade deve ser um número inteiro maior que zero";return}
   if(q>S.cfg.lim[ty]){bad[i]="Acima do limite de "+fmt(S.cfg.lim[ty]);return}
-  list.push({wn,q})});
+  list.push({wn:rt?wn+"~"+Date.now().toString(36).slice(-6)+i:wn,q})});
  $$(".wrow").forEach((el,i)=>{const b=i in bad;el.classList.toggle("err",b);if(b)el.dataset.err=bad[i];else delete el.dataset.err;el.querySelectorAll("input").forEach(x=>x.setAttribute("aria-invalid",b?"true":"false"))});
  const k=Object.keys(bad);if(k.length){toast(bad[k[0]]);return}
  if(!list.length){toast("Informe pelo menos uma onda");return}
