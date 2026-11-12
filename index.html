@@ -257,11 +257,11 @@ a[data-pick]{display:inline-block;padding:8px 0 2px;color:var(--gx);font-weight:
 
  <div id="pro" class="grid two hide">
   <div class="card"><h2>Bipar onda</h2><div class="f">
-   <label>Bipar onda <input id="prBip" placeholder="WN da onda" autocomplete="off"></label>
+   <label>Bipar onda <input id="prBip" placeholder="Onda" autocomplete="off"></label>
    <div id="prRes"></div></div>
 </div>
   <div class="card"><h2>Pendentes <span id="prCnt"></span></h2>
-   <label class="hint" style="display:block;margin-bottom:8px">Pesquisar<input id="prQ" type="search" placeholder="Nome, WN, SKU ou local" autocomplete="off"></label>
+   <label class="hint" style="display:block;margin-bottom:8px">Pesquisar<input id="prQ" type="search" placeholder="Nome, onda, SKU ou local" autocomplete="off"></label>
    <div class="tw" id="prList"></div></div>
   <div class="card" style="grid-column:1/-1"><h2>Histórico de procurando <span id="prHCnt"></span></h2><div class="tw" id="prHist"></div></div>
   <datalist id="prNomes"></datalist>
@@ -722,7 +722,7 @@ function commit(list){S.waves.push(...list);if(!save()){S.waves.splice(S.waves.l
  toast(online()?"Onda salva ✓"+(list.some(isOT)?", hora extra":""):"Salva offline, aguardando sincronização")}
 function check(){const o=curOp();if(!o){toast("Identifique um operador cadastrado");return}return o}
 function opRows(list,ctl){const canR=!S.ges.length||(me&&me.pR);
- return list.length?`<table><tr><th>Operador</th><th>WN</th><th>Tipo</th><th>Qtd</th><th>Status</th><th>Hora</th>${ctl?"<th>Tempo</th><th>Ação</th>":""}</tr>`+list.map(w=>{const o=opOf(w.op);
+ return list.length?`<table><tr><th>Operador</th><th>Onda</th><th>Tipo</th><th>Qtd</th><th>Status</th><th>Hora</th>${ctl?"<th>Tempo</th><th>Ação</th>":""}</tr>`+list.map(w=>{const o=opOf(w.op);
  return`<tr><td><div class="who2">${av(w.opn)}<div>${esc(w.opn)}<br><small>${esc(w.op.split("~")[0])}${w.op.includes("~")?" (excluído)":""}, ${esc(w.gal)}${o?", "+o.t+"ºT":""}</small></div></div></td><td><b>${esc(w.wn||"—")}</b></td><td>${w.ty}</td><td><b>${fmt(w.qty)}</b></td><td><span class="st ${SC[w.st]}">${ST[w.st]}</span>${isOT(w)?' <span class="st so">extra</span>':""}${w.err?'<br><span class="st s2" title="'+esc(w.err)+'">recusada</span> <a href="#" data-del="'+w.id+'" class="pill off">Remover</a><br><small>'+esc(w.err)+"</small>":""}</td><td style="white-space:nowrap">${new Date(w.ts).toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"})}${ctl?"":(w.err?"":w.sync?' <span title="Sincronizado" aria-label="Sincronizado" style="color:var(--gx)">✓</span>':' <span class="st s1">pendente</span>')}</td>${ctl?`<td class="num" data-el="${w.ts}">${mm(Date.now()-w.ts)}</td><td><a href="#" data-fin="${w.id}" class="pill">Concluir</a> <a href="#" data-sd="${w.id}" class="pill warn">Difícil</a>${canR?` <a href="#" data-del="${w.id}" class="pill off">Excluir</a>`:""}</td>`:""}</tr>`}).join("")+"</table>":'<div class="empty">Nenhuma onda registrada.</div>'}
 function operacao(){const L=dayWaves().slice().reverse();$("#cnt").textContent=L.length+" hoje";$("#last").innerHTML=opRows(L.slice(0,8));
  $("#opl").innerHTML=S.ops.map(o=>`<option value="${o.m}">${esc(o.n)}, ${o.t}º turno</option>`).join("");
@@ -733,7 +733,7 @@ function liveWaves(){const gap=(S.cfg.gap||30)*6e4,now=Date.now(),by={};
  S.waves.filter(w=>w.st===0&&!w.err&&inView(w)&&w.ts<=now&&now-w.ts<=gap&&(!$("#fOp").value||w.op===$("#fOp").value)&&(!$("#fTy").value||w.ty===$("#fTy").value)).forEach(w=>{(by[w.op]=by[w.op]||[]).push(w)});
  return Object.values(by).map(a=>{a.sort((x,y)=>y.ts-x.ts);const u=a[0];return{u,g:a.filter(x=>u.ts-x.ts<=3000)}}).sort((x,y)=>y.u.ts-x.u.ts)}
 function ctlLive(){const el=$("#ctlLive");if(!el)return;const L=S.cfg.and?liveWaves():[];
- el.innerHTML='<div style="font-weight:600;margin:4px 0 8px">Contando tempo</div>'+(L.length?`<table><tr><th>Operador</th><th>Onda (WN)</th><th>Tipo</th><th>Qtd</th><th>Início</th><th>Tempo</th></tr>`+L.map(({u,g})=>`<tr><td><div class="who2">${av(u.opn)}<div>${esc(u.opn)}<br><small>${esc(u.op.split("~")[0])}, ${esc(u.gal)}</small></div></div></td><td><b>${esc(u.wn||"—")}</b>${g.length>1?`<br><small>+${g.length-1} ${g.length-1===1?"onda":"ondas"} no mesmo lançamento</small>`:""}</td><td>${esc(u.ty)}</td><td><b>${fmt(g.reduce((a,x)=>a+x.qty,0))}</b></td><td>${new Date(u.ts).toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"})}</td><td><b data-el="${u.ts}">${mm(Date.now()-u.ts)}</b></td></tr>`).join("")+"</table>":'<div class="empty">Nenhuma onda contando tempo agora.</div>')}
+ el.innerHTML='<div style="font-weight:600;margin:4px 0 8px">Contando tempo</div>'+(L.length?`<table><tr><th>Operador</th><th>Onda</th><th>Tipo</th><th>Qtd</th><th>Início</th><th>Tempo</th></tr>`+L.map(({u,g})=>`<tr><td><div class="who2">${av(u.opn)}<div>${esc(u.opn)}<br><small>${esc(u.op.split("~")[0])}, ${esc(u.gal)}</small></div></div></td><td><b>${esc(u.wn||"—")}</b>${g.length>1?`<br><small>+${g.length-1} ${g.length-1===1?"onda":"ondas"} no mesmo lançamento</small>`:""}</td><td>${esc(u.ty)}</td><td><b>${fmt(g.reduce((a,x)=>a+x.qty,0))}</b></td><td>${new Date(u.ts).toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"})}</td><td><b data-el="${u.ts}">${mm(Date.now()-u.ts)}</b></td></tr>`).join("")+"</table>":'<div class="empty">Nenhuma onda contando tempo agora.</div>')}
 function filters(){const f=(id,h,o)=>{const e=$(id),v=e.value;e.innerHTML=`<option value="">${h}</option>`+o.map(([a,b])=>`<option value="${a}">${esc(b)}</option>`).join("");e.value=v};
  f("#fOp","Operador",S.ops.map(o=>[o.m,o.n]));f("#fTy","Tipo",TY.map(t=>[t[0],t[0]]));f("#fSt","Status",[[1,"Procurando"],[2,"Difícil acesso"]])}
 function tick(){const a=$("#tauto");
@@ -793,7 +793,7 @@ function mgReference(o,data){let sum=0,has=false;for(const d of data.days){const
 function metaInd(o,L){const m=MI()[o.g]||{},dias=Math.max(new Set(prod(L).map(w=>dk(w.ts))).size,1);return{o:m.o?m.o*dias:0,q:m.q?m.q*dias:0}}
 const vsMeta=(v,m)=>m?`${fmt(v)} / ${fmt(m)} <small>${Math.round(v/m*100)}%</small>`:"—";
 const mgK=(t,v,sub)=>`<div class="kpi"><dt>${t}</dt><dd class="num">${v}</dd><dd class="sm">${sub||''}</dd></div>`;
-function mgHistory(list){return list.length?`<table><tr><th>Data e hora</th><th>Onda (WN)</th><th>Tipo</th><th>Quantidade</th><th>Situação</th></tr>`+list.map(w=>`<tr><td>${new Date(w.ts).toLocaleString('pt-BR')}</td><td>${esc(w.wn||'—')}</td><td>${esc(w.ty)}</td><td>${fmt(w.qty)}</td><td>${esc(ST[w.st]||'—')}${!w.sync?' · pendente':''}</td></tr>`).join('')+'</table>':'<div class="empty">Nenhuma onda registrada.</div>'}
+function mgHistory(list){return list.length?`<table><tr><th>Data e hora</th><th>Onda</th><th>Tipo</th><th>Quantidade</th><th>Situação</th></tr>`+list.map(w=>`<tr><td>${new Date(w.ts).toLocaleString('pt-BR')}</td><td>${esc(w.wn||'—')}</td><td>${esc(w.ty)}</td><td>${fmt(w.qty)}</td><td>${esc(ST[w.st]||'—')}${!w.sync?' · pendente':''}</td></tr>`).join('')+'</table>':'<div class="empty">Nenhuma onda registrada.</div>'}
 function individual(){
  const sel=$("#iOp"),v=sel.value,data=mgData(),g=$("#gal").value,t=$("#turnoF").value;
  const ops=data.ops.filter(o=>(g==='__all'||o.g===g)&&(!t||String(o.t)===t)).filter(o=>!o.excluido||data.waves.some(w=>w.op===o.m));
@@ -1004,10 +1004,10 @@ function procurando(){const q=($("#prQ")&&$("#prQ").value||"").trim().toLowerCas
  $("#prNomes").innerHTML=S.ops.map(o=>`<option value="${esc(o.n)}">`).join("");
  const P=S.waves.filter(w=>w.st===1&&inView(w)),L=P.filter(ok).sort((a,b)=>(a.pt||a.ts)-(b.pt||b.ts));
  $("#prCnt").textContent=P.length?P.length+" pendentes":"";
- $("#prList").innerHTML=L.length?`<table><tr><th>Onda (WN)</th><th>SKU</th><th>Local</th><th>Quem fez a onda</th><th>Há</th><th></th></tr>`+L.map(w=>`<tr><td><b>${esc(w.wn||"—")}</b><br><small>${esc(w.ty)} · ${fmt(w.qty)}</small></td><td>${esc(w.sku||"—")}</td><td>${esc(w.loc||"—")}</td><td>${esc(w.opn||"—")}</td><td>${mm(Date.now()-(w.pt||w.ts))}</td><td><button class="btn sm" data-pra="${esc(w.id)}">Encontrada</button></td></tr>`).join("")+"</table>":`<div class="empty">${P.length?"Nada encontrado nesta pesquisa.":"Nenhuma onda pendente."}</div>`;
+ $("#prList").innerHTML=L.length?`<table><tr><th>Onda</th><th>SKU</th><th>Local</th><th>Quem fez a onda</th><th>Há</th><th></th></tr>`+L.map(w=>`<tr><td><b>${esc(w.wn||"—")}</b><br><small>${esc(w.ty)} · ${fmt(w.qty)}</small></td><td>${esc(w.sku||"—")}</td><td>${esc(w.loc||"—")}</td><td>${esc(w.opn||"—")}</td><td>${mm(Date.now()-(w.pt||w.ts))}</td><td><button class="btn sm" data-pra="${esc(w.id)}">Encontrada</button></td></tr>`).join("")+"</table>":`<div class="empty">${P.length?"Nada encontrado nesta pesquisa.":"Nenhuma onda pendente."}</div>`;
  const Hh=S.waves.filter(w=>inView(w)&&(prEtapa(w)==="a"||prEtapa(w)==="b")),H2=Hh.filter(ok).sort((a,b)=>Math.max(...prEv(b).map(e=>e.t),0)-Math.max(...prEv(a).map(e=>e.t),0)).slice(0,200);
  const aguardando=Hh.filter(w=>prEtapa(w)==="a").length;$("#prHCnt").textContent=Hh.length?Hh.length+" no histórico"+(aguardando?", "+aguardando+" aguardando baixa":""):"";
- $("#prHist").innerHTML=H2.length?`<table><tr><th>Data e hora</th><th>Tipo</th><th>Onda (WN)</th><th>SKU</th><th>Local</th><th>Quem fez a onda</th><th>Encontrada em</th><th>Baixa por</th></tr>`+H2.map(w=>{const b=prEv(w).find(e=>e.e==="b");
+ $("#prHist").innerHTML=H2.length?`<table><tr><th>Data e hora</th><th>Tipo</th><th>Onda</th><th>SKU</th><th>Local</th><th>Quem fez a onda</th><th>Encontrada em</th><th>Baixa por</th></tr>`+H2.map(w=>{const b=prEv(w).find(e=>e.e==="b");
   return`<tr><td>${prDH(prT(w,"m")||w.pt||w.ts)}</td><td>${esc(w.ty)}<br><small>${fmt(w.qty)} un.</small></td><td><b>${esc(w.wn||"—")}</b></td><td>${esc(w.sku||"—")}</td><td>${esc(w.loc||"—")}</td><td>${esc(w.opn||"—")}</td><td>${prDH(prT(w,"a"))}</td><td>${b?`<b>${esc(b.q)}</b><br><small>${prDH(b.t)}</small>`:`<button class="btn alt sm" data-prb="${esc(w.id)}">Dar baixa</button>`}</td></tr>`}).join("")+"</table>":`<div class="empty">${Hh.length?"Nada encontrado nesta pesquisa.":"Nenhuma onda no histórico ainda."}</div>`}
 $("#pro").addEventListener("keydown",e=>{if(e.key!=="Enter")return;const i=e.target.id;if(!["prBip","prSku","prLoc","prNome"].includes(i))return;e.preventDefault();
  if(i==="prBip")prBuscar();else if(i==="prNome")prBaixar();else prSalvar()});
