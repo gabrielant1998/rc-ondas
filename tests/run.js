@@ -270,6 +270,14 @@ await T("47 Painel: ranking de tipos pelo tempo, maior primeiro",async()=>{
  const p=await page(b,base({waves:[WV('a','1','Vários artigos',10,HR(9,0)),WV('b','2','Vários artigos',10,HR(9,10)),WV('c','3','Itens Únicos',10,HR(9,12))]}));
  await p.evaluate(()=>go('painel'));const t=(await p.textContent('#tmp')).replace(/\s+/g,' ');
  ok(t.indexOf('1º Vários artigos')>=0&&t.indexOf('2º Itens Únicos')>=0&&t.indexOf('1º Vários artigos')<t.indexOf('2º Itens Únicos'),t.slice(0,300))});
+await T("48 Controle de Ondas: última bipagem de cada operador conta tempo ao vivo dentro do intervalo máximo",async()=>{const n=Date.now(),m=60000;
+ const p=await page(b,base({waves:[WV('a','1','Vários artigos',10,n-50*m),WV('b','2','Vários artigos',20,n-5*m),WV('c','3','Itens Únicos',7,n-2*m,'CL002','Bruno Lima'),WV('d','4','Itens Únicos',3,n-45*m,'CL003','Carla Dias')]}));
+ await p.evaluate(()=>go('op'));await p.click('#sub [data-s="ctl"]');await p.waitForTimeout(1200);
+ const t=(await p.textContent('#ctlLive')).replace(/\s+/g,' ');
+ ok(t.includes('Ana Souza')&&t.includes('Bruno Lima')&&!t.includes('Carla Dias'),'operadores: '+t);
+ const el=await p.$$eval('#ctlLive [data-el]',a=>a.map(e=>e.textContent));ok(el.includes('05:01')||el.includes('05:02')||el.includes('05:00'),'tempos: '+el.join(','));
+ await p.evaluate(()=>{S.waves.push({id:'z',wn:'9',op:'CL001',opn:'Ana Souza',gal:'Galpão 1',ty:'Retrabalho',qty:5,st:0,ts:Date.now()-1000,fin:Date.now()-1000,sync:1});renderAll()});
+ const t2=(await p.textContent('#ctlLive')).replace(/\s+/g,' ');ok(t2.includes('Retrabalho')&&!t2.includes('Vários artigos'),'nova bipagem deveria substituir a anterior: '+t2)});
 await b.close();
 const w=Math.max(...R.map(r=>r[1].length));for(const r of R)console.log((r[0]==="PASS"?"✅":"❌")+" "+r[1].padEnd(w)+"  "+r[2]);
 console.log(`\n${R.filter(r=>r[0]==="PASS").length}/${R.length} passaram`)})();

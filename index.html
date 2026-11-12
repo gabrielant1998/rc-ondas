@@ -251,6 +251,7 @@ a[data-pick]{display:inline-block;padding:8px 0 2px;color:var(--gx);font-weight:
  </div>
 
  <div id="ctl" class="card hide"><h2>Ondas em andamento</h2>
+  <div id="ctlLive" style="margin-bottom:16px"></div>
   <div class="ctl" style="margin-bottom:10px"><select id="fOp" aria-label="Filtrar por operador"></select><select id="fTy" aria-label="Filtrar por tipo"></select><select id="fSt" aria-label="Filtrar por status"></select></div>
   <div class="tw" id="ctlList"></div></div>
 
@@ -727,7 +728,12 @@ function operacao(){const L=dayWaves().slice().reverse();$("#cnt").textContent=L
  $("#opl").innerHTML=S.ops.map(o=>`<option value="${o.m}">${esc(o.n)}, ${o.t}º turno</option>`).join("");
  $("#subCtl").classList.toggle("hide",!S.cfg.and);
  const open=S.waves.filter(w=>w.st!==0&&inView(w)&&(!$("#fOp").value||w.op===$("#fOp").value)&&(!$("#fTy").value||w.ty===$("#fTy").value)&&(!$("#fSt").value||w.st==$("#fSt").value));
- $("#ctlList").innerHTML=open.length?opRows(open.reverse(),1):'<div class="empty">Nenhuma onda em andamento.</div>'}
+ $("#ctlList").innerHTML=open.length?'<div style="font-weight:600;margin:4px 0 8px">Procurando e difícil acesso</div>'+opRows(open.reverse(),1):'';ctlLive()}
+function liveWaves(){const gap=(S.cfg.gap||30)*6e4,now=Date.now(),by={};
+ S.waves.filter(w=>w.st===0&&!w.err&&inView(w)&&w.ts<=now&&now-w.ts<=gap&&(!$("#fOp").value||w.op===$("#fOp").value)&&(!$("#fTy").value||w.ty===$("#fTy").value)).forEach(w=>{(by[w.op]=by[w.op]||[]).push(w)});
+ return Object.values(by).map(a=>{a.sort((x,y)=>y.ts-x.ts);const u=a[0];return{u,g:a.filter(x=>u.ts-x.ts<=3000)}}).sort((x,y)=>y.u.ts-x.u.ts)}
+function ctlLive(){const el=$("#ctlLive");if(!el)return;const L=S.cfg.and?liveWaves():[];
+ el.innerHTML='<div style="font-weight:600;margin:4px 0 8px">Contando tempo</div>'+(L.length?`<table><tr><th>Operador</th><th>Onda (WN)</th><th>Tipo</th><th>Qtd</th><th>Início</th><th>Tempo</th></tr>`+L.map(({u,g})=>`<tr><td><div class="who2">${av(u.opn)}<div>${esc(u.opn)}<br><small>${esc(u.op.split("~")[0])}, ${esc(u.gal)}</small></div></div></td><td><b>${esc(u.wn||"—")}</b>${g.length>1?`<br><small>+${g.length-1} ${g.length-1===1?"onda":"ondas"} no mesmo lançamento</small>`:""}</td><td>${esc(u.ty)}</td><td><b>${fmt(g.reduce((a,x)=>a+x.qty,0))}</b></td><td>${new Date(u.ts).toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"})}</td><td><b data-el="${u.ts}">${mm(Date.now()-u.ts)}</b></td></tr>`).join("")+"</table>":'<div class="empty">Nenhuma onda contando tempo agora.</div>')}
 function filters(){const f=(id,h,o)=>{const e=$(id),v=e.value;e.innerHTML=`<option value="">${h}</option>`+o.map(([a,b])=>`<option value="${a}">${esc(b)}</option>`).join("");e.value=v};
  f("#fOp","Operador",S.ops.map(o=>[o.m,o.n]));f("#fTy","Tipo",TY.map(t=>[t[0],t[0]]));f("#fSt","Status",[[1,"Procurando"],[2,"Difícil acesso"]])}
 function tick(){const a=$("#tauto");
@@ -735,6 +741,7 @@ function tick(){const a=$("#tauto");
   else{const d=Date.now()-tim.t0,w=5*6e4,inW=d<w;a.innerHTML=`<div style="font-weight:600">${esc(tim.n)}, ${tim.op}</div><div class="big" style="color:${inW?"var(--a)":"var(--g)"}">${inW?mm(w-d):mm(d-w)}</div><span class="pill ${inW?"warn":""}">${inW?"Janela de agrupamento":"Tempo efetivo da onda"}</span>`}
   const m=S.man;$("#tman").innerHTML=`<div style="font-weight:600">${esc(m.n||"Sem operador")}</div><div class="big">${mm((m.acc||0)+(m.run?Date.now()-m.run:0))}</div><span class="pill ${m.run?"":"off"}">${m.run?"Em andamento":"Parado"}</span>`;
   $("#mLog").innerHTML=m.log.slice(-3).map(l=>"• "+esc(l)).join("<br>")}
+ if(view==="op"&&!$("#ctl").classList.contains("hide"))ctlLive();
  $$("[data-el]").forEach(e=>e.textContent=mm(Date.now()-e.dataset.el))}
 
 /* ===================== GESTÃO OPERACIONAL ===================== */
