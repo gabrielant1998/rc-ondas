@@ -291,6 +291,17 @@ await T("50 Individual: tempo por tipo (mais rápido) e lista de conjuntos com t
  ok(t.includes('Tempo por tipo de onda')&&t.includes('Conjuntos de ondas'),'sem cards');
  ok(t.includes('26 min 30 s')&&t.includes('19 min 30 s'),'sem tempos: '+t.slice(t.indexOf('Tempo por tipo'),t.indexOf('Tempo por tipo')+700));
  ok(/Retrabalho\d+19 min 30 s\d+mais rápido/.test(t),'Retrabalho deveria ser o mais rápido: '+t.slice(t.indexOf('Tempo por tipo'),t.indexOf('Tempo por tipo')+500))});
+await T("51 Operador: nomes aparecem em cartões a partir da primeira letra, sem lista nativa",async()=>{
+ const p=await page(b,base());await p.evaluate(()=>go('op'));
+ ok(!(await p.$eval('#opIn',e=>e.hasAttribute('list'))),'ainda usa a lista nativa');
+ await p.click('#opIn');await p.keyboard.type('b');let c=await p.$$eval('#opSug [data-sug]',a=>a.map(e=>e.textContent.replace(/\s+/g,' ').trim()));
+ ok(c.length===1&&c[0].includes('Bruno Lima')&&c[0].includes('CL002')&&c[0].includes('1º turno'),'b: '+JSON.stringify(c));
+ await p.fill('#opIn','');await p.keyboard.type('c');c=await p.$$eval('#opSug [data-sug]',a=>a.map(e=>e.textContent));
+ ok(c.length===1&&c[0].includes('Carla Dias'),'c não deve casar com todos os códigos: '+c.length);
+ await p.fill('#opIn','');await p.keyboard.type('souza');c=await p.$$eval('#opSug [data-sug]',a=>a.length);ok(c===1,'busca por sobrenome: '+c);
+ await p.fill('#opIn','');await p.keyboard.type('xyz');ok((await p.textContent('#opSug')).includes('Nenhum operador'),'sem aviso de nenhum');
+ await p.fill('#opIn','');await p.keyboard.type('b');await p.click('#opSug [data-sug]');await p.waitForTimeout(300);
+ ok(!(await p.isVisible('#s1'))&&await p.isVisible('#s2')&&(await p.inputValue('#opIn'))==='CL002','clicar no cartão deveria escolher e avançar')});
 await b.close();
 const w=Math.max(...R.map(r=>r[1].length));for(const r of R)console.log((r[0]==="PASS"?"✅":"❌")+" "+r[1].padEnd(w)+"  "+r[2]);
 console.log(`\n${R.filter(r=>r[0]==="PASS").length}/${R.length} passaram`)})();

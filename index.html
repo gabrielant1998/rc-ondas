@@ -138,6 +138,9 @@ svg.ch{width:100%;height:auto;display:block}svg text{fill:var(--mut);font:600 12
 #types_b button .ti{color:var(--c);width:28px;height:28px}#types_b button.on .ti{color:#fff}
 .av{width:34px;height:34px;border-radius:50%;background:var(--bg);border:1px solid var(--line);display:inline-grid;place-items:center;font:700 14px/1 var(--fd);color:var(--ink);flex:none;letter-spacing:.02em}
 .who2{display:flex;gap:10px;align-items:center}.who2 small{color:var(--mut)}
+#opSug{display:grid;gap:6px;margin-top:8px}#opSug:empty{display:none}
+#opSug button.cracha{all:unset;box-sizing:border-box;display:flex;gap:12px;align-items:center;padding:10px 14px;border:1px solid var(--line);border-left:4px solid var(--line);border-radius:4px;background:var(--bg);cursor:pointer;color:var(--ink);width:100%}
+#opSug button.cracha:hover,#opSug button.cracha.on,#opSug button.cracha:focus-visible{border-color:var(--g);border-left-color:var(--g);background:var(--card)}
 .cracha{display:flex;gap:12px;align-items:center;padding:12px 14px;border:1px solid var(--line);border-left:4px solid var(--g);border-radius:4px;background:var(--bg);animation:rowIn .25s ease both}
 .cracha .av{width:44px;height:44px;font-size:18px;background:var(--card)}
 .cracha b{display:block;font:600 17px/1.2 var(--fb)}.cracha small{color:var(--mut);font-size:13.5px}
@@ -231,8 +234,8 @@ a[data-pick]{display:inline-block;padding:8px 0 2px;color:var(--gx);font-weight:
   <div class="card"><h2>Nova onda</h2>
    <div class="prog"><div class="pbar"><b id="pbar"></b></div><div class="plab"><span data-sp="1">Operador</span><span data-sp="2">Tipo</span><span data-sp="3">Ondas</span></div></div>
    <div class="stp" id="s1"><div class="f">
-    <label>Operador<input id="opIn" list="opl" autocomplete="off"></label><datalist id="opl"></datalist>
-    <div id="opName"></div>
+    <label>Operador<input id="opIn" autocomplete="off" role="combobox" aria-expanded="false" aria-controls="opSug" autocomplete="off"></label><datalist id="opl"></datalist>
+    <div id="opName"></div><div id="opSug" role="listbox" aria-label="Operadores encontrados"></div>
     <div class="ctl2"><span></span><button class="btn sm" id="n1">Continuar</button></div>
    </div></div>
    <div class="stp hide" id="s2">
@@ -1065,12 +1068,29 @@ document.addEventListener("click",e=>{const d=e.target.dataset,t=e.target;
   if(ON){rem(()=>mut("/rest/v1/gestores?email=eq."+encodeURIComponent(g.u),"DELETE"),"Gestor excluído");return}
   S.ges.splice(+d.mdel,1);if(me===g)me=null;authUI();save();cfgGes();toast("Gestor excluído")}
 });
-$("#opIn").oninput=()=>{const o=curOp();if(!o)return;track(o);
+const nrm=t=>String(t||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().trim();
+let sugI=-1,sugL=[];
+function opSugest(){const q=nrm($("#opIn").value),box=$("#opSug");sugI=-1;sugL=[];
+ if(!q){box.innerHTML="";$("#opIn").setAttribute("aria-expanded","false");return}
+ const ck=q.length>=2&&/^(cl\d*|\d+)$/.test(q),sc=o=>{const n=nrm(o.n),c=o.m.toLowerCase();if(n===q||(ck&&c===q))return-1;if(n.startsWith(q)||(ck&&c.startsWith(q)))return 0;if(n.split(/\s+/).some(w=>w.startsWith(q)))return 1;if(ck&&c.includes(q))return 2;return 9};
+ const all=S.ops.map(o=>[o,sc(o)]).filter(x=>x[1]<9).sort((a,b)=>a[1]-b[1]||a[0].n.localeCompare(b[0].n)).map(x=>x[0]);sugL=all.slice(0,8);
+ box.innerHTML=sugL.length?sugL.map(o=>`<button type="button" class="cracha" role="option" data-sug="${esc(o.m)}">${av(o.n)}<div><b>${esc(o.n)}</b><small>${o.m}, ${o.t}º turno${o.g?", "+esc(o.g):""}</small></div></button>`).join("")+(all.length>8?`<div class="legend">Mais ${all.length-8} nomes. Continue digitando.</div>`:""):'<div class="legend">Nenhum operador encontrado.</div>';
+ $("#opIn").setAttribute("aria-expanded",String(sugL.length>0))}
+function opEscolher(code){const o=opOf(code);if(!o)return;$("#opIn").value=o.m;$("#opSug").innerHTML="";$("#opIn").setAttribute("aria-expanded","false");curOp();track(o);goStep(2)}
+$("#opIn").oninput=()=>{const o=curOp(),q=$("#opIn").value;
+ if(!o){opSugest();return}
+ const porCodigo=o.m.toLowerCase()===q.trim().toLowerCase();
+ if(!porCodigo&&S.ops.some(x=>x!==o&&nrm(x.n).startsWith(nrm(q)))){opSugest();return}
+ $("#opSug").innerHTML="";track(o);
  setTimeout(()=>{if(!$("#s1").classList.contains("hide")&&findOp($("#opIn").value)===o)goStep(2)},150)};
+document.addEventListener("click",e=>{const b=e.target.closest&&e.target.closest("[data-sug]");if(b)opEscolher(b.dataset.sug)});
 function qtyOk(){const q=Math.floor(+$("#qty").value);if(!q||q<1){toast("Informe a quantidade");return}
  if(q>S.cfg.lim[ty]){toast("Limite de "+fmt(S.cfg.lim[ty])+" excedido para "+ty);return}return q}
 $("#n1").onclick=()=>{const o=curOp();if(!o){toast("Identifique um operador cadastrado");$("#opIn").focus();return}track(o);goStep(2)};
-$("#opIn").onkeydown=e=>{if(e.key==="Enter"){e.preventDefault();$("#n1").click()}};
+$("#opIn").onkeydown=e=>{
+ if((e.key==="ArrowDown"||e.key==="ArrowUp")&&sugL.length){e.preventDefault();sugI=(sugI+(e.key==="ArrowDown"?1:-1)+sugL.length)%sugL.length;$$("#opSug [data-sug]").forEach((b,i)=>b.classList.toggle("on",i===sugI));return}
+ if(e.key==="Enter"){e.preventDefault();if(sugL.length){opEscolher(sugL[sugI>=0?sugI:0].m);return}$("#n1").click()}
+ if(e.key==="Escape"){$("#opSug").innerHTML="";sugL=[]}};
 $("#b2").onclick=()=>goStep(1);
 $("#b3").onclick=()=>goStep(2);
 $("#addRow").onclick=()=>{rows.push({wn:"",q:""});renderRows();setTimeout(()=>{const a=$$("[data-wn]");if(a.length)a[a.length-1].focus()},60)};
@@ -1096,7 +1116,7 @@ $("#save").onclick=()=>{const o=findOp($("#opIn").value);
  const k=Object.keys(bad);if(k.length){toast(bad[k[0]]);return}
  if(!list.length){toast("Informe pelo menos uma onda");return}
  track(o);if(commit(list.map(x=>mk(o,x.q,0,x.wn)))===false)return;
- rows=[{wn:"",q:""}];$("#opIn").value="";$("#opName").textContent="";goStep(1)};
+ rows=[{wn:"",q:""}];$("#opIn").value="";$("#opName").textContent="";$("#opSug").innerHTML="";sugL=[];goStep(1)};
 ["#fOp","#fTy","#fSt"].forEach(i=>$(i).onchange=operacao);
 $("#mS").onclick=()=>{const o=findOp($("#opIn").value),m=S.man;if(!m.run){if(o)m.n=o.n;m.run=Date.now();m.log.push((m.n||"—")+" iniciou "+new Date().toLocaleTimeString("pt-BR"));save();tick()}};
 $("#mP").onclick=()=>{const m=S.man;if(m.run){m.acc=(m.acc||0)+Date.now()-m.run;m.run=0;m.log.push("pausa "+new Date().toLocaleTimeString("pt-BR"));save();tick()}};
