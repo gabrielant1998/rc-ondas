@@ -334,6 +334,14 @@ await T("55 Painel: gráfico alterna Hora e 30 min, mantém necessário por hora
  ok((await p.textContent('#peak')).includes('pico 9h')||(await p.textContent('#peak')).includes('pico 9:30'),'pico');
  await p.click('#hSeg [data-m="h"]');ok(!/9:30/.test(await p.textContent('#chH')),'voltou à hora');
  ok((await p.textContent('#tauto')+await p.textContent('body')).includes('Janela de agrupamento de 2 min'),'texto 2 min')});
+await T("56 Controle de Ondas: ver ondas do mesmo lançamento e pesquisar por onda ou nome",async()=>{
+ const n=Date.now()-60000;const p=await page(b,base({waves:[WV('l1','LA1','Pacote do mesmo',10,n),WV('l2','LA2','Pacote do mesmo',20,n+500),WV('l3','LA3','Pacote do mesmo',30,n+900),WV('m1','MB1','Itens Únicos',5,n-20000,'CL002','Bruno Lima')]}));
+ await p.evaluate(()=>{S.cfg.and=true;go('op')});await p.click('#sub [data-s="ctl"]');await p.waitForTimeout(200);
+ ok((await p.textContent('#ctlLive')).includes('+2 ondas')&&!(await p.textContent('#ctlLive')).includes('LA2'),'recolhido');
+ await p.click('#ctlLive [data-x]');let t=await p.textContent('#ctlLive');ok(t.includes('LA2')&&t.includes('LA1')&&t.includes('LA3'),'expandido: '+t.slice(0,300));
+ await p.click('#ctlLive [data-x]');await p.fill('#ctlQ','la2');t=await p.textContent('#ctlLive');ok(t.includes('LA2')&&!t.includes('MB1'),'busca por onda abre o lançamento: '+t.slice(0,200));
+ await p.fill('#ctlQ','bruno');t=await p.textContent('#ctlLive');ok(t.includes('MB1')&&!t.includes('LA3'),'busca por nome');
+ await p.fill('#ctlQ','zzz');ok((await p.textContent('#ctlLive')).includes('Nenhuma onda em andamento com essa'),'sem resultado')});
 await b.close();
 const w=Math.max(...R.map(r=>r[1].length));for(const r of R)console.log((r[0]==="PASS"?"✅":"❌")+" "+r[1].padEnd(w)+"  "+r[2]);
 console.log(`\n${R.filter(r=>r[0]==="PASS").length}/${R.length} passaram`)})();

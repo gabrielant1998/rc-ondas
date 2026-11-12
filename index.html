@@ -256,6 +256,7 @@ a[data-pick]{display:inline-block;padding:8px 0 2px;color:var(--gx);font-weight:
  </div>
 
  <div id="ctl" class="card hide"><h2>Ondas em andamento</h2>
+  <label class="hint" style="display:block;margin-bottom:8px">Pesquisar<input id="ctlQ" type="search" placeholder="Número da onda ou nome" autocomplete="off"></label>
   <div id="ctlLive" style="margin-bottom:16px"></div>
   <div class="ctl" style="margin-bottom:10px"><select id="fOp" aria-label="Filtrar por operador"></select><select id="fTy" aria-label="Filtrar por tipo"></select><select id="fSt" aria-label="Filtrar por status"></select></div>
   <div class="tw" id="ctlList"></div></div>
@@ -756,8 +757,14 @@ function operacao(){const L=dayWaves().slice().reverse();$("#cnt").textContent=L
 function liveWaves(){const gap=(S.cfg.gap||30)*6e4,now=Date.now(),by={};
  S.waves.filter(w=>w.st===0&&!w.err&&inView(w)&&w.ts<=now&&now-w.ts<=gap&&(!$("#fOp").value||w.op===$("#fOp").value)&&(!$("#fTy").value||w.ty===$("#fTy").value)).forEach(w=>{(by[w.op]=by[w.op]||[]).push(w)});
  return Object.values(by).map(a=>{a.sort((x,y)=>y.ts-x.ts);const u=a[0];return{u,g:a.filter(x=>u.ts-x.ts<=3000)}}).sort((x,y)=>y.u.ts-x.u.ts)}
-function ctlLive(){const el=$("#ctlLive");if(!el)return;const L=S.cfg.and?liveWaves():[];
- el.innerHTML='<div style="font-weight:600;margin:4px 0 8px">Contando tempo</div>'+(L.length?`<table><tr><th>Operador</th><th>Onda</th><th>Tipo</th><th>Qtd</th><th>Início</th><th>Tempo</th></tr>`+L.map(({u,g})=>`<tr><td><div class="who2">${av(u.opn)}<div>${esc(u.opn)}<br><small>${esc(u.op.split("~")[0])}, ${esc(u.gal)}</small></div></div></td><td><b>${esc(u.wn||"—")}</b>${g.length>1?`<br><small>+${g.length-1} ${g.length-1===1?"onda":"ondas"} no mesmo lançamento</small>`:""}</td><td>${esc(u.ty)}</td><td><b>${fmt(g.reduce((a,x)=>a+x.qty,0))}</b></td><td>${new Date(u.ts).toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"})}</td><td><b data-el="${u.ts}">${mm(Date.now()-u.ts)}</b></td></tr>`).join("")+"</table>":'<div class="empty">Nenhuma onda contando tempo agora.</div>')}
+const CTLX=new Set();
+function ctlLive(){const el=$("#ctlLive");if(!el)return;let L=S.cfg.and?liveWaves():[];const q=nrm($("#ctlQ")?$("#ctlQ").value:"").trim(),all=L.length;
+ if(q)L=L.filter(({u,g})=>nrm(u.opn).includes(q)||nrm(u.op).includes(q)||g.some(x=>nrm(String(x.wn||"")).includes(q)));
+ const hh=t=>new Date(t).toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit",second:"2-digit"});
+ el.innerHTML='<div style="font-weight:600;margin:4px 0 8px">Contando tempo</div>'+(L.length?`<table><tr><th>Operador</th><th>Onda</th><th>Tipo</th><th>Qtd</th><th>Início</th><th>Tempo</th></tr>`+L.map(({u,g})=>{
+  const open=CTLX.has(u.op)||(q&&g.length>1&&g.some(x=>nrm(String(x.wn||"")).includes(q))),hit=x=>q&&nrm(String(x.wn||"")).includes(q);
+  return`<tr><td><div class="who2">${av(u.opn)}<div>${esc(u.opn)}<br><small>${esc(u.op.split("~")[0])}, ${esc(u.gal)}</small></div></div></td><td><b>${esc(u.wn||"—")}</b>${g.length>1?`<br><button type="button" class="pill" data-x="${esc(u.op)}" aria-expanded="${open}" style="min-height:28px;padding:2px 8px;margin-top:4px">${open?"Ocultar":"Ver"} +${g.length-1} ${g.length-1===1?"onda":"ondas"} do mesmo lançamento</button>`:""}</td><td>${esc(u.ty)}</td><td><b>${fmt(g.reduce((a,x)=>a+x.qty,0))}</b></td><td>${new Date(u.ts).toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"})}</td><td><b data-el="${u.ts}">${mm(Date.now()-u.ts)}</b></td></tr>`
+  +(open&&g.length>1?`<tr><td></td><td colspan="5"><table class="lanc"><tr><th>Onda</th><th>Tipo</th><th>Qtd</th><th>Hora</th></tr>${g.slice().sort((a,b)=>b.ts-a.ts).map(x=>`<tr${hit(x)?' style="background:var(--field)"':""}><td><b>${esc(x.wn||"—")}</b></td><td>${esc(x.ty)}</td><td>${fmt(x.qty)}</td><td>${hh(x.ts)}</td></tr>`).join("")}</table></td></tr>`:"")}).join("")+"</table>":`<div class="empty">${q&&all?"Nenhuma onda em andamento com essa onda ou nome.":"Nenhuma onda contando tempo agora."}</div>`)}
 function filters(){const f=(id,h,o)=>{const e=$(id),v=e.value;e.innerHTML=`<option value="">${h}</option>`+o.map(([a,b])=>`<option value="${a}">${esc(b)}</option>`).join("");e.value=v};
  f("#fOp","Operador",S.ops.map(o=>[o.m,o.n]));f("#fTy","Tipo",TY.map(t=>[t[0],t[0]]));f("#fSt","Status",[[1,"Procurando"],[2,"Difícil acesso"]])}
 function tick(){const a=$("#tauto");
@@ -1078,7 +1085,7 @@ function renderAll(){netUI();galSel();if(ON&&!me){if(view==="painel")painelPubli
 /* ===================== eventos ===================== */
 $("#day").value=dk(Date.now());galSel();$("#gal").value=S.gal;
 $("#gal").onchange=e=>{if(e.target.value!=="__all"){S.gal=e.target.value;save()}renderAll()};
-$("#day").onchange=()=>{renderAll();if(view==="ind")loadManagement()};$("#turnoF").onchange=renderAll;$("#hSeg").onclick=e=>{const m=e.target.dataset.m;if(!m)return;HM=m;try{localStorage.setItem("rc.hm",m)}catch(x){}if(ON&&!me){if(publicData)desenhaPainelPublico(publicData,$("#gal").value,$("#turnoF").value)}else painel()};$("#hVis").onchange=()=>{$("#hPer").innerHTML="";hisFill();loadHis()};["hPer","hMet","hGal"].forEach(i=>$("#"+i).onchange=()=>{if(i==="hPer")loadHis();else hisRender()});
+$("#ctlQ").oninput=ctlLive;$("#ctlLive").onclick=e=>{const b=e.target.closest("[data-x]");if(!b)return;const k=b.dataset.x;CTLX.has(k)?CTLX.delete(k):CTLX.add(k);ctlLive()};$("#day").onchange=()=>{renderAll();if(view==="ind")loadManagement()};$("#turnoF").onchange=renderAll;$("#hSeg").onclick=e=>{const m=e.target.dataset.m;if(!m)return;HM=m;try{localStorage.setItem("rc.hm",m)}catch(x){}if(ON&&!me){if(publicData)desenhaPainelPublico(publicData,$("#gal").value,$("#turnoF").value)}else painel()};$("#hVis").onchange=()=>{$("#hPer").innerHTML="";hisFill();loadHis()};["hPer","hMet","hGal"].forEach(i=>$("#"+i).onchange=()=>{if(i==="hPer")loadHis();else hisRender()});
 $("#net").onclick=()=>{S.off=!S.off;save();if(online())flush();renderAll()};
 addEventListener("online",()=>{flush();renderAll();if(ON)pull().then(renderAll).catch(()=>{})});addEventListener("offline",renderAll);
 $("#theme").onclick=()=>{const r=document.documentElement,d=getComputedStyle(r).getPropertyValue("--bg").trim()==="#0e1726";r.dataset.theme=d?"light":"dark"};
