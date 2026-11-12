@@ -312,7 +312,7 @@ await T("52 Histórico: visão por dia com KPIs, mediana e previsão de 7 dias",
  ok((await p.$$('#hBody table tr')).length>=7+1,'tabela de previsão incompleta');
  ok(/mediana/.test(await p.textContent('#hBody svg.ch')),'sem linha de mediana');
  await p.selectOption('#hMet','o');await p.waitForTimeout(100);ok((await p.textContent('#hBody')).includes('Evolução: ondas'),'métrica ondas');
- await p.selectOption('#hMet','t');await p.waitForTimeout(100);ok((await p.textContent('#hBody')).includes('Evolução: tempo mediano'),'métrica tempo')});
+ await p.selectOption('#hMet','t');await p.waitForTimeout(100);ok((await p.textContent('#hBody')).includes('Evolução: tempo médio ponderado'),'métrica tempo')});
 await T("53 Histórico: visões por hora e por mês",async()=>{
  const p=await page(b,base({waves:HIS()}));await p.evaluate(()=>go('his'));
  await p.selectOption('#hVis','hora');await p.waitForTimeout(150);let t=(await p.textContent('#hBody')).replace(/\s+/g,' ');

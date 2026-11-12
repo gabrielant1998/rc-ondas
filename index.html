@@ -289,7 +289,7 @@ a[data-pick]{display:inline-block;padding:8px 0 2px;color:var(--gx);font-weight:
 
 <!-- ======================= HISTÓRICO ======================= -->
 <section id="his" class="hide">
- <div class="ctl" style="margin-bottom:12px"><select id="hVis" aria-label="Visão"><option value="dia">Por dia</option><option value="hora">Por hora</option><option value="mes">Por mês</option></select><select id="hPer" aria-label="Período"></select><select id="hMet" aria-label="Métrica"><option value="u">Unidades</option><option value="o">Ondas</option><option value="t">Tempo mediano por conjunto</option></select><select id="hGal" aria-label="Galpão"></select></div>
+ <div class="ctl" style="margin-bottom:12px"><select id="hVis" aria-label="Visão"><option value="dia">Por dia</option><option value="hora">Por hora</option><option value="mes">Por mês</option></select><select id="hPer" aria-label="Período"></select><select id="hMet" aria-label="Métrica"><option value="u">Unidades</option><option value="o">Ondas</option><option value="t">Tempo médio ponderado por conjunto</option></select><select id="hGal" aria-label="Galpão"></select></div>
  <div id="hStatus" class="legend hide" role="status"></div><div id="hBody"></div>
 </section>
 
@@ -986,9 +986,9 @@ function hisRender(){
  const vis=$("#hVis").value,met=$("#hMet").value,p=+$("#hPer").value,g=restricted()?myG():$("#hGal").value,low=met==='t',f=met==='t'?mm:fmt;
  const L=HW.filter(w=>g==='__all'?visG().includes(w.gal):w.gal===g),P=prod(L),C=durs(L),U={},O={},D={},HU={},HO={},HD={};
  P.forEach(w=>{const t=w.fin||w.ts,d=dk(t),h=new Date(t).getHours();U[d]=(U[d]||0)+w.qty;O[d]=(O[d]||0)+1;HU[d+'|'+h]=(HU[d+'|'+h]||0)+w.qty;HO[d+'|'+h]=(HO[d+'|'+h]||0)+1});
- C.forEach(c=>{const d=dk(c.t),h=new Date(c.t).getHours();(D[d]=D[d]||[]).push(c.d);(HD[d+'|'+h]=HD[d+'|'+h]||[]).push(c.d)});
- const dayV=d=>met==='u'?(U[d]||0):met==='o'?(O[d]||0):(D[d]?med(D[d]):0),agg=ds=>met==='t'?med(ds.flatMap(d=>D[d]||[])):ds.reduce((s,d)=>s+(met==='u'?U[d]||0:O[d]||0),0);
- const today=dk(Date.now()),nome=met==='u'?'unidades':met==='o'?'ondas':'tempo mediano por conjunto';
+ const wa=a=>{const q=a.reduce((s,x)=>s+x.q,0);return q?a.reduce((s,x)=>s+x.d*x.q,0)/q:0};C.forEach(c=>{const d=dk(c.t),h=new Date(c.t).getHours(),z={d:c.d,q:c.qty||1};(D[d]=D[d]||[]).push(z);(HD[d+'|'+h]=HD[d+'|'+h]||[]).push(z)});
+ const dayV=d=>met==='u'?(U[d]||0):met==='o'?(O[d]||0):(D[d]?wa(D[d]):0),agg=ds=>met==='t'?wa(ds.flatMap(d=>D[d]||[])):ds.reduce((s,d)=>s+(met==='u'?U[d]||0:O[d]||0),0);
+ const today=dk(Date.now()),nome=met==='u'?'unidades':met==='o'?'ondas':'tempo médio ponderado por conjunto';
  if(!P.length){el.innerHTML='<div class="card"><div class="empty">Ainda não há ondas concluídas neste período'+(g!=='__all'?' para '+esc(g):'')+'.</div></div>';return}
  /* mediana por dia da semana (só dias com produção) -> base da previsão */
  const allDays=[...new Set(P.map(w=>dk(w.fin||w.ts)))].sort(),wdS=Array.from({length:7},(_,i)=>{const a=allDays.filter(d=>d!==today&&new Date(d+'T12:00:00').getDay()===i).map(dayV).filter(v=>v>0);return{n:a.length,m:med(a),lo:pct(a,.25),hi:pct(a,.75)}});
@@ -1008,10 +1008,10 @@ function hisRender(){
   const sd=days.filter(d=>dayV(d)>0),a1=sd.slice(-7).map(dayV),a0=sd.slice(-14,-7).map(dayV);
   if(a1.length>=3&&a0.length>=3){const m1=med(a1),m0=med(a0),dd=(m1-m0)/m0*100;ex=`<div class="legend">Tendência: mediana dos últimos 7 dias com produção é ${f(m1)}, contra ${f(m0)} nos 7 anteriores (${dd>0?'+':''}${dd.toLocaleString('pt-BR',{maximumFractionDigits:1})}%).</div>`}
  }else if(vis==='hora'){
-  const days=Array.from({length:p},(_,i)=>dAdd(today,i-p+1)).filter(d=>d!==today&&dayV(d)>0),hv=(d,h)=>met==='u'?HU[d+'|'+h]||0:met==='o'?HO[d+'|'+h]||0:(HD[d+'|'+h]?med(HD[d+'|'+h]):0);
+  const days=Array.from({length:p},(_,i)=>dAdd(today,i-p+1)).filter(d=>d!==today&&dayV(d)>0),hv=(d,h)=>met==='u'?HU[d+'|'+h]||0:met==='o'?HO[d+'|'+h]||0:(HD[d+'|'+h]?wa(HD[d+'|'+h]):0);
   const mh=Array.from({length:24},(_,h)=>{const a=days.map(d=>hv(d,h)).filter(v=>met!=='t'||v>0);return a.length?med(a):0}),act=mh.map((v,h)=>[v,h]).filter(x=>x[0]>0),top=act.slice().sort((a,b)=>low?a[0]-b[0]:b[0]-a[0]);
   const nowH=new Date().getHours(),tv=Array.from({length:24},(_,h)=>h<=nowH?hv(today,h):null),hasT=tv.some(v=>v>0);
-  kp=hK('Dias na base',String(days.length),'sem contar hoje')+hK(low?'Hora mais rápida':'Hora mais produtiva',top[0]?top[0][1]+'h':'—',top[0]?f(top[0][0])+' (mediana)':'')+hK(low?'Hora mais lenta':'Hora menos produtiva',top.length?top[top.length-1][1]+'h':'—',top.length?f(top[top.length-1][0])+' (mediana)':'')+hK('Hoje',met==='t'?(D[today]?mm(med(D[today])):'—'):fmt((met==='u'?U[today]:O[today])||0),hasT?'pontos azuis no gráfico':'sem produção ainda');
+  kp=hK('Dias na base',String(days.length),'sem contar hoje')+hK(low?'Hora mais rápida':'Hora mais produtiva',top[0]?top[0][1]+'h':'—',top[0]?f(top[0][0])+' (mediana)':'')+hK(low?'Hora mais lenta':'Hora menos produtiva',top.length?top[top.length-1][1]+'h':'—',top.length?f(top[top.length-1][0])+' (mediana)':'')+hK('Hoje',met==='t'?(D[today]?mm(wa(D[today])):'—'):fmt((met==='u'?U[today]:O[today])||0),hasT?'pontos azuis no gráfico':'sem produção ainda');
   const first=Math.max(0,(act[0]||[0,0])[1]-1),lastH=Math.min(23,Math.max(nowH,(act[act.length-1]||[0,23])[1])+1),sl=[];for(let h=first;h<=lastH;h++)sl.push(h);
   ch=hChart(sl.map(h=>({k:h+'h',v:mh[h],hl:top[0]&&h===top[0][1]&&!low})),{f,cmp:sl.map(h=>tv[h]),cmpName:'Hoje',aria:'Mediana por hora'});
   if(met!=='t'&&days.length&&hasT){const fe=tv.reduce((a,v)=>a+(v||0),0),rest=mh.slice(nowH+1).reduce((a,b)=>a+b,0);ex=`<div class="ins"><div><b>Previsão de hoje</b><span>Realizado até ${nowH}h: ${fmt(fe)}. Somando a mediana das horas que faltam (${fmt(rest)}), o dia deve fechar perto de <b>${fmt(fe+rest)}</b>.</span></div></div>`}
@@ -1030,8 +1030,8 @@ function hisRender(){
   tb=`<div class="card" style="margin-top:14px"><h2>Meses</h2><div class="tw"><table><tr><th>Mês</th><th>${met==='t'?'Mediana':'Total'}</th><th>Dias com produção</th><th>Mediana por dia</th></tr>${ms.slice().reverse().map(m=>{const a=inM(m);return`<tr><td>${MES[+m.slice(5)-1]}/${m.slice(0,4)}</td><td class="num">${mv(m)?f(mv(m)):'—'}</td><td class="num">${a.filter(d=>dayV(d)>0).length}</td><td class="num">${a.length?f(med(a.map(dayV).filter(v=>v>0))):'—'}</td></tr>`}).join('')}</table></div><div class="legend">Previsão: soma da mediana de cada dia da semana nos dias que faltam. Quartis dão a faixa.</div></div>`;
  }
  /* quebra por tipo */
- const tr=TY.map(([n,c])=>{const q=P.filter(w=>w.ty===n),d=C.filter(x=>x.w.ty===n).map(x=>x.d);return`<tr><td><b>${esc(n)}</b></td><td class="num">${fmt(q.length)}</td><td class="num">${fmt(q.reduce((a,w)=>a+w.qty,0))}</td><td class="num">${d.length?mm(med(d)):'—'}</td></tr>`}).join('');
- el.innerHTML=`<dl class="stats solo">${kp}</dl><div class="card" style="margin-top:14px"><h2>Evolução: ${nome}</h2>${ch}${ex}</div>${tb}<div class="card" style="margin-top:14px"><h2>Por tipo de onda no período</h2><div class="tw"><table><tr><th>Tipo</th><th>Ondas</th><th>Unidades</th><th>Tempo mediano por conjunto</th></tr>${tr}</table></div>${foraLim(L)}</div>`;
+ const tr=TY.map(([n,c])=>{const q=P.filter(w=>w.ty===n),d=C.filter(x=>x.w.ty===n).map(x=>({d:x.d,q:x.qty||1}));return`<tr><td><b>${esc(n)}</b></td><td class="num">${fmt(q.length)}</td><td class="num">${fmt(q.reduce((a,w)=>a+w.qty,0))}</td><td class="num">${d.length?mm(wa(d)):'—'}</td></tr>`}).join('');
+ el.innerHTML=`<dl class="stats solo">${kp}</dl><div class="card" style="margin-top:14px"><h2>Evolução: ${nome}</h2>${ch}${ex}</div>${tb}<div class="card" style="margin-top:14px"><h2>Por tipo de onda no período</h2><div class="tw"><table><tr><th>Tipo</th><th>Ondas</th><th>Unidades</th><th>Tempo médio ponderado por conjunto</th></tr>${tr}</table></div><div class="legend">Tempo médio ponderado: cada conjunto pesa pelas unidades que produziu, então conjuntos grandes influenciam mais que os pequenos.</div>${foraLim(L)}</div>`;
 }
 
 /* ===================== acesso ===================== */
