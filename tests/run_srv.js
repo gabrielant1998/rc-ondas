@@ -6,8 +6,9 @@ const HOST='https://fiqintmclivzckmfjeml.supabase.co';
 const R=[];const ok=(c,m)=>{if(!c)throw new Error(m)};
 const G1='00000000-0000-4000-8000-0000000000a1',G2='00000000-0000-4000-8000-0000000000a2';
 const normWN=s=>{s=String(s).replace(/\s+/g,'');return /^\d+$/.test(s)?s.replace(/^0+(?=\d)/,''):s.toUpperCase()};
+const HJ=(()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')})();
 function banco(){return{down:false,expiresIn:3600,calls:{rpc:0,refresh:0},seq:1,
- galpoes:[{id:G1,nome:'Galpão 1',meta_diaria:2000},{id:G2,nome:'Galpão 2',meta_diaria:null}],
+ galpoes:[{id:G1,nome:'Galpão 1'},{id:G2,nome:'Galpão 2'}],metas:[{galpao_id:G1,data:HJ,meta:2000}],
  tipos:[['Vários artigos',1000],['Múltiplas quantidades',1000],['Itens Únicos',100],['Maiores/Pesados',10],['Retrabalho',1000],['Pacote do mesmo',1000]].map((t,i)=>({nome:t[0],limite:t[1],ordem:i+1})),
  config:[{id:true,turno1_ini:7,turno1_fim:16,turno2_ini:16,turno2_fim:23,intervalo_max_min:30,tolerancia_min:15,ondas_em_andamento:true}],
  operadores:[{id:'00000000-0000-4000-8000-0000000000b1',codigo:'CL001',nome:'Ana Souza',turno:1,galpao_id:G1,excluido_em:null},
@@ -80,6 +81,10 @@ function fake(db){const cors={'access-control-allow-origin':'*','access-control-
   if(t==='solicitacoes_gestor'){if(!(g&&g.admin))return J(route,200,[]);
    if(m==='GET')return J(route,200,db.pedidos.map(e=>({email:e,criado_em:'2026-11-11T20:12:00Z'})));
    if(m==='DELETE'){const e=eq('email'),had=db.pedidos.includes(e);db.pedidos=db.pedidos.filter(x=>x!==e);return J(route,200,had?[{email:e}]:[])}}
+  if(t==='metas_diarias'){
+   if(m==='GET')return J(route,200,!g?[]:db.metas.filter(x=>x.data===eq('data')&&escopo(x.galpao_id)));
+   if(m==='POST'){if(!podeC(body.galpao_id))return J(route,403,{code:'42501',message:'rls'});const i=db.metas.findIndex(x=>x.galpao_id===body.galpao_id&&x.data===body.data);if(i>=0)db.metas[i]=body;else db.metas.push(body);return J(route,201,[body])}
+   if(m==='DELETE'){const gid=eq('galpao_id'),dt=eq('data');if(!podeC(gid))return J(route,200,[]);const had=db.metas.filter(x=>x.galpao_id===gid&&x.data===dt);db.metas=db.metas.filter(x=>!had.includes(x));return J(route,200,had)}}
   return J(route,404,{message:'rota não simulada: '+m+' '+p})}}
 async function page(b,db,opts={}){const ctx=await b.newContext({viewport:opts.vp||{width:1366,height:900}});const p=await ctx.newPage();
  p.errors=[];p.on('pageerror',e=>p.errors.push(e.message));p.on('dialog',d=>d.accept());
@@ -101,7 +106,7 @@ await T('S01 Público: carrega cadastros do banco e abre no Painel',async()=>{co
 
 await T('S02 Público: Painel aberto e gestão exige login',async()=>{const db=banco(),agora=new Date().toISOString();db.ondas.push({id:'a',wn:'123',operador_id:db.operadores[0].id,galpao_id:G1,tipo:'Vários artigos',quantidade:31,status:0,registrada_em:agora,concluida_em:agora});const p=await page(b,db);
  await p.click('.tab[data-t="painel"]');ok(await p.isHidden('#login'),'painel pediu login');ok((await num(p)).trim()==='31','painel não trouxe o total');ok((await p.evaluate(()=>S.waves.filter(w=>w.srv).length))===0,'expôs ondas individuais');
- for(const t of['ind','cfg']){await p.click(`.tab[data-t="${t}"]`);await p.waitForTimeout(120);ok(!(await p.isHidden('#login')),t+' abriu sem login');await p.click('#lX')}
+ for(const t of['ind','cfg']){ok(await p.isHidden(`.tab[data-t="${t}"]`),t+' fica oculta sem login')}
  ok((await p.evaluate(()=>view))==='painel','saiu do painel')});
 
 await T('S03 Público registra 3 ondas e elas chegam ao banco',async()=>{const db=banco();const p=await page(b,db);await reg(p,'CL001','Vários artigos',[[5001,10],[5002,20],[5003,30]]);
@@ -162,15 +167,21 @@ await T('S18 Admin libera pedido de acesso: aparece em Pedidos, aceita com galp�
 await p.fill('#mN','Fora Gestora');await p.click('[data-sacc="fora@x.com"]');await p.waitForTimeout(600);
  const criado=db.gestores.find(x=>x.email==='fora@x.com');const sumiu=!db.pedidos.includes('fora@x.com');
  ok(visto&&criado&&criado.galpao_id===G1&&criado.nome==='Fora Gestora'&&sumiu,'visto '+visto+', criado '+!!criado+', pedido apagado '+sumiu);});
+await T('S19 Abas: sem login aparecem Operação e Painel; com login, as abas do perfil',async()=>{const db=banco();const p=await page(b,db);
+ const vis=async t=>p.isVisible('.tab[data-t="'+t+'"]');
+ const sem=[await vis('op'),await vis('painel'),await vis('ind'),await vis('cfg')];
+ await login(p,'g2@x.com','senha1234');await p.waitForTimeout(300);
+ const com=[await vis('op'),await vis('painel'),await vis('ind'),await vis('cfg')];
+ ok(sem.join()==='true,true,false,false'&&com.join()==='true,true,true,true','sem login '+sem+' | gestor '+com);});
 await T('S12 Admin: galpão, meta, limite, turno e gestor gravam no banco',async()=>{const db=banco();const p=await page(b,db);await login(p,'adm@x.com','senha1234');await p.click('.tab[data-t="cfg"]');
  await p.fill('[data-lim="Itens Únicos"]','250');await p.press('[data-lim="Itens Únicos"]','Tab');await p.waitForTimeout(400);
  await p.fill('[data-tn="1"][data-k="fim"]','17');await p.press('[data-tn="1"][data-k="fim"]','Tab');await p.waitForTimeout(400);
- await p.click('[data-c="cga"]');await p.fill('#gN','Galpão Norte');await p.fill('#gM','5000');await p.click('#gB');await p.waitForTimeout(450);
+ await p.click('[data-c="cga"]');await p.fill('#gN','Galpão Norte');await p.click('#gB');await p.waitForTimeout(450);
  await p.fill('[data-gmeta="Galpão 2"]','3000');await p.press('[data-gmeta="Galpão 2"]','Tab');await p.waitForTimeout(450);
  await p.click('[data-gdel="0"]');await p.waitForTimeout(450);const tg=await p.textContent('#toast');
  await p.click('[data-c="cge"]');await p.fill('#mN','Nova Gestora');await p.fill('#mU','Nova@X.com');await p.click('#mB');await p.waitForTimeout(450);
  ok(db.tipos.find(t=>t.nome==='Itens Únicos').limite===250,'limite');ok(db.config[0].turno1_fim===17,'turno');
- ok(db.galpoes.some(g=>g.nome==='Galpão Norte'&&g.meta_diaria===5000),'galpão novo');ok(db.galpoes.find(g=>g.id===G2).meta_diaria===3000,'meta');
+ ok(db.galpoes.some(g=>g.nome==='Galpão Norte'),'galpão novo');ok(db.metas.some(m=>m.galpao_id===G2&&m.data===HJ&&m.meta===3000),'meta do dia salva');
  ok(db.galpoes.some(g=>g.id===G1)&&/Não dá para excluir/.test(tg),'excluiu galpão com operadores: '+tg);
  ok(db.gestores.some(g=>g.email==='nova@x.com'&&!g.admin&&g.galpao_id),'gestor: '+JSON.stringify(db.gestores.slice(-1)));
  ok(await p.isHidden('#mP2'),'campo de senha do gestor aparece');ok(p.errors.length===0,p.errors.join(';'))});
@@ -191,7 +202,7 @@ await T('S15 Dados antigos do aparelho: admin envia para o banco, e repetir não
   waves:[{id:'w1',wn:'8001',op:'CL001',opn:'Ana Souza',gal:'Galpão 1',ty:'Vários',qty:10,st:0,ts:t,fin:t},{id:'w2',wn:'8002',op:'CL002',opn:'Zeca Antigo',gal:'Galpão Sul',ty:'Itens Únicos',qty:5,st:0,ts:t,fin:t},{id:'w3',wn:'8003',op:'CL009~x',opn:'Sumiu',gal:'Galpão 1',ty:'Vários artigos',qty:1,st:0,ts:t,fin:t}]};
  const p=await page(b,db,{antigo});await login(p,'adm@x.com','senha1234');await p.click('.tab[data-t="cfg"]');await p.waitForTimeout(150);
  await p.click('#impB');await p.waitForTimeout(1500);const t1=await p.textContent('#toast');
- ok(db.galpoes.some(g=>g.nome==='Galpão Sul'&&g.meta_diaria===900),'galpão antigo não criado');const z=db.operadores.find(o=>o.nome==='Zeca Antigo');ok(z&&z.codigo==='CL003','Zeca: '+JSON.stringify(z));
+ ok(db.galpoes.some(g=>g.nome==='Galpão Sul'),'galpão antigo criado');const z=db.operadores.find(o=>o.nome==='Zeca Antigo');ok(z&&z.codigo==='CL003','Zeca: '+JSON.stringify(z));
  ok(db.ondas.length===2&&db.ondas.some(o=>o.wn==='8001'&&o.tipo==='Vários artigos'),'ondas: '+JSON.stringify(db.ondas.map(o=>o.wn+o.tipo)));
  await p.click('#impB');await p.waitForTimeout(1500);ok(db.ondas.length===2&&db.operadores.length===3,'duplicou ao repetir');
  ok((await p.evaluate(()=>!!localStorage.getItem('rcondas.v2'))),'apagou os dados antigos do aparelho');return t1});

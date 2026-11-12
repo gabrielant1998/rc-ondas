@@ -3,8 +3,9 @@ const {chromium}=require('playwright');const path=require('path');
 const FILE='http://127.0.0.1:8765/'+(process.argv[2]||'index.html');
 const R=[];const ok=(c,m)=>{if(!c)throw new Error(m)};
 const DAY=new Date();DAY.setHours(0,0,0,0);const D0=DAY.getTime(),H=36e5;
+const HJ=(()=>{const d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")})();
 const base=(o={})=>Object.assign({cfg:{lim:{"Vários":1000,"Múltiplos":1000,"Itens Únicos":100,"Maiores/Pesados":10},and:true,gap:30,tol:15,turnos:{1:{ini:7,fim:16},2:{ini:16,fim:23}}},
- gals:["Galpão 1","Galpão 2","Galpão 3"],metas:{"Galpão 1":10000,"Galpão 2":8000,"Galpão 3":6000},
+ gals:["Galpão 1","Galpão 2","Galpão 3"],metasDia:{[HJ]:{"Galpão 1":10000,"Galpão 2":8000,"Galpão 3":6000}},
  ops:[{m:"CL001",n:"Ana Souza",t:1,g:"Galpão 1"},{m:"CL002",n:"Bruno Lima",t:1,g:"Galpão 1"},{m:"CL003",n:"Carla Dias",t:2,g:"Galpão 2"}],
  ges:[],waves:[],gal:"Galpão 1",off:false,man:{log:[]}},o);
 function bigState(N){const TY=["Vários","Múltiplos","Itens Únicos","Maiores/Pesados"],ops=[],waves=[];
@@ -114,7 +115,7 @@ await T("18 Código reutilizado não herda a produção do usuário excluído",a
 
 await T("19 Renomear galpão leva junto registros e meta",async()=>{const S=base({waves:[{id:"a",wn:"1",op:"CL001",opn:"Ana Souza",gal:"Galpão 1",ty:"Vários",qty:5,st:0,ts:Date.now(),fin:Date.now(),sync:1}]});
  const p=await page(b,S);await p.click('.tab[data-t="cfg"]');await p.click('[data-c="cga"]');await p.fill('[data-gre="0"]','Galpão Norte');await p.press('[data-gre="0"]','Tab');await p.waitForTimeout(150);
- const s=await st(p);ok(s.gals[0]==="Galpão Norte"&&s.waves[0].gal==="Galpão Norte"&&s.metas["Galpão Norte"]===10000&&s.ops[0].g==="Galpão Norte","não acompanhou: "+JSON.stringify({g:s.gals[0],w:s.waves[0].gal,m:s.metas}))});
+ const s=await st(p);ok(s.gals[0]==="Galpão Norte"&&s.waves[0].gal==="Galpão Norte"&&s.metasDia[HJ]["Galpão Norte"]===10000&&s.ops[0].g==="Galpão Norte","não acompanhou: "+JSON.stringify({g:s.gals[0],w:s.waves[0].gal,m:s.metasDia}))});
 
 await T("20 Nome malicioso não executa código (XSS)",async()=>{const p=await page(b,base());await p.click('.tab[data-t="cfg"]');await p.click('[data-c="cus"]');
  await p.fill('#uN','<img src=x onerror="window.__x=1">');await p.click('#uB');await p.waitForTimeout(100);
@@ -136,7 +137,7 @@ await T("21 Gestor comum vê só o galpão dele; admin vê todos",async()=>{cons
 await T("22 Senha errada não entra",async()=>{const p0=await page(b,null);const hp=await p0.evaluate(()=>h32("certa"));
  const p=await page(b,base({ges:[{n:"G",u:"g@x.com",g:"Galpão 1",adm:true,p:hp,pC:true,pI:true,pR:true}]}));
  await p.click('#logbtn');await p.fill('#lU','g@x.com');await p.fill('#lP','errada');await p.click('#lB');await p.waitForTimeout(100);
- ok(!(await p.isHidden('#login')),"entrou com senha errada");await p.click('#lX');await p.click('.tab[data-t="cfg"]');ok(!(await p.isHidden('#login')),"Config abriu sem login")});
+ ok(!(await p.isHidden('#login')),"entrou com senha errada");await p.click('#lX');ok(await p.isHidden('.tab[data-t="cfg"]'),"Config visível sem login")});
 
 await T("23 Filtro de turno: 1º + 2º = todos",async()=>{const S=bigState(3000);const p=await page(b,S);
  const r=await p.evaluate(()=>{const v=x=>{$("#turnoF").value=x;$("#gal").value="__all";renderAll();return +document.querySelector("#kpis .num").textContent.replace(/\D/g,"")};return[v(""),v("1"),v("2")]});

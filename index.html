@@ -292,9 +292,8 @@ a[data-pick]{display:inline-block;padding:8px 0 2px;color:var(--gx);font-weight:
  <div id="cga" class="grid two hide">
   <div class="card"><h2>Novo galpão</h2><div class="f">
    <label>Nome<input id="gN" placeholder="Galpão 4" autocomplete="off"></label>
-   <label>Meta diária (opcional)<input id="gM" type="number" min="0" placeholder="ex.: 10000" inputmode="numeric"></label>
-   <button class="btn" id="gB">Criar galpão</button></div></div>
-  <div class="card"><h2>Galpões</h2><div class="tw" id="gL"></div><div class="legend">Renomear um galpão atualiza os registros já lançados.</div></div>
+    <button class="btn" id="gB">Criar galpão</button></div></div>
+  <div class="card"><h2>Galpões</h2><div class="tw" id="gL"></div><div class="legend">A meta vale só para o dia de hoje: cada dia começa sem meta e você preenche de novo. Os dias anteriores ficam salvos. Renomear um galpão atualiza os registros já lançados.</div></div>
  </div>
 
  <div id="cge" class="grid two hide">
@@ -358,7 +357,9 @@ if(!S){ /* migra base antiga, se existir */
 }
 ["cfg","gals","ops","ges","waves","man"].forEach(k=>{if(S[k]==null)S[k]=JSON.parse(JSON.stringify(DEF[k]))});
 Object.keys(DEF.cfg).forEach(k=>{if(S.cfg[k]==null)S.cfg[k]=JSON.parse(JSON.stringify(DEF.cfg[k]))});
-if(!S.metas)S.metas={};
+if(!S.metasDia)S.metasDia={};
+function hoje(){const d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")}
+function MT(){S.metasDia=S.metasDia||{};const k=hoje();if(!S.metasDia[k]){S.metasDia[k]={};Object.keys(S.metasDia).sort().slice(0,-60).forEach(x=>{if(x!==k)delete S.metasDia[x]})}return S.metasDia[k]}
 /* nomes antigos de tipo -> nomes novos, sem perder registros nem limites */
 S.waves.forEach(w=>{if(TYREN[w.ty])w.ty=TYREN[w.ty]});
 Object.keys(TYREN).forEach(k=>{if(S.cfg.lim[k]!=null){if(S.cfg.lim[TYREN[k]]==null)S.cfg.lim[TYREN[k]]=S.cfg.lim[k];delete S.cfg.lim[k]}});
@@ -416,13 +417,15 @@ function errMsg(e){if(!e.status)return"Sem conexão com o servidor. Tente de nov
 async function pull(){
  const [gs,ts,cf,os]=await Promise.all([api("/rest/v1/galpoes?select=*&order=nome"),api("/rest/v1/tipos_onda?select=*&order=ordem"),api("/rest/v1/config?select=*"),api("/rest/v1/operadores?select=*&order=codigo")]);
  GID={};GN={};gs.forEach(g=>{GID[g.nome]=g.id;GN[g.id]=g.nome});
- S.gals=gs.map(g=>g.nome);S.metas={};gs.forEach(g=>{if(g.meta_diaria)S.metas[g.nome]=g.meta_diaria});
+ S.gals=gs.map(g=>g.nome);
  ts.forEach(t=>{S.cfg.lim[t.nome]=t.limite});
  const c=cf[0];if(c){S.cfg.turnos={1:{ini:c.turno1_ini,fim:c.turno1_fim},2:{ini:c.turno2_ini,fim:c.turno2_fim}};S.cfg.gap=c.intervalo_max_min;S.cfg.tol=c.tolerancia_min;S.cfg.and=c.ondas_em_andamento}
  OPSALL={};os.forEach(o=>{OPSALL[o.id]=o});
  S.ops=os.filter(o=>!o.excluido_em).map(o=>({id:o.id,m:o.codigo,n:o.nome,t:o.turno,g:GN[o.galpao_id],criado:o.criado_em}));
  if(!S.gals.includes(S.gal))S.gal=S.gals[0];
+ S.metasDia={};
  if(sess){
+  const mt=await api("/rest/v1/metas_diarias?select=galpao_id,meta&data=eq."+hoje());const dh=hoje();S.metasDia[dh]={};mt.forEach(x=>{const n=GN[x.galpao_id];if(n)S.metasDia[dh][n]=x.meta});
   const g=await api("/rest/v1/gestores?select=*&order=nome");
   S.ges=g.map(x=>({n:x.nome,u:x.email,g:x.galpao_id?GN[x.galpao_id]:null,adm:x.admin,pC:x.pode_config,pI:x.pode_individual,pR:x.pode_registros}));
   me=S.ges.find(x=>x.u===sess.email)||null;
@@ -465,7 +468,7 @@ function remChange(e){const d=e.target.dataset,id=e.target.id,v=e.target.value;
  if(d.ug2){const o=opOf(d.ug2);if(o)return rem(()=>mut("/rest/v1/operadores?id=eq."+o.id,"PATCH",{galpao_id:GID[v]}),o.n+" agora no "+v)}
  if(d.gre!==undefined){const old=S.gals[+d.gre],nv=v.trim();if(!nv){cfgGals();return}
   return rem(()=>mut("/rest/v1/galpoes?id=eq."+GID[old],"PATCH",{nome:nv}),"Galpão renomeado")}
- if(d.gmeta!==undefined){const n=Math.floor(+v);return rem(()=>mut("/rest/v1/galpoes?id=eq."+GID[d.gmeta],"PATCH",{meta_diaria:n>0?n:null}),n>0?"Meta atualizada":"Meta removida")}}
+ if(d.gmeta!==undefined){const n=Math.floor(+v),gid=GID[d.gmeta];return rem(()=>n>0?api("/rest/v1/metas_diarias?on_conflict=galpao_id,data",{method:"POST",body:{galpao_id:gid,data:hoje(),meta:n},prefer:"resolution=merge-duplicates,return=representation"}):api("/rest/v1/metas_diarias?galpao_id=eq."+gid+"&data=eq."+hoje(),{method:"DELETE"}),n>0?"Meta de hoje salva":"Meta de hoje removida")}}
 function remWave(d){const id=d.fin||d.sd||d.del,w=S.waves.find(x=>x.id===id);if(!w)return;
  if(!w.srv){
   if(d.del){if(w.sync&&!w.err){toast("Esta onda já foi enviada. Entre como gestor para excluir.");return}S.waves=S.waves.filter(x=>x!==w)}
@@ -517,7 +520,7 @@ async function importar(){const L=antigos();if(!L||!(me&&me.adm))return;
  const b=$("#impB");if(b){b.disabled=true;b.textContent="Enviando"}
  const tot={ok:0,ja_existia:0,wn_repetido:0,recusada:0,sem_operador:0};
  try{
-  for(const g of L.gals)if(!S.gals.some(x=>x.toLowerCase()===String(g).toLowerCase()))await mut("/rest/v1/galpoes","POST",{nome:g,meta_diaria:(L.metas&&L.metas[g])||null});
+  for(const g of L.gals)if(!S.gals.some(x=>x.toLowerCase()===String(g).toLowerCase()))await mut("/rest/v1/galpoes","POST",{nome:g});
   await pull();
   for(const o of L.ops){if(S.ops.some(x=>x.n.toLowerCase()===o.n.toLowerCase()))continue;
    const livre=!S.ops.some(x=>x.m===o.m)&&/^CL\d{3}$/.test(o.m);
@@ -597,7 +600,7 @@ async function painelPublico(force=false){
  }catch(e){if(seq!==publicSeq)return;publicLoading=false;if(me)return;publicKey='';$("#kpis").innerHTML='<div class="card">Não foi possível carregar o painel. Confira a conexão e tente novamente.</div>'}
 }
 function desenhaPainelPublico(x,g,t){
- const tot=+x.total||0,n=+x.ondas||0,pes=+x.pessoas||0,meta=g&&g!=='__all'?(+S.metas[g]||0):S.gals.reduce((s,k)=>s+(+S.metas[k]||0),0);
+ const tot=+x.total||0,n=+x.ondas||0,pes=+x.pessoas||0,meta=g&&g!=='__all'?(+MT()[g]||0):S.gals.reduce((s,k)=>s+(+MT()[k]||0),0);
  const K=(a,b,c)=>`<div class="kpi"><dt>${a}</dt><dd class="num">${b}</dd><dd class="sm">${c||''}</dd></div>`;
  const metaTxt=t?'Meta diária do galpão completo':meta?'Meta diária: '+fmt(meta)+' unidades':'Meta diária não cadastrada';
  $("#kpis").innerHTML=`<div class="placar"><div><div class="num">${fmt(tot)}</div><div class="un">unidades produzidas</div></div><div class="regua"><div class="hd"><span>${metaTxt}</span><b>${!t&&meta?fmt(tot/meta*100)+'% da meta':''}</b></div><div class="trk"><b style="width:${!t&&meta?Math.min(100,tot/meta*100):0}%"></b></div></div></div><dl class="stats">`+
@@ -619,13 +622,13 @@ function painel(){
  const TF=$("#turnoF").value,TW=TF?S.cfg.turnos[TF]:{ini:Math.min(S.cfg.turnos[1].ini,S.cfg.turnos[2].ini),fim:Math.max(S.cfg.turnos[1].fim,S.cfg.turnos[2].fim)};
  const nowF=new Date().getHours()+new Date().getMinutes()/60,isNow=$("#day").value===dk(Date.now());
  const hWin=Math.max(TW.fim-TW.ini,1),elapsed=isNow?Math.min(Math.max(nowF-TW.ini,0),hWin):hWin,remain=isNow?Math.max(TW.fim-Math.max(nowF,TW.ini),0):0;
- const metaT=g?(+S.metas[g]||0):visG().reduce((s,k)=>s+(+S.metas[k]||0),0);
+ const metaT=g?(+MT()[g]||0):visG().reduce((s,k)=>s+(+MT()[k]||0),0);
  const faltam=Math.max(metaT-tot,0),need=remain>0?faltam/remain:0,avgH=elapsed>0?tot/elapsed:0,upw=ond?tot/ond:0,ondH=upw?need/upw:0;
  const F=TW.fim>TW.ini?TW.fim:TW.fim+24,vao=F-TW.ini,nf=nowF<TW.ini&&TW.fim<=TW.ini?nowF+24:nowF,
   pct=metaT?Math.min(tot/metaT*100,100):0,nowP=isNow&&nf>=TW.ini&&nf<=F?(nf-TW.ini)/vao*100:null,
   esp=metaT?metaT*Math.min(Math.max(nf-TW.ini,0),vao)/vao:0,dif=tot-esp,passo=vao>12?2:1;
  let tk="";for(let x=TW.ini;x<=F;x+=passo)tk+=`<span style="left:${(x-TW.ini)/vao*100}%">${x%24}h</span>`;
- const msg=!metaT?"Sem meta definida. Cadastre em Config, Galpões.":faltam<=0?"Meta batida":!isNow?"Faltaram "+fmt(faltam)+" para a meta":nf>F?"Turno encerrado, faltaram "+fmt(faltam):nf<TW.ini?"O turno ainda não começou":dif>=0?fmt(dif)+" à frente do ritmo":fmt(-dif)+" atrás do ritmo",
+ const msg=!metaT?"Meta de hoje não definida. Cadastre em Configurações, Galpões.":faltam<=0?"Meta batida":!isNow?"Faltaram "+fmt(faltam)+" para a meta":nf>F?"Turno encerrado, faltaram "+fmt(faltam):nf<TW.ini?"O turno ainda não começou":dif>=0?fmt(dif)+" à frente do ritmo":fmt(-dif)+" atrás do ritmo",
   ruim=metaT&&faltam>0&&(!isNow||nf>F||(nf>=TW.ini&&dif<0));
  const K=(t,v,s)=>`<div class="kpi"><dt>${t}</dt><dd class="num">${v}</dd>${s?`<dd class="sm">${s}</dd>`:""}</div>`;
  $("#kpis").innerHTML=`<div class="placar"><div><div class="num">${fmt(tot)}</div><div class="un">unidades produzidas</div></div>
@@ -644,7 +647,7 @@ function painel(){
   $("#chT").innerHTML=`<div class="stack${tot?"":" vazio"}" role="img" aria-label="Participação de cada tipo de onda">`+tv.filter(x=>x.v).map(x=>`<i style="--c:${x.c};flex:${x.v}" title="${x.n}: ${fmt(x.v)}"></i>`).join("")+"</div>"+
    tv.map(x=>`<div class="trow" style="--c:${x.c}">${ico(x.n)}<b>${x.n}</b><span class="v"><span class="num">${fmt(x.v)}</span><small>${x.k} ${x.k===1?"onda":"ondas"}${tot&&x.v?", "+Math.round(x.v/tot*100)+"%":""}</small></span></div>`).join("")}
  $("#gals").innerHTML=bars(visG().map((k,i)=>{const q=prod(all).filter(w=>w.gal===k);
-  const v0=q.reduce((s,w)=>s+w.qty,0),m=S.metas[k];return{k,v:v0,p:m?Math.min(v0/m*100,100):null,s:(m?Math.round(v0/m*100)+"% da meta de "+fmt(m)+", ":"")+q.length+" ondas, "+(new Set(q.map(w=>w.op)).size===1?"1 pessoa":new Set(q.map(w=>w.op)).size+" pessoas"),c:["var(--g)","var(--v)","var(--a)","var(--t)"][i%4]}}));
+  const v0=q.reduce((s,w)=>s+w.qty,0),m=MT()[k];return{k,v:v0,p:m?Math.min(v0/m*100,100):null,s:(m?Math.round(v0/m*100)+"% da meta de "+fmt(m)+", ":"")+q.length+" ondas, "+(new Set(q.map(w=>w.op)).size===1?"1 pessoa":new Set(q.map(w=>w.op)).size+" pessoas"),c:["var(--g)","var(--v)","var(--a)","var(--t)"][i%4]}}));
  const Dg=durs(L);
  $("#tmp").innerHTML=TY.map(([n,c])=>{const d=Dg.filter(x=>x.w.ty===n).map(x=>x.d);
   return`<div class="gal"><div class="r"><b>${n}</b><span>${d.length?mm(avg(d)):"—"} <small style="color:var(--mut)">${d.length} medições</small></span></div><div class="bar"><b style="width:${d.length?Math.min(avg(d)/((S.cfg.gap||30)*6e4)*100,100):0}%;--c:${c}"></b></div></div>`}).join("")
@@ -738,7 +741,7 @@ function mgExtra(o,d,L){
  let ms=0;for(let i=1;i<times.length;i++){const a=times[i-1],b=times[i];if(b<=a||b-a>(S.cfg.gap||30)*6e4)continue;ms+=Math.max(0,Math.min(b,start)-a)+Math.max(0,b-Math.max(a,end))}
  return {ms,count:times.filter(x=>x<start||x>end).length};
 }
-function mgReference(o,data){let sum=0,has=false;for(const d of data.days){const own=data.byOpDay.get(d+'|'+o.m)||[],people=data.byGalDay.get(d+'|'+o.g),meta=+S.metas[o.g]||0;if(own.length&&people&&people.size&&meta){sum+=meta/people.size;has=true}}return has?sum:null}
+function mgReference(o,data){let sum=0,has=false;for(const d of data.days){const own=data.byOpDay.get(d+'|'+o.m)||[],people=data.byGalDay.get(d+'|'+o.g),meta=+MT()[o.g]||0;if(own.length&&people&&people.size&&meta){sum+=meta/people.size;has=true}}return has?sum:null}
 const mgK=(t,v,sub)=>`<div class="kpi"><dt>${t}</dt><dd class="num">${v}</dd><dd class="sm">${sub||''}</dd></div>`;
 function mgHistory(list){return list.length?`<table><tr><th>Data e hora</th><th>Onda (WN)</th><th>Tipo</th><th>Quantidade</th><th>Situação</th></tr>`+list.map(w=>`<tr><td>${new Date(w.ts).toLocaleString('pt-BR')}</td><td>${esc(w.wn||'—')}</td><td>${esc(w.ty)}</td><td>${fmt(w.qty)}</td><td>${esc(ST[w.st]||'—')}${!w.sync?' · pendente':''}</td></tr>`).join('')+'</table>':'<div class="empty">Nenhuma onda registrada.</div>'}
 function individual(){
@@ -772,8 +775,8 @@ function coletiva(){
  const target=$("#coBody");if(ON&&me&&MGW===null){target.innerHTML='<div class="card"><div class="empty">'+esc(mgState||'Carregando histórico…')+'</div></div>';return}
  const data=mgData(),g=$("#gal").value,t=$("#turnoF").value,opmap=new Map(data.ops.map(o=>[o.m,o]));
  const W=data.waves.filter(w=>(g==='__all'||w.gal===g)&&(!t||String((opmap.get(w.op)||{}).t)===t)),P=prod(W),total=P.reduce((s,w)=>s+w.qty,0),people=new Set(W.map(w=>w.op)).size;
- const gals=(g==='__all'?visG():[g]).filter(Boolean),active=data.days.flatMap(d=>gals.filter(k=>d===dk(Date.now())||data.byGalDay.has(d+'|'+k)).map(k=>({d,k}))),missing=gals.filter(k=>!(+S.metas[k]>0));
- const configured=active.reduce((sum,x)=>sum+(+S.metas[x.k]||0),0),canCompare=!t&&!missing.length&&configured>0;
+ const gals=(g==='__all'?visG():[g]).filter(Boolean),active=data.days.flatMap(d=>gals.filter(k=>d===dk(Date.now())||data.byGalDay.has(d+'|'+k)).map(k=>({d,k}))),missing=gals.filter(k=>!(+MT()[k]>0));
+ const configured=active.reduce((sum,x)=>sum+(+MT()[x.k]||0),0),canCompare=!t&&!missing.length&&configured>0;
  const types=TY.map(([n,c])=>({k:n,v:P.filter(w=>w.ty===n).reduce((s,w)=>s+w.qty,0),s:P.filter(w=>w.ty===n).length+' ondas',c}));
  target.innerHTML=`<dl class="stats solo">`+mgK('Produção coletiva',fmt(total),'unidades concluídas')+mgK('Pessoas com bipagem',fmt(people),'no período')+mgK('Ondas concluídas',fmt(P.length),'compartilhadas pela equipe')+mgK('Meta coletiva',canCompare?fmt(configured):'—',t?'disponível em todos os turnos':missing.length?'configure a meta dos galpões':'dias com operação')+mgK('Atingimento',canCompare?fmt(total/configured*100)+'%':'—',canCompare?'da meta coletiva':'sem comparação disponível')+`</dl>
  <div class="grid two" style="margin-top:14px"><div class="card"><h2>Produção por tipo de onda</h2>${bars(types)}</div><div class="card"><h2>Critério da meta coletiva</h2><div class="ins"><div>Somamos as unidades concluídas da equipe, sem ranking de pessoas.</div><div>A meta é a soma da meta diária atual dos galpões nos dias com bipagem registrada e no dia de hoje.</div><div>A meta cadastrada cobre o dia inteiro. Por isso, a comparação aparece somente com todos os turnos selecionados.</div><div>Faltas e horas extras não geram descontos automáticos. Os tipos são mostrados separadamente porque têm dificuldades diferentes. No histórico usamos a meta e os turnos atualmente cadastrados.</div></div></div></div>
@@ -799,8 +802,8 @@ function cfgUsers(){
    return`<tr><td><b>${o.m}</b></td><td>${esc(o.n)}</td><td><select data-ut2="${o.m}" aria-label="Turno de ${esc(o.n)}"><option value="1"${o.t===1?" selected":""}>1º turno</option><option value="2"${o.t===2?" selected":""}>2º turno</option></select></td><td><select data-ug2="${o.m}" aria-label="Galpão de ${esc(o.n)}">${S.gals.map(g=>`<option${g===o.g?" selected":""}>${esc(g)}</option>`).join("")}</select></td><td>${n}</td><td><button class="btn d sm" data-udel="${o.m}">Excluir</button></td></tr>`}).join("")+"</table>"
   :'<div class="empty">Nenhum usuário cadastrado.</div>'}
 function cfgGals(){
- $("#gL").innerHTML=`<table><tr><th>Galpão</th><th>Meta diária</th><th>Registros</th><th></th></tr>`+S.gals.map((g,i)=>{const n=S.waves.filter(w=>w.gal===g).length;
-  return`<tr><td><input data-gre="${i}" value="${esc(g)}" aria-label="Nome do galpão"></td><td><input type="number" min="0" data-gmeta="${esc(g)}" aria-label="Meta diária de ${esc(g)}" value="${S.metas[g]||""}" placeholder="sem meta" style="width:130px"></td><td>${n}</td><td><button class="btn d sm" data-gdel="${i}"${S.gals.length<2?" disabled style='opacity:.4'":""}>Excluir</button></td></tr>`}).join("")+"</table>"}
+ $("#gL").innerHTML=`<table><tr><th>Galpão</th><th>Meta de hoje</th><th>Registros</th><th></th></tr>`+S.gals.map((g,i)=>{const n=S.waves.filter(w=>w.gal===g).length;
+  return`<tr><td><input data-gre="${i}" value="${esc(g)}" aria-label="Nome do galpão"></td><td><input type="number" min="0" data-gmeta="${esc(g)}" aria-label="Meta de hoje de ${esc(g)}" value="${MT()[g]||""}" placeholder="sem meta" style="width:130px"></td><td>${n}</td><td><button class="btn d sm" data-gdel="${i}"${S.gals.length<2?" disabled style='opacity:.4'":""}>Excluir</button></td></tr>`}).join("")+"</table>"}
 function cfgGes(){
  $("#mG").innerHTML=S.gals.map(g=>`<option>${esc(g)}</option>`).join("");
  $("#pedL").innerHTML=SOL.length?`<table><tr><th>E-mail</th><th></th></tr>`+SOL.map(s=>`<tr><td>${esc(s.email)}<br><small style="color:var(--mut)">pediu em ${new Date(s.criado_em).toLocaleDateString("pt-BR")}</small></td><td style="white-space:nowrap"><button class="btn sm" data-sacc="${esc(s.email)}">Aceitar</button> <button class="btn d sm" data-srec="${esc(s.email)}">Recusar</button></td></tr>`).join("")+"</table>"
@@ -812,8 +815,12 @@ function cfgRender(){cfgOp();cfgUsers();cfgGals();cfgGes()}
 
 /* ===================== acesso ===================== */
 const needAuth=k=>ON?!me:S.ges.length>0&&!(me&&(k==="cfg"?me.pC:me.pI));
-function authUI(){$("#who").textContent=me?"Gestor: "+me.n:"";$("#logtx").textContent=me?"Sair":"Entrar"}
+/* aba só aparece se o perfil atual pode abri-la; o que não é acessível fica oculto */
+function podeVer(t){if(t==="op"||t==="painel")return true;if(ON)return !!me&&(t==="ind"?!!me.pI:!!me.pC);if(t==="painel")return true;return !needAuth(t)}
+function updTabs(){$$(".tab[data-t]").forEach(b=>{b.style.display=podeVer(b.dataset.t)?"":"none"});if(!podeVer(view)){view="op";["painel","op","ind","cfg"].forEach(s=>$("#"+s).classList.toggle("hide",s!=="op"));$$(".tab[data-t]").forEach(b=>b.classList.toggle("on",b.dataset.t==="op"))}}
+function authUI(){$("#who").textContent=me?"Gestor: "+me.n:"";$("#logtx").textContent=me?"Sair":"Entrar";updTabs()}
 function go(t){
+ updTabs();
  if((t==="cfg"||t==="ind")&&needAuth(t)){$("#login").classList.remove("hide");$("#lU").focus();pend=t;return}
  if(ON&&me&&((t==="cfg"&&!me.pC)||(t==="ind"&&!me.pI))){toast("Seu acesso não inclui esta área.");return}
  view=t;["painel","op","ind","cfg"].forEach(s=>$("#"+s).classList.toggle("hide",s!==t));
@@ -879,7 +886,7 @@ document.addEventListener("click",e=>{const d=e.target.dataset,t=e.target;
  if(d.gdel){const g=S.gals[+d.gdel];if(!ON&&S.gals.length<2)return;
   if(!confirm("Excluir o galpão "+g+"?\n\nOs registros já lançados mantêm o nome antigo."))return;
   if(ON){rem(()=>mut("/rest/v1/galpoes?id=eq."+GID[g],"DELETE"),"Galpão excluído");return}
-  S.gals.splice(+d.gdel,1);delete S.metas[g];S.ops.forEach(o=>{if(o.g===g)o.g=S.gals[0]});S.ges.forEach(x=>{if(x.g===g)x.g=null});if(S.gal===g)S.gal=S.gals[0];
+  S.gals.splice(+d.gdel,1);delete MT()[g];S.ops.forEach(o=>{if(o.g===g)o.g=S.gals[0]});S.ges.forEach(x=>{if(x.g===g)x.g=null});if(S.gal===g)S.gal=S.gals[0];
   save();cfgGals();cfgUsers();renderAll();toast("Galpão excluído")}
  if(d.sacc){const em=d.sacc,n=$("#mN").value.trim(),adm=$("#mA").checked,gg=$("#mG").value;
   if(n.length<2){toast("Digite o nome do gestor no formulário ao lado e clique em Aceitar de novo.",6000);$("#mN").focus();return}
@@ -939,8 +946,8 @@ $("#uB").onclick=()=>{const n=$("#uN").value.trim().replace(/\s+/g," ");
 $("#uN").onkeydown=e=>{if(e.key==="Enter")$("#uB").click()};
 $("#gB").onclick=()=>{const n=$("#gN").value.trim();if(!n){toast("Informe o nome do galpão");return}
  if(S.gals.some(g=>g.toLowerCase()===n.toLowerCase())){toast("Galpão já existe");return}
- if(ON){const mv0=Math.floor(+$("#gM").value);rem(()=>mut("/rest/v1/galpoes","POST",{nome:n,meta_diaria:mv0>0?mv0:null}),"Galpão criado").then(ok=>{if(ok){$("#gN").value="";$("#gM").value=""}});return}
- S.gals.push(n);const mv=+$("#gM").value;if(mv>0)S.metas[n]=mv;$("#gM").value="";$("#gN").value="";save();cfgGals();cfgUsers();renderAll();toast("Galpão criado")};
+ if(ON){rem(()=>mut("/rest/v1/galpoes","POST",{nome:n}),"Galpão criado").then(ok=>{if(ok){$("#gN").value=""}});return}
+ S.gals.push(n);$("#gN").value="";save();cfgGals();cfgUsers();renderAll();toast("Galpão criado")};
 $("#gN").onkeydown=e=>{if(e.key==="Enter")$("#gB").click()};
 $("#mB").onclick=()=>{const n=$("#mN").value.trim(),u=$("#mU").value.trim(),p=$("#mP2").value;
  if(ON){const em=u.toLowerCase(),adm=$("#mA").checked,gg0=$("#mG").value;
@@ -967,9 +974,9 @@ document.addEventListener("change",e=>{const d=e.target.dataset,id=e.target.id;l
  if(d.ug2){const o=opOf(d.ug2);if(o){o.g=e.target.value;r=true}}
  if(d.gre!==undefined){const i=+d.gre,old=S.gals[i],nv=e.target.value.trim();
   if(!nv||S.gals.some((g,j)=>j!==i&&g.toLowerCase()===nv.toLowerCase())){toast("Nome inválido ou repetido");cfgGals();return}
-  S.gals[i]=nv;if(S.metas[old]!=null){S.metas[nv]=S.metas[old];delete S.metas[old]}S.waves.forEach(w=>{if(w.gal===old)w.gal=nv});S.ops.forEach(o=>{if(o.g===old)o.g=nv});S.ges.forEach(x=>{if(x.g===old)x.g=nv});
+  S.gals[i]=nv;const mt0=MT();if(mt0[old]!=null){mt0[nv]=mt0[old];delete mt0[old]}S.waves.forEach(w=>{if(w.gal===old)w.gal=nv});S.ops.forEach(o=>{if(o.g===old)o.g=nv});S.ges.forEach(x=>{if(x.g===old)x.g=nv});
   if(S.gal===old)S.gal=nv;r=true;toast("Galpão renomeado")}
- if(d.gmeta!==undefined){const v=Math.floor(+e.target.value);if(v>0)S.metas[d.gmeta]=v;else delete S.metas[d.gmeta];r=true;toast(v>0?"Meta de "+d.gmeta+": "+fmt(v):"Meta removida")}
+ if(d.gmeta!==undefined){const v=Math.floor(+e.target.value);if(v>0)MT()[d.gmeta]=v;else delete MT()[d.gmeta];r=true;toast(v>0?"Meta de "+d.gmeta+": "+fmt(v):"Meta removida")}
  if(r){save();if(view==="cfg")cfgRender();renderAll()}});
 
 try{storeLen=(localStorage.getItem(LS)||"").length}catch(e){}

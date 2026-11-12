@@ -10,7 +10,7 @@ const ctx={console,Date,Map,Set,Number,Math,ON:false,me:null,OPSALL:{},GN:{},S:{
 vm.createContext(ctx);vm.runInContext(source,ctx);
 const yesterday=new Date();yesterday.setDate(yesterday.getDate()-1);yesterday.setHours(0,0,0,0);const day=ctx.dk(yesterday);ctx.fields['#day'].value=day;
 const ana={m:'CL001',n:'Ana',t:1,g:'A'},bruno={m:'CL002',n:'Bruno',t:1,g:'A'},carla={m:'CL003',n:'Carla',t:2,g:'A'};
-ctx.S.ops=[ana,bruno,carla];ctx.S.metas={A:1200};
+ctx.S.ops=[ana,bruno,carla];ctx.S.metas={A:1200};ctx.MT=()=>ctx.S.metas;
 const wave=(op,h,m=0)=>({op,gal:'A',ts:new Date(day+'T'+String(h).padStart(2,'0')+':'+String(m).padStart(2,'0')+':00').getTime(),st:0,qty:10});
 ctx.S.waves=[wave('CL001',10),wave('CL001',16,30),wave('CL001',16,45)];
 let data=ctx.mgData();
