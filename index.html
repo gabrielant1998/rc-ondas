@@ -225,7 +225,7 @@ a[data-pick]{display:inline-block;padding:8px 0 2px;color:var(--gx);font-weight:
 
 <!-- ======================= OPERAÇÃO ======================= -->
 <section id="op" class="hide">
- <div class="sub" id="sub"><button data-s="reg" class="on">Registro</button><button data-s="ctl" id="subCtl">Controle de Ondas</button><button data-s="ace">Acompanhamento</button></div>
+ <div class="sub" id="sub"><button data-s="reg" class="on">Registro</button><button data-s="ctl" id="subCtl">Controle de Ondas</button><button data-s="pro" id="subPro">Procurando</button><button data-s="ace">Acompanhamento</button></div>
 
  <div id="reg" class="grid two">
   <div class="card"><h2>Nova onda</h2>
@@ -253,6 +253,13 @@ a[data-pick]{display:inline-block;padding:8px 0 2px;color:var(--gx);font-weight:
  <div id="ctl" class="card hide"><h2>Ondas em andamento</h2>
   <div class="ctl" style="margin-bottom:10px"><select id="fOp" aria-label="Filtrar por operador"></select><select id="fTy" aria-label="Filtrar por tipo"></select><select id="fSt" aria-label="Filtrar por status"></select></div>
   <div class="tw" id="ctlList"></div></div>
+
+ <div id="pro" class="grid two hide">
+  <div class="card"><h2>Marcar onda como procurando</h2><div class="f">
+   <label>Bipar onda <span class="hint">Bipe o WN de uma onda já registrada</span><input id="prBip" placeholder="WN da onda" autocomplete="off"></label>
+   <div id="prRes"></div></div></div>
+  <div class="card"><h2>Procurando agora <span id="prCnt"></span></h2><div class="tw" id="prList"></div><div class="legend">Enquanto a onda está em procurando, ela não conta na produção do dia. Ao marcar como encontrada, volta a contar.</div></div>
+ </div>
 
  <div id="ace" class="grid two hide">
   <div class="card"><h2>Temporizador automático</h2><div id="tauto"></div><div class="legend">Janela de agrupamento de 5 min, depois contagem efetiva. Trocar de operador reinicia.</div></div>
@@ -294,10 +301,10 @@ a[data-pick]{display:inline-block;padding:8px 0 2px;color:var(--gx);font-weight:
  </div>
 
  <div id="cga" class="grid two hide">
-  <div class="card"><h2>Novo galpão</h2><div class="f">
+  <div class="card" id="gNovo"><h2>Novo galpão</h2><div class="f">
    <label>Nome<input id="gN" placeholder="Galpão 4" autocomplete="off"></label>
     <button class="btn" id="gB">Criar galpão</button></div></div>
-  <div class="card"><h2>Galpões</h2><div class="tw" id="gL"></div><div class="legend">A meta vale só para o dia de hoje: cada dia começa sem meta e você preenche de novo. Os dias anteriores ficam salvos. Renomear um galpão atualiza os registros já lançados.</div></div>
+  <div class="card"><h2>Galpões</h2><div class="tw" id="gL"></div><div class="legend" id="gLeg">A meta vale só para o dia de hoje: cada dia começa sem meta e você preenche de novo. Os dias anteriores ficam salvos. Renomear um galpão atualiza os registros já lançados.</div></div>
  </div>
 
  <div id="cma" class="grid two hide"><div class="card"><h2>Apagar registros do banco</h2>
@@ -358,7 +365,7 @@ const DEF={cfg:{lim:{"Vários artigos":1000,"Múltiplas quantidades":1000,"Itens
  turnos:{1:{ini:7,fim:16},2:{ini:16,fim:23}}},gals:["Galpão 1","Galpão 2","Galpão 3"],ops:[],ges:[],waves:[],gal:"Galpão 1",off:false,man:{log:[]}};
 let S;try{S=JSON.parse(localStorage.getItem(LS))}catch(e){}
 /* formato compacto: ondas como listas, cabe ~2x mais no aparelho */
-if(S&&S.wv){S.waves=S.wv.map(a=>{const w={id:a[0],wn:a[1],op:a[2],opn:a[3],gal:a[4],ty:(TY[a[5]]||TY[0])[0],qty:a[6],st:a[7],ts:a[8],fin:a[9]<0?null:a[8]+a[9],sync:a[10]};if(a[11])w.auto=1;if(a[12])w.oid=a[12];if(a[13])w.err=a[13];return w});delete S.wv}
+if(S&&S.wv){S.waves=S.wv.map(a=>{const w={id:a[0],wn:a[1],op:a[2],opn:a[3],gal:a[4],ty:(TY[a[5]]||TY[0])[0],qty:a[6],st:a[7],ts:a[8],fin:a[9]<0?null:a[8]+a[9],sync:a[10]};if(a[11])w.auto=1;if(a[12])w.oid=a[12];if(a[13])w.err=a[13];if(a[14]){w.sku=a[14][0];w.loc=a[14][1];w.pn=a[14][2];w.pt=a[14][3]}return w});delete S.wv}
 const LIM_STORE=5.2e6;
 if(!S){ /* migra base antiga, se existir */
  let old=null;try{old=ON?null:JSON.parse(localStorage.getItem("rcondas.v1"))}catch(e){}
@@ -381,7 +388,7 @@ TY.forEach(([n])=>{if(S.cfg.lim[n]==null)S.cfg.lim[n]=DEF.cfg.lim[n]||1000});
 if(!ON&&!S.gals.length)S.gals=["Galpão 1"];
 if(!S.gals.includes(S.gal))S.gal=S.gals[0];
 let ty=TY[0][0],st=0,draft=[],tim={op:null,t0:0},view="painel",me=null,uT=1,csub="cop",gsub="mi";
-const ser=()=>{const o=Object.assign({},S);delete o.waves;o.wv=(ON?S.waves.filter(w=>!w.srv):S.waves).map(w=>{const a=[w.id,w.wn,w.op,w.opn,w.gal,Math.max(0,TY.findIndex(t=>t[0]===w.ty)),w.qty,w.st,w.ts,w.fin==null?-1:w.fin-w.ts,w.sync?1:0,w.auto?1:0];if(w.oid||w.err)a.push(w.oid||0);if(w.err)a.push(w.err);return a});return JSON.stringify(o)};
+const ser=()=>{const o=Object.assign({},S);delete o.waves;o.wv=(ON?S.waves.filter(w=>!w.srv):S.waves).map(w=>{const a=[w.id,w.wn,w.op,w.opn,w.gal,Math.max(0,TY.findIndex(t=>t[0]===w.ty)),w.qty,w.st,w.ts,w.fin==null?-1:w.fin-w.ts,w.sync?1:0,w.auto?1:0];if(w.oid||w.err)a.push(w.oid||0);if(w.err)a.push(w.err);if(w.sku||w.pn||w.loc||w.pt){while(a.length<14)a.push(0);a.push([w.sku||"",w.loc||"",w.pn||"",w.pt||0])}return a});return JSON.stringify(o)};
 let storeLen=0,storeWarned=false;
 const save=()=>{try{const s=ser();localStorage.setItem(LS,s);storeLen=s.length;
   if(storeLen>LIM_STORE*.8&&!storeWarned){storeWarned=true;setTimeout(()=>toast("Atenção: memória do aparelho em "+Math.round(storeLen/LIM_STORE*100)+"%. Ligue um banco de dados antes que encha.",9000),2600)}
@@ -449,8 +456,8 @@ async function pull(){
  else{S.ges=[];me=null;SOL=[]}
  const mine=S.waves.filter(w=>!w.srv);
  if(me){const de=new Date(Date.now()-35*864e5).toISOString(),srv=[];
-  for(let off=0;;off+=1000){const p=await api("/rest/v1/ondas?select=id,wn,operador_id,galpao_id,tipo,quantidade,status,registrada_em,concluida_em,encerrada_auto&registrada_em=gte."+encodeURIComponent(de)+"&order=registrada_em.asc&limit=1000&offset="+off);
-   p.forEach(x=>{const o=OPSALL[x.operador_id];srv.push({id:x.id,wn:x.wn,oid:x.operador_id,op:o?(o.excluido_em?o.codigo+"~"+o.id.slice(0,6):o.codigo):"—",opn:o?o.nome:"Operador removido",gal:GN[x.galpao_id]||"—",ty:x.tipo,qty:x.quantidade,st:x.status,ts:Date.parse(x.registrada_em),fin:x.concluida_em?Date.parse(x.concluida_em):null,sync:1,srv:1,auto:x.encerrada_auto?1:0})});
+  for(let off=0;;off+=1000){const p=await api("/rest/v1/ondas?select=id,wn,operador_id,galpao_id,tipo,quantidade,status,registrada_em,concluida_em,encerrada_auto,procura_sku,procura_local,procura_nome,procura_em&registrada_em=gte."+encodeURIComponent(de)+"&order=registrada_em.asc&limit=1000&offset="+off);
+   p.forEach(x=>{const o=OPSALL[x.operador_id];srv.push({id:x.id,wn:x.wn,oid:x.operador_id,op:o?(o.excluido_em?o.codigo+"~"+o.id.slice(0,6):o.codigo):"—",opn:o?o.nome:"Operador removido",gal:GN[x.galpao_id]||"—",ty:x.tipo,qty:x.quantidade,st:x.status,ts:Date.parse(x.registrada_em),fin:x.concluida_em?Date.parse(x.concluida_em):null,sync:1,srv:1,auto:x.encerrada_auto?1:0,sku:x.procura_sku||"",loc:x.procura_local||"",pn:x.procura_nome||"",pt:x.procura_em?Date.parse(x.procura_em):0})});
    if(p.length<1000||off>=59000)break}
   const ids=new Set(srv.map(w=>w.id));S.waves=srv.concat(mine.filter(w=>!ids.has(w.id)))}
  else{const corte=Date.now()-3*864e5;S.waves=mine.filter(w=>!w.sync||w.err||w.ts>corte)}
@@ -734,9 +741,9 @@ async function loadManagement(){
  const seq=++mgSeq,days=mgDates(),start=new Date(days[0]+'T00:00:00'),end=new Date(days[days.length-1]+'T00:00:00');end.setDate(end.getDate()+1);
  mgState='Carregando histórico do período…';MGW=null;$("#mgStatus").textContent=mgState;$("#mgStatus").classList.remove('hide');
  try{
-  const arr=[];for(let off=0;;off+=1000){const q='/rest/v1/ondas?select=id,wn,operador_id,galpao_id,tipo,quantidade,status,registrada_em,concluida_em,encerrada_auto&registrada_em=gte.'+encodeURIComponent(start.toISOString())+'&registrada_em=lt.'+encodeURIComponent(end.toISOString())+'&order=registrada_em.asc,id.asc&limit=1000&offset='+off;
+  const arr=[];for(let off=0;;off+=1000){const q='/rest/v1/ondas?select=id,wn,operador_id,galpao_id,tipo,quantidade,status,registrada_em,concluida_em,encerrada_auto,procura_sku,procura_local,procura_nome,procura_em&registrada_em=gte.'+encodeURIComponent(start.toISOString())+'&registrada_em=lt.'+encodeURIComponent(end.toISOString())+'&order=registrada_em.asc,id.asc&limit=1000&offset='+off;
    const part=await api(q);if(seq!==mgSeq)return;arr.push(...part);if(part.length<1000)break}
-  const rows=arr.map(x=>{const o=OPSALL[x.operador_id];return{id:x.id,wn:x.wn,oid:x.operador_id,op:o?(o.excluido_em?o.codigo+'~'+o.id.slice(0,6):o.codigo):'—',opn:o?o.nome:'Operador removido',gal:GN[x.galpao_id]||'—',ty:x.tipo,qty:x.quantidade,st:x.status,ts:Date.parse(x.registrada_em),fin:x.concluida_em?Date.parse(x.concluida_em):null,sync:1,srv:1,auto:x.encerrada_auto?1:0}});
+  const rows=arr.map(x=>{const o=OPSALL[x.operador_id];return{id:x.id,wn:x.wn,oid:x.operador_id,op:o?(o.excluido_em?o.codigo+'~'+o.id.slice(0,6):o.codigo):'—',opn:o?o.nome:'Operador removido',gal:GN[x.galpao_id]||'—',ty:x.tipo,qty:x.quantidade,st:x.status,ts:Date.parse(x.registrada_em),fin:x.concluida_em?Date.parse(x.concluida_em):null,sync:1,srv:1,auto:x.encerrada_auto?1:0,sku:x.procura_sku||"",loc:x.procura_local||"",pn:x.procura_nome||"",pt:x.procura_em?Date.parse(x.procura_em):0}});
   const ids=new Set(rows.map(w=>w.id));MGW=rows.concat(S.waves.filter(w=>!w.srv&&!ids.has(w.id)&&w.ts>=start.getTime()&&w.ts<end.getTime()));
   mgState='';$("#mgStatus").classList.add('hide');individual();coletiva();
  }catch(e){if(seq!==mgSeq)return;MGW=null;mgState='Não foi possível carregar o período. Confira a conexão e tente novamente.';$("#mgStatus").textContent=mgState;$("#mgStatus").classList.remove('hide');$("#iBody").innerHTML='';$("#coBody").innerHTML=''}
@@ -825,9 +832,11 @@ function cfgUsers(){
   S.ops.slice().sort((a,b)=>a.m.localeCompare(b.m)).map(o=>{const n=S.waves.filter(w=>w.op===o.m).length;
    return`<tr><td><b>${o.m}</b></td><td>${esc(o.n)}</td><td><select data-ut2="${o.m}" aria-label="Turno de ${esc(o.n)}"><option value="1"${o.t===1?" selected":""}>1º turno</option><option value="2"${o.t===2?" selected":""}>2º turno</option></select></td><td><select data-ug2="${o.m}" aria-label="Galpão de ${esc(o.n)}">${S.gals.map(g=>`<option${g===o.g?" selected":""}>${esc(g)}</option>`).join("")}</select></td><td>${n}</td><td><button class="btn d sm" data-udel="${o.m}">Excluir</button></td></tr>`}).join("")+"</table>"
   :'<div class="empty">Nenhum usuário cadastrado.</div>'}
-function cfgGals(){
- $("#gL").innerHTML=`<table><tr><th>Galpão</th><th>Meta de hoje</th><th>Registros</th><th></th></tr>`+S.gals.map((g,i)=>{const n=S.waves.filter(w=>w.gal===g).length;
-  return`<tr><td><input data-gre="${i}" value="${esc(g)}" aria-label="Nome do galpão"></td><td><input type="number" min="0" data-gmeta="${esc(g)}" aria-label="Meta de hoje de ${esc(g)}" value="${MT()[g]||""}" placeholder="sem meta" style="width:130px"></td><td>${n}</td><td><button class="btn d sm" data-gdel="${i}"${S.gals.length<2?" disabled style='opacity:.4'":""}>Excluir</button></td></tr>`}).join("")+"</table>"}
+function soMeta(){return ON&&!!me&&!me.adm}
+function cfgGals(){const gest=soMeta();$("#gNovo").classList.toggle("hide",gest);
+ $("#gL").previousElementSibling.textContent=gest?"Meta de hoje":"Galpões";$("#gLeg").textContent=gest?"A meta vale só para hoje: cada dia começa sem meta e você preenche de novo.":"A meta vale só para o dia de hoje: cada dia começa sem meta e você preenche de novo. Os dias anteriores ficam salvos. Renomear um galpão atualiza os registros já lançados.";
+ $("#gL").innerHTML=`<table><tr><th>Galpão</th><th>Meta de hoje</th>${gest?"":"<th>Registros</th><th></th>"}</tr>`+S.gals.map((g,i)=>[g,i]).filter(x=>!gest||x[0]===me.g).map(([g,i])=>{const n=S.waves.filter(w=>w.gal===g).length;
+  return`<tr><td>${gest?`<b>${esc(g)}</b>`:`<input data-gre="${i}" value="${esc(g)}" aria-label="Nome do galpão">`}</td><td><input type="number" min="0" data-gmeta="${esc(g)}" aria-label="Meta de hoje de ${esc(g)}" value="${MT()[g]||""}" placeholder="sem meta" style="width:130px"></td>${gest?"":`<td>${n}</td><td><button class="btn d sm" data-gdel="${i}"${S.gals.length<2?" disabled style='opacity:.4'":""}>Excluir</button></td>`}</tr>`}).join("")+"</table>"}
 function cfgGes(){
  $("#mG").innerHTML=S.gals.map(g=>`<option>${esc(g)}</option>`).join("");
  $("#pedL").innerHTML=SOL.length?`<table><tr><th>E-mail</th><th></th></tr>`+SOL.map(s=>`<tr><td><b>${esc(s.nome||"Sem nome")}</b><br>${esc(s.email)}<br><small style="color:var(--mut)">${esc((s.galpao_id&&GN[s.galpao_id])||"sem galpão")}, pediu em ${new Date(s.criado_em).toLocaleDateString("pt-BR")}</small></td><td style="white-space:nowrap"><button class="btn sm" data-sacc="${esc(s.email)}">Aceitar</button> <button class="btn d sm" data-srec="${esc(s.email)}">Recusar</button></td></tr>`).join("")+"</table>"
@@ -879,7 +888,7 @@ $("#xCon").oninput=()=>{$("#xDel").disabled=$("#xCon").value!=="APAGAR"};
 const needAuth=k=>ON?!me:S.ges.length>0&&!(me&&(k==="cfg"?me.pC:me.pI));
 /* aba só aparece se o perfil atual pode abri-la; o que não é acessível fica oculto */
 function podeVer(t){if(t==="op"||t==="painel")return true;if(ON)return !!me&&(t==="ind"?!!me.pI:!!me.pC);if(t==="painel")return true;return !needAuth(t)}
-function updTabs(){$$(".tab[data-t]").forEach(b=>{b.style.display=podeVer(b.dataset.t)?"":"none"});$$('#csub [data-c="cma"]').forEach(b=>{b.style.display=(!ON||(me&&me.adm))?"":"none"});if(!podeVer(view)){view="op";["painel","op","ind","cfg"].forEach(s=>$("#"+s).classList.toggle("hide",s!=="op"));$$(".tab[data-t]").forEach(b=>b.classList.toggle("on",b.dataset.t==="op"))}}
+function updTabs(){$$(".tab[data-t]").forEach(b=>{b.style.display=podeVer(b.dataset.t)?"":"none"});$$('#csub [data-c="cga"]').forEach(b=>{b.textContent=soMeta()?"Meta do dia":"Galpões"});$$('#csub [data-c="cma"]').forEach(b=>{b.style.display=(!ON||(me&&me.adm))?"":"none"});if(!podeVer(view)){view="op";["painel","op","ind","cfg"].forEach(s=>$("#"+s).classList.toggle("hide",s!=="op"));$$(".tab[data-t]").forEach(b=>b.classList.toggle("on",b.dataset.t==="op"))}}
 function authUI(){$("#who").textContent=me?"Gestor: "+me.n:"";$("#logtx").textContent=me?"Sair":"Entrar";updTabs()}
 function go(t){
  updTabs();
@@ -911,7 +920,7 @@ const visG=()=>restricted()?[myG()]:S.gals;
 const inTurno=w=>{const f=$("#turnoF").value;if(!f)return true;const o=opOf(w.op);return!!o&&String(o.t)===f};
 function galSel(){const e=$("#gal"),v=e.value;e.innerHTML=(restricted()?"":'<option value="__all">Visão geral</option>')+visG().map(g=>`<option>${esc(g)}</option>`).join("");
  if(restricted()){S.gal=myG();e.value=myG();e.disabled=true}else{e.value=S.gals.includes(v)||v==="__all"?v:S.gal;e.disabled=false}}
-function renderAll(){netUI();galSel();if(ON&&!me){if(view==="painel")painelPublico()}else painel();operacao();filters();
+function renderAll(){netUI();galSel();if(ON&&!me){if(view==="painel")painelPublico()}else painel();operacao();procurando();filters();
  $("#sub2").textContent=new Date($("#day").value+"T12:00").toLocaleDateString("pt-BR",{weekday:"long",day:"numeric",month:"long",year:"numeric"});
  if(view==="ind"){individual();coletiva()}}
 
@@ -923,7 +932,40 @@ $("#net").onclick=()=>{S.off=!S.off;save();if(online())flush();renderAll()};
 addEventListener("online",()=>{flush();renderAll();if(ON)pull().then(renderAll).catch(()=>{})});addEventListener("offline",renderAll);
 $("#theme").onclick=()=>{const r=document.documentElement,d=getComputedStyle(r).getPropertyValue("--bg").trim()==="#0e1726";r.dataset.theme=d?"light":"dark"};
 $$(".tab[data-t]").forEach(b=>b.onclick=()=>go(b.dataset.t));
-$("#sub").onclick=e=>{const s=e.target.dataset.s;if(!s)return;$$("#sub button").forEach(b=>b.classList.toggle("on",b===e.target));["reg","ctl","ace"].forEach(x=>$("#"+x).classList.toggle("hide",x!==s));tick()};
+/* procurando: onda já bipada vira status 1 com SKU, local e quem procura; encontrada volta ao status 0 */
+let prW=null;
+function prBuscar(){const v=$("#prBip").value.trim();if(!v)return;const n=normWN(v),w=S.waves.find(x=>normWN(x.wn)===n&&inView(x));
+ if(!w&&!ON){toast("Onda não encontrada neste aparelho");return}
+ if(w&&w.st===2){toast("Onda em difícil acesso não pode ser marcada como procurando");return}
+ prW={wn:v,w};prForm()}
+function prForm(){const w=prW.w;
+ $("#prRes").innerHTML=`<div class="sumline"><b>${esc(prW.wn)}</b>${w?" · "+esc(w.ty)+" · "+fmt(w.qty)+" · "+esc(w.opn)+" · "+esc(ST[w.st]):" · não está neste aparelho, o servidor confere ao salvar"}</div>
+ <label>Nome de quem procura <span class="hint">Opcional, pode ser outra pessoa</span><input id="prNome" autocomplete="off" value="${esc((w&&w.pn)||"")}"></label>
+ <label>SKU <span class="hint">Obrigatório</span><input id="prSku" autocomplete="off" value="${esc((w&&w.sku)||"")}"></label>
+ <label>Local <span class="hint">Opcional</span><input id="prLoc" autocomplete="off" value="${esc((w&&w.loc)||"")}"></label>
+ <div class="ctl2"><button class="btn alt sm" id="prCan">Cancelar</button><button class="btn" id="prOk">Marcar como procurando</button></div>`;
+ $("#prSku").focus()}
+async function prSalvar(){const sku=$("#prSku").value.trim(),loc=$("#prLoc").value.trim(),nome=$("#prNome").value.trim();
+ if(!sku){toast("Informe o SKU");$("#prSku").focus();return}
+ if(sku.length>40||loc.length>60||nome.length>80){toast("Texto grande demais em SKU, local ou nome");return}
+ let w=prW.w,pt=Date.now();
+ if(ON){try{const r=await api("/rest/v1/rpc/marcar_procurando",{method:"POST",body:{p_wn:prW.wn,p_sku:sku,p_local:loc||null,p_nome:nome||null}});
+   w=w||S.waves.find(a=>a.id===r.id);pt=Date.parse(r.procura_em)||pt;
+   if(!w){w={id:r.id,wn:r.wn,op:"—",opn:"—",gal:GN[r.galpao_id]||"—",ty:r.tipo,qty:r.quantidade,st:0,ts:Date.parse(r.registrada_em),fin:null,sync:1};S.waves.push(w)}
+  }catch(e){toast(errMsg(e));return}}
+ if(w.st!==1)w.pt=pt;else w.pt=w.pt||pt;
+ w.st=1;w.fin=null;w.sku=sku;w.loc=loc;w.pn=nome;w.sync=ON?1:(online()?1:0);
+ save();prW=null;$("#prRes").innerHTML="";$("#prBip").value="";renderAll();toast("Onda marcada como procurando");$("#prBip").focus()}
+async function prEncontrar(id){const w=S.waves.find(x=>x.id===id);if(!w)return;
+ if(ON){try{await api("/rest/v1/rpc/encontrar_procurando",{method:"POST",body:{p_wn:w.wn}})}catch(e){toast(errMsg(e));return}}
+ w.st=0;w.fin=Date.now();w.sync=ON?1:(online()?1:0);save();renderAll();toast("Onda encontrada")}
+function procurando(){const L=S.waves.filter(w=>w.st===1&&inView(w)).sort((a,b)=>(a.pt||a.ts)-(b.pt||b.ts));
+ $("#prCnt").textContent=L.length?L.length+" em aberto":"";
+ $("#prList").innerHTML=L.length?`<table><tr><th>Onda (WN)</th><th>SKU</th><th>Local</th><th>Quem procura</th><th>Há</th><th></th></tr>`+L.map(w=>`<tr><td><b>${esc(w.wn||"—")}</b><br><small>${esc(w.ty)} · ${fmt(w.qty)}</small></td><td>${esc(w.sku||"—")}</td><td>${esc(w.loc||"—")}</td><td>${esc(w.pn||w.opn||"—")}</td><td>${mm(Date.now()-(w.pt||w.ts))}</td><td><button class="btn sm" data-prf="${esc(w.id)}">Encontrada</button></td></tr>`).join("")+"</table>":'<div class="empty">Nenhuma onda sendo procurada.</div>'}
+$("#pro").addEventListener("keydown",e=>{if(e.key!=="Enter")return;e.preventDefault();if(e.target.id==="prBip")prBuscar();else if(["prSku","prLoc","prNome"].includes(e.target.id))prSalvar()});
+document.addEventListener("click",e=>{const t=e.target;if(t.id==="prOk")prSalvar();else if(t.id==="prCan"){prW=null;$("#prRes").innerHTML="";$("#prBip").focus()}
+ const f=t.closest&&t.closest("[data-prf]");if(f)prEncontrar(f.dataset.prf)});
+$("#sub").onclick=e=>{const s=e.target.dataset.s;if(!s)return;$$("#sub button").forEach(b=>b.classList.toggle("on",b===e.target));["reg","ctl","pro","ace"].forEach(x=>$("#"+x).classList.toggle("hide",x!==s));tick()};
 $("#csub").onclick=e=>{const c=e.target.dataset.c;if(!c)return;csub=c;$$("#csub button").forEach(b=>b.classList.toggle("on",b===e.target));["cop","cus","cga","cge","cma"].forEach(x=>$("#"+x).classList.toggle("hide",x!==c));if(c==="cge"&&ON&&me&&me.adm)pull().then(()=>cfgGes()).catch(()=>{});if(c==="cma")cfgMan()};
 $("#iOp").onchange=()=>{mgShown=100;individual()};$("#iPer").onchange=()=>{mgShown=100;individual();coletiva();loadManagement()};
 $("#iBody").addEventListener("click",e=>{if(e.target.id==="mgMore"){mgShown+=100;individual()}});
@@ -971,7 +1013,7 @@ $("#b3").onclick=()=>goStep(2);
 $("#addRow").onclick=()=>{rows.push({wn:"",q:""});renderRows();setTimeout(()=>{const a=$$("[data-wn]");if(a.length)a[a.length-1].focus()},60)};
 $("#rowsL").oninput=e=>{const d=e.target.dataset;if(d.wn!==undefined)rows[+d.wn].wn=e.target.value;if(d.q!==undefined)rows[+d.q].q=e.target.value;
  const last=rows[rows.length-1];
- if(multiOnda()&&((last.wn||"").trim()||last.q)){rows.push({wn:"",q:""});$("#rowsL").insertAdjacentHTML("beforeend",rowHtml(rows[rows.length-1],rows.length-1))}};
+ if(multiOnda()&&(last.wn||"").trim()&&String(last.q||"").trim()){rows.push({wn:"",q:""});$("#rowsL").insertAdjacentHTML("beforeend",rowHtml(rows[rows.length-1],rows.length-1))}};
 $("#rowsL").onkeydown=e=>{if(e.key!=="Enter")return;const d=e.target.dataset;
  if(d.wn!==undefined){e.preventDefault();const q=$('[data-q="'+d.wn+'"]');if(q)q.focus()}
  else if(d.q!==undefined){e.preventDefault();const n=$('[data-wn="'+(+d.q+1)+'"]');if(n)n.focus();else $("#save").focus()}};
