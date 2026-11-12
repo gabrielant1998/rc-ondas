@@ -229,7 +229,7 @@ const WV=(id,wn,ty,qty,t,op='CL001',opn='Ana Souza',st=0)=>({id,wn,op,opn,gal:'G
 await T("43 Procurando em 3 etapas: pendente com SKU, encontrada vai ao histórico, baixa com nome",async()=>{
  const p=await page(b,base({waves:[WV('a','00123','Vários artigos',10,HR(9,0)),WV('b','456','Vários artigos',20,HR(9,10))]}));
  const prod=()=>p.evaluate(()=>prod(S.waves).reduce((a,w)=>a+w.qty,0));
- await p.evaluate(()=>go('op'));await p.click('#sub [data-s="pro"]');
+ await p.evaluate(()=>go('prs'));
  await p.fill('#prBip','123');await p.press('#prBip','Enter');ok(await p.isVisible('#prSku'),'formulário não abriu');
  await p.press('#prSku','Enter');ok((await p.textContent('#toast')).includes('SKU'),'deixou salvar sem SKU');
  await p.fill('#prSku','SKU-9');await p.fill('#prLoc','A-01');await p.press('#prLoc','Enter');
@@ -237,7 +237,7 @@ await T("43 Procurando em 3 etapas: pendente com SKU, encontrada vai ao históri
  await p.evaluate(()=>go('painel'));const k=(await p.textContent('#kpis')).replace(/\s+/g,' ');ok(/Procurando1/.test(k),'painel não mostra 1 procurando: '+k.slice(0,300));
  ok(await prod()===20,'produção deveria ser 20, é '+await prod());
  await p.reload();const w=await p.evaluate(()=>S.waves.find(x=>x.id==='a'));ok(w.st===1&&w.sku==='SKU-9'&&w.loc==='A-01'&&w.hist.length===1,'não persistiu: '+JSON.stringify(w));
- await p.evaluate(()=>go('op'));await p.click('#sub [data-s="pro"]');
+ await p.evaluate(()=>go('prs'));
  await p.fill('#prBip','00123');await p.press('#prBip','Enter');ok(await p.isVisible('#prAOk')&&!(await p.isVisible('#prSku')),'segunda bipagem deveria pedir "encontrada"');
  await p.click('#prAOk');ok((await p.textContent('#prList')).includes('Nenhuma'),'ainda pendente');
  ok(await prod()===30,'produção deveria voltar a 30, é '+await prod());
@@ -247,11 +247,11 @@ await T("43 Procurando em 3 etapas: pendente com SKU, encontrada vai ao históri
  await p.fill('#prNome','Maria Souza');await p.press('#prNome','Enter');
  h=(await p.textContent('#prHist')).replace(/\s+/g,' ');ok(h.includes('Maria Souza')&&!h.includes('Dar baixa'),'baixa não apareceu: '+h);
  await p.fill('#prBip','123');await p.press('#prBip','Enter');ok(!(await p.isVisible('#prNome'))&&(await p.textContent('#prRes')).includes('já tem baixa'),'onda baixada deveria só informar');
- await p.fill('#prQ','maria');ok((await p.textContent('#prHist')).includes('123'),'pesquisa por nome não achou');
+ await p.click('#psub [data-p="sku"]');await p.fill('#prQ','maria');ok((await p.textContent('#prHist')).includes('123'),'pesquisa por nome não achou');
  await p.fill('#prQ','zzzz');ok((await p.textContent('#prHist')).includes('Nada encontrado'),'pesquisa sem resultado')});
 await T("44 Procurando: WN inexistente e onda em difícil acesso não abrem formulário",async()=>{
  const p=await page(b,base({waves:[WV('a','900','Vários artigos',10,HR(9,0),'CL001','Ana Souza',2)]}));
- await p.evaluate(()=>go('op'));await p.click('#sub [data-s="pro"]');
+ await p.evaluate(()=>go('prs'));
  await p.fill('#prBip','777');await p.press('#prBip','Enter');ok(!(await p.isVisible('#prSku')),'abriu para WN inexistente');
  await p.fill('#prBip','900');await p.press('#prBip','Enter');ok(!(await p.isVisible('#prSku')),'abriu para difícil acesso')});
 await T("45 Meta individual: configurar ondas e unidades aparece no Individual com percentual",async()=>{
@@ -387,6 +387,21 @@ await T("61 Histórico: Procurando com registro, tempos e baixa; pesquisa dentro
  ok(t.includes('Procurando: registro, tempo e conclusão')&&/Marcadas2/.test(t)&&/Pendentes1/.test(t)&&/Baixadas1/.test(t),'kpis: '+t.slice(t.indexOf('Procurando:'),t.indexOf('Procurando:')+300));
  ok(t.includes('SKU-9')&&t.includes('Carla Dias')&&t.includes('10:00')&&t.includes('15:00')&&t.includes('25:00')===false||t.includes('Baixada'),'tempos: '+t.slice(t.indexOf('Tempo procurando'),t.indexOf('Tempo procurando')+400));
  await p.fill('#hPq','sku-7');t=await p.textContent('#hPt');ok(t.includes('WN22A22222')&&!t.includes('WN22A11111'),'pesquisa procurando')});
+await T("62 Procurando em aba própria: lista SKU/onda/quantidade com pesquisa e Finalizar onda exigindo nome",async()=>{
+ const w1=WV('f1','WN500100','Vários artigos',40,HR(9,0));w1.st=1;w1.fin=null;w1.sku='SKU-1';w1.loc='Z-9';w1.pt=Date.now()-120000;w1.hist=[{e:'m',q:'Ana Souza',t:w1.pt}];
+ const w2=WV('f2','WN500200','Itens Únicos',7,HR(9,5));w2.st=1;w2.fin=null;w2.sku='SKU-2';w2.pt=Date.now()-60000;w2.hist=[{e:'m',q:'Ana Souza',t:w2.pt}];
+ const p=await page(b,base({waves:[w1,w2]}));
+ ok(!(await p.$('#sub [data-s="pro"]')),'subaba antiga ainda existe em Operação');
+ await p.click('.tab[data-t="prs"]');ok((await p.textContent('#ttl')).includes('Procurando'),'título');
+ await p.click('#psub [data-p="sku"]');ok((await p.textContent('#psub')).includes('SKU procurando (2)'),'contador');
+ let t=(await p.textContent('#prList')).replace(/\s+/g,' ');ok(t.includes('SKU-1')&&t.includes('WN500100')&&t.includes('40')&&t.includes('Finalizar onda'),'lista: '+t);
+ await p.fill('#prQ','sku-2');t=await p.textContent('#prList');ok(t.includes('WN500200')&&!t.includes('WN500100'),'pesquisa');
+ await p.fill('#prQ','');await p.click('[data-prf="f1"]');ok(await p.isVisible('#prNome'),'abre pedindo nome');
+ await p.click('#prFOk');ok((await p.textContent('#toast')).includes('nome')&&(await p.evaluate(()=>S.waves.find(x=>x.id==='f1').st))===1,'finalizou sem nome');
+ await p.fill('#prNome','Carla Dias');await p.click('#prFOk');
+ const w=await p.evaluate(()=>S.waves.find(x=>x.id==='f1'));ok(w.st===0&&w.hist.map(e=>e.e).join('')==='mab'&&w.hist[2].q==='Carla Dias','estado: '+JSON.stringify(w.hist));
+ t=await p.textContent('#prList');ok(!t.includes('WN500100')&&t.includes('WN500200'),'saiu da lista');
+ await p.click('#psub [data-p="his"]');ok((await p.textContent('#prHist')).includes('Carla Dias'),'histórico com nome')});
 await b.close();
 const w=Math.max(...R.map(r=>r[1].length));for(const r of R)console.log((r[0]==="PASS"?"✅":"❌")+" "+r[1].padEnd(w)+"  "+r[2]);
 console.log(`\n${R.filter(r=>r[0]==="PASS").length}/${R.length} passaram`)})();

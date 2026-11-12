@@ -196,6 +196,7 @@ a[data-pick]{display:inline-block;padding:8px 0 2px;color:var(--gx);font-weight:
  <div class="brand"><i><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 9c3-4 5 4 10 0s7 4 10 0M2 16c3-4 5 4 10 0s7 4 10 0"/></svg></i><span>RC Ondas<small>Gestão de produção</small></span></div>
  <button class="tab on" data-t="painel"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20V11M10 20V5M16 20v-6M2 20h20"/></svg>Painel</button>
  <button class="tab" data-t="op"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13 2 4 14h7l-1 8 9-12h-7z"/></svg>Operação</button>
+ <button class="tab" data-t="prs"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6"/><path d="m20 20-4.2-4.2"/></svg>Procurando</button>
  <button class="tab" data-t="ind"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3.5"/><path d="M5 21c0-4 3.5-6 7-6s7 2 7 6"/></svg><span class="nav-long">Gestão operacional</span><span class="nav-short">Gestão</span></button>
  <button class="tab" data-t="his"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19V5M4 19h16"/><path d="M8 15l3-4 3 2 5-6"/></svg>Histórico</button>
  <button class="tab" data-t="cfg"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/></svg>Config</button>
@@ -232,7 +233,7 @@ a[data-pick]{display:inline-block;padding:8px 0 2px;color:var(--gx);font-weight:
 
 <!-- ======================= OPERAÇÃO ======================= -->
 <section id="op" class="hide">
- <div class="sub" id="sub"><button data-s="reg" class="on">Registro</button><button data-s="ctl" id="subCtl">Controle de Ondas</button><button data-s="pro" id="subPro">Procurando</button><button data-s="ace">Acompanhamento</button></div>
+ <div class="sub" id="sub"><button data-s="reg" class="on">Registro</button><button data-s="ctl" id="subCtl">Controle de Ondas</button><button data-s="ace">Acompanhamento</button></div>
 
  <div id="reg" class="grid two">
   <div class="card"><h2>Nova onda</h2>
@@ -263,19 +264,7 @@ a[data-pick]{display:inline-block;padding:8px 0 2px;color:var(--gx);font-weight:
   <div class="ctl" style="margin-bottom:10px"><select id="fOp" aria-label="Filtrar por operador"></select><select id="fTy" aria-label="Filtrar por tipo"></select><select id="fSt" aria-label="Filtrar por status"></select></div>
   <div class="tw" id="ctlList"></div></div>
 
- <div id="pro" class="grid two hide">
-  <div class="card"><h2>Bipar onda</h2><div class="f">
-   <label>Bipar onda <input id="prBip" placeholder="Onda" autocomplete="off"></label>
-   <div id="prRes"></div></div>
-</div>
-  <div class="card"><h2>Pendentes <span id="prCnt"></span></h2>
-   <label class="hint" style="display:block;margin-bottom:8px">Pesquisar<input id="prQ" type="search" placeholder="Nome, onda, SKU ou local" autocomplete="off"></label>
-   <div class="tw" id="prList"></div></div>
-  <div class="card" style="grid-column:1/-1"><h2>Histórico de procurando <span id="prHCnt"></span></h2><div class="tw" id="prHist"></div></div>
-  <datalist id="prNomes"></datalist>
- </div>
-
- <div id="ace" class="grid two hide">
+  <div id="ace" class="grid two hide">
   <div class="card"><h2>Temporizador automático</h2><div id="tauto"></div><div class="legend">Janela de agrupamento de 2 min, depois contagem efetiva. Trocar de operador reinicia.</div></div>
   <div class="card"><h2>Temporizador manual</h2><div id="tman"></div>
    <div class="grid" style="grid-template-columns:repeat(3,1fr);margin-top:8px"><button class="btn" id="mS">Iniciar</button><button class="btn am" id="mP">Pausar</button><button class="btn d" id="mE">Encerrar</button></div>
@@ -288,6 +277,20 @@ a[data-pick]{display:inline-block;padding:8px 0 2px;color:var(--gx);font-weight:
  <div class="sub" id="gsub"><button data-gs="mi" class="on">Meta individual</button><button data-gs="mc">Meta coletiva</button></div>
  <div class="ctl" style="margin-bottom:12px"><select id="iOp" aria-label="Operador"></select><select id="iPer" aria-label="Período"><option value="1">Dia selecionado</option><option value="7">Últimos 7 dias</option><option value="30">Últimos 30 dias</option><option value="90">Últimos 90 dias</option></select></div>
  <div id="mgStatus" class="legend hide" role="status"></div><div id="iBody"></div><div id="coBody" class="hide"></div>
+</section>
+
+<!-- ======================= PROCURANDO ======================= -->
+<section id="prs" class="hide">
+ <div class="sub" id="psub"><button data-p="bip" class="on">Bipar onda</button><button data-p="sku">SKU procurando</button><button data-p="his">Histórico</button></div>
+ <div id="pBip" class="grid two"><div class="card"><h2>Bipar onda</h2><div class="f">
+   <label>Bipar onda <input id="prBip" placeholder="Bipe a onda" autocomplete="off"></label>
+   <div id="prRes"></div></div></div></div>
+ <div id="pSku" class="hide"><div id="prFin"></div>
+  <div class="card"><h2>SKU procurando <span id="prCnt"></span></h2>
+   <label class="hint" style="display:block;margin-bottom:8px">Pesquisar<input id="prQ" type="search" placeholder="SKU, onda, nome ou local" autocomplete="off"></label>
+   <div class="tw" id="prList"></div></div></div>
+ <div id="pHis" class="hide"><div class="card"><h2>Histórico de procurando <span id="prHCnt"></span></h2><div class="tw" id="prHist"></div></div></div>
+ <datalist id="prNomes"></datalist>
 </section>
 
 <!-- ======================= HISTÓRICO ======================= -->
@@ -1101,18 +1104,18 @@ function hisRender(){
 const needAuth=k=>ON?!me:S.ges.length>0&&!(me&&(k==="cfg"?me.pC:me.pI));
 const isI=t=>t==="ind"||t==="his";
 /* aba só aparece se o perfil atual pode abri-la; o que não é acessível fica oculto */
-function podeVer(t){if(t==="op"||t==="painel")return true;if(ON)return !!me&&(isI(t)?!!me.pI:!!me.pC);if(t==="painel")return true;return !needAuth(t)}
-function updTabs(){$$(".tab[data-t]").forEach(b=>{b.style.display=podeVer(b.dataset.t)?"":"none"});$$('#csub [data-c="cga"]').forEach(b=>{b.textContent=soMeta()?"Meta do dia":"Galpões"});$$('#csub [data-c="cge"]').forEach(b=>{b.style.display=soMeta()?"none":""});$$('#csub [data-c="cma"]').forEach(b=>{b.style.display=(!ON||(me&&me.adm))?"":"none"});if(!podeVer(view)){view="op";["painel","op","ind","his","cfg"].forEach(s=>$("#"+s).classList.toggle("hide",s!=="op"));$$(".tab[data-t]").forEach(b=>b.classList.toggle("on",b.dataset.t==="op"))}}
+function podeVer(t){if(t==="op"||t==="painel"||t==="prs")return true;if(ON)return !!me&&(isI(t)?!!me.pI:!!me.pC);if(t==="painel")return true;return !needAuth(t)}
+function updTabs(){$$(".tab[data-t]").forEach(b=>{b.style.display=podeVer(b.dataset.t)?"":"none"});$$('#csub [data-c="cga"]').forEach(b=>{b.textContent=soMeta()?"Meta do dia":"Galpões"});$$('#csub [data-c="cge"]').forEach(b=>{b.style.display=soMeta()?"none":""});$$('#csub [data-c="cma"]').forEach(b=>{b.style.display=(!ON||(me&&me.adm))?"":"none"});if(!podeVer(view)){view="op";["painel","op","prs","ind","his","cfg"].forEach(s=>$("#"+s).classList.toggle("hide",s!=="op"));$$(".tab[data-t]").forEach(b=>b.classList.toggle("on",b.dataset.t==="op"))}}
 let hWho="";
 function authUI(){const w=me?me.n+"|"+(me.g||"")+"|"+(me.adm?1:0):"";if(w!==hWho){hWho=w;hKey="";HW=null;HPW=null}$("#who").textContent=me?"Gestor: "+me.n:"";$("#logtx").textContent=me?"Sair":"Entrar";updTabs()}
 function go(t){
  updTabs();
  if((t==="cfg"||isI(t))&&needAuth(t)){$("#login").classList.remove("hide");$("#lU").focus();pend=t;return}
  if(ON&&me&&((t==="cfg"&&!me.pC)||(isI(t)&&!me.pI))){toast("Seu acesso não inclui esta área.");return}
- view=t;["painel","op","ind","his","cfg"].forEach(s=>$("#"+s).classList.toggle("hide",s!==t));
+ view=t;["painel","op","prs","ind","his","cfg"].forEach(s=>$("#"+s).classList.toggle("hide",s!==t));
  $$(".tab[data-t]").forEach(b=>b.classList.toggle("on",b.dataset.t===t));
- $("#ttl").textContent={painel:"Painel",op:"Operação",ind:"Gestão operacional",his:"Histórico",cfg:"Configurações"}[t];
- if(t==="cfg")cfgRender();if(t==="his")hisOpen();if(t==="ind"){if(ON){MGW=null;mgState='Carregando histórico do período…'}individual();loadManagement()}renderAll();
+ $("#ttl").textContent={painel:"Painel",op:"Operação",ind:"Gestão operacional",his:"Histórico",prs:"Procurando",cfg:"Configurações"}[t];
+ if(t==="cfg")cfgRender();if(t==="his")hisOpen();if(t==="prs"){procurando();psub(window.__ps||"bip")}if(t==="ind"){if(ON){MGW=null;mgState='Carregando histórico do período…'}individual();loadManagement()}renderAll();
  if(t==="op"&&!$("#s1").classList.contains("hide"))setTimeout(()=>$("#opIn").focus({preventScroll:true}),60)}
 let pend=null;
 $("#logbtn").onclick=()=>{if(ON&&(me||sess)){sair();return}if(me){me=null;authUI();toast("Sessão encerrada");go("painel");return}$("#login").classList.remove("hide");$("#lU").focus()};
@@ -1163,10 +1166,11 @@ function prBuscar(){const v=$("#prBip").value.trim();if(!v)return;const n=normWN
  if(w&&w.st===2){toast("Onda em difícil acesso não pode entrar em procurando");return}
  const e=w?prEtapa(w):"";prW={wn:v,w,modo:e==="p"?"achar":e==="a"?"baixa":e==="b"?"fim":"marcar"};prForm()}
 function prAbrir(id,modo){const w=S.waves.find(x=>x.id===id);if(!w)return;prW={wn:w.wn,w,modo};prForm()}
-function prForm(){const w=prW.w,m=prW.modo,R=$("#prRes");
+function prForm(){const w=prW.w,m=prW.modo,R=$(m==="finalizar"?"#prFin":"#prRes");
  const info=`<div class="sumline"><b>${esc(prW.wn)}</b>${w?" · "+esc(w.ty)+" · "+fmt(w.qty)+" · "+esc(w.opn):" · não está neste aparelho, o servidor confere ao salvar"}</div>`;
  const cancel='<button class="btn alt sm" id="prCan">Cancelar</button>';
  if(m==="fim"){R.innerHTML=info+`<div class="legend">Esta onda já tem baixa de ${esc(((prEv(w).slice(-1)[0])||{}).q||"—")}.</div><div class="ctl2">${cancel}<span></span></div>`;return}
+ if(m==="finalizar"){R.innerHTML=`<div class="card" style="margin-bottom:14px"><h2>Finalizar onda</h2>${info}<label>Nome de quem finalizou <span class="hint">Obrigatório</span><input id="prNome" list="prNomes" autocomplete="off"></label><div class="ctl2">${cancel}<button class="btn" id="prFOk">Finalizar onda</button></div></div>`;$("#prNome").focus();return}
  if(m==="marcar")R.innerHTML=info+`<label>SKU <span class="hint">Obrigatório</span><input id="prSku" autocomplete="off" value="${esc((w&&w.sku)||"")}"></label>
   <label>Local <span class="hint">Opcional</span><input id="prLoc" autocomplete="off" value="${esc((w&&w.loc)||"")}"></label>
   <div class="ctl2">${cancel}<button class="btn" id="prOk">Marcar como procurando</button></div>`;
@@ -1174,7 +1178,7 @@ function prForm(){const w=prW.w,m=prW.modo,R=$("#prRes");
  else R.innerHTML=info+`<label>Nome de quem fez<input id="prNome" list="prNomes" autocomplete="off"></label>
   <div class="ctl2">${cancel}<button class="btn" id="prBOk">Dar baixa</button></div>`;
  const f=$("#prSku")||$("#prNome")||$("#prAOk");if(f)f.focus()}
-function prFim(msg){prW=null;$("#prRes").innerHTML="";$("#prBip").value="";save();renderAll();toast(msg);$("#prBip").focus()}
+function prFim(msg){prW=null;$("#prRes").innerHTML="";$("#prFin").innerHTML="";$("#prBip").value="";save();renderAll();toast(msg);$("#prBip").focus()}
 async function prSalvar(){const sku=$("#prSku").value.trim(),loc=$("#prLoc").value.trim();
  if(!sku){toast("Informe o SKU");$("#prSku").focus();return}
  if(sku.length>40||loc.length>60){toast("SKU até 40 e local até 60 caracteres");return}
@@ -1190,6 +1194,13 @@ async function prAchar(){const w=prW.w;if(!w)return;
  if(ON){try{await api("/rest/v1/rpc/encontrar_procurando",{method:"POST",body:{p_wn:w.wn}})}catch(e){toast(errMsg(e));return}}
  w.st=0;w.fin=Date.now();w.sync=ON?1:(online()?1:0);w.hist=(w.hist||[]).concat({e:"a",q:"",t:Date.now()});
  prFim("Onda encontrada: foi para o histórico")}
+async function prFinalizar(){const w=prW.w,nome=$("#prNome").value.trim();
+ if(!w){toast("Onda não encontrada");return}
+ if(nome.length<2){toast("Informe o nome de quem finalizou");$("#prNome").focus();return}
+ if(nome.length>80){toast("Nome grande demais");return}
+ if(ON){try{if(w.st===1)await api("/rest/v1/rpc/encontrar_procurando",{method:"POST",body:{p_wn:w.wn}});await api("/rest/v1/rpc/baixar_procurando",{method:"POST",body:{p_wn:w.wn,p_nome:nome}})}catch(e){toast(errMsg(e));return}}
+ const t=Date.now();if(w.st===1){w.st=0;w.fin=t;w.sync=ON?1:(online()?1:0);w.hist=(w.hist||[]).concat({e:"a",q:nome,t})}
+ w.hist=(w.hist||[]).concat({e:"b",q:nome,t});prFim("Onda finalizada")}
 async function prBaixar(){const w=prW.w,nome=$("#prNome").value.trim();
  if(nome.length<2){toast("Informe o nome de quem fez");$("#prNome").focus();return}
  if(nome.length>80){toast("Nome grande demais");return}
@@ -1199,19 +1210,21 @@ async function prBaixar(){const w=prW.w,nome=$("#prNome").value.trim();
 function procurando(){const q=($("#prQ")&&$("#prQ").value||"").trim().toLowerCase(),ok=w=>!q||[w.wn,w.sku,w.loc,w.ty,w.opn,w.op,(prEv(w).filter(e=>e.q).map(e=>e.q).join(" "))].join(" ").toLowerCase().includes(q);
  $("#prNomes").innerHTML=S.ops.map(o=>`<option value="${esc(o.n)}">`).join("");
  const P=S.waves.filter(w=>w.st===1&&inView(w)),L=P.filter(ok).sort((a,b)=>(a.pt||a.ts)-(b.pt||b.ts));
- $("#prCnt").textContent=P.length?P.length+" pendentes":"";
- $("#prList").innerHTML=L.length?`<table><tr><th>Onda</th><th>SKU</th><th>Local</th><th>Quem fez a onda</th><th>Há</th><th></th></tr>`+L.map(w=>`<tr><td><b>${esc(w.wn||"—")}</b><br><small>${esc(w.ty)} · ${fmt(w.qty)}</small></td><td>${esc(w.sku||"—")}</td><td>${esc(w.loc||"—")}</td><td>${esc(w.opn||"—")}</td><td>${mm(Date.now()-(w.pt||w.ts))}</td><td><button class="btn sm" data-pra="${esc(w.id)}">Encontrada</button></td></tr>`).join("")+"</table>":`<div class="empty">${P.length?"Nada encontrado nesta pesquisa.":"Nenhuma onda pendente."}</div>`;
+ $("#prCnt").textContent=P.length?P.length+" pendentes":"";$$("#psub [data-p=sku]").forEach(x=>x.textContent="SKU procurando"+(P.length?" ("+P.length+")":""));
+ $("#prList").innerHTML=L.length?`<table><tr><th>SKU</th><th>Onda</th><th>Quantidade</th><th>Há</th><th></th></tr>`+L.map(w=>`<tr><td><b>${esc(w.sku||"—")}</b>${w.loc?`<br><small>${esc(w.loc)}</small>`:""}</td><td><b>${esc(w.wn||"—")}</b><br><small>${esc(w.ty)} · ${esc(w.opn||"—")}</small></td><td><b>${fmt(w.qty)}</b></td><td>${mm(Date.now()-(w.pt||w.ts))}</td><td><button class="btn sm" data-prf="${esc(w.id)}">Finalizar onda</button></td></tr>`).join("")+"</table>":`<div class="empty">${P.length?"Nada encontrado nesta pesquisa.":"Nenhuma onda pendente."}</div>`;
  const Hh=S.waves.filter(w=>inView(w)&&(prEtapa(w)==="a"||prEtapa(w)==="b")),H2=Hh.filter(ok).sort((a,b)=>Math.max(...prEv(b).map(e=>e.t),0)-Math.max(...prEv(a).map(e=>e.t),0)).slice(0,200);
  const aguardando=Hh.filter(w=>prEtapa(w)==="a").length;$("#prHCnt").textContent=Hh.length?Hh.length+" no histórico"+(aguardando?", "+aguardando+" aguardando baixa":""):"";
  $("#prHist").innerHTML=H2.length?`<table><tr><th>Data e hora</th><th>Tipo</th><th>Onda</th><th>SKU</th><th>Local</th><th>Quem fez a onda</th><th>Encontrada em</th><th>Baixa por</th></tr>`+H2.map(w=>{const b=prEv(w).find(e=>e.e==="b");
   return`<tr><td>${prDH(prT(w,"m")||w.pt||w.ts)}</td><td>${esc(w.ty)}<br><small>${fmt(w.qty)} un.</small></td><td><b>${esc(w.wn||"—")}</b></td><td>${esc(w.sku||"—")}</td><td>${esc(w.loc||"—")}</td><td>${esc(w.opn||"—")}</td><td>${prDH(prT(w,"a"))}</td><td>${b?`<b>${esc(b.q)}</b><br><small>${prDH(b.t)}</small>`:`<button class="btn alt sm" data-prb="${esc(w.id)}">Dar baixa</button>`}</td></tr>`}).join("")+"</table>":`<div class="empty">${Hh.length?"Nada encontrado nesta pesquisa.":"Nenhuma onda no histórico ainda."}</div>`}
-$("#pro").addEventListener("keydown",e=>{if(e.key!=="Enter")return;const i=e.target.id;if(!["prBip","prSku","prLoc","prNome"].includes(i))return;e.preventDefault();
- if(i==="prBip")prBuscar();else if(i==="prNome")prBaixar();else prSalvar()});
+$("#prs").addEventListener("keydown",e=>{if(e.key!=="Enter")return;const i=e.target.id;if(!["prBip","prSku","prLoc","prNome"].includes(i))return;e.preventDefault();
+ if(i==="prBip")prBuscar();else if(i==="prNome")(prW&&prW.modo==="finalizar"?prFinalizar():prBaixar());else prSalvar()});
 $("#prQ").oninput=procurando;
-document.addEventListener("click",e=>{const t=e.target;if(t.id==="prOk")prSalvar();else if(t.id==="prAOk")prAchar();else if(t.id==="prBOk")prBaixar();
- else if(t.id==="prCan"){prW=null;$("#prRes").innerHTML="";$("#prBip").focus()}
- const a=t.closest&&t.closest("[data-pra]");if(a)prAbrir(a.dataset.pra,"achar");const b=t.closest&&t.closest("[data-prb]");if(b)prAbrir(b.dataset.prb,"baixa")});
-$("#sub").onclick=e=>{const s=e.target.dataset.s;if(!s)return;$$("#sub button").forEach(b=>b.classList.toggle("on",b===e.target));["reg","ctl","pro","ace"].forEach(x=>$("#"+x).classList.toggle("hide",x!==s));tick()};
+document.addEventListener("click",e=>{const t=e.target;if(t.id==="prOk")prSalvar();else if(t.id==="prAOk")prAchar();else if(t.id==="prBOk")prBaixar();else if(t.id==="prFOk")prFinalizar();
+ else if(t.id==="prCan"){prW=null;$("#prRes").innerHTML="";$("#prFin").innerHTML="";const f=$("#prBip");if(f&&view==="prs"&&!$("#pBip").classList.contains("hide"))f.focus()}
+ const a=t.closest&&t.closest("[data-prf]");if(a)prAbrir(a.dataset.prf,"finalizar");const b=t.closest&&t.closest("[data-prb]");if(b)prAbrir(b.dataset.prb,"baixa")});
+function psub(k){window.__ps=k;$$("#psub button").forEach(b=>b.classList.toggle("on",b.dataset.p===k));[["bip","pBip"],["sku","pSku"],["his","pHis"]].forEach(([a,id])=>$("#"+id).classList.toggle("hide",a!==k));setTimeout(()=>{if(view!=="prs")return;const f=k==="bip"?$("#prBip"):k==="sku"?$("#prQ"):null;if(f)f.focus({preventScroll:true})},60)}
+$("#psub").onclick=e=>{const k=e.target.dataset.p;if(k)psub(k)};
+$("#sub").onclick=e=>{const s=e.target.dataset.s;if(!s)return;$$("#sub button").forEach(b=>b.classList.toggle("on",b===e.target));["reg","ctl","ace"].forEach(x=>$("#"+x).classList.toggle("hide",x!==s));tick()};
 $("#csub").onclick=e=>{const c=e.target.dataset.c;if(!c)return;csub=c;$$("#csub button").forEach(b=>b.classList.toggle("on",b===e.target));["cop","cus","cga","cge","cma"].forEach(x=>$("#"+x).classList.toggle("hide",x!==c));if(c==="cge"&&ON&&me&&me.adm)pull().then(()=>cfgGes()).catch(()=>{});if(c==="cma")cfgMan()};
 $("#iOp").onchange=()=>{mgShown=100;individual()};$("#iPer").onchange=()=>{mgShown=100;individual();coletiva();loadManagement()};
 $("#iBody").addEventListener("click",e=>{if(e.target.id==="mgMore"){mgShown+=100;individual()}});

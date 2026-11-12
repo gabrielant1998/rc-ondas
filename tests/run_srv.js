@@ -262,7 +262,7 @@ await T('S22 Gestor comum vê só "Meta do dia" e não cria nem lista galpões; 
  ok(a.tab==='Galpões'&&!a.novo&&a.nomes===2,JSON.stringify(a))});
 await T('S23 Procurando no servidor: pendente com SKU, encontrada e baixa com nome; WN desconhecido avisa',async()=>{const db=banco();
  db.ondas.push({id:'x1',wn:'555',operador_id:db.operadores[0].id,galpao_id:G1,tipo:'Vários artigos',quantidade:40,status:0,registrada_em:new Date().toISOString(),concluida_em:new Date().toISOString(),procura_hist:[]});
- const p=await page(b,db);await p.click('.tab[data-t="op"]');await p.click('#sub [data-s="pro"]');
+ const p=await page(b,db);await p.click('.tab[data-t="prs"]');
  await p.fill('#prBip','999');await p.press('#prBip','Enter');await p.fill('#prSku','S1');await p.press('#prSku','Enter');await p.waitForTimeout(400);
  ok((await p.textContent('#toast')).includes('não está registrada'),'toast: '+await p.textContent('#toast'));
  await p.fill('#prBip','0555');await p.press('#prBip','Enter');await p.fill('#prSku','SKU-7');await p.fill('#prLoc','B-02');await p.press('#prLoc','Enter');await p.waitForTimeout(500);
