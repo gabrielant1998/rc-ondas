@@ -327,6 +327,8 @@ a[data-pick]{display:inline-block;padding:8px 0 2px;color:var(--gx);font-weight:
 </div>
 <div class="toast" id="toast" role="status" aria-live="polite"></div><div class="sr" id="sr" aria-live="polite"></div>
 <div class="mask hide" id="login" role="dialog" aria-modal="true" aria-labelledby="lT"><div class="card"><h2 id="lT">Entrar como gestor</h2><div class="f">
+ <label id="lNomeL" class="hide"><span>Seu nome</span><input id="lN" autocomplete="name"></label>
+ <label id="lGalL" class="hide"><span>Galpão onde você trabalha</span><select id="lG"></select></label>
  <label><span id="lUl">Usuário</span><input id="lU" autocomplete="username"></label>
  <label><span id="lPl">Senha</span><input id="lP" type="password" autocomplete="current-password"></label>
  <div class="grid" style="grid-template-columns:1fr 1fr"><button class="btn" id="lB">Entrar</button><button class="btn alt" id="lX">Cancelar</button></div>
@@ -396,7 +398,8 @@ function toast(m,ms){const t=$("#toast");t.textContent=m;t.classList.add("on");c
 function flush(){if(ON){push();return}let n=0;S.waves.forEach(w=>{if(!w.sync){w.sync=1;n++}});if(n){save();toast(n+" registro(s) sincronizado(s)")}}
 
 /* ===================== servidor (Supabase) ===================== */
-let sess=null,GID={},GN={},OPSALL={},pushing=false,recMode=false,SOL=[];
+let sess=null,GID={},GN={},OPSALL={},pushing=false,recMode=false,SOL=[],pedidoDados=null,primeiroMode=false;
+function pedidoPendente(){if(pedidoDados)return pedidoDados;try{return JSON.parse(localStorage.getItem("rcondas.pedido")||"null")}catch(e){return null}}
 const CFGP="/rest/v1/config?id=eq.true";
 function setSess(s){sess=s;try{s?localStorage.setItem("rcondas.sess",JSON.stringify(s)):localStorage.removeItem("rcondas.sess")}catch(e){}}
 function tok(j){return{access_token:j.access_token,refresh_token:j.refresh_token,exp:Date.now()+(+j.expires_in||3600)*1000,email:((j.user&&j.user.email)||(sess&&sess.email)||"").toLowerCase()}}
@@ -441,8 +444,8 @@ async function pull(){
   const g=await api("/rest/v1/gestores?select=*&order=nome");
   S.ges=g.map(x=>({n:x.nome,u:x.email,g:x.galpao_id?GN[x.galpao_id]:null,adm:x.admin,pC:x.pode_config,pI:x.pode_individual,pR:x.pode_registros}));
   me=S.ges.find(x=>x.u===sess.email)||null;
-  if(!me){S.ges=[];SOL=[];try{await api("/rest/v1/rpc/solicitar_acesso",{method:"POST",body:{}})}catch(e){}setSess(null);toast("Ainda sem acesso. Pedido enviado ao administrador: quando ele liberar, entre de novo.",8000)}
-  else{if(me.g)S.gal=me.g;SOL=[];if(me.adm)try{SOL=await api("/rest/v1/solicitacoes_gestor?select=email,criado_em&order=criado_em")}catch(e){}}}
+  if(!me){S.ges=[];SOL=[];const pd=pedidoPendente();try{await api("/rest/v1/rpc/solicitar_acesso",{method:"POST",body:{p_nome:pd?pd.nome:null,p_galpao:(pd&&GID[pd.galpao])||null}});localStorage.removeItem("rcondas.pedido");pedidoDados=null}catch(e){}setSess(null);toast("Ainda sem acesso. Pedido enviado ao administrador: quando ele liberar, entre de novo.",8000)}
+  else{if(me.g)S.gal=me.g;SOL=[];if(me.adm)try{SOL=await api("/rest/v1/solicitacoes_gestor?select=email,criado_em,nome,galpao_id&order=criado_em")}catch(e){}}}
  else{S.ges=[];me=null;SOL=[]}
  const mine=S.waves.filter(w=>!w.srv);
  if(me){const de=new Date(Date.now()-35*864e5).toISOString(),srv=[];
@@ -493,16 +496,20 @@ function remWave(d){const id=d.fin||d.sd||d.del,w=S.waves.find(x=>x.id===id);if(
 const voltaPara=()=>encodeURIComponent(location.origin+location.pathname);
 async function entrar(){const email=$("#lU").value.trim().toLowerCase(),pw=$("#lP").value;
  if(recMode){if(pw.length<8){toast("Use pelo menos 8 caracteres.");return}
-  try{await api("/auth/v1/user",{method:"PUT",body:{password:pw}});recMode=false;loginUI();$("#login").classList.add("hide");$("#lP").value="";toast("Senha criada. Você já está dentro.");await pull();go("painel")}catch(e){toast(errMsg(e),6000)}return}
+  try{await api("/auth/v1/user",{method:"PUT",body:{password:pw}});recMode=false;loginUI();$("#login").classList.add("hide");primeiroMode=false;$("#lP").value="";toast("Senha criada. Você já está dentro.");await pull();go("painel")}catch(e){toast(errMsg(e),6000)}return}
  if(!email||!pw){toast("Informe e-mail e senha.");return}
  try{setSess(tok(await raw("/auth/v1/token?grant_type=password",{method:"POST",auth:false,body:{email,password:pw}})));sess.email=email;setSess(sess);
   await pull();if(!me)return;
-  $("#login").classList.add("hide");$("#lP").value="";toast("Bem-vindo, "+me.n);const t=pend||"painel";pend=null;go(t)}
+  $("#login").classList.add("hide");primeiroMode=false;$("#lP").value="";toast("Bem-vindo, "+me.n);const t=pend||"painel";pend=null;go(t)}
  catch(e){if(e.status)setSess(null);toast(errMsg(e),6000)}}
 async function primeiroAcesso(){const email=$("#lU").value.trim().toLowerCase(),pw=$("#lP").value;
+ const nome=$("#lN").value.trim(),gal=$("#lG").value;
+ if(nome.length<2){toast("Informe seu nome.");$("#lN").focus();return}
+ if(!gal){toast("Escolha o galpão onde você trabalha.");$("#lG").focus();return}
+ pedidoDados={nome,galpao:gal};try{localStorage.setItem("rcondas.pedido",JSON.stringify(pedidoDados))}catch(e){}
  if(!email||pw.length<8){toast("Informe seu e-mail e uma senha com pelo menos 8 caracteres.",5000);return}
  try{const j=await raw("/auth/v1/signup?redirect_to="+voltaPara(),{method:"POST",auth:false,body:{email,password:pw}});
-  if(j&&j.access_token){setSess(tok(j));sess.email=email;setSess(sess);await pull();if(me){$("#login").classList.add("hide");go(pend||"painel")}}
+  if(j&&j.access_token){setSess(tok(j));sess.email=email;setSess(sess);await pull();if(me){$("#login").classList.add("hide");primeiroMode=false;go(pend||"painel")}}
   else toast("Enviamos um link de confirmação para "+email+". Abra o e-mail, confirme e depois entre aqui.",10000)}
  catch(e){toast(errMsg(e),6000)}}
 async function esqueci(){const email=$("#lU").value.trim().toLowerCase();if(!email){toast("Informe seu e-mail no campo acima.");return}
@@ -510,7 +517,10 @@ async function esqueci(){const email=$("#lU").value.trim().toLowerCase();if(!ema
  catch(e){toast(errMsg(e),6000)}}
 async function sair(){try{await raw("/auth/v1/logout",{method:"POST"})}catch(e){}
  setSess(null);me=null;limparGestao();publicKey="";publicSeq++;publicLoading=false;S.ges=[];S.waves=S.waves.filter(w=>!w.srv);save();authUI();toast("Sessão encerrada");go("painel")}
-function loginUI(){$("#lT").textContent=recMode?"Criar nova senha":"Entrar como gestor";$("#lUl").textContent="E-mail";$("#lPl").textContent=recMode?"Nova senha":"Senha";
+function loginUI(){const pa=primeiroMode&&!recMode;$("#lNomeL").classList.toggle("hide",!pa);$("#lGalL").classList.toggle("hide",!pa);
+ if(pa)$("#lG").innerHTML='<option value="">Escolha o galpão</option>'+S.gals.map(g=>`<option value="${esc(g)}">${esc(g)}</option>`).join("");
+ $("#lNew").textContent=pa?"Criar acesso":"Primeiro acesso";
+ $("#lT").textContent=recMode?"Criar nova senha":(pa?"Primeiro acesso":"Entrar como gestor");$("#lUl").textContent="E-mail";$("#lPl").textContent=recMode?"Nova senha":"Senha";
  $("#lU").closest("label").classList.toggle("hide",recMode);$("#lExtra").classList.toggle("hide",recMode);$("#lB").textContent=recMode?"Salvar senha":"Entrar";$("#lU").type="email"}
 /* volta do link de e-mail (confirmação ou nova senha) */
 async function lerRetorno(){const h=location.hash.slice(1);if(!/access_token=|error_description=/.test(h))return;
@@ -818,7 +828,7 @@ function cfgGals(){
   return`<tr><td><input data-gre="${i}" value="${esc(g)}" aria-label="Nome do galpão"></td><td><input type="number" min="0" data-gmeta="${esc(g)}" aria-label="Meta de hoje de ${esc(g)}" value="${MT()[g]||""}" placeholder="sem meta" style="width:130px"></td><td>${n}</td><td><button class="btn d sm" data-gdel="${i}"${S.gals.length<2?" disabled style='opacity:.4'":""}>Excluir</button></td></tr>`}).join("")+"</table>"}
 function cfgGes(){
  $("#mG").innerHTML=S.gals.map(g=>`<option>${esc(g)}</option>`).join("");
- $("#pedL").innerHTML=SOL.length?`<table><tr><th>E-mail</th><th></th></tr>`+SOL.map(s=>`<tr><td>${esc(s.email)}<br><small style="color:var(--mut)">pediu em ${new Date(s.criado_em).toLocaleDateString("pt-BR")}</small></td><td style="white-space:nowrap"><button class="btn sm" data-sacc="${esc(s.email)}">Aceitar</button> <button class="btn d sm" data-srec="${esc(s.email)}">Recusar</button></td></tr>`).join("")+"</table>"
+ $("#pedL").innerHTML=SOL.length?`<table><tr><th>E-mail</th><th></th></tr>`+SOL.map(s=>`<tr><td><b>${esc(s.nome||"Sem nome")}</b><br>${esc(s.email)}<br><small style="color:var(--mut)">${esc((s.galpao_id&&GN[s.galpao_id])||"sem galpão")}, pediu em ${new Date(s.criado_em).toLocaleDateString("pt-BR")}</small></td><td style="white-space:nowrap"><button class="btn sm" data-sacc="${esc(s.email)}">Aceitar</button> <button class="btn d sm" data-srec="${esc(s.email)}">Recusar</button></td></tr>`).join("")+"</table>"
   :'<div class="empty">Nenhum pedido de acesso pendente.</div>';
  $("#mL").innerHTML=S.ges.length?`<table><tr><th>Gestor</th><th>Login</th><th>Permissões</th><th></th></tr>`+S.ges.map((m,i)=>
   `<tr><td>${esc(m.n)}<br><small style="color:var(--mut)">${esc(m.g||"sem galpão")}</small>${m.adm?' <span class="tag">admin</span>':""}</td><td>${esc(m.u)}${ON?"":m.p?' <span class="tag">senha</span>':' <span class="tag t2">sem senha</span>'}</td><td style="font-size:12px">${[m.pC&&"config",m.pI&&"individual",m.pR&&"registros"].filter(Boolean).join(", ")||"—"}</td><td><button class="btn d sm" data-mdel="${i}">Excluir</button></td></tr>`).join("")+"</table>"
@@ -880,13 +890,13 @@ function go(t){
  if(t==="op"&&!$("#s1").classList.contains("hide"))setTimeout(()=>$("#opIn").focus({preventScroll:true}),60)}
 let pend=null;
 $("#logbtn").onclick=()=>{if(ON&&(me||sess)){sair();return}if(me){me=null;authUI();toast("Sessão encerrada");go("painel");return}$("#login").classList.remove("hide");$("#lU").focus()};
-$("#lX").onclick=()=>{if(recMode){recMode=false;loginUI()}$("#login").classList.add("hide");pend=null;$("#logbtn").focus()};
+$("#lX").onclick=()=>{if(recMode){recMode=false;loginUI()}$("#login").classList.add("hide");primeiroMode=false;pend=null;$("#logbtn").focus()};
 $("#login").onkeydown=e=>{if(e.key==="Escape")$("#lX").click()};
-$("#lNew").onclick=primeiroAcesso;$("#lRec").onclick=esqueci;
+$("#lNew").onclick=()=>{if(!primeiroMode){primeiroMode=true;loginUI();$("#lN").focus();return}primeiroAcesso()};$("#lRec").onclick=esqueci;
 $("#lB").onclick=()=>{if(ON){entrar();return}const u=$("#lU").value.trim().toLowerCase(),p=$("#lP").value,
  g=S.ges.find(x=>x.u.toLowerCase()===u);
  if(!g||(g.p&&g.p!==h32(p))){toast("Usuário ou senha inválidos");return}
- me=g;$("#login").classList.add("hide");$("#lP").value="";if(g.g&&S.gals.includes(g.g)){S.gal=g.g;save()}authUI();toast("Bem-vindo, "+g.n);const t=pend||"cfg";pend=null;go(t)};
+ me=g;$("#login").classList.add("hide");primeiroMode=false;$("#lP").value="";if(g.g&&S.gals.includes(g.g)){S.gal=g.g;save()}authUI();toast("Bem-vindo, "+g.n);const t=pend||"cfg";pend=null;go(t)};
 $("#lP").onkeydown=e=>{if(e.key==="Enter")$("#lB").click()};
 
 /* ===================== render geral ===================== */
@@ -938,7 +948,7 @@ document.addEventListener("click",e=>{const d=e.target.dataset,t=e.target;
   if(ON){rem(()=>mut("/rest/v1/galpoes?id=eq."+GID[g],"DELETE"),"Galpão excluído");return}
   S.gals.splice(+d.gdel,1);delete MT()[g];S.ops.forEach(o=>{if(o.g===g)o.g=S.gals[0]});S.ges.forEach(x=>{if(x.g===g)x.g=null});if(S.gal===g)S.gal=S.gals[0];
   save();cfgGals();cfgUsers();renderAll();toast("Galpão excluído")}
- if(d.sacc){const em=d.sacc,n=$("#mN").value.trim(),adm=$("#mA").checked,gg=$("#mG").value;
+ if(d.sacc){const em=d.sacc,sp=SOL.find(x=>x.email===em)||{},n=sp.nome||$("#mN").value.trim(),adm=$("#mA").checked,gg=(sp.galpao_id&&GN[sp.galpao_id])||$("#mG").value;
   if(n.length<2){toast("Digite o nome do gestor no formulário ao lado e clique em Aceitar de novo.",6000);$("#mN").focus();return}
   if(!adm&&!gg){toast("Selecione o galpão do gestor");return}
   rem(()=>mut("/rest/v1/rpc/aceitar_solicitacao","POST",{p_email:em,p_nome:n,p_galpao:adm?null:(GID[gg]||null),p_admin:adm,p_pc:$("#mC").checked,p_pi:$("#mI").checked,p_pr:$("#mR").checked}),"Acesso liberado para "+em).then(ok=>{if(ok)$("#mN").value=""});return}

@@ -16,7 +16,7 @@ function banco(){return{down:false,expiresIn:3600,calls:{rpc:0,refresh:0},seq:1,
  gestores:[{email:'adm@x.com',nome:'Admin',galpao_id:null,admin:true,pode_config:true,pode_individual:true,pode_registros:true},
            {email:'g2@x.com',nome:'Gestor G2',galpao_id:G2,admin:false,pode_config:true,pode_individual:true,pode_registros:true}],
  users:{'adm@x.com':{pw:'senha1234',ok:true},'g2@x.com':{pw:'senha1234',ok:true},'fora@x.com':{pw:'senha1234',ok:true},'novo@x.com':{pw:'senha1234',ok:false}},
- tokens:{},refs:{},ondas:[],pedidos:[]}}
+ tokens:{},refs:{},ondas:[],pedidos:[],pedidoInfo:{}}}
 function fake(db){const cors={'access-control-allow-origin':'*','access-control-allow-headers':'*','access-control-allow-methods':'GET,POST,PATCH,PUT,DELETE,OPTIONS'};
  const J=(route,status,body)=>route.fulfill({status,headers:Object.assign({'content-type':'application/json'},cors),body:body===undefined?'':JSON.stringify(body)});
  const sessao=email=>{const n=db.seq++;db.tokens['tok'+n]=email;db.refs['ref'+n]=email;return{access_token:'tok'+n,refresh_token:'ref'+n,expires_in:db.expiresIn,user:{email}}};
@@ -34,7 +34,7 @@ function fake(db){const cors={'access-control-allow-origin':'*','access-control-
    if(q.get('grant_type')==='refresh_token'){db.calls.refresh++;const e=db.refs[body.refresh_token];if(!e)return J(route,400,{error_code:'refresh_token_not_found',msg:'Invalid Refresh Token'});delete db.refs[body.refresh_token];return J(route,200,sessao(e))}
    const us=db.users[body.email];if(!us||us.pw!==body.password)return J(route,400,{error_code:'invalid_credentials',msg:'Invalid login credentials'});
    if(!us.ok)return J(route,400,{error_code:'email_not_confirmed',msg:'Email not confirmed'});return J(route,200,sessao(body.email))}
-  if(p==='/auth/v1/signup'){db.users[body.email]=db.users[body.email]||{pw:body.password,ok:false};return J(route,200,{id:'u',email:body.email})}
+  if(p==='/auth/v1/signup'){db.users[body.email]=db.users[body.email]||{pw:body.password,ok:false};if(db.semConfirmacao){db.users[body.email].ok=true;return J(route,200,sessao(body.email))}return J(route,200,{id:'u',email:body.email})}
   if(p==='/auth/v1/recover')return J(route,200,{});
   if(p==='/auth/v1/logout'){delete db.tokens[bearer];return route.fulfill({status:204,headers:cors})}
   if(p==='/auth/v1/user')return email?J(route,200,{email}):J(route,401,{msg:'no'});
@@ -76,10 +76,10 @@ function fake(db){const cors={'access-control-allow-origin':'*','access-control-
   if(t==='gestores'&&m==='DELETE'){const o=db.gestores.find(x=>x.email===eq('email'));if(!o||!(g&&g.admin))return J(route,200,[]);db.gestores=db.gestores.filter(x=>x!==o);return J(route,200,[o])}
   if(t==='ondas'&&(m==='PATCH'||m==='DELETE')){const alvo=db.ondas.filter(o=>(eq('id')?o.id===eq('id'):o.status!==0)&&g&&g.pode_registros&&escopo(o.galpao_id));
    if(m==='DELETE')db.ondas=db.ondas.filter(o=>!alvo.includes(o));else alvo.forEach(o=>Object.assign(o,body));return J(route,200,alvo)}
-  if(t==='rpc/solicitar_acesso'&&m==='POST'){if(!email)return J(route,401,{message:'sem sessao'});if(!db.gestores.some(x=>x.email===email)&&!db.pedidos.includes(email))db.pedidos.push(email);return route.fulfill({status:204,headers:cors})}
+  if(t==='rpc/solicitar_acesso'&&m==='POST'){if(!email)return J(route,401,{message:'sem sessao'});if(!db.gestores.some(x=>x.email===email)&&!db.pedidos.includes(email))db.pedidos.push(email);const inf=db.pedidoInfo[email]||{};if(body&&body.p_nome)inf.nome=body.p_nome;if(body&&body.p_galpao)inf.galpao_id=body.p_galpao;db.pedidoInfo[email]=inf;return route.fulfill({status:204,headers:cors})}
   if(t==='rpc/aceitar_solicitacao'&&m==='POST'){if(!(g&&g.admin))return J(route,403,{code:'42501',message:'Sem permissao'});db.gestores.push({email:body.p_email,nome:body.p_nome,galpao_id:body.p_galpao,admin:body.p_admin,pode_config:body.p_pc,pode_individual:body.p_pi,pode_registros:body.p_pr});db.pedidos=db.pedidos.filter(x=>x!==body.p_email);return route.fulfill({status:204,headers:cors})}
   if(t==='solicitacoes_gestor'){if(!(g&&g.admin))return J(route,200,[]);
-   if(m==='GET')return J(route,200,db.pedidos.map(e=>({email:e,criado_em:'2026-11-11T20:12:00Z'})));
+   if(m==='GET')return J(route,200,db.pedidos.map(e=>({email:e,criado_em:'2026-11-11T20:12:00Z',nome:(db.pedidoInfo[e]||{}).nome||null,galpao_id:(db.pedidoInfo[e]||{}).galpao_id||null})));
    if(m==='DELETE'){const e=eq('email'),had=db.pedidos.includes(e);db.pedidos=db.pedidos.filter(x=>x!==e);return J(route,200,had?[{email:e}]:[])}}
   if(t==='metas_diarias'){
    if(m==='GET')return J(route,200,!g?[]:db.metas.filter(x=>x.data===eq('data')&&escopo(x.galpao_id)));
@@ -190,6 +190,15 @@ await T('S20 Manutenção: só o administrador vê; apaga o período escolhido d
  const travado=await p.isDisabled('#xDel');
  await p.fill('#xCon','APAGAR');await p.click('#xDel');await p.waitForTimeout(700);
  ok(!gestorVe&&admVe&&contou&&travado&&db.ondas.length===1&&db.ondas[0].id==='m2','gestor '+gestorVe+', admin '+admVe+', contou '+contou+', travado '+travado+', restam '+db.ondas.length)});
+await T('S21 Cadastro sozinho: nome e galpão viram pedido e o administrador libera sem redigitar',async()=>{const db=banco();db.semConfirmacao=true;
+ const pn=await page(b,db);await pn.click('#logbtn');await pn.fill('#lU','nova@x.com');await pn.fill('#lP','senha1234');await pn.click('#lNew');await pn.waitForTimeout(200);
+ await pn.fill('#lN','Nova Pessoa');await pn.selectOption('#lG','Galpão 2');await pn.click('#lNew');await pn.waitForTimeout(700);
+ const info=db.pedidoInfo['nova@x.com']||{};const pediu=db.pedidos.includes('nova@x.com')&&info.nome==='Nova Pessoa'&&info.galpao_id===G2;
+ const pa=await page(b,db);await login(pa,'adm@x.com','senha1234');await pa.click('.tab[data-t="cfg"]');await pa.click('[data-c="cge"]');await pa.waitForTimeout(500);
+ const lista=(await pa.textContent('#pedL')).includes('Nova Pessoa');
+ await pa.click('[data-sacc="nova@x.com"]');await pa.waitForTimeout(600);
+ const g=db.gestores.find(x=>x.email==='nova@x.com');
+ ok(pediu&&lista&&g&&g.nome==='Nova Pessoa'&&g.galpao_id===G2&&!db.pedidos.includes('nova@x.com'),'pediu '+pediu+', lista '+lista+', gestor '+!!g)});
 await T('S12 Admin: galpão, meta, limite, turno e gestor gravam no banco',async()=>{const db=banco();const p=await page(b,db);await login(p,'adm@x.com','senha1234');await p.click('.tab[data-t="cfg"]');
  await p.fill('[data-lim="Itens Únicos"]','250');await p.press('[data-lim="Itens Únicos"]','Tab');await p.waitForTimeout(400);
  await p.fill('[data-tn="1"][data-k="fim"]','17');await p.press('[data-tn="1"][data-k="fim"]','Tab');await p.waitForTimeout(400);
@@ -210,7 +219,7 @@ await T('S13 Gestor exclui onda do banco; ondas somem do Painel',async()=>{const
  await p.evaluate(()=>go('painel'));ok((await num(p)).trim()==='7','painel '+await num(p))});
 
 await T('S14 Primeiro acesso e Esqueci a senha chamam o serviço certo',async()=>{const db=banco();const p=await page(b,db);await p.click('#logbtn');
- await p.fill('#lU','gestora@x.com');await p.fill('#lP','curta');await p.click('#lNew');await p.waitForTimeout(200);ok(!db.users['gestora@x.com'],'aceitou senha curta');
+ await p.fill('#lU','gestora@x.com');await p.fill('#lP','curta');await p.click('#lNew');await p.waitForTimeout(150);await p.fill('#lN','Gestora Teste');await p.selectOption('#lG','Galpão 1');await p.click('#lNew');await p.waitForTimeout(200);ok(!db.users['gestora@x.com'],'aceitou senha curta');
  await p.fill('#lP','senhaforte1');await p.click('#lNew');await p.waitForTimeout(400);ok(db.users['gestora@x.com']&&/link de confirmação/.test(await p.textContent('#toast')),await p.textContent('#toast'));
  await p.click('#lRec');await p.waitForTimeout(300);ok(/enviamos um link/.test(await p.textContent('#toast')),await p.textContent('#toast'))});
 
