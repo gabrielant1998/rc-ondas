@@ -972,7 +972,7 @@ async function loadHis(force){
   HW=rows.concat(S.waves.filter(w=>!w.srv&&!ids.has(w.id)&&w.ts>=s.getTime()&&w.ts<=e.getTime()));hAt=Date.now();hisRender();
  }catch(err){if(seq!==hSeq)return;HW=undefined;hisRender()}
 }
-function hChart(items,o){o=o||{};const n=items.length,W=innerWidth<760?380:680,H=230,pl=44,pr=8,pt=16,pb=34,f=o.f||fmt,
+function hChart(items,o){o=o||{};const n=items.length,cw=($('#hBody')||{}).clientWidth||0,W=Math.round(Math.min(Math.max((cw||innerWidth)-48,300),960)),H=240,pl=44,pr=8,pt=16,pb=34,f=o.f||fmt,
  mx=nice(Math.max(...items.map(i=>Math.max(i.v||0,i.hi||0)),o.line||0,1)),bw=(W-pl-pr)/Math.max(n,1),bwid=Math.max(Math.min(bw*.62,34),3),Y=v=>H-pb-v/mx*(H-pb-pt),step=Math.ceil(n/(innerWidth<760?8:16)),
  halo="fill:var(--ink);paint-order:stroke;stroke:var(--card);stroke-width:4px;stroke-linejoin:round";
  let s=`<svg class="ch" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(o.aria||'Histórico')}">`+[0,1,2,3].map(i=>{const y=Y(mx*i/3);return`<line x1="${pl}" x2="${W-pr}" y1="${y}" y2="${y}" stroke="var(--line)"/><text x="${pl-6}" y="${y+4}" text-anchor="end" style="fill:var(--mut)">${f(mx*i/3)}</text>`}).join('');
@@ -1085,7 +1085,7 @@ function renderAll(){netUI();galSel();if(ON&&!me){if(view==="painel")painelPubli
 /* ===================== eventos ===================== */
 $("#day").value=dk(Date.now());galSel();$("#gal").value=S.gal;
 $("#gal").onchange=e=>{if(e.target.value!=="__all"){S.gal=e.target.value;save()}renderAll()};
-$("#ctlQ").oninput=ctlLive;$("#ctlLive").onclick=e=>{const b=e.target.closest("[data-x]");if(!b)return;const k=b.dataset.x;CTLX.has(k)?CTLX.delete(k):CTLX.add(k);ctlLive()};$("#day").onchange=()=>{renderAll();if(view==="ind")loadManagement()};$("#turnoF").onchange=renderAll;$("#hSeg").onclick=e=>{const m=e.target.dataset.m;if(!m)return;HM=m;try{localStorage.setItem("rc.hm",m)}catch(x){}if(ON&&!me){if(publicData)desenhaPainelPublico(publicData,$("#gal").value,$("#turnoF").value)}else painel()};$("#hVis").onchange=()=>{$("#hPer").innerHTML="";hisFill();loadHis()};["hPer","hMet","hGal"].forEach(i=>$("#"+i).onchange=()=>{if(i==="hPer")loadHis();else hisRender()});
+$("#ctlQ").oninput=ctlLive;$("#ctlLive").onclick=e=>{const b=e.target.closest("[data-x]");if(!b)return;const k=b.dataset.x;CTLX.has(k)?CTLX.delete(k):CTLX.add(k);ctlLive()};$("#day").onchange=()=>{renderAll();if(view==="ind")loadManagement()};$("#turnoF").onchange=renderAll;let hRz=0;addEventListener("resize",()=>{clearTimeout(hRz);hRz=setTimeout(()=>{if(view==="his")hisRender()},200)});$("#hSeg").onclick=e=>{const m=e.target.dataset.m;if(!m)return;HM=m;try{localStorage.setItem("rc.hm",m)}catch(x){}if(ON&&!me){if(publicData)desenhaPainelPublico(publicData,$("#gal").value,$("#turnoF").value)}else painel()};$("#hVis").onchange=()=>{$("#hPer").innerHTML="";hisFill();loadHis()};["hPer","hMet","hGal"].forEach(i=>$("#"+i).onchange=()=>{if(i==="hPer")loadHis();else hisRender()});
 $("#net").onclick=()=>{S.off=!S.off;save();if(online())flush();renderAll()};
 addEventListener("online",()=>{flush();renderAll();if(ON)pull().then(renderAll).catch(()=>{})});addEventListener("offline",renderAll);
 $("#theme").onclick=()=>{const r=document.documentElement,d=getComputedStyle(r).getPropertyValue("--bg").trim()==="#0e1726";r.dataset.theme=d?"light":"dark"};
