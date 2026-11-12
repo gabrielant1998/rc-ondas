@@ -295,6 +295,7 @@ a[data-pick]{display:inline-block;padding:8px 0 2px;color:var(--gx);font-weight:
 
 <!-- ======================= HISTÓRICO ======================= -->
 <section id="his" class="hide">
+ <div class="sub" id="hsub"><button data-hs="evo" class="on">Evolução e previsão</button><button data-hs="tipo">Tipos de onda</button><button data-hs="pro">Procurando</button><button data-hs="pes">Pessoas e ondas</button></div>
  <div class="ctl" style="margin-bottom:12px"><select id="hVis" aria-label="Visão"><option value="dia">Por dia</option><option value="hora">Por hora</option><option value="mes">Por mês</option></select><select id="hPer" aria-label="Período"></select><select id="hMet" aria-label="Métrica"><option value="u">Unidades</option><option value="o">Ondas</option><option value="t">Tempo médio ponderado por conjunto</option></select><select id="hGal" aria-label="Galpão"></select><select id="hOp" aria-label="Operador"><option value="">Todos os operadores</option></select></div>
  <div id="hStatus" class="legend hide" role="status"></div><div id="hBody"></div>
 </section>
@@ -985,6 +986,8 @@ const hRow=x=>{const o=OPSALL[x.operador_id];return{id:x.id,wn:x.wn,op:x.operado
 const HOPEN=new Set(),HPQ={};let HPBY={},HUQ="",HUR="";
 const hDT=t=>new Date(t).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
 const hST=['Concluída','Procurando','Difícil acesso'];
+let HS="evo";
+function hsShow(){$$("#hsub button").forEach(b=>b.classList.toggle("on",b.dataset.hs===HS));$$("#hBody [data-hs]").forEach(d=>d.classList.toggle("hide",d.dataset.hs!==HS))}
 let HPR="",HPRR=[];
 function hProcRows(PW){return PW.filter(w=>w.st===1||prEv(w).some(e=>e.e==='m')).map(w=>{const ev=prEv(w),f=e=>ev.find(z=>z.e===e),m=f('m'),a=f('a'),b=f('b'),t0=m?m.t:(w.pt||w.ts);
  return{w,t0,ta:a?a.t:0,tb:b?b.t:0,qa:a?a.q:'',qb:b?b.q:'',et:prEtapa(w),tp:a?a.t-t0:(w.st===1?Date.now()-t0:0),tbx:a&&b?b.t-a.t:0,tot:b?b.t-t0:0}}).sort((x,y)=>y.t0-x.t0)}
@@ -1097,7 +1100,7 @@ function hisRender(){
  }
  /* quebra por tipo */
  const tr=TY.map(([n,c])=>{const q=P.filter(w=>w.ty===n),d=C.filter(x=>x.w.ty===n).map(x=>({d:x.d,q:x.qty||1}));return`<tr><td><b>${esc(n)}</b></td><td class="num">${fmt(q.length)}</td><td class="num">${fmt(q.reduce((a,w)=>a+w.qty,0))}</td><td class="num">${d.length?mm(wa(d)):'—'}</td></tr>`}).join('');
- el.innerHTML=`<dl class="stats solo">${kp}</dl><div class="card" style="margin-top:14px"><h2>${ttl}${nome}</h2>${ch}${ex}</div>${tb}<div class="card" style="margin-top:14px"><h2>Por tipo de onda no período</h2><div class="tw"><table><tr><th>Tipo</th><th>Ondas</th><th>Unidades</th><th>Tempo médio ponderado por conjunto</th></tr>${tr}</table></div><div class="legend">Tempo médio ponderado: cada conjunto pesa pelas unidades que produziu, então conjuntos grandes influenciam mais que os pequenos.</div>${foraLim(L)}</div>${hisProc(HPW===undefined?undefined:(HPW||[]).filter(w=>(g==='__all'?visG().includes(w.gal):w.gal===g)&&(!so.value||w.op===so.value)))}${hisPessoas(P)}`;
+ el.innerHTML=`<div data-hs="evo"><dl class="stats solo">${kp}</dl><div class="card" style="margin-top:14px"><h2>${ttl}${nome}</h2>${ch}${ex}</div>${tb}</div><div data-hs="tipo"><div class="card" style="margin-top:14px"><h2>Por tipo de onda no período</h2><div class="tw"><table><tr><th>Tipo</th><th>Ondas</th><th>Unidades</th><th>Tempo médio ponderado por conjunto</th></tr>${tr}</table></div><div class="legend">Tempo médio ponderado: cada conjunto pesa pelas unidades que produziu, então conjuntos grandes influenciam mais que os pequenos.</div>${foraLim(L)}</div></div><div data-hs="pro">${hisProc(HPW===undefined?undefined:(HPW||[]).filter(w=>(g==='__all'?visG().includes(w.gal):w.gal===g)&&(!so.value||w.op===so.value)))}</div><div data-hs="pes">${hisPessoas(P)}</div>`;hsShow();
 }
 
 /* ===================== acesso ===================== */
@@ -1146,6 +1149,7 @@ function renderAll(){netUI();galSel();if(ON&&!me){if(view==="painel")painelPubli
 $("#day").value=dk(Date.now());galSel();$("#gal").value=S.gal;
 $("#gal").onchange=e=>{if(e.target.value!=="__all"){S.gal=e.target.value;save()}renderAll()};
 $("#ctlQ").oninput=ctlLive;$("#ctlLive").onclick=e=>{const b=e.target.closest("[data-x]");if(!b)return;const k=b.dataset.x;CTLX.has(k)?CTLX.delete(k):CTLX.add(k);ctlLive()};$("#day").onchange=()=>{renderAll();if(view==="ind")loadManagement()};$("#turnoF").onchange=renderAll;$("#hBody").addEventListener("toggle",e=>{const d=e.target;if(!d.matches||!d.matches("details.hp"))return;const k=d.dataset.hp;d.open?HOPEN.add(k):HOPEN.delete(k);if(d.open)d.querySelector(".hpb").innerHTML=hpBody(k)},true);
+$("#hsub").onclick=e=>{const k=e.target.dataset.hs;if(!k)return;HS=k;hsShow()};
 $("#hBody").addEventListener("click",e=>{if(e.target.closest("[data-hretry]"))loadHis(true)});
 $("#hBody").addEventListener("input",e=>{if(e.target.id==="hPq"){HPR=e.target.value;$("#hPt").innerHTML=hProcTable();return}const k=e.target.dataset&&e.target.dataset.hpq;if(k==null)return;HPQ[k]=e.target.value;const b=e.target.closest(".hpb"),pos=e.target.selectionStart;b.innerHTML=hpBody(k);const n=b.querySelector("input");n.focus();n.setSelectionRange(pos,pos)});
 $("#hBody").addEventListener("keydown",e=>{if(e.target.id==="hUni"&&e.key==="Enter"){e.preventDefault();hUniGo(e.target.value)}});

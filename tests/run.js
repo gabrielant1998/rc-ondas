@@ -344,7 +344,7 @@ await T("56 Controle de Ondas: ver ondas do mesmo lançamento e pesquisar por on
  await p.fill('#ctlQ','zzz');ok((await p.textContent('#ctlLive')).includes('Nenhuma onda em andamento com essa'),'sem resultado')});
 await T("57 Histórico: ondas por pessoa recolhidas, pesquisa por número dentro da pessoa e pesquisa universal com 9 caracteres + Enter",async()=>{
  const n=Date.now()-2*24*H;const p=await page(b,base({waves:[WV('p1','WN22A48089','Pacote do mesmo',10,n),WV('p2','WN22A48090','Itens Únicos',20,n+60000),WV('p3','WN22A99999','Vários artigos',30,n+120000,'CL002','Bruno Lima')]}));
- await p.evaluate(()=>go('his'));await p.waitForTimeout(200);
+ await p.evaluate(()=>go('his'));await p.click('#hsub [data-hs="pes"]');await p.waitForTimeout(200);
  ok((await p.$$('#hBody details.hp')).length===2,'duas pessoas');ok(!(await p.textContent('#hBody')).includes('WN22A48089'),'deveria vir recolhido');
  await p.click('#hBody details.hp[data-hp="CL001"] summary');await p.waitForTimeout(100);let t=await p.textContent('#hBody');ok(t.includes('WN22A48089')&&t.includes('WN22A48090')&&!t.includes('WN22A99999'),'abre só a pessoa');
  await p.fill('#hBody [data-hpq="CL001"]','48090');t=await p.textContent('#hBody details.hp[data-hp="CL001"]');ok(t.includes('WN22A48090')&&!t.includes('WN22A48089'),'pesquisa na pessoa');
@@ -382,7 +382,7 @@ await T("60 Histórico: filtro por operador vale para volume, ondas e tempo por 
 await T("61 Histórico: Procurando com registro, tempos e baixa; pesquisa dentro dele",async()=>{
  const n=Date.now()-3*36e5;const w1=WV('r1','WN22A11111','Vários artigos',40,n-36e5);w1.sku='SKU-9';w1.loc='A-01';w1.hist=[{e:'m',q:'',t:n},{e:'a',q:'Carla Dias',t:n+10*60000},{e:'b',q:'Bruno Lima',t:n+25*60000}];
  const w2=WV('r2','WN22A22222','Itens Únicos',5,n-36e5,'CL002','Bruno Lima',1);w2.sku='SKU-7';w2.hist=[{e:'m',q:'',t:n}];
- const p=await page(b,base({waves:[w1,w2,WV('r3','WN22A33333','Vários artigos',10,n)]}));await p.evaluate(()=>go('his'));await p.waitForTimeout(250);
+ const p=await page(b,base({waves:[w1,w2,WV('r3','WN22A33333','Vários artigos',10,n)]}));await p.evaluate(()=>go('his'));await p.click('#hsub [data-hs="pro"]');await p.waitForTimeout(250);
  let t=(await p.textContent('#hBody')).replace(/\s+/g,' ');
  ok(t.includes('Procurando: registro, tempo e conclusão')&&/Marcadas2/.test(t)&&/Pendentes1/.test(t)&&/Baixadas1/.test(t),'kpis: '+t.slice(t.indexOf('Procurando:'),t.indexOf('Procurando:')+300));
  ok(t.includes('SKU-9')&&t.includes('Carla Dias')&&t.includes('10:00')&&t.includes('15:00')&&t.includes('25:00')===false||t.includes('Baixada'),'tempos: '+t.slice(t.indexOf('Tempo procurando'),t.indexOf('Tempo procurando')+400));
@@ -402,6 +402,12 @@ await T("62 Procurando em aba própria: lista SKU/onda/quantidade com pesquisa e
  const w=await p.evaluate(()=>S.waves.find(x=>x.id==='f1'));ok(w.st===0&&w.hist.map(e=>e.e).join('')==='mab'&&w.hist[2].q==='Carla Dias','estado: '+JSON.stringify(w.hist));
  t=await p.textContent('#prList');ok(!t.includes('WN500100')&&t.includes('WN500200'),'saiu da lista');
  await p.click('#psub [data-p="his"]');ok((await p.textContent('#prHist')).includes('Carla Dias'),'histórico com nome')});
+await T("63 Histórico em subabas: Evolução, Tipos de onda, Procurando e Pessoas e ondas",async()=>{
+ const p=await page(b,base({waves:HIS()}));await p.evaluate(()=>go('his'));await p.waitForTimeout(200);
+ const vis=()=>p.$$eval('#hBody [data-hs]',a=>a.filter(e=>!e.classList.contains('hide')).map(e=>e.dataset.hs).join());
+ ok(await vis()==='evo','começa em evolução: '+await vis());
+ for(const k of ['tipo','pro','pes','evo']){await p.click('#hsub [data-hs="'+k+'"]');ok(await vis()===k,k+': '+await vis())}
+ await p.click('#hsub [data-hs="pes"]');await p.selectOption('#hMet','o');ok(await vis()==='pes','mantém a subaba ao trocar filtro: '+await vis())});
 await b.close();
 const w=Math.max(...R.map(r=>r[1].length));for(const r of R)console.log((r[0]==="PASS"?"✅":"❌")+" "+r[1].padEnd(w)+"  "+r[2]);
 console.log(`\n${R.filter(r=>r[0]==="PASS").length}/${R.length} passaram`)})();
