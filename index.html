@@ -114,6 +114,7 @@ svg.ch{width:100%;height:auto;display:block}svg text{fill:var(--mut);font:600 12
 .stp{animation:stIn .32s cubic-bezier(.2,.8,.2,1)}@keyframes stIn{from{opacity:0;transform:translateX(14px)}to{opacity:1;transform:none}}
 .sumline{font-size:14px;color:var(--mut);margin-bottom:12px}.sumline b{color:var(--ink);font-weight:600}
 #opName{font-weight:600;color:var(--ink)!important;min-height:22px}
+.hm{float:right;display:inline-flex;gap:4px}.hm button{all:unset;cursor:pointer;padding:5px 11px;border:1px solid var(--line);border-radius:4px;font:600 12.5px var(--fb);color:var(--mut)}.hm button.on{background:var(--ink);color:var(--card);border-color:var(--ink)}.hm button:focus-visible{outline:2px solid var(--a);outline-offset:2px}
 .seg{display:flex;flex-wrap:wrap;gap:8px}
 .seg button{all:unset;cursor:pointer;flex:1 1 120px;text-align:center;padding:12px 8px;border:1px solid var(--field);border-radius:4px;font-weight:600;font-size:14.5px;background:var(--card);min-height:20px;box-sizing:border-box;min-height:46px}
 .seg button:hover{border-color:var(--ink)}
@@ -194,6 +195,7 @@ a[data-pick]{display:inline-block;padding:8px 0 2px;color:var(--gx);font-weight:
  <button class="tab on" data-t="painel"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20V11M10 20V5M16 20v-6M2 20h20"/></svg>Painel</button>
  <button class="tab" data-t="op"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13 2 4 14h7l-1 8 9-12h-7z"/></svg>Operação</button>
  <button class="tab" data-t="ind"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3.5"/><path d="M5 21c0-4 3.5-6 7-6s7 2 7 6"/></svg><span class="nav-long">Gestão operacional</span><span class="nav-short">Gestão</span></button>
+ <button class="tab" data-t="his"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19V5M4 19h16"/><path d="M8 15l3-4 3 2 5-6"/></svg>Histórico</button>
  <button class="tab" data-t="cfg"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/></svg>Config</button>
  <div class="sp"></div>
  <div class="who" id="who"></div>
@@ -217,7 +219,7 @@ a[data-pick]{display:inline-block;padding:8px 0 2px;color:var(--gx);font-weight:
 <section id="painel">
  <div id="kpis"></div>
  <div class="grid g21" style="margin-top:14px">
-  <div class="card"><h2>Produção por hora <span id="peak"></span></h2><div id="chH"></div><div id="pace"></div></div>
+  <div class="card"><h2><span id="hTit">Produção por hora</span> <span id="peak"></span><span class="hm" id="hSeg" role="group" aria-label="Intervalo do gráfico"><button data-m="h" class="on">Hora</button><button data-m="m">30 min</button></span></h2><div id="chH"></div><div id="pace"></div></div>
   <div class="card"><h2>Quantidades por tipo de onda</h2><div id="chT"></div></div>
  </div>
  <div class="grid two" style="margin-top:14px">
@@ -271,7 +273,7 @@ a[data-pick]{display:inline-block;padding:8px 0 2px;color:var(--gx);font-weight:
  </div>
 
  <div id="ace" class="grid two hide">
-  <div class="card"><h2>Temporizador automático</h2><div id="tauto"></div><div class="legend">Janela de agrupamento de 5 min, depois contagem efetiva. Trocar de operador reinicia.</div></div>
+  <div class="card"><h2>Temporizador automático</h2><div id="tauto"></div><div class="legend">Janela de agrupamento de 2 min, depois contagem efetiva. Trocar de operador reinicia.</div></div>
   <div class="card"><h2>Temporizador manual</h2><div id="tman"></div>
    <div class="grid" style="grid-template-columns:repeat(3,1fr);margin-top:8px"><button class="btn" id="mS">Iniciar</button><button class="btn am" id="mP">Pausar</button><button class="btn d" id="mE">Encerrar</button></div>
    <div id="mLog" class="legend"></div></div>
@@ -283,6 +285,12 @@ a[data-pick]{display:inline-block;padding:8px 0 2px;color:var(--gx);font-weight:
  <div class="sub" id="gsub"><button data-gs="mi" class="on">Meta individual</button><button data-gs="mc">Meta coletiva</button></div>
  <div class="ctl" style="margin-bottom:12px"><select id="iOp" aria-label="Operador"></select><select id="iPer" aria-label="Período"><option value="1">Dia selecionado</option><option value="7">Últimos 7 dias</option><option value="30">Últimos 30 dias</option><option value="90">Últimos 90 dias</option></select></div>
  <div id="mgStatus" class="legend hide" role="status"></div><div id="iBody"></div><div id="coBody" class="hide"></div>
+</section>
+
+<!-- ======================= HISTÓRICO ======================= -->
+<section id="his" class="hide">
+ <div class="ctl" style="margin-bottom:12px"><select id="hVis" aria-label="Visão"><option value="dia">Por dia</option><option value="hora">Por hora</option><option value="mes">Por mês</option></select><select id="hPer" aria-label="Período"></select><select id="hMet" aria-label="Métrica"><option value="u">Unidades</option><option value="o">Ondas</option><option value="t">Tempo mediano por conjunto</option></select><select id="hGal" aria-label="Galpão"></select></div>
+ <div id="hStatus" class="legend hide" role="status"></div><div id="hBody"></div>
 </section>
 
 <!-- ======================= CONFIG ======================= -->
@@ -429,7 +437,7 @@ async function raw(path,o){o=o||{};
 let refP=null;
 function refresh(){ /* uma renovação por vez: várias chamadas juntas esperam a mesma */
  if(!refP)refP=(async()=>{try{setSess(tok(await raw("/auth/v1/token?grant_type=refresh_token",{method:"POST",auth:false,body:{refresh_token:sess.refresh_token}})))}
-  catch(e){if(e.status){setSess(null);me=null;limparGestao();S.waves=S.waves.filter(w=>!w.srv);authUI();if(view==="ind"||view==="cfg")go("painel");toast("Sua sessão expirou. Entre de novo.")}throw e}})().finally(()=>{refP=null});
+  catch(e){if(e.status){setSess(null);me=null;limparGestao();S.waves=S.waves.filter(w=>!w.srv);authUI();if(view==="ind"||view==="his"||view==="cfg")go("painel");toast("Sua sessão expirou. Entre de novo.")}throw e}})().finally(()=>{refP=null});
  return refP}
 async function api(path,o){if(sess&&sess.exp<Date.now()+60000)await refresh();
  try{return await raw(path,o)}catch(e){if(e.status===401&&sess){await refresh();return raw(path,o)}throw e}}
@@ -604,6 +612,14 @@ function rangeWaves(days){if(days<=1)return dayWaves();const end=new Date($("#da
 const prod=l=>l.filter(w=>w.st===0&&!w.err);
 function hourly(list,gal){const H=24,a=Array(H).fill(0),o=Array(H).fill(0);
  prod(list).filter(w=>!gal||w.gal===gal).forEach(w=>{const h=new Date(w.fin||w.ts).getHours();a[h]+=w.qty;o[h]++});return{a,o}}
+let HM="h";try{HM=localStorage.getItem("rc.hm")==="m"?"m":"h"}catch(e){}
+function meias(list,gal){const a=Array(48).fill(0);prod(list).filter(w=>!gal||w.gal===gal).forEach(w=>{const d=new Date(w.fin||w.ts);a[d.getHours()*2+(d.getMinutes()>=30?1:0)]+=w.qty});return a}
+function hmUI(has){const b=$("#hSeg");if(!b)return;b.style.display=has?"":"none";$$("#hSeg button").forEach(x=>x.classList.toggle("on",x.dataset.m===HM));$("#hTit").textContent=HM==="m"&&has?"Produção por meia hora":"Produção por hora"}
+function chartH(a24,a48,ov){ov=ov||{};const half=HM==="m"&&a48;hmUI(!!a48);
+ if(half){const[i0,i1]=win48(a48);return barsSvg(a48,i0,i1,Object.assign({half:1},ov))}
+ const[i0,i1]=hourWindow(a24);return barsSvg(a24,i0,i1,ov)}
+function win48(a){const f=a.findIndex(v=>v>0);let l=-1;a.forEach((v,i)=>{if(v>0)l=i});if(f<0){const t=S.cfg.turnos[1];return[t.ini*2,Math.max(t.fim,t.ini+1)*2]}return[Math.max(0,f-1),Math.min(47,l+1)]}
+const peakTxt=(a24,a48)=>{const m=Math.max(...(HM==="m"&&a48?a48:a24));if(!m)return"";if(HM==="m"&&a48){const i=a48.indexOf(m);return"pico "+(i>>1)+(i%2?":30":"h")}return"pico "+a24.indexOf(m)+"h"};
 function hourWindow(a){let f=a.findIndex(v=>v>0),l=-1;a.forEach((v,i)=>{if(v>0)l=i});
  if(f<0){const t=S.cfg.turnos[1];return[t.ini,Math.max(t.fim,t.ini+1)]}
  return[Math.max(0,f-1),Math.min(23,l+1)]}
@@ -614,20 +630,21 @@ function conjuntos(list){const by={},out=[];
  Object.values(by).forEach(a=>{const gs=[];a.forEach(w=>{const t=w.fin||w.ts,g=gs[gs.length-1];if(g&&t-g.t0<=3000)g.w.push(w);else gs.push({t0:t,w:[w]})});
   gs.forEach((g,i)=>{const dom=g.w.slice().sort((x,y)=>y.qty-x.qty)[0];out.push({op:dom.op,t:g.t0,ondas:g.w.length,qty:g.w.reduce((q,w)=>q+w.qty,0),w:dom,tipos:[...new Set(g.w.map(x=>x.ty))],d:gs[i+1]?gs[i+1].t0-g.t0:null})})});return out}
 function durs(list){const gap=(S.cfg.gap||30)*6e4;return conjuntos(list).filter(c=>c.d!=null&&c.d>0&&c.d<=gap)}
+function foraLim(list){const gap=(S.cfg.gap||30)*6e4,n=conjuntos(list).filter(c=>c.d!=null&&c.d>gap).length;return n?`<div class="legend" style="color:var(--o)">${n} ${n===1?'conjunto passou':'conjuntos passaram'} de ${S.cfg.gap||30} min e ficou de fora. Se foram tempos normais de trabalho, aumente o intervalo máximo em Configurações, Operação.</div>`:''}
 function med(a){if(!a.length)return 0;const s=a.slice().sort((x,y)=>x-y),m=s.length>>1;return s.length%2?s[m]:(s[m-1]+s[m])/2}
 const avg=a=>a.length?a.reduce((s,v)=>s+v,0)/a.length:0;
 
 /* ===================== gráficos ===================== */
 const nice=v=>{const e=Math.pow(10,Math.floor(Math.log10(v))),m=v/e;return[1,1.2,1.5,2,2.5,3,4,5,6,8,10].find(x=>m<=x)*e};
-function barsSvg(a,i0,i1,ov){ov=ov||{};const lab=[],v=[];for(let i=i0;i<=i1;i++){lab.push(i);v.push(a[i])}
- const W=innerWidth<760?380:600,H=innerWidth<760?210:200,p=innerWidth<760?30:38,mx=nice(Math.max(...v,ov.need||0,ov.avg||0,1)),bw=(W-p*2)/v.length,hi=v.indexOf(Math.max(...v)),act=v.filter(x=>x>0),lo=act.length>1?v.indexOf(Math.min(...act)):-1;
+function barsSvg(a,i0,i1,ov){ov=ov||{};const sc=ov.half?.5:1,LT=i=>ov.half?(i%2?(i>>1)+":30":(i>>1)+"h"):i+"h",lab=[],v=[];for(let i=i0;i<=i1;i++){lab.push(i);v.push(a[i])}
+ const W=innerWidth<760?380:600,H=innerWidth<760?210:200,p=innerWidth<760?30:38,mx=nice(Math.max(...v,(ov.need||0)*sc,(ov.avg||0)*sc,1)),bw=(W-p*2)/v.length,hi=v.indexOf(Math.max(...v)),act=v.filter(x=>x>0),lo=act.length>1?v.indexOf(Math.min(...act)):-1;
  let s=`<svg class="ch" viewBox="0 0 ${W} ${H}" role="img" aria-label="Produção por hora">`+[0,1,2].map(i=>`<line x1="${p}" x2="${W-p}" y1="${H-24-i*(H-44)/2}" y2="${H-24-i*(H-44)/2}" stroke="var(--line)"/>${i?`<text x="${p-6}" y="${H-20-i*(H-44)/2}" text-anchor="end">${fmt(mx*i/2)}</text>`:""}`).join("");
  const bwid=Math.max(Math.min(bw*0.46,30),6),halo="fill:var(--ink);paint-order:stroke;stroke:var(--card);stroke-width:4px;stroke-linejoin:round";
  v.forEach((q,i)=>{const h=Math.max(q/mx*(H-44),q?2:0),cx=p+i*bw+bw/2,x=cx-bwid/2,top=H-24-h,r=Math.min(4,h,bwid/2),c=q&&i===hi?"var(--g)":i===lo?"var(--r)":"var(--t)";
-  s+=(q?`<path d="M${x} ${H-24}V${top+r}Q${x} ${top} ${x+r} ${top}H${x+bwid-r}Q${x+bwid} ${top} ${x+bwid} ${top+r}V${H-24}Z" fill="${c}"><title>${lab[i]}h: ${fmt(q)} unidades</title></path><text x="${cx}" y="${top-6}" text-anchor="middle" style="${halo}">${fmt(q)}</text>`:`<rect x="${x}" y="${H-26}" width="${bwid}" height="2" fill="var(--line)"><title>${lab[i]}h: 0 unidades</title></rect>`)+`<text x="${cx}" y="${H-8}" text-anchor="middle">${lab[i]}h</text>`});
+  s+=(q?`<path d="M${x} ${H-24}V${top+r}Q${x} ${top} ${x+r} ${top}H${x+bwid-r}Q${x+bwid} ${top} ${x+bwid} ${top+r}V${H-24}Z" fill="${c}"><title>${LT(lab[i])}: ${fmt(q)} unidades</title></path>${!ov.half||bw>=26||i===hi||i===lo?`<text x="${cx}" y="${top-6}" text-anchor="middle" style="${halo}${ov.half?";font-size:11px":""}">${fmt(q)}</text>`:""}`:`<rect x="${x}" y="${H-26}" width="${bwid}" height="2" fill="var(--line)"><title>${LT(lab[i])}: 0 unidades</title></rect>`)+(!ov.half||bw>=26||lab[i]%2===0?`<text x="${cx}" y="${H-8}" text-anchor="middle"${ov.half?` style="font-size:11px"`:""}>${LT(lab[i])}</text>`:"")});
  const Y=val=>H-24-val/mx*(H-44);
- if(ov.avg)s+=`<line x1="${p}" x2="${W-p}" y1="${Y(ov.avg)}" y2="${Y(ov.avg)}" stroke="var(--v)" stroke-width="2"/><text x="${W-p}" y="${Y(ov.avg)-5}" text-anchor="end" style="fill:var(--v)">média ${fmt(ov.avg)}/h</text>`;
- if(ov.need)s+=`<line x1="${p}" x2="${W-p}" y1="${Y(ov.need)}" y2="${Y(ov.need)}" stroke="var(--r)" stroke-width="2" stroke-dasharray="6 5"/><text x="${W-p}" y="${Y(ov.need)-5}" text-anchor="end" style="fill:var(--r)">necessário ${fmt(ov.need)}/h</text>`;
+ if(ov.avg)s+=`<line x1="${p}" x2="${W-p}" y1="${Y(ov.avg*sc)}" y2="${Y(ov.avg*sc)}" stroke="var(--v)" stroke-width="2"/><text x="${W-p}" y="${Y(ov.avg*sc)-5}" text-anchor="end" style="fill:var(--v)">média ${fmt(ov.avg)}/h${ov.half?` (${fmt(ov.avg/2)} por 30 min)`:""}</text>`;
+ if(ov.need)s+=`<line x1="${p}" x2="${W-p}" y1="${Y(ov.need*sc)}" y2="${Y(ov.need*sc)}" stroke="var(--r)" stroke-width="2" stroke-dasharray="6 5"/><text x="${W-p}" y="${Y(ov.need*sc)-5}" text-anchor="end" style="fill:var(--r)">necessário ${fmt(ov.need)}/h${ov.half?` (${fmt(ov.need/2)} por 30 min)`:""}</text>`;
  return s+"</svg><div class='legend'><span><i style='background:var(--g)'></i>Pico</span><span><i style='background:var(--r)'></i>Menor</span><span><i style='background:var(--t)'></i>Demais</span><span><i class='ln'></i>Média</span><span><i class='ln ds'></i>Necessário p/ meta</span></div>"}
 function bars(items){const mx=Math.max(...items.map(i=>i.v),1);
  return items.map(i=>`<div class="gal"><div class="r"><b>${esc(i.k)}</b><span>${fmt(i.v)}${i.s?' <small style="color:var(--mut)">'+esc(i.s)+"</small>":""}</span></div><div class="bar"><b style="width:${i.p!=null?i.p:i.v/mx*100}%;--c:${i.c||"var(--g)"}"></b></div></div>`).join("")||'<div class="empty">Sem registros.</div>'}
@@ -649,7 +666,7 @@ function desenhaPainelPublico(x,g,t){
  const metaTxt=t?'Meta diária do galpão completo':meta?'Meta diária: '+fmt(meta)+' unidades':'Meta diária não cadastrada';
  $("#kpis").innerHTML=`<div class="placar"><div><div class="num">${fmt(tot)}</div><div class="un">unidades produzidas</div></div><div class="regua"><div class="hd"><span>${metaTxt}</span><b>${!t&&meta?fmt(tot/meta*100)+'% da meta':''}</b></div><div class="trk"><b style="width:${!t&&meta?Math.min(100,tot/meta*100):0}%"></b></div></div></div><dl class="stats">`+
  K('Ondas concluídas',fmt(n),'')+K('Pessoas',fmt(pes),'com produção')+K('Tempo mediano por conjunto',x.dur_n?mm(+x.dur_mediana||0):'—',x.dur_n?fmt(x.dur_n)+' conjuntos':'sem medições')+K('Unidades por onda',n?fmt(tot/n):'0','em média')+K('Procurando',fmt((x.procurando||{}).ondas||0),fmt((x.procurando||{}).qtd||0)+' unidades')+K('Produção fora do turno',fmt(x.extra_un||0),'unidades em '+fmt(x.extra_ondas||0)+' ondas')+'</dl>';
- const a=Array(24).fill(0);(x.horas||[]).forEach(z=>a[z.hora]=+z.qtd);const [i0,i1]=hourWindow(a);$("#chH").innerHTML=barsSvg(a,i0,i1);$("#peak").textContent=tot?'pico '+a.indexOf(Math.max(...a))+'h':'';
+ const a=Array(24).fill(0);(x.horas||[]).forEach(z=>a[z.hora]=+z.qtd);const a2=x.meias?Array(48).fill(0):null;if(a2)x.meias.forEach(z=>a2[z.slot]=+z.qtd);$("#chH").innerHTML=chartH(a,a2);$("#peak").textContent=tot?peakTxt(a,a2):'';
  const types=x.tipos||[];$("#chT").innerHTML=TY.map(([name,c])=>{const z=types.find(v=>v.tipo===name)||{};return `<div class="trow" style="--c:${c}">${ico(name)}<b>${name}</b><span class="v"><span class="num">${fmt(z.qtd||0)}</span><small>${fmt(z.ondas||0)} ondas</small></span></div>`}).join('');
  $("#gals").innerHTML=bars((x.galpoes||[]).map(z=>({k:z.nome,v:+z.qtd||0,s:fmt(z.ondas)+' ondas, '+fmt(z.pessoas)+' pessoas',c:'var(--g)'})));
  const dt=x.dur_tipos||[];const rk=v=>{const z=dt.find(q=>q.tipo===v)||{};return +z.n?(+z.mediana||0):0},TYR=TY.slice().sort((a,b)=>rk(b[0])-rk(a[0]));$("#tmp").innerHTML=TYR.map(([name,c])=>{const z=dt.find(v=>v.tipo===name)||{},n=+z.n||0,ms=n?(+z.mediana||0):0;return `<div class="gal"><div class="r"><b>${n?(TYR.findIndex(q=>q[0]===name)+1)+'º ':''}${name}</b><span>${n?mm(ms):'—'} <small style="color:var(--mut)">${n} ${n===1?'conjunto':'conjuntos'}</small></span></div><div class="bar"><b style="width:${n?Math.min(ms/((S.cfg.gap||30)*6e4)*100,100):0}%;--c:${c}"></b></div></div>`}).join('')+`<div class="legend">Mediana do tempo de cada conjunto de ondas, até ${S.cfg.gap||30} min.</div>`;
@@ -662,7 +679,7 @@ function painel(){
  const g=$("#gal").value==="__all"?null:$("#gal").value,all=dayWaves().filter(inTurno),L=g?all.filter(w=>w.gal===g):all,P=prod(L),
   tot=P.reduce((s,w)=>s+w.qty,0),ond=P.length,pes=new Set(P.map(w=>w.op)).size,
   D=durs(L),md=med(D.map(d=>d.d)),ot=P.filter(isOT),
-  {a}=hourly(all,g),[i0,i1]=hourWindow(a),mx=Math.max(...a);
+  {a}=hourly(all,g),a2=meias(all,g),mx=Math.max(...a);
  const TF=$("#turnoF").value,TW=TF?S.cfg.turnos[TF]:{ini:Math.min(S.cfg.turnos[1].ini,S.cfg.turnos[2].ini),fim:Math.max(S.cfg.turnos[1].fim,S.cfg.turnos[2].fim)};
  const nowF=new Date().getHours()+new Date().getMinutes()/60,isNow=$("#day").value===dk(Date.now());
  const hWin=Math.max(TW.fim-TW.ini,1),elapsed=isNow?Math.min(Math.max(nowF-TW.ini,0),hWin):hWin,remain=isNow?Math.max(TW.fim-Math.max(nowF,TW.ini),0):0;
@@ -686,9 +703,9 @@ function painel(){
   K("Unidades por onda",ond?fmt(tot/ond):"0","em média")+
   K("Procurando",fmt(PR.length),fmt(PR.reduce((a,w)=>a+w.qty,0))+" unidades")+
   K("Hora extra",fmt(ot.reduce((s,w)=>s+w.qty,0)),"unidades em "+ot.length+" ondas")+"</dl>";
- $("#chH").innerHTML=barsSvg(a,i0,i1,{need:need,avg:avgH});
+ $("#chH").innerHTML=chartH(a,a2,{need:need,avg:avgH});
  $("#pace").innerHTML=metaT&&isNow&&faltam>0&&remain>0?"Para bater a meta é preciso fazer <b>"+fmt(need)+" unidades por hora</b>"+(upw?", perto de "+ondH.toLocaleString("pt-BR",{maximumFractionDigits:1})+" ondas por hora":"")+". A média até agora é de "+fmt(avgH)+" por hora.":"";
- $("#peak").textContent=mx?"pico "+a.indexOf(mx)+"h":"";
+ $("#peak").textContent=mx?peakTxt(a,a2):"";
  {const tv=TY.map(([n,c])=>{const q=P.filter(w=>w.ty===n);return{n,c,v:q.reduce((s,w)=>s+w.qty,0),k:q.length}});
   $("#chT").innerHTML=`<div class="stack${tot?"":" vazio"}" role="img" aria-label="Participação de cada tipo de onda">`+tv.filter(x=>x.v).map(x=>`<i style="--c:${x.c};flex:${x.v}" title="${x.n}: ${fmt(x.v)}"></i>`).join("")+"</div>"+
    tv.map(x=>`<div class="trow" style="--c:${x.c}">${ico(x.n)}<b>${x.n}</b><span class="v"><span class="num">${fmt(x.v)}</span><small>${x.k} ${x.k===1?"onda":"ondas"}${tot&&x.v?", "+Math.round(x.v/tot*100)+"%":""}</small></span></div>`).join("")}
@@ -698,7 +715,7 @@ function painel(){
  const TYR=TY.slice().sort((a,b)=>med(Dg.filter(x=>x.w.ty===b[0]).map(x=>x.d))-med(Dg.filter(x=>x.w.ty===a[0]).map(x=>x.d)));
  $("#tmp").innerHTML=TYR.map(([n,c])=>{const d=Dg.filter(x=>x.w.ty===n).map(x=>x.d);
   return`<div class="gal"><div class="r"><b>${d.length?(TYR.findIndex(z=>z[0]===n)+1)+"º ":""}${n}</b><span>${d.length?mm(med(d)):"—"} <small style="color:var(--mut)">${d.length} ${d.length===1?"conjunto":"conjuntos"}</small></span></div><div class="bar"><b style="width:${d.length?Math.min(med(d)/((S.cfg.gap||30)*6e4)*100,100):0}%;--c:${c}"></b></div></div>`}).join("")
-  +`<div class="legend">Mediana do tempo de cada conjunto de ondas (ondas bipadas no mesmo instante contam uma vez), da bipagem até a seguinte do mesmo operador. Pausas acima de ${S.cfg.gap||30} min ficam de fora.</div>`;
+  +`<div class="legend">Mediana do tempo de cada conjunto de ondas (ondas bipadas no mesmo instante contam uma vez), da bipagem até a seguinte do mesmo operador. Pausas acima de ${S.cfg.gap||30} min ficam de fora.</div>`+foraLim(L);
 }
 
 /* ===================== OPERAÇÃO ===================== */
@@ -745,7 +762,7 @@ function filters(){const f=(id,h,o)=>{const e=$(id),v=e.value;e.innerHTML=`<opti
  f("#fOp","Operador",S.ops.map(o=>[o.m,o.n]));f("#fTy","Tipo",TY.map(t=>[t[0],t[0]]));f("#fSt","Status",[[1,"Procurando"],[2,"Difícil acesso"]])}
 function tick(){const a=$("#tauto");
  if(view==="op"){if(!tim.op)a.innerHTML='<div class="empty">Identifique um operador na aba Registro para iniciar.</div>';
-  else{const d=Date.now()-tim.t0,w=5*6e4,inW=d<w;a.innerHTML=`<div style="font-weight:600">${esc(tim.n)}, ${tim.op}</div><div class="big" style="color:${inW?"var(--a)":"var(--g)"}">${inW?mm(w-d):mm(d-w)}</div><span class="pill ${inW?"warn":""}">${inW?"Janela de agrupamento":"Tempo efetivo da onda"}</span>`}
+  else{const d=Date.now()-tim.t0,w=2*6e4,inW=d<w;a.innerHTML=`<div style="font-weight:600">${esc(tim.n)}, ${tim.op}</div><div class="big" style="color:${inW?"var(--a)":"var(--g)"}">${inW?mm(w-d):mm(d-w)}</div><span class="pill ${inW?"warn":""}">${inW?"Janela de agrupamento":"Tempo efetivo da onda"}</span>`}
   const m=S.man;$("#tman").innerHTML=`<div style="font-weight:600">${esc(m.n||"Sem operador")}</div><div class="big">${mm((m.acc||0)+(m.run?Date.now()-m.run:0))}</div><span class="pill ${m.run?"":"off"}">${m.run?"Em andamento":"Parado"}</span>`;
   $("#mLog").innerHTML=m.log.slice(-3).map(l=>"• "+esc(l)).join("<br>")}
  if(view==="op"&&!$("#ctl").classList.contains("hide"))ctlLive();
@@ -923,20 +940,115 @@ $("#xCon").oninput=()=>{$("#xDel").disabled=$("#xCon").value!=="APAGAR"};
  });
 })();
 
+/* ===================== histórico e previsão ===================== */
+let HW=null,hKey='',hAt=0,hSeq=0;
+const HPER={hora:[[7,'Últimos 7 dias'],[14,'Últimos 14 dias'],[30,'Últimos 30 dias']],dia:[[14,'Últimos 14 dias'],[30,'Últimos 30 dias'],[60,'Últimos 60 dias'],[90,'Últimos 90 dias']],mes:[[3,'Últimos 3 meses'],[6,'Últimos 6 meses'],[12,'Últimos 12 meses']]};
+const WD=['dom','seg','ter','qua','qui','sex','sáb'],MES=['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+const pct=(a,p)=>{if(!a.length)return 0;const s=a.slice().sort((x,y)=>x-y),i=(s.length-1)*p,l=Math.floor(i),h=Math.ceil(i);return s[l]+(s[h]-s[l])*(i-l)};
+const dAdd=(k,n)=>{const d=new Date(k+'T12:00:00');d.setDate(d.getDate()+n);return dk(d)};
+const dFmt=k=>{const d=new Date(k+'T12:00:00');return WD[d.getDay()]+' '+String(d.getDate()).padStart(2,'0')+'/'+String(d.getMonth()+1).padStart(2,'0')};
+function hisFill(){const v=$("#hVis").value,p=$("#hPer");const cur=p.value;p.innerHTML=HPER[v].map(([n,t],i)=>`<option value="${n}"${(cur?+cur===n:i===1||v==='mes'&&i===1)?' selected':''}>${t}</option>`).join('');if(!p.value)p.selectedIndex=Math.min(1,HPER[v].length-1)}
+function hisGalSel(){const g=$("#hGal"),r=restricted();g.style.display=r?"none":"";const cur=g.value;g.innerHTML='<option value="__all">Todos os galpões</option>'+S.gals.map(k=>`<option>${esc(k)}</option>`).join('');if(cur&&[...g.options].some(o=>o.value===cur))g.value=cur}
+function hisOpen(){if(!podeVer('his'))return;hisGalSel();if(!$("#hPer").options.length)hisFill();loadHis()}
+function hRange(){const v=$("#hVis").value,p=+$("#hPer").value,e=new Date();e.setHours(23,59,59,999);const s=new Date();s.setHours(0,0,0,0);
+ if(v==='mes'){s.setDate(1);s.setMonth(s.getMonth()-(p-1))}else s.setDate(s.getDate()-(2*p-1));return[s,e]}
+async function loadHis(force){
+ if(!podeVer('his')||view!=='his')return;
+ const key=$("#hVis").value+'|'+$("#hPer").value;
+ if(!force&&key===hKey&&HW&&Date.now()-hAt<60000){hisRender();return}
+ hKey=key;const seq=++hSeq,[s,e]=hRange();
+ if(!ON){HW=S.waves.filter(w=>w.ts>=s.getTime()&&w.ts<=e.getTime());hAt=Date.now();hisRender();return}
+ HW=null;hisRender();
+ try{const arr=[];for(let off=0;;off+=1000){const q='/rest/v1/ondas?select=id,operador_id,galpao_id,tipo,quantidade,status,registrada_em,concluida_em&status=eq.0&registrada_em=gte.'+encodeURIComponent(s.toISOString())+'&registrada_em=lt.'+encodeURIComponent(e.toISOString())+'&order=registrada_em.asc,id.asc&limit=1000&offset='+off;
+  const part=await api(q);if(seq!==hSeq)return;arr.push(...part);if(part.length<1000)break}
+  const rows=arr.map(x=>({id:x.id,op:x.operador_id,gal:GN[x.galpao_id]||'—',ty:x.tipo,qty:x.quantidade,st:x.status,ts:Date.parse(x.registrada_em),fin:x.concluida_em?Date.parse(x.concluida_em):null,srv:1})),ids=new Set(rows.map(w=>w.id));
+  HW=rows.concat(S.waves.filter(w=>!w.srv&&!ids.has(w.id)&&w.ts>=s.getTime()&&w.ts<=e.getTime()));hAt=Date.now();hisRender();
+ }catch(err){if(seq!==hSeq)return;HW=undefined;hisRender()}
+}
+function hChart(items,o){o=o||{};const n=items.length,W=innerWidth<760?380:680,H=230,pl=44,pr=8,pt=16,pb=34,f=o.f||fmt,
+ mx=nice(Math.max(...items.map(i=>Math.max(i.v||0,i.hi||0)),o.line||0,1)),bw=(W-pl-pr)/Math.max(n,1),bwid=Math.max(Math.min(bw*.62,34),3),Y=v=>H-pb-v/mx*(H-pb-pt),step=Math.ceil(n/(innerWidth<760?8:16)),
+ halo="fill:var(--ink);paint-order:stroke;stroke:var(--card);stroke-width:4px;stroke-linejoin:round";
+ let s=`<svg class="ch" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(o.aria||'Histórico')}">`+[0,1,2,3].map(i=>{const y=Y(mx*i/3);return`<line x1="${pl}" x2="${W-pr}" y1="${y}" y2="${y}" stroke="var(--line)"/><text x="${pl-6}" y="${y+4}" text-anchor="end" style="fill:var(--mut)">${f(mx*i/3)}</text>`}).join('');
+ items.forEach((i,k)=>{const cx=pl+k*bw+bw/2,x=cx-bwid/2,v=i.v||0,top=Y(v),h=H-pb-top;
+  if(i.fc){s+=`<rect x="${x}" y="${top}" width="${bwid}" height="${Math.max(h,0)}" rx="3" fill="var(--v)" opacity=".4" stroke="var(--v)" stroke-dasharray="4 3"><title>${esc(i.k)}: previsão ${f(v)}${i.lo!=null?' (faixa '+f(i.lo)+' a '+f(i.hi)+')':''}</title></rect>`;
+   if(i.lo!=null)s+=`<line x1="${cx}" x2="${cx}" y1="${Y(i.hi)}" y2="${Y(i.lo)}" stroke="var(--v)" stroke-width="2"/><line x1="${cx-4}" x2="${cx+4}" y1="${Y(i.hi)}" y2="${Y(i.hi)}" stroke="var(--v)" stroke-width="2"/><line x1="${cx-4}" x2="${cx+4}" y1="${Y(i.lo)}" y2="${Y(i.lo)}" stroke="var(--v)" stroke-width="2"/>`}
+  else if(v>0)s+=`<rect x="${x}" y="${top}" width="${bwid}" height="${h}" rx="3" fill="${i.hl?'var(--g)':'var(--t)'}"><title>${esc(i.k)}: ${f(v)}</title></rect>`;
+  if(o.cmp&&o.cmp[k]!=null)s+=`<circle cx="${cx}" cy="${Y(o.cmp[k])}" r="3.5" fill="var(--a)" stroke="var(--card)" stroke-width="1.5"><title>${esc(o.cmpName||'Comparação')}: ${f(o.cmp[k])}</title></circle>`;
+  if(k%step===0)s+=`<text x="${cx}" y="${H-12}" text-anchor="middle" style="fill:var(--mut)">${esc(i.k)}</text>`});
+ if(o.line)s+=`<line x1="${pl}" x2="${W-pr}" y1="${Y(o.line)}" y2="${Y(o.line)}" stroke="var(--g)" stroke-width="2" stroke-dasharray="6 5"/><text x="${W-pr}" y="${Y(o.line)-5}" text-anchor="end" style="${halo}">mediana ${f(o.line)}</text>`;
+ return s+`</svg><div class="legend"><span><i style="background:var(--t)"></i>Realizado</span>${items.some(i=>i.fc)?'<span><i style="background:var(--v);opacity:.5"></i>Previsão (faixa = quartis 25% a 75%)</span>':''}${o.cmp?`<span><i style="background:var(--a)"></i>${esc(o.cmpName)}</span>`:''}<span><i style="background:var(--g)"></i>Mediana</span></div>`}
+const hK=(t,v,sub)=>`<div class="kpi"><dt>${t}</dt><dd class="num">${v}</dd><dd class="sm">${sub||''}</dd></div>`;
+const hVar=(c,p,low)=>{if(!p)return'';const d=(c-p)/p*100,good=low?d<0:d>0;return`<span style="color:var(--${Math.abs(d)<1?'mut':good?'g':'r'})">${d>0?'▲':'▼'} ${Math.abs(d).toLocaleString('pt-BR',{maximumFractionDigits:1})}% vs período anterior</span>`};
+function hisRender(){
+ const el=$("#hBody"),st=$("#hStatus");if(!el||!podeVer('his'))return;st.classList.add('hide');
+ if(HW===undefined){el.innerHTML='<div class="card"><div class="empty">Não foi possível carregar o histórico. Confira a conexão e tente novamente.</div></div>';return}
+ if(HW===null){el.innerHTML='<div class="card"><div class="empty">Carregando histórico…</div></div>';return}
+ const vis=$("#hVis").value,met=$("#hMet").value,p=+$("#hPer").value,g=restricted()?myG():$("#hGal").value,low=met==='t',f=met==='t'?mm:fmt;
+ const L=HW.filter(w=>g==='__all'?visG().includes(w.gal):w.gal===g),P=prod(L),C=durs(L),U={},O={},D={},HU={},HO={},HD={};
+ P.forEach(w=>{const t=w.fin||w.ts,d=dk(t),h=new Date(t).getHours();U[d]=(U[d]||0)+w.qty;O[d]=(O[d]||0)+1;HU[d+'|'+h]=(HU[d+'|'+h]||0)+w.qty;HO[d+'|'+h]=(HO[d+'|'+h]||0)+1});
+ C.forEach(c=>{const d=dk(c.t),h=new Date(c.t).getHours();(D[d]=D[d]||[]).push(c.d);(HD[d+'|'+h]=HD[d+'|'+h]||[]).push(c.d)});
+ const dayV=d=>met==='u'?(U[d]||0):met==='o'?(O[d]||0):(D[d]?med(D[d]):0),agg=ds=>met==='t'?med(ds.flatMap(d=>D[d]||[])):ds.reduce((s,d)=>s+(met==='u'?U[d]||0:O[d]||0),0);
+ const today=dk(Date.now()),nome=met==='u'?'unidades':met==='o'?'ondas':'tempo mediano por conjunto';
+ if(!P.length){el.innerHTML='<div class="card"><div class="empty">Ainda não há ondas concluídas neste período'+(g!=='__all'?' para '+esc(g):'')+'.</div></div>';return}
+ /* mediana por dia da semana (só dias com produção) -> base da previsão */
+ const allDays=[...new Set(P.map(w=>dk(w.fin||w.ts)))].sort(),wdS=Array.from({length:7},(_,i)=>{const a=allDays.filter(d=>d!==today&&new Date(d+'T12:00:00').getDay()===i).map(dayV).filter(v=>v>0);return{n:a.length,m:med(a),lo:pct(a,.25),hi:pct(a,.75)}});
+ const fcDay=d=>wdS[new Date(d+'T12:00:00').getDay()];
+ let kp='',ch='',tb='',ex='';
+ if(vis==='dia'){
+  const days=Array.from({length:p},(_,i)=>dAdd(today,i-p+1)),prev=Array.from({length:p},(_,i)=>dAdd(today,i-2*p+1)),vals=days.map(dayV),act=days.filter(d=>dayV(d)>0),mdn=med(act.map(dayV));
+  const best=act.slice().sort((a,b)=>low?dayV(a)-dayV(b):dayV(b)-dayV(a)),tot=agg(days),pt=agg(prev);
+  kp=hK(met==='t'?'Mediana do período':'Total no período',met==='t'?mm(tot):fmt(tot),hVar(tot,pt,low))+hK(met==='t'?'Mediana dos dias':'Mediana por dia',f(mdn),act.length+' dias com produção')+hK(low?'Dia mais rápido':'Melhor dia',best[0]?f(dayV(best[0])):'—',best[0]?dFmt(best[0]):'')+hK(low?'Dia mais lento':'Pior dia',best.length?f(dayV(best[best.length-1])):'—',best.length?dFmt(best[best.length-1]):'');
+  const items=days.map(d=>({k:d.slice(8)+'/'+d.slice(5,7),v:dayV(d),hl:d===best[0]}));
+  const fut=Array.from({length:7},(_,i)=>dAdd(today,i+1)),fi=fut.map(d=>{const s=fcDay(d);return{k:d.slice(8)+'/'+d.slice(5,7),v:s.n?s.m:0,lo:s.n?s.lo:null,hi:s.n?s.hi:null,fc:1}});
+  ch=hChart(items.concat(fi),{line:mdn,f,aria:'Evolução por dia'});
+  /* hoje: realizado + mediana das horas restantes */
+  let prevTxt='';if(met!=='t'){const hs=Array.from({length:24},(_,h)=>{const a=allDays.filter(d=>d!==today&&dayV(d)>0).map(d=>(met==='u'?HU:HO)[d+'|'+h]||0);return med(a)}),nowH=new Date().getHours(),fe=(met==='u'?U[today]:O[today])||0,rest=hs.slice(nowH+1).reduce((a,b)=>a+b,0);if(wdS.some(x=>x.n)&&fe+rest>0)prevTxt=`<div class="ins"><div><b>Hoje</b><span>Realizado até agora: ${fmt(fe)}. Pela mediana de cada hora restante, o dia fecha perto de <b>${fmt(fe+rest)}</b>.</span></div></div>`}
+  const wk=fut.map((d,i)=>`<tr><td>${dFmt(d)}</td><td class="num">${fi[i].v?f(fi[i].v):'—'}</td><td class="num">${fi[i].lo!=null?f(fi[i].lo)+' a '+f(fi[i].hi):'—'}</td><td class="num">${fcDay(d).n}</td></tr>`).join('');
+  tb=`<div class="card" style="margin-top:14px"><h2>Previsão dos próximos 7 dias</h2><div class="tw"><table><tr><th>Dia</th><th>Previsto (mediana)</th><th>Faixa provável</th><th>Dias usados</th></tr>${wk}</table></div><div class="legend">Mediana de cada dia da semana, usando só dias com produção. A faixa vai do 1º ao 3º quartil. Com menos de 3 dias na base, a previsão é fraca.</div>${prevTxt}</div>`;
+  const sd=days.filter(d=>dayV(d)>0),a1=sd.slice(-7).map(dayV),a0=sd.slice(-14,-7).map(dayV);
+  if(a1.length>=3&&a0.length>=3){const m1=med(a1),m0=med(a0),dd=(m1-m0)/m0*100;ex=`<div class="legend">Tendência: mediana dos últimos 7 dias com produção é ${f(m1)}, contra ${f(m0)} nos 7 anteriores (${dd>0?'+':''}${dd.toLocaleString('pt-BR',{maximumFractionDigits:1})}%).</div>`}
+ }else if(vis==='hora'){
+  const days=Array.from({length:p},(_,i)=>dAdd(today,i-p+1)).filter(d=>d!==today&&dayV(d)>0),hv=(d,h)=>met==='u'?HU[d+'|'+h]||0:met==='o'?HO[d+'|'+h]||0:(HD[d+'|'+h]?med(HD[d+'|'+h]):0);
+  const mh=Array.from({length:24},(_,h)=>{const a=days.map(d=>hv(d,h)).filter(v=>met!=='t'||v>0);return a.length?med(a):0}),act=mh.map((v,h)=>[v,h]).filter(x=>x[0]>0),top=act.slice().sort((a,b)=>low?a[0]-b[0]:b[0]-a[0]);
+  const nowH=new Date().getHours(),tv=Array.from({length:24},(_,h)=>h<=nowH?hv(today,h):null),hasT=tv.some(v=>v>0);
+  kp=hK('Dias na base',String(days.length),'sem contar hoje')+hK(low?'Hora mais rápida':'Hora mais produtiva',top[0]?top[0][1]+'h':'—',top[0]?f(top[0][0])+' (mediana)':'')+hK(low?'Hora mais lenta':'Hora menos produtiva',top.length?top[top.length-1][1]+'h':'—',top.length?f(top[top.length-1][0])+' (mediana)':'')+hK('Hoje',met==='t'?(D[today]?mm(med(D[today])):'—'):fmt((met==='u'?U[today]:O[today])||0),hasT?'pontos azuis no gráfico':'sem produção ainda');
+  const first=Math.max(0,(act[0]||[0,0])[1]-1),lastH=Math.min(23,Math.max(nowH,(act[act.length-1]||[0,23])[1])+1),sl=[];for(let h=first;h<=lastH;h++)sl.push(h);
+  ch=hChart(sl.map(h=>({k:h+'h',v:mh[h],hl:top[0]&&h===top[0][1]&&!low})),{f,cmp:sl.map(h=>tv[h]),cmpName:'Hoje',aria:'Mediana por hora'});
+  if(met!=='t'&&days.length&&hasT){const fe=tv.reduce((a,v)=>a+(v||0),0),rest=mh.slice(nowH+1).reduce((a,b)=>a+b,0);ex=`<div class="ins"><div><b>Previsão de hoje</b><span>Realizado até ${nowH}h: ${fmt(fe)}. Somando a mediana das horas que faltam (${fmt(rest)}), o dia deve fechar perto de <b>${fmt(fe+rest)}</b>.</span></div></div>`}
+  tb=`<div class="card" style="margin-top:14px"><h2>Mediana por hora</h2><div class="tw"><table><tr><th>Hora</th><th>Mediana</th><th>Hoje</th></tr>${sl.map(h=>`<tr><td>${h}h</td><td class="num">${mh[h]?f(mh[h]):'—'}</td><td class="num">${tv[h]?f(tv[h]):'—'}</td></tr>`).join('')}</table></div></div>`;
+ }else{
+  const ms=Array.from({length:p},(_,i)=>{const d=new Date();d.setDate(1);d.setMonth(d.getMonth()-(p-1-i));return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')}),inM=m=>allDays.filter(d=>d.slice(0,7)===m),mv=m=>agg(inM(m)),cur=ms[ms.length-1];
+  const act=ms.filter(m=>mv(m)>0),bs=act.slice().sort((a,b)=>low?mv(a)-mv(b):mv(b)-mv(a));
+  const dim=(y,m)=>new Date(y,m,0).getDate(),proj=(m,from)=>{const[y,mo]=m.split('-').map(Number);let a=0,lo=0,hi=0,n=0;for(let i=from;i<=dim(y,mo);i++){const s=fcDay(m+'-'+String(i).padStart(2,'0'));if(s.n){a+=s.m;lo+=s.lo;hi+=s.hi;n++}}return{m:a,lo,hi}};
+  const dn=new Date(),pj=met==='t'?null:proj(cur,dn.getDate()+1),sofar=met==='t'?0:mv(cur);
+  const nx=new Date();nx.setDate(1);nx.setMonth(nx.getMonth()+1);const nm=nx.getFullYear()+'-'+String(nx.getMonth()+1).padStart(2,'0'),pn=met==='t'?null:proj(nm,1);
+  const t3=act.slice(-3).map(mv);
+  kp=hK('Meses com produção',String(act.length),'de '+p)+hK(low?'Mês mais rápido':'Melhor mês',bs[0]?f(mv(bs[0])):'—',bs[0]?MES[+bs[0].slice(5)-1]+'/'+bs[0].slice(2,4):'')+hK(low?'Mês mais lento':'Pior mês',bs.length?f(mv(bs[bs.length-1])):'—',bs.length?MES[+bs[bs.length-1].slice(5)-1]+'/'+bs[bs.length-1].slice(2,4):'')+(met==='t'?hK('Mediana dos meses',f(med(act.map(mv))),''):hK('Fechamento do mês',pj&&pj.m?fmt(sofar+pj.m):'—',pj&&pj.m?'faixa '+fmt(sofar+pj.lo)+' a '+fmt(sofar+pj.hi):'poucos dados'));
+  const items=ms.map(m=>({k:MES[+m.slice(5)-1]+'/'+m.slice(2,4),v:mv(m),hl:bs[0]===m&&!low}));
+  if(met==='t'){if(t3.length>=2)items.push({k:'próx.',v:med(t3),fc:1,lo:pct(t3,.25),hi:pct(t3,.75)})}else{if(pn&&pn.m)items.push({k:MES[nx.getMonth()]+'/'+String(nx.getFullYear()).slice(2),v:pn.m,lo:pn.lo,hi:pn.hi,fc:1})}
+  ch=hChart(items,{line:med(act.map(mv)),f,aria:'Evolução por mês'});
+  tb=`<div class="card" style="margin-top:14px"><h2>Meses</h2><div class="tw"><table><tr><th>Mês</th><th>${met==='t'?'Mediana':'Total'}</th><th>Dias com produção</th><th>Mediana por dia</th></tr>${ms.slice().reverse().map(m=>{const a=inM(m);return`<tr><td>${MES[+m.slice(5)-1]}/${m.slice(0,4)}</td><td class="num">${mv(m)?f(mv(m)):'—'}</td><td class="num">${a.filter(d=>dayV(d)>0).length}</td><td class="num">${a.length?f(med(a.map(dayV).filter(v=>v>0))):'—'}</td></tr>`}).join('')}</table></div><div class="legend">Previsão: soma da mediana de cada dia da semana nos dias que faltam. Quartis dão a faixa.</div></div>`;
+ }
+ /* quebra por tipo */
+ const tr=TY.map(([n,c])=>{const q=P.filter(w=>w.ty===n),d=C.filter(x=>x.w.ty===n).map(x=>x.d);return`<tr><td><b>${esc(n)}</b></td><td class="num">${fmt(q.length)}</td><td class="num">${fmt(q.reduce((a,w)=>a+w.qty,0))}</td><td class="num">${d.length?mm(med(d)):'—'}</td></tr>`}).join('');
+ el.innerHTML=`<dl class="stats solo">${kp}</dl><div class="card" style="margin-top:14px"><h2>Evolução: ${nome}</h2>${ch}${ex}</div>${tb}<div class="card" style="margin-top:14px"><h2>Por tipo de onda no período</h2><div class="tw"><table><tr><th>Tipo</th><th>Ondas</th><th>Unidades</th><th>Tempo mediano por conjunto</th></tr>${tr}</table></div>${foraLim(L)}</div>`;
+}
+
 /* ===================== acesso ===================== */
 const needAuth=k=>ON?!me:S.ges.length>0&&!(me&&(k==="cfg"?me.pC:me.pI));
+const isI=t=>t==="ind"||t==="his";
 /* aba só aparece se o perfil atual pode abri-la; o que não é acessível fica oculto */
-function podeVer(t){if(t==="op"||t==="painel")return true;if(ON)return !!me&&(t==="ind"?!!me.pI:!!me.pC);if(t==="painel")return true;return !needAuth(t)}
-function updTabs(){$$(".tab[data-t]").forEach(b=>{b.style.display=podeVer(b.dataset.t)?"":"none"});$$('#csub [data-c="cga"]').forEach(b=>{b.textContent=soMeta()?"Meta do dia":"Galpões"});$$('#csub [data-c="cge"]').forEach(b=>{b.style.display=soMeta()?"none":""});$$('#csub [data-c="cma"]').forEach(b=>{b.style.display=(!ON||(me&&me.adm))?"":"none"});if(!podeVer(view)){view="op";["painel","op","ind","cfg"].forEach(s=>$("#"+s).classList.toggle("hide",s!=="op"));$$(".tab[data-t]").forEach(b=>b.classList.toggle("on",b.dataset.t==="op"))}}
-function authUI(){$("#who").textContent=me?"Gestor: "+me.n:"";$("#logtx").textContent=me?"Sair":"Entrar";updTabs()}
+function podeVer(t){if(t==="op"||t==="painel")return true;if(ON)return !!me&&(isI(t)?!!me.pI:!!me.pC);if(t==="painel")return true;return !needAuth(t)}
+function updTabs(){$$(".tab[data-t]").forEach(b=>{b.style.display=podeVer(b.dataset.t)?"":"none"});$$('#csub [data-c="cga"]').forEach(b=>{b.textContent=soMeta()?"Meta do dia":"Galpões"});$$('#csub [data-c="cge"]').forEach(b=>{b.style.display=soMeta()?"none":""});$$('#csub [data-c="cma"]').forEach(b=>{b.style.display=(!ON||(me&&me.adm))?"":"none"});if(!podeVer(view)){view="op";["painel","op","ind","his","cfg"].forEach(s=>$("#"+s).classList.toggle("hide",s!=="op"));$$(".tab[data-t]").forEach(b=>b.classList.toggle("on",b.dataset.t==="op"))}}
+function authUI(){hKey="";HW=null;$("#who").textContent=me?"Gestor: "+me.n:"";$("#logtx").textContent=me?"Sair":"Entrar";updTabs()}
 function go(t){
  updTabs();
- if((t==="cfg"||t==="ind")&&needAuth(t)){$("#login").classList.remove("hide");$("#lU").focus();pend=t;return}
- if(ON&&me&&((t==="cfg"&&!me.pC)||(t==="ind"&&!me.pI))){toast("Seu acesso não inclui esta área.");return}
- view=t;["painel","op","ind","cfg"].forEach(s=>$("#"+s).classList.toggle("hide",s!==t));
+ if((t==="cfg"||isI(t))&&needAuth(t)){$("#login").classList.remove("hide");$("#lU").focus();pend=t;return}
+ if(ON&&me&&((t==="cfg"&&!me.pC)||(isI(t)&&!me.pI))){toast("Seu acesso não inclui esta área.");return}
+ view=t;["painel","op","ind","his","cfg"].forEach(s=>$("#"+s).classList.toggle("hide",s!==t));
  $$(".tab[data-t]").forEach(b=>b.classList.toggle("on",b.dataset.t===t));
- $("#ttl").textContent={painel:"Painel",op:"Operação",ind:"Gestão operacional",cfg:"Configurações"}[t];
- if(t==="cfg")cfgRender();if(t==="ind"){if(ON){MGW=null;mgState='Carregando histórico do período…'}individual();loadManagement()}renderAll();
+ $("#ttl").textContent={painel:"Painel",op:"Operação",ind:"Gestão operacional",his:"Histórico",cfg:"Configurações"}[t];
+ if(t==="cfg")cfgRender();if(t==="his")hisOpen();if(t==="ind"){if(ON){MGW=null;mgState='Carregando histórico do período…'}individual();loadManagement()}renderAll();
  if(t==="op"&&!$("#s1").classList.contains("hide"))setTimeout(()=>$("#opIn").focus({preventScroll:true}),60)}
 let pend=null;
 $("#logbtn").onclick=()=>{if(ON&&(me||sess)){sair();return}if(me){me=null;authUI();toast("Sessão encerrada");go("painel");return}$("#login").classList.remove("hide");$("#lU").focus()};
@@ -961,12 +1073,12 @@ function galSel(){const e=$("#gal"),v=e.value;e.innerHTML=(restricted()?"":'<opt
  if(restricted()){S.gal=myG();e.value=myG();e.disabled=true}else{e.value=S.gals.includes(v)||v==="__all"?v:S.gal;e.disabled=false}}
 function renderAll(){netUI();galSel();if(ON&&!me){if(view==="painel")painelPublico()}else painel();operacao();procurando();filters();
  $("#sub2").textContent=new Date($("#day").value+"T12:00").toLocaleDateString("pt-BR",{weekday:"long",day:"numeric",month:"long",year:"numeric"});
- if(view==="ind"){individual();coletiva()}}
+ if(view==="ind"){individual();coletiva()}if(view==="his")hisRender()}
 
 /* ===================== eventos ===================== */
 $("#day").value=dk(Date.now());galSel();$("#gal").value=S.gal;
 $("#gal").onchange=e=>{if(e.target.value!=="__all"){S.gal=e.target.value;save()}renderAll()};
-$("#day").onchange=()=>{renderAll();if(view==="ind")loadManagement()};$("#turnoF").onchange=renderAll;
+$("#day").onchange=()=>{renderAll();if(view==="ind")loadManagement()};$("#turnoF").onchange=renderAll;$("#hSeg").onclick=e=>{const m=e.target.dataset.m;if(!m)return;HM=m;try{localStorage.setItem("rc.hm",m)}catch(x){}if(ON&&!me){if(publicData)desenhaPainelPublico(publicData,$("#gal").value,$("#turnoF").value)}else painel()};$("#hVis").onchange=()=>{$("#hPer").innerHTML="";hisFill();loadHis()};["hPer","hMet","hGal"].forEach(i=>$("#"+i).onchange=()=>{if(i==="hPer")loadHis();else hisRender()});
 $("#net").onclick=()=>{S.off=!S.off;save();if(online())flush();renderAll()};
 addEventListener("online",()=>{flush();renderAll();if(ON)pull().then(renderAll).catch(()=>{})});addEventListener("offline",renderAll);
 $("#theme").onclick=()=>{const r=document.documentElement,d=getComputedStyle(r).getPropertyValue("--bg").trim()==="#0e1726";r.dataset.theme=d?"light":"dark"};

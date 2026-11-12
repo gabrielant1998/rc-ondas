@@ -302,6 +302,38 @@ await T("51 Operador: nomes aparecem em cartões a partir da primeira letra, sem
  await p.fill('#opIn','');await p.keyboard.type('xyz');ok((await p.textContent('#opSug')).includes('Nenhum operador'),'sem aviso de nenhum');
  await p.fill('#opIn','');await p.keyboard.type('b');await p.click('#opSug [data-sug]');await p.waitForTimeout(300);
  ok(!(await p.isVisible('#s1'))&&await p.isVisible('#s2')&&(await p.inputValue('#opIn'))==='CL002','clicar no cartão deveria escolher e avançar')});
+const HIS=()=>{const w=[];let n=0;for(let d=1;d<=21;d++){const day=new Date();day.setDate(day.getDate()-d);day.setHours(0,0,0,0);const base0=day.getTime(),q=day.getDay()%6===0?0:100+d;if(!q)continue;
+ w.push(WV('h'+(n++),'H'+n,'Vários artigos',q,base0+9*H),WV('h'+(n++),'H'+n,'Itens Únicos',20,base0+9*H+30*60000),WV('h'+(n++),'H'+n,'Vários artigos',10,base0+10*H+10*60000))}return w};
+await T("52 Histórico: visão por dia com KPIs, mediana e previsão de 7 dias",async()=>{
+ const p=await page(b,base({waves:HIS()}));await p.evaluate(()=>go('his'));await p.waitForTimeout(200);
+ const t=(await p.textContent('#hBody')).replace(/\s+/g,' ');
+ ok(t.includes('Melhor dia')&&t.includes('Mediana por dia')&&t.includes('Previsão dos próximos 7 dias'),'sem blocos: '+t.slice(0,300));
+ ok((await p.$$('#hBody svg.ch')).length===1,'sem gráfico');
+ ok((await p.$$('#hBody table tr')).length>=7+1,'tabela de previsão incompleta');
+ ok(/mediana/.test(await p.textContent('#hBody svg.ch')),'sem linha de mediana');
+ await p.selectOption('#hMet','o');await p.waitForTimeout(100);ok((await p.textContent('#hBody')).includes('Evolução: ondas'),'métrica ondas');
+ await p.selectOption('#hMet','t');await p.waitForTimeout(100);ok((await p.textContent('#hBody')).includes('Evolução: tempo mediano'),'métrica tempo')});
+await T("53 Histórico: visões por hora e por mês",async()=>{
+ const p=await page(b,base({waves:HIS()}));await p.evaluate(()=>go('his'));
+ await p.selectOption('#hVis','hora');await p.waitForTimeout(150);let t=(await p.textContent('#hBody')).replace(/\s+/g,' ');
+ ok(t.includes('Hora mais produtiva')&&t.includes('Mediana por hora')&&t.includes('9h'),'hora: '+t.slice(0,300));
+ await p.selectOption('#hVis','mes');await p.waitForTimeout(150);t=(await p.textContent('#hBody')).replace(/\s+/g,' ');
+ ok(t.includes('Melhor mês')&&t.includes('Meses com produção'),'mês: '+t.slice(0,300));
+ ok((await p.$$eval('#hPer option',a=>a.map(o=>o.textContent))).join().includes('12 meses'),'períodos do mês')});
+await T("54 Histórico: só gestores e administradores veem a aba",async()=>{
+ const S=base({waves:HIS()});const p0=await page(b,null);const hp=await p0.evaluate(()=>h32("123"));
+ S.ges=[{n:"Admin",u:"adm@x.com",g:"Galpão 1",adm:true,p:hp,pC:true,pI:true,pR:true}];
+ const p=await page(b,S);ok(!(await p.isVisible('.tab[data-t="his"]')),'aba visível sem login');
+ await p.evaluate(()=>go('his'));ok(await p.isVisible('#login'),'deveria pedir login');
+ await p.fill('#lU','adm@x.com');await p.fill('#lP','123');await p.click('#lB');await p.waitForTimeout(300);
+ ok(await p.isVisible('.tab[data-t="his"]'),'aba some após login');ok((await p.textContent('#ttl')).includes('Histórico'),'não abriu: '+await p.textContent('#ttl'))});
+await T("55 Painel: gráfico alterna Hora e 30 min, mantém necessário por hora; temporizador de 2 min",async()=>{
+ const p=await page(b,base({waves:[WV('q1','Q1','Vários artigos',50,HR(9,10)),WV('q2','Q2','Vários artigos',30,HR(9,40)),WV('q3','Q3','Itens Únicos',20,HR(10,5))]}));
+ await p.evaluate(()=>go('painel'));let t=await p.textContent('#chH');ok(/9h/.test(t)&&!/9:30/.test(t),'hora: '+t.slice(0,120));
+ await p.click('#hSeg [data-m="m"]');await p.waitForTimeout(100);t=await p.textContent('#chH');ok(/9:30/.test(t)&&(await p.textContent('#hTit')).includes('meia hora'),'30 min: '+t.slice(0,160));
+ ok((await p.textContent('#peak')).includes('pico 9h')||(await p.textContent('#peak')).includes('pico 9:30'),'pico');
+ await p.click('#hSeg [data-m="h"]');ok(!/9:30/.test(await p.textContent('#chH')),'voltou à hora');
+ ok((await p.textContent('#tauto')+await p.textContent('body')).includes('Janela de agrupamento de 2 min'),'texto 2 min')});
 await b.close();
 const w=Math.max(...R.map(r=>r[1].length));for(const r of R)console.log((r[0]==="PASS"?"✅":"❌")+" "+r[1].padEnd(w)+"  "+r[2]);
 console.log(`\n${R.filter(r=>r[0]==="PASS").length}/${R.length} passaram`)})();

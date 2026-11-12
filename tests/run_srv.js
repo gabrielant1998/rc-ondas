@@ -290,6 +290,15 @@ await T('S25 Gestor comum: Usuários só do galpão dele, cria usuário nele e a
  const n=db.operadores.find(o=>o.nome==='Novo Op');ok(n&&n.galpao_id===G2,JSON.stringify(n));
  await p.click('#logbtn');await login(p,'adm@x.com','senha1234');await p.click('.tab[data-t="cfg"]');await p.click('[data-c="cus"]');
  const a=await ver();ok(a.lista.includes('Ana Souza')&&a.lista.includes('Carla Dias')&&!a.sel&&a.ges!=='none',JSON.stringify(a))});
+await T('S26 Histórico no servidor: gestor do galpão vê só o dele; aba exige login',async()=>{const db=banco();const p=await page(b,db);
+ const t=(d,h)=>{const x=new Date();x.setDate(x.getDate()-d);x.setHours(h,0,0,0);return x.toISOString()};
+ [[1,G1,100],[2,G1,120],[3,G1,90],[1,G2,7],[2,G2,9]].forEach(([d,g,q],i)=>db.ondas.push({id:'hs'+i,wn:'HS'+i,operador_id:db.operadores.find(o=>o.galpao_id===g).id,galpao_id:g,tipo:'Vários artigos',quantidade:q,status:0,registrada_em:t(d,9),concluida_em:t(d,9),encerrada_auto:false}));
+ ok(!(await p.isVisible('.tab[data-t="his"]')),'aba visível sem login');
+ await login(p,'g2@x.com','senha1234');await p.evaluate(()=>go('his'));await p.waitForTimeout(600);
+ let x=(await p.textContent('#hBody')).replace(/\s+/g,' ');ok(x.includes('Melhor dia')&&x.includes('16')&&!x.includes('310'),'gestor G2: '+x.slice(0,260));
+ ok(await p.$eval('#hGal',e=>e.style.display==='none'),'gestor não deveria escolher galpão');
+ await p.click('#logbtn');await login(p,'adm@x.com','senha1234');await p.evaluate(()=>go('his'));await p.selectOption('#hMet','o');await p.selectOption('#hMet','u');await p.waitForTimeout(600);
+ x=(await p.textContent('#hBody')).replace(/\s+/g,' ');ok(x.includes('326'),'admin deveria somar tudo (326): '+x.slice(0,260))});
 await b.close();
 const w=Math.max(...R.map(r=>r[1].length));for(const r of R)console.log((r[0]==='PASS'?'✅':'❌')+' '+r[1].padEnd(w)+'  '+r[2]);
 console.log(`\n${R.filter(r=>r[0]==='PASS').length}/${R.length} passaram`)})();
