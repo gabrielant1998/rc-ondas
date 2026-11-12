@@ -38,14 +38,14 @@ await T("02 Volume: salvar 1 onda com 20.000 já existentes",async()=>{const p=a
  const t0=Date.now();await typeRows(p,[[999001,10]]);await p.click('#save');await p.waitForTimeout(200);const dt=Date.now()-t0;
  const s=await st(p);ok(s.waves.length===20001,"total "+s.waves.length);return `ok em ${dt}ms (inclui digitação)`});
 
-await T("03 Lote: 25 ondas numa tacada só pelo teclado",async()=>{const p=await page(b,base());await openReg(p,"CL002","Múltiplos");
+await T("03 Lote: 25 ondas numa tacada só pelo teclado",async()=>{const p=await page(b,base());await openReg(p,"CL002","Pacote do mesmo");
  const rows=[];for(let i=0;i<25;i++)rows.push([7000+i,10+i]);await typeRows(p,rows);await p.click('#save');await p.waitForTimeout(300);
  const s=await st(p);ok(s.waves.length===25,"salvou "+s.waves.length);ok(new Set(s.waves.map(w=>w.id)).size===25,"ids repetidos");
  ok(new Set(s.waves.map(w=>w.wn)).size===25,"WN repetidos");const sum=s.waves.reduce((a,w)=>a+w.qty,0);
  const shown=await p.evaluate(()=>{go("painel");return document.querySelector("#kpis .num").textContent});ok(shown.replace(/\D/g,"")==String(sum),"painel "+shown+" ≠ "+sum);
  return `25 salvas, painel = ${shown}`});
 
-await T("04 WN repetido no mesmo formulário é bloqueado",async()=>{const p=await page(b,base());await openReg(p,"CL001","Vários");
+await T("04 WN repetido no mesmo formulário é bloqueado",async()=>{const p=await page(b,base());await openReg(p,"CL001","Pacote do mesmo");
  await typeRows(p,[[5001,10],[5001,20]]);await p.click('#save');await p.waitForTimeout(150);const s=await st(p);ok(!s||s.waves.length===0,"salvou com WN repetido");
  const err=await p.$$eval('.wrow.err',x=>x.length);ok(err===1,"linhas marcadas: "+err)});
 
@@ -73,7 +73,7 @@ await T("10 Linha incompleta (só WN, ou só quantidade) é bloqueada",async()=>
  await p.fill('[data-wn="0"]','');await p.fill('[data-q="0"]','5');await p.click('#save');await p.waitForTimeout(150);ok(!(await st(p))||(await st(p)).waves.length===0,"salvou sem WN")});
 
 await T("11 Offline: registra, mostra pendentes e sincroniza sem duplicar",async()=>{const p=await page(b,base());await p.click('#net');
- await openReg(p,"CL001","Vários");await typeRows(p,[[6401,1],[6402,2],[6403,3]]);await p.click('#save');await p.waitForTimeout(200);
+ await openReg(p,"CL001","Pacote do mesmo");await typeRows(p,[[6401,1],[6402,2],[6403,3]]);await p.click('#save');await p.waitForTimeout(200);
  let s=await st(p);ok(s.waves.length===3&&s.waves.every(w=>!w.sync),"não ficou pendente");ok((await p.textContent('#net')).includes("3 pendente"),"indicador: "+await p.textContent('#net'));
  await p.click('#net');await p.waitForTimeout(150);s=await st(p);ok(s.waves.length===3&&s.waves.every(w=>w.sync),"não sincronizou ou duplicou");return await p.textContent('#toast')});
 
@@ -149,7 +149,7 @@ await T("24 Desligar 'ondas em andamento' fecha as abertas sem perder quantidade
  ok(s.waves.every(w=>w.st===0&&w.fin&&w.auto)&&s.waves.reduce((a,w)=>a+w.qty,0)===30,"não fechou certo");
  await p.evaluate(()=>go("painel"));ok((await p.textContent('#kpis .num')).trim()==="30","painel não somou")});
 
-await T("25 Celular (390px): registro completo sem erro e sem rolagem lateral",async()=>{const p=await page(b,base(),{vp:{width:390,height:844}});await openReg(p,"CL001","Itens Únicos");
+await T("25 Celular (390px): registro completo sem erro e sem rolagem lateral",async()=>{const p=await page(b,base(),{vp:{width:390,height:844}});await openReg(p,"CL001","Pacote do mesmo");
  await typeRows(p,[[9001,5],[9002,6]]);await p.click('#save');await p.waitForTimeout(200);const s=await st(p);ok(s.waves.length===2,"salvou "+s.waves.length);
  const w=await p.evaluate(()=>document.documentElement.scrollWidth);ok(w<=392,"rolagem lateral: "+w+"px")});
 
@@ -215,6 +215,10 @@ await T("41 Manutenção local: apaga só o período escolhido, depois de digita
  await p.fill('#xCon','APAGAR');await p.click('#xDel');await p.waitForTimeout(300);
  const restam=await p.evaluate(()=>S.waves.map(w=>w.id));
  ok(res.includes('1 registro')&&restam.join()==='b','contou: '+res+' | restam: '+restam.join())});
+
+await T("42 Adicionar outra onda aparece só em Pacote do mesmo",async()=>{const p=await page(b,base());
+ const r=await p.evaluate(()=>{const f=n=>{document.querySelector(`[data-ty="${n}"]`).click();return document.querySelector('#addRow').style.display};return [f('Vários artigos'),f('Pacote do mesmo'),f('Retrabalho')]});
+ ok(r[0]==='none'&&r[1]==='block'&&r[2]==='none',r.join(' | '))});
 
 await T("34 Gestão: meta coletiva soma produção uma vez e mantém tipos",async()=>{const now=Date.now(),waves=[{id:'a',wn:'a',op:'CL001',opn:'Ana Souza',gal:'Galpão 1',ty:'Vários artigos',qty:10,st:0,ts:now,fin:now,sync:1},{id:'b',wn:'b',op:'CL002',opn:'Bruno Lima',gal:'Galpão 1',ty:'Retrabalho',qty:20,st:0,ts:now,fin:now,sync:1}];
  const p=await page(b,base({waves}));await p.evaluate(()=>{go('ind');document.querySelector('[data-gs="mc"]').click()});const txt=await p.textContent('#coBody');ok(txt.includes('30')&&txt.includes('10.000')&&txt.includes('Retrabalho'),'coletiva: '+txt);

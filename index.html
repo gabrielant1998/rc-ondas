@@ -677,7 +677,9 @@ function painel(){
 }
 
 /* ===================== OPERAÇÃO ===================== */
-function segs(){$("#types_b").innerHTML=TY.map(([n,c])=>`<button data-ty="${n}" style="--c:${c}" class="${n===ty?"on":""}">${ico(n)}<span>${n}</span></button>`).join("");}
+function multiOnda(){return ty==="Pacote do mesmo"}
+function updMulti(){const b=$("#addRow");if(b)b.style.display=multiOnda()?"block":"none"}
+function segs(){updMulti();$("#types_b").innerHTML=TY.map(([n,c])=>`<button data-ty="${n}" style="--c:${c}" class="${n===ty?"on":""}">${ico(n)}<span>${n}</span></button>`).join("");}
 function goStep(n){
  [1,2,3].forEach(i=>{const e=$("#s"+i);if(i===n){e.classList.remove("hide","stp");void e.offsetWidth;e.classList.add("stp")}else e.classList.add("hide")});
  $$("[data-sp]").forEach(s=>{const k=+s.dataset.sp;s.classList.toggle("on",k===n);s.classList.toggle("done",k<n)});
@@ -928,7 +930,7 @@ $("#iBody").addEventListener("click",e=>{if(e.target.id==="mgMore"){mgShown+=100
 $("#gsub").onclick=e=>{const x=e.target.dataset.gs;if(!x)return;gsub=x;$$("#gsub button").forEach(b=>b.classList.toggle("on",b===e.target));$("#iBody").classList.toggle("hide",x!=="mi");$("#coBody").classList.toggle("hide",x!=="mc");$("#iOp").classList.toggle("hide",x!=="mi");if(x==="mc")coletiva();else individual()};
 
 document.addEventListener("click",e=>{const d=e.target.dataset,t=e.target;
- const tyB=t.closest&&t.closest("[data-ty]");if(tyB){ty=tyB.dataset.ty;segs();setTimeout(()=>goStep(3),260)}
+ const tyB=t.closest&&t.closest("[data-ty]");if(tyB){ty=tyB.dataset.ty;if(!multiOnda()&&rows.length>1)rows.splice(1);segs();setTimeout(()=>goStep(3),260)}
  if(d.st!==undefined&&t.matches("[data-st]")){st=+d.st;segs()}
  if(d.ut){uT=+d.ut;cfgUsers()}
  if(d.goto){go("cfg");const b=document.querySelector('[data-c="'+d.goto+'"]');if(b)b.click()}
@@ -969,10 +971,10 @@ $("#b3").onclick=()=>goStep(2);
 $("#addRow").onclick=()=>{rows.push({wn:"",q:""});renderRows();setTimeout(()=>{const a=$$("[data-wn]");if(a.length)a[a.length-1].focus()},60)};
 $("#rowsL").oninput=e=>{const d=e.target.dataset;if(d.wn!==undefined)rows[+d.wn].wn=e.target.value;if(d.q!==undefined)rows[+d.q].q=e.target.value;
  const last=rows[rows.length-1];
- if((last.wn||"").trim()||last.q){rows.push({wn:"",q:""});$("#rowsL").insertAdjacentHTML("beforeend",rowHtml(rows[rows.length-1],rows.length-1))}};
+ if(multiOnda()&&((last.wn||"").trim()||last.q)){rows.push({wn:"",q:""});$("#rowsL").insertAdjacentHTML("beforeend",rowHtml(rows[rows.length-1],rows.length-1))}};
 $("#rowsL").onkeydown=e=>{if(e.key!=="Enter")return;const d=e.target.dataset;
  if(d.wn!==undefined){e.preventDefault();const q=$('[data-q="'+d.wn+'"]');if(q)q.focus()}
- else if(d.q!==undefined){e.preventDefault();const n=$('[data-wn="'+(+d.q+1)+'"]');if(n)n.focus();else $("#save").click()}};
+ else if(d.q!==undefined){e.preventDefault();const n=$('[data-wn="'+(+d.q+1)+'"]');if(n)n.focus();else $("#save").focus()}};
 $("#rowsL").onclick=e=>{const i=e.target.dataset.rmrow;if(i!==undefined){rows.splice(+i,1);if(!rows.length)rows.push({wn:"",q:""});renderRows()}};
 $("#save").onclick=()=>{const o=findOp($("#opIn").value);
  if(!o){toast("Identifique o operador");goStep(1);return}
