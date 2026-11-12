@@ -198,7 +198,7 @@ a[data-pick]{display:inline-block;padding:8px 0 2px;color:var(--gx);font-weight:
  body.printing #folha{display:block}
 }
 #folha{--g:#0f4bd0;--v:#0a2f7a;--a:#3d7be8;--mut:#55627a;--o:#b85c00;--k:#0b7f70;color:#14243d;font-family:var(--fb);-webkit-print-color-adjust:exact;print-color-adjust:exact}
-.fl{width:297mm;height:209mm;box-sizing:border-box;display:grid;grid-template-columns:78mm 1fr;page-break-after:always;break-after:page;overflow:hidden;background:#fff}
+.fl{width:100%;max-width:297mm;height:209mm;margin:0 auto;box-sizing:border-box;display:grid;grid-template-columns:78mm 1fr;page-break-after:always;break-after:page;overflow:hidden;background:#fff}
 .fl:last-child{page-break-after:auto;break-after:auto}
 .fl-s{background:linear-gradient(165deg,#0d2a5e 0%,#12408f 100%);color:#fff;padding:14mm 9mm;display:flex;flex-direction:column;position:relative;overflow:hidden}
 .fl-s:before{content:"";position:absolute;right:-30mm;bottom:-30mm;width:90mm;height:90mm;border-radius:50%;border:10mm solid rgba(255,255,255,.07)}
@@ -207,17 +207,17 @@ a[data-pick]{display:inline-block;padding:8px 0 2px;color:var(--gx);font-weight:
 .fl-s .mt{font-size:11pt;opacity:.85}
 .fl-s .info{margin-top:auto;border-top:1px solid rgba(255,255,255,.25);padding-top:5mm;font-size:10pt;line-height:1.7;position:relative}
 .fl-s .info b{display:block;font-size:8pt;font-weight:600;letter-spacing:.12em;text-transform:uppercase;opacity:.65;margin-top:2mm}
-.fl-m{padding:12mm 12mm 9mm 11mm;display:flex;flex-direction:column;gap:6mm;min-width:0}
+.fl-m{padding:10mm 11mm 7mm 10mm;display:flex;flex-direction:column;gap:4.5mm;min-width:0}
 .fl-m h2{font-family:var(--fd);font-size:15pt;margin:0;font-weight:800}
 .fl-hd{display:flex;justify-content:space-between;align-items:flex-end;gap:6mm}
 .fl-hd span{font-size:10pt;color:#55627a;text-align:right}
 .fl-k{display:grid;grid-template-columns:repeat(4,1fr);gap:4mm}
 .fl-k div{border:1px solid #d3d9e3;border-top:3mm solid #0f4bd0;border-radius:2mm;padding:3.5mm 4mm}
 .fl-k div:nth-child(2){border-top-color:#3d7be8}.fl-k div:nth-child(3){border-top-color:#0b7f70}.fl-k div:nth-child(4){border-top-color:#b85c00}
-.fl-k b{display:block;font-family:var(--fd);font-size:26pt;line-height:1;font-weight:800}
+.fl-k b{display:block;font-family:var(--fd);font-size:22pt;line-height:1;font-weight:800}
 .fl-k span{display:block;font-size:9pt;color:#55627a;margin-top:1.5mm}
 .fl-k em{display:block;font-style:normal;font-size:8pt;letter-spacing:.1em;text-transform:uppercase;color:#55627a;margin-bottom:1.5mm}
-.fl-g{display:grid;grid-template-columns:1.55fr 1fr;gap:6mm;flex:1;min-height:0}
+.fl-g{display:grid;grid-template-columns:1.55fr 1fr;gap:5mm;flex:1;min-height:0}
 .fl-g>div{border:1px solid #d3d9e3;border-radius:2mm;padding:4mm 5mm;display:flex;flex-direction:column;min-height:0}
 .fl-g h3{margin:0 0 2mm;font-size:11pt;font-weight:700}
 .fl-g svg{width:100%;flex:1;min-height:0}
@@ -225,6 +225,13 @@ a[data-pick]{display:inline-block;padding:8px 0 2px;color:var(--gx);font-weight:
 .fl-t i{display:block;font-style:normal;font-size:9.5pt;display:flex;justify-content:space-between}
 .fl-t u{display:block;height:3.2mm;background:#eef1f4;border-radius:2mm;text-decoration:none;overflow:hidden;margin-top:1mm}
 .fl-t u b{display:block;height:100%;border-radius:2mm}
+.fl-i{display:grid;grid-template-columns:1.15fr 1fr 1fr;gap:4mm;flex:1.25;min-height:0}
+.fl-i>div{border-radius:2mm;padding:3mm 4mm;overflow:hidden;font-size:9pt;line-height:1.38;border-top:2.4mm solid;min-height:0}
+.fl-i h4{margin:0 0 1.5mm;font-size:9.5pt;font-weight:800;letter-spacing:.02em}
+.fl-i p{margin:0}.fl-i ul{margin:0;padding-left:4mm}.fl-i li{margin-bottom:1.2mm}
+.fl-i .r{background:#eef3fd;border-color:#0f4bd0}.fl-i .m{background:#fff6ea;border-color:#b85c00}.fl-i .p{background:#eaf7f4;border-color:#0b7f70}
+.fl-i .r h4{color:#0f4bd0}.fl-i .m h4{color:#b85c00}.fl-i .p h4{color:#0b7f70}
+@media print and (max-width:200mm){.fl{grid-template-columns:1fr;grid-template-rows:auto 1fr;height:auto;min-height:209mm}.fl-s{padding:8mm}.fl-s .info{margin-top:5mm}.fl-i,.fl-g,.fl-k{grid-template-columns:1fr}}
 .fl-f{display:flex;justify-content:space-between;align-items:center;font-size:9pt;color:#55627a;border-top:1px solid #d3d9e3;padding-top:3mm}
 .fl-f strong{color:#0d2a5e;font-size:11pt}
 </style>
@@ -902,21 +909,60 @@ function destaques(rows,data){
  return`<div class="hlg">${c.join('')}</div>`}
 
 let INDX=null;
+
+function folhaInsights(o,data,L,P,qty,mi,single){
+ const seed=[...String(o.m)].reduce((a,c)=>a+c.charCodeAt(0),0)+qty+P.length*7,pk=(a,i)=>a[(seed+(i||0))%a.length];
+ const nome=String(o.n).split(' ')[0].toLowerCase().replace(/^./,c=>c.toUpperCase()),days=[...new Set(P.map(w=>dk(w.ts)))].sort(),nd=days.length;
+ const rate=C=>{const tm=C.reduce((a,c)=>a+c.d,0),cu=C.reduce((a,c)=>a+c.qty,0);return C.length>=3&&tm>0?cu/(tm/36e5):0};
+ const C=durs(L),my=rate(C),mates=new Set(data.ops.filter(x=>x.g===o.g&&x.t===o.t).map(x=>x.m)),TC=durs(data.waves.filter(w=>mates.has(w.op))),tr=rate(TC),pctM=mi.q?Math.round(qty/mi.q*100):0;
+ const f1=x=>x.toLocaleString('pt-BR',{maximumFractionDigits:1}),pc=x=>Math.round(Math.abs(x)*100);
+ // evolução: 1ª metade x 2ª metade do período
+ let ev=null;
+ if(single){const ts=P.map(w=>w.ts).sort((a,b)=>a-b);if(ts.length>=4&&ts[ts.length-1]-ts[0]>=2*36e5){const mid=(ts[0]+ts[ts.length-1])/2,a=P.filter(w=>w.ts<mid).reduce((x,w)=>x+w.qty,0),b=P.filter(w=>w.ts>=mid).reduce((x,w)=>x+w.qty,0);if(a>0)ev={r:b/a,txt:'do dia'}}}
+ else if(nd>=4){const h=Math.floor(nd/2),a=days.slice(0,h),b=days.slice(h),av=ds=>ds.reduce((x,d)=>x+prod(data.byOpDay.get(d+'|'+o.m)||[]).reduce((y,w)=>y+w.qty,0),0)/ds.length,A=av(a);if(A>0)ev={r:av(b)/A,txt:'do período'}}
+ // tipos: tempo ponderado da pessoa contra a equipe
+ const tp=[];TY.forEach(([n])=>{if(NOTIME.includes(n))return;const m=C.filter(c=>c.w.ty===n),t=TC.filter(c=>c.w.ty===n);if(m.length>=3&&t.length>=5){const a=wA(m),b=wA(t);if(b>0)tp.push({n,r:a/b,a,b})}});
+ const rapido=tp.filter(x=>x.r<=.88).sort((x,y)=>x.r-y.r)[0],lento=tp.filter(x=>x.r>=1.2).sort((x,y)=>y.r-x.r)[0];
+ const el=data.days.filter(d=>mgEligible(o,d)),faltas=el.filter(d=>mgStatus(o,d,data.byOpDay.get(d+'|'+o.m)||[],data).startsWith('Falta')).length;
+ const proc=L.filter(w=>(w.hist||[]).some(e=>e.e==='m')).length,ajud=data.waves.filter(w=>w.pn&&String(w.pn).toLowerCase()===String(o.n).toLowerCase()&&(w.hist||[]).some(e=>e.e==='b')).length;
+ const pos=[],mel=[];
+ if(mi.q){if(pctM>=100)pos.push(pk(['Bateu a meta de unidades: '+pctM+'% do previsto. Resultado de quem entrega.','Meta de unidades superada ('+pctM+'%). Ritmo e constância aparecem no resultado.'],1))}
+ if(my&&tr&&my>=tr*1.08)pos.push(pk(['Ritmo de '+Math.round(my)+' un/h, '+pc(my/tr-1)+'% acima da média da equipe no mesmo turno.','Coleta '+pc(my/tr-1)+'% mais rápido que a média do turno ('+Math.round(my)+' un/h).'],2));
+ if(rapido)pos.push('Destaque em '+rapido.n+': '+mn(rapido.a)+' por conjunto, contra '+mn(rapido.b)+' da equipe.');
+ if(ev&&ev.r>=1.12)pos.push(pk(['Evolução clara: a segunda metade '+ev.txt+' rendeu '+pc(ev.r-1)+'% a mais que a primeira.','Terminou mais forte: +'+pc(ev.r-1)+'% de produção na segunda metade '+ev.txt+'.'],3));
+ if(!single&&el.length>=3&&faltas===0&&nd>=el.length)pos.push('Presença total: bipou em todos os '+el.length+' dias do período.');
+ if(ajud>0)pos.push('Ajudou a finalizar '+ajud+(ajud===1?' onda':' ondas')+' que estavam em Procurando. Boa colaboração.');
+ if(!pos.length&&qty)pos.push(pk(['Manteve a produção ativa no período: cada onda ajuda a fechar a meta do galpão.','Constância na rotina: o histórico já dá base para metas individuais mais precisas.'],4));
+ if(mi.q&&pctM<80&&qty)mel.push('Unidades em '+pctM+'% da meta individual. Vale conferir com o líder o que está travando o ritmo.');
+ if(my&&tr&&my<=tr*.9)mel.push(pk(['Ritmo de '+Math.round(my)+' un/h, '+pc(1-my/tr)+'% abaixo da média da equipe. Reduzir pausas entre bipagens ajuda.','Há espaço para ganhar velocidade: média da equipe é '+Math.round(tr)+' un/h e a sua foi '+Math.round(my)+'.'],5));
+ if(lento)mel.push(lento.n+' leva '+mn(lento.a)+' por conjunto, '+pc(lento.r-1)+'% acima da equipe ('+mn(lento.b)+'). Peça dicas de quem é mais rápido nesse tipo.');
+ if(ev&&ev.r<=.8)mel.push(pk(['A segunda metade '+ev.txt+' rendeu '+pc(1-ev.r)+'% menos que a primeira. Atenção a pausas longas e ao fim do turno.','O ritmo caiu '+pc(1-ev.r)+'% no fim '+ev.txt+'. Reservar uma pausa curta no meio pode ajudar a segurar o ritmo.'],6));
+ if(faltas>0)mel.push(faltas+(faltas===1?' dia sem bipagem a conferir':' dias sem bipagem a conferir')+' no período.');
+ if(proc>=2)mel.push(proc+' ondas suas foram para Procurando. Conferir endereço e SKU antes de bipar evita retrabalho.');
+ if(!mel.length)mel.push(qty?pk(['Nenhum ponto crítico no período. O próximo passo é ganhar segundos por onda, mantendo a qualidade.','Sem alertas: o desafio agora é sustentar esse resultado dia após dia.'],7):'Sem produção registrada no período para analisar.');
+ // resumo
+ const per=single?'no dia':'em '+nd+(nd===1?' dia':' dias'),p1=nome+' concluiu '+fmt(qty)+' unidades em '+fmt(P.length)+' ondas '+per+(my?', num ritmo de '+Math.round(my)+' un/h':'')+'.';
+ let p2='';
+ if(ev)p2=ev.r>=1.12?pk([' A produção cresceu ao longo '+ev.txt+'.',' Houve evolução entre o começo e o fim '+ev.txt+'.'],8):ev.r<=.8?pk([' O ritmo diminuiu na reta final '+ev.txt+'.',' A segunda metade '+ev.txt+' foi mais lenta que a primeira.'],9):pk([' O ritmo se manteve estável '+(single?'durante o dia':'no período')+'.',' Produção constante ao longo '+ev.txt+'.'],10);
+ let p3='';if(mi.q)p3=pctM>=100?' A meta de unidades foi alcançada.':' Faltaram '+fmt(Math.max(mi.q-qty,0))+' unidades para a meta.';
+ else if(my&&tr)p3=my>=tr?' Acima da média do turno.':' Abaixo da média do turno.';
+ return{resumo:qty?p1+p2+p3:nome+' não teve produção registrada no período.',mel:mel.slice(0,3),pos:pos.slice(0,3)}}
 function folhaHTML(o,data){
  const L=data.days.flatMap(d=>data.byOpDay.get(d+'|'+o.m)||[]),P=prod(L),qty=P.reduce((a,w)=>a+w.qty,0),C=durs(L),tm=C.reduce((a,c)=>a+c.d,0),cu=C.reduce((a,c)=>a+c.qty,0),rate=C.length>=3&&tm>0?Math.round(cu/(tm/36e5)):0,mi=metaInd(o,L),dias=new Set(P.map(w=>dk(w.ts))).size,single=data.days.length===1;
  let ser;
  if(single){const h={};P.forEach(w=>{const k=new Date(w.ts).getHours();h[k]=(h[k]||0)+w.qty});const ks=Object.keys(h).map(Number),a=ks.length?Math.min(...ks):7,b=ks.length?Math.max(...ks):16,i0=Math.max(0,Math.min(a,b-5)),i1=Math.min(23,Math.max(b,a+5));ser=[];for(let i=i0;i<=i1;i++)ser.push([i+'h',h[i]||0])}
  else ser=data.days.map(d=>[d.slice(8)+'/'+d.slice(5,7),prod(data.byOpDay.get(d+'|'+o.m)||[]).reduce((a,w)=>a+w.qty,0)]);
- const mx=Math.max(...ser.map(x=>x[1]),1),W=560,H=400,pl=6,pb=22,pt=16,bw=(W-pl*2)/ser.length,step=Math.ceil(ser.length/16),best=ser.reduce((a,x)=>x[1]>a[1]?x:a,['',0]);
+ const mx=Math.max(...ser.map(x=>x[1]),1),W=560,H=230,pl=6,pb=22,pt=16,bw=(W-pl*2)/ser.length,step=Math.ceil(ser.length/16),best=ser.reduce((a,x)=>x[1]>a[1]?x:a,['',0]);
  const svg=`<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Produção">`+[0,.5,1].map(f=>`<line x1="${pl}" x2="${W-pl}" y1="${pt+(H-pt-pb)*(1-f)}" y2="${pt+(H-pt-pb)*(1-f)}" stroke="#d3d9e3" stroke-width="1"/>`).join('')+ser.map((x,i)=>{const h=(H-pt-pb)*x[1]/mx,xx=pl+i*bw+bw*.18,w=bw*.64;return `<rect x="${xx.toFixed(1)}" y="${(H-pb-h).toFixed(1)}" width="${w.toFixed(1)}" height="${h.toFixed(1)}" rx="2" fill="${x===best&&x[1]>0?'#0b7f70':'#0f4bd0'}"/>`+(x[1]>0&&ser.length<=24?`<text x="${(xx+w/2).toFixed(1)}" y="${(H-pb-h-4).toFixed(1)}" font-size="16" text-anchor="middle" fill="#14243d" font-weight="700">${fmt(x[1])}</text>`:'')+(i%step===0?`<text x="${(xx+w/2).toFixed(1)}" y="${H-6}" font-size="14" text-anchor="middle" fill="#55627a">${x[0]}</text>`:'')}).join('')+`</svg>`;
  const types=TY.map(([n,c])=>({n,c,v:P.filter(w=>w.ty===n).reduce((a,w)=>a+w.qty,0),o:P.filter(w=>w.ty===n).length})).filter(x=>x.v>0),tmax=Math.max(...types.map(x=>x.v),1);
  const tb=types.length?types.map(x=>`<div><i><span>${esc(x.n)}</span><span><b>${fmt(x.v)}</b> un. · ${x.o} ${x.o===1?'onda':'ondas'}</span></i><u><b style="width:${Math.max(x.v/tmax*100,2)}%;background:${x.c}"></b></u></div>`).join(''):'<div style="color:#55627a;font-size:10pt">Sem produção no período.</div>';
- const pct=mi.q?Math.round(qty/mi.q*100):0,msg=!qty?'Até a próxima!':pct>=100?'Meta batida. Parabéns!':'Obrigado pelo seu trabalho!';
+ const pct=mi.q?Math.round(qty/mi.q*100):0,IN=folhaInsights(o,data,L,P,qty,mi,single),msg=!qty?'Até a próxima!':pct>=100?'Meta batida. Parabéns!':'Obrigado pelo seu trabalho!';
  const d0=data.days[0],d1=data.days[data.days.length-1],fd=d=>new Date(d+'T12:00').toLocaleDateString('pt-BR'),per=single?new Date(d0+'T12:00').toLocaleDateString('pt-BR',{weekday:'long',day:'numeric',month:'long',year:'numeric'}):fd(d0)+' a '+fd(d1);
  return `<section class="fl"><aside class="fl-s"><small>RC Ondas · Minha produção</small><h1>${esc(o.n)}</h1><div class="mt">Matrícula ${esc(String(o.m).split('~')[0])}</div><div class="info"><b>Galpão</b>${esc(o.g||'—')}<b>Turno</b>${o.t===2?'2º turno':'1º turno'}<b>Período</b>${esc(per)}</div></aside>
  <div class="fl-m"><div class="fl-hd"><h2>${esc(msg)}</h2><span>${single?'Produção por hora':'Produção por dia'}</span></div>
  <div class="fl-k"><div><em>Unidades</em><b>${fmt(qty)}</b><span>concluídas</span></div><div><em>Ondas</em><b>${fmt(P.length)}</b><span>concluídas</span></div><div><em>Unidades por hora</em><b>${rate?fmt(rate):'—'}</b><span>${rate?'no ritmo medido':'poucos conjuntos medidos'}</span></div><div><em>${mi.q?'Meta de unidades':'Dias com produção'}</em><b>${mi.q?pct+'%':dias}</b><span>${mi.q?fmt(qty)+' de '+fmt(mi.q):best[1]?'melhor: '+best[0]+' ('+fmt(best[1])+' un.)':''}</span></div></div>
  <div class="fl-g"><div><h3>${single?'Unidades por hora':'Unidades por dia'}${best[1]?` <span style="font-weight:400;color:#55627a;font-size:9pt">· melhor: ${best[0]} (${fmt(best[1])})</span>`:''}</h3>${svg}</div><div><h3>Produção por tipo de onda</h3><div class="fl-t">${tb}</div></div></div>
+ <div class="fl-i"><div class="r"><h4>1 · Resumo</h4><p>${esc(IN.resumo)}</p></div><div class="m"><h4>2 · Pontos a melhorar</h4><ul>${IN.mel.map(x=>`<li>${esc(x)}</li>`).join('')}</ul></div><div class="p"><h4>3 · Pontos positivos</h4><ul>${IN.pos.map(x=>`<li>${esc(x)}</li>`).join('')}</ul></div></div>
  <div class="fl-f"><span>Gerado em ${new Date().toLocaleString('pt-BR')}</span><strong>RC Ondas</strong></div></div></section>`}
 function imprimirFolhas(){
  if(!INDX)return;const sel=$("#iOp").value,data=INDX.data;let list=sel?INDX.ops.filter(o=>o.m===sel):INDX.ops.filter(o=>prod(data.days.flatMap(d=>data.byOpDay.get(d+'|'+o.m)||[])).length);

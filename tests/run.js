@@ -377,8 +377,15 @@ await T("70 Folha para imprimir: A4 paisagem, 1 página por pessoa, com gráfico
  await p.selectOption('#iOp','CL001');await p.waitForTimeout(200);ok(/Imprimir folha$/.test((await p.textContent('#iPrint')).trim()),'botão individual');
  await p.click('#iPrint');await p.waitForTimeout(400);
  const t=await p.textContent('#folha');ok(t.includes('Ana Souza')&&t.includes('200')&&!t.includes('Histórico das ondas')&&!t.includes('D1'),'conteúdo: '+t.slice(0,200));
+ ok(t.includes('1 · Resumo')&&t.includes('2 · Pontos a melhorar')&&t.includes('3 · Pontos positivos'),'faltam os 3 blocos: '+t.slice(-600));
  await p.emulateMedia({media:'print'});await p.pdf({path:'/tmp/claude-0/-home-claude/1b46621a-564c-549a-8cc9-448283bd574c/scratchpad/folha.pdf',preferCSSPageSize:true,printBackground:true});
  await p.emulateMedia({media:'screen'})});
+await T("72 Folha com vários dias: evolução ao longo do período aparece no resumo e nos pontos",async()=>{
+ const W=[];const day=864e5;[6,5,4,3,2,1,0].forEach((d,i)=>{const b0=HR(9,0)-d*day;for(let k=0;k<6;k++)W.push(WV('m'+i+'_'+k,'M'+i+k,k%2?'Vários artigos':'Itens Únicos',20+i*8,b0+k*9*60000))});
+ const p=await page(b,base({waves:W}));await p.evaluate(()=>{window.print=()=>{}});await p.evaluate(()=>go('ind'));await p.selectOption('#iPer','7');await p.selectOption('#iOp','CL001');await p.waitForTimeout(300);
+ await p.click('#iPrint');await p.waitForTimeout(400);const t=await p.textContent('#folha');
+ ok(/cresceu|evolução|Evolução|mais forte/i.test(t),'sem menção à evolução: '+t.slice(0,900));
+ await p.emulateMedia({media:'print'});await p.pdf({path:'/tmp/claude-0/-home-claude/1b46621a-564c-549a-8cc9-448283bd574c/scratchpad/folha2.pdf',preferCSSPageSize:true,printBackground:true});await p.emulateMedia({media:'screen'})});
 await T("59 Individual: cards de destaque (mais rápido, volumes, ondas, por tipo, procurando)",async()=>{
  const b0=HR(9,0);const W=[WV('d1','D1','Vários artigos',100,b0),WV('d2','D2','Itens Únicos',40,b0+10*60000),WV('d3','D3','Vários artigos',60,b0+20*60000),WV('d4','D4','Vários artigos',60,b0+30*60000),
   WV('e1','E1','Itens Únicos',10,b0,'CL002','Bruno Lima'),WV('e2','E2','Itens Únicos',10,b0+20*60000,'CL002','Bruno Lima'),WV('e3','E3','Itens Únicos',5,b0+40*60000,'CL002','Bruno Lima',1)];
