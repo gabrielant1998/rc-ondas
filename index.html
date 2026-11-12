@@ -617,10 +617,11 @@ const avg=a=>a.length?a.reduce((s,v)=>s+v,0)/a.length:0;
 /* ===================== gráficos ===================== */
 const nice=v=>{const e=Math.pow(10,Math.floor(Math.log10(v))),m=v/e;return[1,1.2,1.5,2,2.5,3,4,5,6,8,10].find(x=>m<=x)*e};
 function barsSvg(a,i0,i1,ov){ov=ov||{};const lab=[],v=[];for(let i=i0;i<=i1;i++){lab.push(i);v.push(a[i])}
- const W=innerWidth<760?380:600,H=innerWidth<760?200:170,p=innerWidth<760?30:38,mx=nice(Math.max(...v,ov.need||0,ov.avg||0,1)),bw=(W-p*2)/v.length,hi=v.indexOf(Math.max(...v)),act=v.filter(x=>x>0),lo=act.length>1?v.indexOf(Math.min(...act)):-1;
+ const W=innerWidth<760?380:600,H=innerWidth<760?210:200,p=innerWidth<760?30:38,mx=nice(Math.max(...v,ov.need||0,ov.avg||0,1)),bw=(W-p*2)/v.length,hi=v.indexOf(Math.max(...v)),act=v.filter(x=>x>0),lo=act.length>1?v.indexOf(Math.min(...act)):-1;
  let s=`<svg class="ch" viewBox="0 0 ${W} ${H}" role="img" aria-label="Produção por hora">`+[0,1,2].map(i=>`<line x1="${p}" x2="${W-p}" y1="${H-24-i*(H-44)/2}" y2="${H-24-i*(H-44)/2}" stroke="var(--line)"/>${i?`<text x="${p-6}" y="${H-20-i*(H-44)/2}" text-anchor="end">${fmt(mx*i/2)}</text>`:""}`).join("");
- v.forEach((q,i)=>{const h=q/mx*(H-44),x=p+i*bw+4,c=q&&i===hi?"var(--g)":i===lo?"var(--r)":"var(--t)";
-  s+=`<rect x="${x}" y="${H-24-h}" width="${Math.max(bw-8,2)}" height="${h}" rx="1" fill="${c}" opacity="${q?1:.15}"><title>${lab[i]}h: ${fmt(q)} unidades</title></rect>${q?`<text x="${x+(bw-8)/2}" y="${H-28-h}" text-anchor="middle" style="fill:var(--ink)">${fmt(q)}</text>`:""}<text x="${x+(bw-8)/2}" y="${H-8}" text-anchor="middle">${lab[i]}h</text>`});
+ const bwid=Math.max(Math.min(bw*0.46,30),6),halo="fill:var(--ink);paint-order:stroke;stroke:var(--card);stroke-width:4px;stroke-linejoin:round";
+ v.forEach((q,i)=>{const h=Math.max(q/mx*(H-44),q?2:0),cx=p+i*bw+bw/2,x=cx-bwid/2,top=H-24-h,r=Math.min(4,h,bwid/2),c=q&&i===hi?"var(--g)":i===lo?"var(--r)":"var(--t)";
+  s+=(q?`<path d="M${x} ${H-24}V${top+r}Q${x} ${top} ${x+r} ${top}H${x+bwid-r}Q${x+bwid} ${top} ${x+bwid} ${top+r}V${H-24}Z" fill="${c}"><title>${lab[i]}h: ${fmt(q)} unidades</title></path><text x="${cx}" y="${top-6}" text-anchor="middle" style="${halo}">${fmt(q)}</text>`:`<rect x="${x}" y="${H-26}" width="${bwid}" height="2" fill="var(--line)"><title>${lab[i]}h: 0 unidades</title></rect>`)+`<text x="${cx}" y="${H-8}" text-anchor="middle">${lab[i]}h</text>`});
  const Y=val=>H-24-val/mx*(H-44);
  if(ov.avg)s+=`<line x1="${p}" x2="${W-p}" y1="${Y(ov.avg)}" y2="${Y(ov.avg)}" stroke="var(--v)" stroke-width="2"/><text x="${W-p}" y="${Y(ov.avg)-5}" text-anchor="end" style="fill:var(--v)">média ${fmt(ov.avg)}/h</text>`;
  if(ov.need)s+=`<line x1="${p}" x2="${W-p}" y1="${Y(ov.need)}" y2="${Y(ov.need)}" stroke="var(--r)" stroke-width="2" stroke-dasharray="6 5"/><text x="${W-p}" y="${Y(ov.need)-5}" text-anchor="end" style="fill:var(--r)">necessário ${fmt(ov.need)}/h</text>`;
