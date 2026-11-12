@@ -188,6 +188,45 @@ a[data-pick]{display:inline-block;padding:8px 0 2px;color:var(--gx);font-weight:
  .card{padding:14px}.sub{gap:18px}
  .tks span:nth-child(even):not(:last-child){display:none}}
 @media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+
+/* Folha de produção para imprimir (A4 paisagem, 1 página por pessoa) */
+#folha{display:none}
+@media print{
+ @page{size:A4 landscape;margin:0}
+ html,body{background:#fff!important}
+ body.printing>*:not(#folha){display:none!important}
+ body.printing #folha{display:block}
+}
+#folha{--g:#0f4bd0;--v:#0a2f7a;--a:#3d7be8;--mut:#55627a;--o:#b85c00;--k:#0b7f70;color:#14243d;font-family:var(--fb);-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.fl{width:297mm;height:209mm;box-sizing:border-box;display:grid;grid-template-columns:78mm 1fr;page-break-after:always;break-after:page;overflow:hidden;background:#fff}
+.fl:last-child{page-break-after:auto;break-after:auto}
+.fl-s{background:linear-gradient(165deg,#0d2a5e 0%,#12408f 100%);color:#fff;padding:14mm 9mm;display:flex;flex-direction:column;position:relative;overflow:hidden}
+.fl-s:before{content:"";position:absolute;right:-30mm;bottom:-30mm;width:90mm;height:90mm;border-radius:50%;border:10mm solid rgba(255,255,255,.07)}
+.fl-s small{font-size:9pt;letter-spacing:.14em;text-transform:uppercase;opacity:.7}
+.fl-s h1{font-family:var(--fd);font-size:27pt;line-height:1.05;margin:4mm 0 3mm;font-weight:800;word-break:break-word}
+.fl-s .mt{font-size:11pt;opacity:.85}
+.fl-s .info{margin-top:auto;border-top:1px solid rgba(255,255,255,.25);padding-top:5mm;font-size:10pt;line-height:1.7;position:relative}
+.fl-s .info b{display:block;font-size:8pt;font-weight:600;letter-spacing:.12em;text-transform:uppercase;opacity:.65;margin-top:2mm}
+.fl-m{padding:12mm 12mm 9mm 11mm;display:flex;flex-direction:column;gap:6mm;min-width:0}
+.fl-m h2{font-family:var(--fd);font-size:15pt;margin:0;font-weight:800}
+.fl-hd{display:flex;justify-content:space-between;align-items:flex-end;gap:6mm}
+.fl-hd span{font-size:10pt;color:#55627a;text-align:right}
+.fl-k{display:grid;grid-template-columns:repeat(4,1fr);gap:4mm}
+.fl-k div{border:1px solid #d3d9e3;border-top:3mm solid #0f4bd0;border-radius:2mm;padding:3.5mm 4mm}
+.fl-k div:nth-child(2){border-top-color:#3d7be8}.fl-k div:nth-child(3){border-top-color:#0b7f70}.fl-k div:nth-child(4){border-top-color:#b85c00}
+.fl-k b{display:block;font-family:var(--fd);font-size:26pt;line-height:1;font-weight:800}
+.fl-k span{display:block;font-size:9pt;color:#55627a;margin-top:1.5mm}
+.fl-k em{display:block;font-style:normal;font-size:8pt;letter-spacing:.1em;text-transform:uppercase;color:#55627a;margin-bottom:1.5mm}
+.fl-g{display:grid;grid-template-columns:1.55fr 1fr;gap:6mm;flex:1;min-height:0}
+.fl-g>div{border:1px solid #d3d9e3;border-radius:2mm;padding:4mm 5mm;display:flex;flex-direction:column;min-height:0}
+.fl-g h3{margin:0 0 2mm;font-size:11pt;font-weight:700}
+.fl-g svg{width:100%;flex:1;min-height:0}
+.fl-t{display:grid;gap:3mm;margin-top:1mm}
+.fl-t i{display:block;font-style:normal;font-size:9.5pt;display:flex;justify-content:space-between}
+.fl-t u{display:block;height:3.2mm;background:#eef1f4;border-radius:2mm;text-decoration:none;overflow:hidden;margin-top:1mm}
+.fl-t u b{display:block;height:100%;border-radius:2mm}
+.fl-f{display:flex;justify-content:space-between;align-items:center;font-size:9pt;color:#55627a;border-top:1px solid #d3d9e3;padding-top:3mm}
+.fl-f strong{color:#0d2a5e;font-size:11pt}
 </style>
 </head>
 <body>
@@ -275,7 +314,7 @@ a[data-pick]{display:inline-block;padding:8px 0 2px;color:var(--gx);font-weight:
 <!-- ======================= INDIVIDUAL ======================= -->
 <section id="ind" class="hide">
  <div class="sub" id="gsub"><button data-gs="mi" class="on">Meta individual</button><button data-gs="mc">Meta coletiva</button></div>
- <div class="ctl" style="margin-bottom:12px"><select id="iOp" aria-label="Operador"></select><select id="iPer" aria-label="Período"><option value="1">Dia selecionado</option><option value="7">Últimos 7 dias</option><option value="30">Últimos 30 dias</option><option value="90">Últimos 90 dias</option></select></div>
+ <div class="ctl" style="margin-bottom:12px"><select id="iOp" aria-label="Operador"></select><select id="iPer" aria-label="Período"><option value="1">Dia selecionado</option><option value="7">Últimos 7 dias</option><option value="30">Últimos 30 dias</option><option value="90">Últimos 90 dias</option></select><button class="btn" id="iPrint" type="button">Imprimir folha</button></div>
  <div id="mgStatus" class="legend hide" role="status"></div><div id="iBody"></div><div id="coBody" class="hide"></div>
 </section>
 
@@ -860,11 +899,37 @@ function destaques(rows,data){
  const bl=Object.entries(by).sort((a,b)=>b[1]-a[1]).slice(0,3);
  c.push(`<div class="card hl"><div class="hlt">Mais acha em procurando</div>${bl.length?`<div class="hl1"><b>${esc(bl[0][0])}</b></div><div class="hlv num">${fmt(bl[0][1])} ondas</div><div class="hld">baixas feitas no período</div>${bl.slice(1).map((x,i)=>`<div class="hl2"><span>${i+2}º ${esc(x[0])}</span><b>${fmt(x[1])}</b></div>`).join('')}`:'<div class="hld">Sem baixas no período.</div>'}<div class="hls">Quem deu baixa nas ondas encontradas</div></div>`);
  return`<div class="hlg">${c.join('')}</div>`}
+
+let INDX=null;
+function folhaHTML(o,data){
+ const L=data.days.flatMap(d=>data.byOpDay.get(d+'|'+o.m)||[]),P=prod(L),qty=P.reduce((a,w)=>a+w.qty,0),C=durs(L),tm=C.reduce((a,c)=>a+c.d,0),cu=C.reduce((a,c)=>a+c.qty,0),rate=C.length>=3&&tm>0?Math.round(cu/(tm/36e5)):0,mi=metaInd(o,L),dias=new Set(P.map(w=>dk(w.ts))).size,single=data.days.length===1;
+ let ser;
+ if(single){const h={};P.forEach(w=>{const k=new Date(w.ts).getHours();h[k]=(h[k]||0)+w.qty});const ks=Object.keys(h).map(Number),a=ks.length?Math.min(...ks):7,b=ks.length?Math.max(...ks):16,i0=Math.max(0,Math.min(a,b-5)),i1=Math.min(23,Math.max(b,a+5));ser=[];for(let i=i0;i<=i1;i++)ser.push([i+'h',h[i]||0])}
+ else ser=data.days.map(d=>[d.slice(8)+'/'+d.slice(5,7),prod(data.byOpDay.get(d+'|'+o.m)||[]).reduce((a,w)=>a+w.qty,0)]);
+ const mx=Math.max(...ser.map(x=>x[1]),1),W=560,H=400,pl=6,pb=22,pt=16,bw=(W-pl*2)/ser.length,step=Math.ceil(ser.length/16),best=ser.reduce((a,x)=>x[1]>a[1]?x:a,['',0]);
+ const svg=`<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Produção">`+[0,.5,1].map(f=>`<line x1="${pl}" x2="${W-pl}" y1="${pt+(H-pt-pb)*(1-f)}" y2="${pt+(H-pt-pb)*(1-f)}" stroke="#d3d9e3" stroke-width="1"/>`).join('')+ser.map((x,i)=>{const h=(H-pt-pb)*x[1]/mx,xx=pl+i*bw+bw*.18,w=bw*.64;return `<rect x="${xx.toFixed(1)}" y="${(H-pb-h).toFixed(1)}" width="${w.toFixed(1)}" height="${h.toFixed(1)}" rx="2" fill="${x===best&&x[1]>0?'#0b7f70':'#0f4bd0'}"/>`+(x[1]>0&&ser.length<=24?`<text x="${(xx+w/2).toFixed(1)}" y="${(H-pb-h-4).toFixed(1)}" font-size="16" text-anchor="middle" fill="#14243d" font-weight="700">${fmt(x[1])}</text>`:'')+(i%step===0?`<text x="${(xx+w/2).toFixed(1)}" y="${H-6}" font-size="14" text-anchor="middle" fill="#55627a">${x[0]}</text>`:'')}).join('')+`</svg>`;
+ const types=TY.map(([n,c])=>({n,c,v:P.filter(w=>w.ty===n).reduce((a,w)=>a+w.qty,0),o:P.filter(w=>w.ty===n).length})).filter(x=>x.v>0),tmax=Math.max(...types.map(x=>x.v),1);
+ const tb=types.length?types.map(x=>`<div><i><span>${esc(x.n)}</span><span><b>${fmt(x.v)}</b> un. · ${x.o} ${x.o===1?'onda':'ondas'}</span></i><u><b style="width:${Math.max(x.v/tmax*100,2)}%;background:${x.c}"></b></u></div>`).join(''):'<div style="color:#55627a;font-size:10pt">Sem produção no período.</div>';
+ const pct=mi.q?Math.round(qty/mi.q*100):0,msg=!qty?'Até a próxima!':pct>=100?'Meta batida. Parabéns!':'Obrigado pelo seu trabalho!';
+ const d0=data.days[0],d1=data.days[data.days.length-1],fd=d=>new Date(d+'T12:00').toLocaleDateString('pt-BR'),per=single?new Date(d0+'T12:00').toLocaleDateString('pt-BR',{weekday:'long',day:'numeric',month:'long',year:'numeric'}):fd(d0)+' a '+fd(d1);
+ return `<section class="fl"><aside class="fl-s"><small>RC Ondas · Minha produção</small><h1>${esc(o.n)}</h1><div class="mt">Matrícula ${esc(String(o.m).split('~')[0])}</div><div class="info"><b>Galpão</b>${esc(o.g||'—')}<b>Turno</b>${o.t===2?'2º turno':'1º turno'}<b>Período</b>${esc(per)}</div></aside>
+ <div class="fl-m"><div class="fl-hd"><h2>${esc(msg)}</h2><span>${single?'Produção por hora':'Produção por dia'}</span></div>
+ <div class="fl-k"><div><em>Unidades</em><b>${fmt(qty)}</b><span>concluídas</span></div><div><em>Ondas</em><b>${fmt(P.length)}</b><span>concluídas</span></div><div><em>Unidades por hora</em><b>${rate?fmt(rate):'—'}</b><span>${rate?'no ritmo medido':'poucos conjuntos medidos'}</span></div><div><em>${mi.q?'Meta de unidades':'Dias com produção'}</em><b>${mi.q?pct+'%':dias}</b><span>${mi.q?fmt(qty)+' de '+fmt(mi.q):best[1]?'melhor: '+best[0]+' ('+fmt(best[1])+' un.)':''}</span></div></div>
+ <div class="fl-g"><div><h3>${single?'Unidades por hora':'Unidades por dia'}${best[1]?` <span style="font-weight:400;color:#55627a;font-size:9pt">· melhor: ${best[0]} (${fmt(best[1])})</span>`:''}</h3>${svg}</div><div><h3>Produção por tipo de onda</h3><div class="fl-t">${tb}</div></div></div>
+ <div class="fl-f"><span>Gerado em ${new Date().toLocaleString('pt-BR')}</span><strong>RC Ondas</strong></div></div></section>`}
+function imprimirFolhas(){
+ if(!INDX)return;const sel=$("#iOp").value,data=INDX.data;let list=sel?INDX.ops.filter(o=>o.m===sel):INDX.ops.filter(o=>prod(data.days.flatMap(d=>data.byOpDay.get(d+'|'+o.m)||[])).length);
+ if(!list.length){alert('Nenhuma produção para imprimir neste período.');return}
+ let f=$("#folha");if(!f){f=document.createElement('div');f.id='folha';document.body.appendChild(f)}
+ f.innerHTML=list.map(o=>folhaHTML(o,data)).join('');document.body.classList.add('printing');
+ const fim=()=>{document.body.classList.remove('printing');f.innerHTML='';removeEventListener('afterprint',fim)};addEventListener('afterprint',fim);
+ setTimeout(()=>window.print(),150)}
 function individual(){
  const sel=$("#iOp"),v=sel.value,data=mgData(),g=$("#gal").value,t=$("#turnoF").value;
  const ops=data.ops.filter(o=>(g==='__all'||o.g===g)&&(!t||String(o.t)===t)).filter(o=>!o.excluido||data.waves.some(w=>w.op===o.m));
  sel.innerHTML='<option value="">Todos os operadores</option>'+ops.map(o=>`<option value="${esc(o.m)}">${esc(o.n)}, ${esc(o.m.split('~')[0])}${o.excluido?' (excluído)':''}</option>`).join('');sel.value=v;
  if(ON&&me&&MGW===null){$("#iBody").innerHTML='<div class="card"><div class="empty">'+esc(mgState||'Carregando histórico…')+'</div></div>';return}
+ INDX={ops,data};$("#iPrint").textContent=sel.value?'Imprimir folha':'Imprimir folhas da equipe';
  if(!ops.length){$("#iBody").innerHTML='<div class="card"><div class="empty">Nenhum operador para os filtros selecionados.</div></div>';return}
  const selected=ops.find(o=>o.m===sel.value);
  if(!selected){
@@ -1238,9 +1303,9 @@ function psub(k){window.__ps=k;$$("#psub button").forEach(b=>b.classList.toggle(
 $("#psub").onclick=e=>{const k=e.target.dataset.p;if(k)psub(k)};
 $("#sub").onclick=e=>{const s=e.target.dataset.s;if(!s)return;$$("#sub button").forEach(b=>b.classList.toggle("on",b===e.target));["reg","ctl","ace"].forEach(x=>$("#"+x).classList.toggle("hide",x!==s));tick()};
 $("#csub").onclick=e=>{const c=e.target.dataset.c;if(!c)return;csub=c;$$("#csub button").forEach(b=>b.classList.toggle("on",b===e.target));["cop","cus","cga","cge","cma"].forEach(x=>$("#"+x).classList.toggle("hide",x!==c));if(c==="cge"&&ON&&me&&me.adm)pull().then(()=>cfgGes()).catch(()=>{});if(c==="cma")cfgMan()};
-$("#iOp").onchange=()=>{mgShown=100;individual()};$("#iPer").onchange=()=>{mgShown=100;individual();coletiva();loadManagement()};
+$("#iPrint").onclick=imprimirFolhas;$("#iOp").onchange=()=>{mgShown=100;individual()};$("#iPer").onchange=()=>{mgShown=100;individual();coletiva();loadManagement()};
 $("#iBody").addEventListener("click",e=>{if(e.target.id==="mgMore"){mgShown+=100;individual()}});
-$("#gsub").onclick=e=>{const x=e.target.dataset.gs;if(!x)return;gsub=x;$$("#gsub button").forEach(b=>b.classList.toggle("on",b===e.target));$("#iBody").classList.toggle("hide",x!=="mi");$("#coBody").classList.toggle("hide",x!=="mc");$("#iOp").classList.toggle("hide",x!=="mi");if(x==="mc")coletiva();else individual()};
+$("#gsub").onclick=e=>{const x=e.target.dataset.gs;if(!x)return;gsub=x;$$("#gsub button").forEach(b=>b.classList.toggle("on",b===e.target));$("#iBody").classList.toggle("hide",x!=="mi");$("#coBody").classList.toggle("hide",x!=="mc");$("#iOp").classList.toggle("hide",x!=="mi");$("#iPrint").classList.toggle("hide",x!=="mi");if(x==="mc")coletiva();else individual()};
 
 document.addEventListener("click",e=>{const d=e.target.dataset,t=e.target;
  const tyB=t.closest&&t.closest("[data-ty]");if(tyB){ty=tyB.dataset.ty;if(!multiOnda()&&rows.length>1)rows.splice(1);segs();setTimeout(()=>goStep(3),260)}

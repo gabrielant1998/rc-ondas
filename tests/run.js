@@ -362,6 +362,18 @@ await T("58 Histórico por hora: só com hoje já mostra a média por hora; filt
  let t=(await p.textContent('#hBody')).replace(/\s+/g,' ');ok(/Dias na base1só hoje/.test(t)&&t.includes('Média por hora'),'só hoje: '+t.slice(0,260));
  ok((await p.$$('#hBody svg.ch rect')).length>=2,'barras no gráfico');
  await p.selectOption('#hMet','o');await p.waitForTimeout(100);ok((await p.textContent('#hBody')).includes('Média por hora: ondas'),'filtro ondas')});
+await T("70 Folha para imprimir: A4 paisagem, 1 página por pessoa, com gráfico e sem tabela de ondas",async()=>{
+ const b0=HR(9,0);const W=[WV('d1','D1','Vários artigos',100,b0),WV('d2','D2','Itens Únicos',40,b0+10*60000),WV('d3','D3','Vários artigos',60,b0+20*60000),WV('e1','E1','Itens Únicos',10,b0,'CL002','Bruno Lima'),WV('e2','E2','Itens Únicos',10,b0+20*60000,'CL002','Bruno Lima')];
+ const p=await page(b,base({waves:W}));await p.evaluate(()=>{window.print=()=>{}});await p.evaluate(()=>go('ind'));await p.waitForTimeout(200);
+ ok(/folhas da equipe/i.test(await p.textContent('#iPrint')),'botão da equipe');
+ await p.click('#iPrint');await p.waitForTimeout(400);
+ ok(await p.$$eval('#folha .fl',a=>a.length)===2,'uma folha por pessoa com produção');
+ await p.evaluate(()=>{document.querySelector('#folha').innerHTML='';document.body.classList.remove('printing')});
+ await p.selectOption('#iOp','CL001');await p.waitForTimeout(200);ok(/Imprimir folha$/.test((await p.textContent('#iPrint')).trim()),'botão individual');
+ await p.click('#iPrint');await p.waitForTimeout(400);
+ const t=await p.textContent('#folha');ok(t.includes('Ana Souza')&&t.includes('200')&&!t.includes('Histórico das ondas')&&!t.includes('D1'),'conteúdo: '+t.slice(0,200));
+ await p.emulateMedia({media:'print'});await p.pdf({path:'/tmp/claude-0/-home-claude/1b46621a-564c-549a-8cc9-448283bd574c/scratchpad/folha.pdf',preferCSSPageSize:true,printBackground:true});
+ await p.emulateMedia({media:'screen'})});
 await T("59 Individual: cards de destaque (mais rápido, volumes, ondas, por tipo, procurando)",async()=>{
  const b0=HR(9,0);const W=[WV('d1','D1','Vários artigos',100,b0),WV('d2','D2','Itens Únicos',40,b0+10*60000),WV('d3','D3','Vários artigos',60,b0+20*60000),WV('d4','D4','Vários artigos',60,b0+30*60000),
   WV('e1','E1','Itens Únicos',10,b0,'CL002','Bruno Lima'),WV('e2','E2','Itens Únicos',10,b0+20*60000,'CL002','Bruno Lima'),WV('e3','E3','Itens Únicos',5,b0+40*60000,'CL002','Bruno Lima',1)];
