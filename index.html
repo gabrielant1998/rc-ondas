@@ -672,11 +672,12 @@ function hourWindow(a){let f=a.findIndex(v=>v>0),l=-1;a.forEach((v,i)=>{if(v>0)l
 /* tempo de onda: intervalo entre ondas concluídas consecutivas do mesmo operador */
 /* conjuntos: ondas do mesmo operador bipadas no mesmo instante (até 3 s) contam como UM conjunto; o tempo dele vai da sua bipagem até a do conjunto seguinte */
 function conjuntos(list){const by={},out=[];
- prod(list).filter(w=>!NOTIME.includes(w.ty)).slice().sort((x,y)=>(x.fin||x.ts)-(y.fin||y.ts)).forEach(w=>{(by[w.op]=by[w.op]||[]).push(w)});
+ prod(list).filter(w=>!NOTIME.includes(w.ty)&&!procurou(w)).slice().sort((x,y)=>(x.fin||x.ts)-(y.fin||y.ts)).forEach(w=>{(by[w.op]=by[w.op]||[]).push(w)});
  Object.values(by).forEach(a=>{const gs=[];a.forEach(w=>{const t=w.fin||w.ts,g=gs[gs.length-1];if(g&&t-g.t0<=3000)g.w.push(w);else gs.push({t0:t,w:[w]})});
   gs.forEach((g,i)=>{const dom=g.w.slice().sort((x,y)=>y.qty-x.qty)[0];out.push({op:dom.op,t:g.t0,zt:g.w.some(x=>x.zt),ondas:g.w.length,qty:g.w.reduce((q,w)=>q+w.qty,0),w:dom,tipos:[...new Set(g.w.map(x=>x.ty))],d:gs[i+1]?gs[i+1].t0-g.t0:null})})});return out}
 function durs(list){const gap=GAP()*6e4;return conjuntos(list).filter(c=>c.d!=null&&c.d>0&&c.d<=gap&&!c.zt)}
 const NOTIME=["Retrabalho","Maiores/Pesados"];
+const procurou=w=>(w.hist||[]).some(e=>e.e==="m");/* onda que passou por Procurando: o tempo dela é do Procurando, não do conjunto */
 const wA=a=>{const q=a.reduce((s,c)=>s+(c.qty||0),0);return q?a.reduce((s,c)=>s+c.d*(c.qty||0),0)/q:0};
 const GAP=()=>Math.min(Math.max(+S.cfg.gap||30,1),60);
 function foraLim(list){const gap=GAP()*6e4,n=conjuntos(list).filter(c=>c.d!=null&&c.d>gap&&!c.zt).length;return n?`<div class="legend" style="color:var(--o)">${n} ${n===1?'conjunto passou':'conjuntos passaram'} de ${GAP()} min entre uma bipagem e a seguinte e ficaram de fora, pois provavelmente foram pausas e não tempo de onda.</div>`:''}
@@ -719,7 +720,7 @@ function desenhaPainelPublico(x,g,t){
  const a=Array(24).fill(0);(x.horas||[]).forEach(z=>a[z.hora]=+z.qtd);const a2=x.meias?Array(48).fill(0):null;if(a2)x.meias.forEach(z=>a2[z.slot]=+z.qtd);$("#chH").innerHTML=chartH(a,a2);$("#peak").textContent=tot?peakTxt(a,a2):'';
  const types=x.tipos||[];$("#chT").innerHTML=TY.map(([name,c])=>{const z=types.find(v=>v.tipo===name)||{};return `<div class="trow" style="--c:${c}">${ico(name)}<b>${name}</b><span class="v"><span class="num">${fmt(z.qtd||0)}</span><small>${fmt(z.ondas||0)} ondas</small></span></div>`}).join('');
  $("#gals").innerHTML=bars((x.galpoes||[]).map(z=>({k:z.nome,v:+z.qtd||0,s:fmt(z.ondas)+' ondas, '+fmt(z.pessoas)+' pessoas',c:'var(--g)'})));
- const dt=x.dur_tipos||[];const rk=v=>{const z=dt.find(q=>q.tipo===v)||{};return +z.n?(+(z.pond!=null?z.pond:z.mediana)||0):0},TYR=TY.slice().sort((a,b)=>rk(b[0])-rk(a[0]));$("#tmp").innerHTML=TYR.map(([name,c])=>{const z=dt.find(v=>v.tipo===name)||{},n=+z.n||0,ms=n?(+(z.pond!=null?z.pond:z.mediana)||0):0;return `<div class="gal"><div class="r"><b>${n?(TYR.findIndex(q=>q[0]===name)+1)+'º ':''}${name}</b><span>${n?mm(ms):'—'} <small style="color:var(--mut)">${n} ${n===1?'conjunto':'conjuntos'}</small></span></div><div class="bar"><b style="width:${n?Math.min(ms/(GAP()*6e4)*100,100):0}%;--c:${c}"></b></div></div>`}).join('')+`<div class="legend">Média ponderada pelas unidades de cada conjunto de ondas, até ${GAP()} min. Retrabalho e Maiores/Pesados não contam tempo.</div>`;
+ const dt=x.dur_tipos||[];const rk=v=>{const z=dt.find(q=>q.tipo===v)||{};return +z.n?(+(z.pond!=null?z.pond:z.mediana)||0):0},TYR=TY.slice().sort((a,b)=>rk(b[0])-rk(a[0]));$("#tmp").innerHTML=TYR.map(([name,c])=>{const z=dt.find(v=>v.tipo===name)||{},n=+z.n||0,ms=n?(+(z.pond!=null?z.pond:z.mediana)||0):0;return `<div class="gal"><div class="r"><b>${n?(TYR.findIndex(q=>q[0]===name)+1)+'º ':''}${name}</b><span>${n?mm(ms):'—'} <small style="color:var(--mut)">${n} ${n===1?'conjunto':'conjuntos'}</small></span></div><div class="bar"><b style="width:${n?Math.min(ms/(GAP()*6e4)*100,100):0}%;--c:${c}"></b></div></div>`}).join('')+`<div class="legend">Média ponderada pelas unidades de cada conjunto de ondas, até ${GAP()} min. Retrabalho, Maiores/Pesados e ondas que passaram por Procurando não entram no tempo do conjunto (o tempo de procurando é medido à parte).</div>`;
  $("#pace").innerHTML='<span class="legend">Painel público com totais consolidados. Registros ainda offline aparecem após a sincronização.</span>';
 }
 
@@ -765,7 +766,7 @@ function painel(){
  const TYR=TY.slice().sort((a,b)=>wA(Dg.filter(x=>x.w.ty===b[0]))-wA(Dg.filter(x=>x.w.ty===a[0])));
  $("#tmp").innerHTML=TYR.map(([n,c])=>{const dc=Dg.filter(x=>x.w.ty===n),d=dc;
   return`<div class="gal"><div class="r"><b>${d.length?(TYR.findIndex(z=>z[0]===n)+1)+"º ":""}${n}</b><span>${d.length?mm(wA(dc)):"—"} <small style="color:var(--mut)">${d.length} ${d.length===1?"conjunto":"conjuntos"}</small></span></div><div class="bar"><b style="width:${d.length?Math.min(wA(dc)/(GAP()*6e4)*100,100):0}%;--c:${c}"></b></div></div>`}).join("")
-  +`<div class="legend">Média ponderada pelas unidades de cada conjunto de ondas (ondas bipadas no mesmo instante contam uma vez), da bipagem até a seguinte do mesmo operador. Pausas acima de ${GAP()} min ficam de fora. Retrabalho e Maiores/Pesados não contam tempo.</div>`+foraLim(L);
+  +`<div class="legend">Média ponderada pelas unidades de cada conjunto de ondas (ondas bipadas no mesmo instante contam uma vez), da bipagem até a seguinte do mesmo operador. Pausas acima de ${GAP()} min ficam de fora. Retrabalho, Maiores/Pesados e ondas que passaram por Procurando não entram no tempo do conjunto (o tempo de procurando é medido à parte).</div>`+foraLim(L);
 }
 
 /* ===================== OPERAÇÃO ===================== */
@@ -806,7 +807,7 @@ function operacao(){const L=dayWaves().slice().reverse();$("#cnt").textContent=L
  const open=S.waves.filter(w=>w.st!==0&&inView(w)&&(!$("#fOp").value||w.op===$("#fOp").value)&&(!$("#fTy").value||w.ty===$("#fTy").value)&&(!$("#fSt").value||w.st==$("#fSt").value));
  $("#ctlList").innerHTML=open.length?'<div style="font-weight:600;margin:4px 0 8px">Procurando e difícil acesso</div>'+opRows(open.reverse(),1):'';ctlLive()}
 function liveWaves(){const gap=GAP()*6e4,now=Date.now(),by={};
- S.waves.filter(w=>w.st===0&&!w.err&&!w.zt&&!NOTIME.includes(w.ty)&&inView(w)&&w.ts<=now&&now-w.ts<=gap&&(!$("#fOp").value||w.op===$("#fOp").value)&&(!$("#fTy").value||w.ty===$("#fTy").value)).forEach(w=>{(by[w.op]=by[w.op]||[]).push(w)});
+ S.waves.filter(w=>w.st===0&&!w.err&&!w.zt&&!NOTIME.includes(w.ty)&&!procurou(w)&&inView(w)&&w.ts<=now&&now-w.ts<=gap&&(!$("#fOp").value||w.op===$("#fOp").value)&&(!$("#fTy").value||w.ty===$("#fTy").value)).forEach(w=>{(by[w.op]=by[w.op]||[]).push(w)});
  return Object.values(by).map(a=>{a.sort((x,y)=>y.ts-x.ts);const u=a[0];return{u,g:a.filter(x=>u.ts-x.ts<=3000)}}).sort((x,y)=>y.u.ts-x.u.ts)}
 const CTLX=new Set();
 function ctlLive(){const el=$("#ctlLive");if(!el)return;let L=S.cfg.and?liveWaves():[];const q=nrm($("#ctlQ")?$("#ctlQ").value:"").trim(),all=L.length;

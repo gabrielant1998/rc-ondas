@@ -296,6 +296,11 @@ await T("69 Maiores/Pesados não conta tempo e a média é ponderada pelas unida
  const r=await p.evaluate(()=>({n:durs(S.waves).length,ty:durs(S.waves).map(c=>c.w.ty),w:wA([{d:90,qty:10},{d:10,qty:100}])}));
  ok(!r.ty.includes('Maiores/Pesados'),'Pesados não deveria ter tempo: '+JSON.stringify(r));
  ok(Math.round(r.w*100)===1727,'ponderada (10×90+100×10)/110 deveria dar 17,27: '+r.w)});
+await T("71 Onda que passou por Procurando não entra no tempo do conjunto (unidades continuam)",async()=>{
+ const b0=HR(9,0);const W=[WV('a','1','Itens Únicos',10,b0),WV('b','2','Itens Únicos',20,b0+10*60000),WV('c','3','Itens Únicos',5,b0+20*60000),WV('d','4','Itens Únicos',7,b0+30*60000)];
+ const p=await page(b,base({waves:W}));
+ const r=await p.evaluate(()=>{const a=durs(S.waves).length;S.waves.find(w=>w.id==='b').hist=[{e:'m',q:'x',t:Date.now()-5e5},{e:'a',q:'',t:Date.now()-4e5}];const c=conjuntos(S.waves);return{a,n:c.length,q:prod(S.waves).reduce((s,w)=>s+w.qty,0)}});
+ ok(r.a===3&&r.n===3&&r.q===42,'esperava 3→3 conjuntos sem a onda de procurando e 42 un.: '+JSON.stringify(r))});
 await T("51 Operador: nomes aparecem em cartões a partir da primeira letra, sem lista nativa",async()=>{
  const p=await page(b,base());await p.evaluate(()=>go('op'));
  ok(!(await p.$eval('#opIn',e=>e.hasAttribute('list'))),'ainda usa a lista nativa');
