@@ -316,7 +316,7 @@ await T("52 Histórico: visão por dia com KPIs, mediana e previsão de 7 dias",
 await T("53 Histórico: visões por hora e por mês",async()=>{
  const p=await page(b,base({waves:HIS()}));await p.evaluate(()=>go('his'));
  await p.selectOption('#hVis','hora');await p.waitForTimeout(150);let t=(await p.textContent('#hBody')).replace(/\s+/g,' ');
- ok(t.includes('Hora mais produtiva')&&t.includes('Mediana por hora')&&t.includes('9h'),'hora: '+t.slice(0,300));
+ ok(t.includes('Média por hora')&&t.includes('Hora mais produtiva')&&t.includes('9h'),'hora: '+t.slice(0,300));
  await p.selectOption('#hVis','mes');await p.waitForTimeout(150);t=(await p.textContent('#hBody')).replace(/\s+/g,' ');
  ok(t.includes('Melhor mês')&&t.includes('Meses com produção'),'mês: '+t.slice(0,300));
  ok((await p.$$eval('#hPer option',a=>a.map(o=>o.textContent))).join().includes('12 meses'),'períodos do mês')});
@@ -342,6 +342,21 @@ await T("56 Controle de Ondas: ver ondas do mesmo lançamento e pesquisar por on
  await p.click('#ctlLive [data-x]');await p.fill('#ctlQ','la2');t=await p.textContent('#ctlLive');ok(t.includes('LA2')&&!t.includes('MB1'),'busca por onda abre o lançamento: '+t.slice(0,200));
  await p.fill('#ctlQ','bruno');t=await p.textContent('#ctlLive');ok(t.includes('MB1')&&!t.includes('LA3'),'busca por nome');
  await p.fill('#ctlQ','zzz');ok((await p.textContent('#ctlLive')).includes('Nenhuma onda em andamento com essa'),'sem resultado')});
+await T("57 Histórico: ondas por pessoa recolhidas, pesquisa por número dentro da pessoa e pesquisa universal com 9 caracteres + Enter",async()=>{
+ const n=Date.now()-2*24*H;const p=await page(b,base({waves:[WV('p1','WN22A48089','Pacote do mesmo',10,n),WV('p2','WN22A48090','Itens Únicos',20,n+60000),WV('p3','WN22A99999','Vários artigos',30,n+120000,'CL002','Bruno Lima')]}));
+ await p.evaluate(()=>go('his'));await p.waitForTimeout(200);
+ ok((await p.$$('#hBody details.hp')).length===2,'duas pessoas');ok(!(await p.textContent('#hBody')).includes('WN22A48089'),'deveria vir recolhido');
+ await p.click('#hBody details.hp[data-hp="CL001"] summary');await p.waitForTimeout(100);let t=await p.textContent('#hBody');ok(t.includes('WN22A48089')&&t.includes('WN22A48090')&&!t.includes('WN22A99999'),'abre só a pessoa');
+ await p.fill('#hBody [data-hpq="CL001"]','48090');t=await p.textContent('#hBody details.hp[data-hp="CL001"]');ok(t.includes('WN22A48090')&&!t.includes('WN22A48089'),'pesquisa na pessoa');
+ await p.fill('#hUni','WN22A999');await p.keyboard.press('Enter');ok((await p.textContent('#hUniRes')).includes('pelo menos 9'),'menos de 9 não busca');
+ await p.fill('#hUni','WN22A99999');ok(!(await p.textContent('#hUniRes')).includes('Bruno'),'não busca sem Enter');
+ await p.keyboard.press('Enter');await p.waitForTimeout(150);t=await p.textContent('#hUniRes');ok(t.includes('Bruno Lima')&&t.includes('Vários artigos')&&t.includes('30'),'busca universal: '+t.slice(0,200))});
+await T("58 Histórico por hora: só com hoje já mostra a média por hora; filtros seguem valendo",async()=>{
+ const p=await page(b,base({waves:[WV('a1','A1','Vários artigos',100,HR(8,10)),WV('a2','A2','Itens Únicos',50,HR(8,40)),WV('a3','A3','Vários artigos',70,HR(9,5))]}));
+ await p.evaluate(()=>{go('his')});await p.selectOption('#hVis','hora');await p.waitForTimeout(150);
+ let t=(await p.textContent('#hBody')).replace(/\s+/g,' ');ok(/Dias na base1só hoje/.test(t)&&t.includes('Média por hora'),'só hoje: '+t.slice(0,260));
+ ok((await p.$$('#hBody svg.ch rect')).length>=2,'barras no gráfico');
+ await p.selectOption('#hMet','o');await p.waitForTimeout(100);ok((await p.textContent('#hBody')).includes('Média por hora: ondas'),'filtro ondas')});
 await b.close();
 const w=Math.max(...R.map(r=>r[1].length));for(const r of R)console.log((r[0]==="PASS"?"✅":"❌")+" "+r[1].padEnd(w)+"  "+r[2]);
 console.log(`\n${R.filter(r=>r[0]==="PASS").length}/${R.length} passaram`)})();
