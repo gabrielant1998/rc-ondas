@@ -276,21 +276,26 @@ await T("48 Controle de Ondas: última bipagem de cada operador conta tempo ao v
  const t=(await p.textContent('#ctlLive')).replace(/\s+/g,' ');
  ok(t.includes('Ana Souza')&&t.includes('Bruno Lima')&&!t.includes('Carla Dias'),'operadores: '+t);
  const el=await p.$$eval('#ctlLive [data-el]',a=>a.map(e=>e.textContent));ok(el.includes('05:01')||el.includes('05:02')||el.includes('05:00'),'tempos: '+el.join(','));
- await p.evaluate(()=>{S.waves.push({id:'z',wn:'9',op:'CL001',opn:'Ana Souza',gal:'Galpão 1',ty:'Maiores/Pesados',qty:5,st:0,ts:Date.now()-1000,fin:Date.now()-1000,sync:1});renderAll()});
- const t2=(await p.textContent('#ctlLive')).replace(/\s+/g,' ');ok(t2.includes('Maiores/Pesados')&&!t2.includes('Vários artigos'),'nova bipagem deveria substituir a anterior: '+t2)});
-const CJ=()=>{const b0=HR(9,0);return[WV('a','1','Itens Únicos',10,b0),WV('b','2','Vários artigos',50,b0+500),WV('c','3','Vários artigos',40,b0+1000),WV('d','4','Maiores/Pesados',5,b0+26.5*60000),WV('e','5','Itens Únicos',7,b0+46*60000)]};
+ await p.evaluate(()=>{S.waves.push({id:'z',wn:'9',op:'CL001',opn:'Ana Souza',gal:'Galpão 1',ty:'Múltiplas quantidades',qty:5,st:0,ts:Date.now()-1000,fin:Date.now()-1000,sync:1});renderAll()});
+ const t2=(await p.textContent('#ctlLive')).replace(/\s+/g,' ');ok(t2.includes('Múltiplas quantidades')&&!t2.includes('Vários artigos'),'nova bipagem deveria substituir a anterior: '+t2)});
+const CJ=()=>{const b0=HR(9,0);return[WV('a','1','Itens Únicos',10,b0),WV('b','2','Vários artigos',50,b0+500),WV('c','3','Vários artigos',40,b0+1000),WV('d','4','Múltiplas quantidades',5,b0+26.5*60000),WV('e','5','Itens Únicos',7,b0+46*60000)]};
 await T("49 Conjuntos: ondas bipadas no mesmo instante contam uma vez, com um tempo só",async()=>{
  const p=await page(b,base({waves:CJ()}));
  const r=await p.evaluate(()=>durs(S.waves).map(c=>[c.w.ty,c.d,c.ondas,c.qty]));
  ok(r.length===2,'esperava 2 conjuntos medidos, vieram '+JSON.stringify(r));
  ok(r[0][0]==='Vários artigos'&&r[0][1]===26.5*60000-0&&r[0][2]===3&&r[0][3]===100,'conjunto 1: '+JSON.stringify(r[0]));
- ok(r[1][0]==='Maiores/Pesados'&&r[1][1]===19.5*60000&&r[1][2]===1,'conjunto 2: '+JSON.stringify(r[1]))});
+ ok(r[1][0]==='Múltiplas quantidades'&&r[1][1]===19.5*60000&&r[1][2]===1,'conjunto 2: '+JSON.stringify(r[1]))});
 await T("50 Individual: tempo por tipo (mais rápido) e lista de conjuntos com tempo em minutos",async()=>{
  const p=await page(b,base({waves:CJ()}));
  await p.evaluate(()=>go('ind'));await p.selectOption('#iOp','CL001');const t=(await p.textContent('#iBody')).replace(/\s+/g,' ');
  ok(t.includes('Tempo por tipo de onda')&&t.includes('Conjuntos de ondas'),'sem cards');
  ok(t.includes('26 min 30 s')&&t.includes('19 min 30 s'),'sem tempos: '+t.slice(t.indexOf('Tempo por tipo'),t.indexOf('Tempo por tipo')+700));
- ok(/Maiores\/Pesados\d+19 min 30 s\d+mais rápido/.test(t),'Maiores/Pesados deveria ser o mais rápido: '+t.slice(t.indexOf('Tempo por tipo'),t.indexOf('Tempo por tipo')+500))});
+ ok(/Múltiplas quantidades\d+19 min 30 s\d+mais rápido/.test(t),'Múltiplas deveria ser o mais rápido: '+t.slice(t.indexOf('Tempo por tipo'),t.indexOf('Tempo por tipo')+500))});
+await T("69 Maiores/Pesados não conta tempo e a média é ponderada pelas unidades",async()=>{
+ const b0=HR(9,0);const p=await page(b,base({waves:[WV('a','1','Itens Únicos',10,b0),WV('b','2','Maiores/Pesados',5,b0+10*60000),WV('c','3','Vários artigos',100,b0+20*60000),WV('d','4','Itens Únicos',1,b0+25*60000)]}));
+ const r=await p.evaluate(()=>({n:durs(S.waves).length,ty:durs(S.waves).map(c=>c.w.ty),w:wA([{d:90,qty:10},{d:10,qty:100}])}));
+ ok(!r.ty.includes('Maiores/Pesados'),'Pesados não deveria ter tempo: '+JSON.stringify(r));
+ ok(Math.round(r.w*100)===1727,'ponderada (10×90+100×10)/110 deveria dar 17,27: '+r.w)});
 await T("51 Operador: nomes aparecem em cartões a partir da primeira letra, sem lista nativa",async()=>{
  const p=await page(b,base());await p.evaluate(()=>go('op'));
  ok(!(await p.$eval('#opIn',e=>e.hasAttribute('list'))),'ainda usa a lista nativa');

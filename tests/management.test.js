@@ -3,7 +3,7 @@ process.env.TZ='America/Sao_Paulo';
 const assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
 const html=fs.readFileSync('index.html','utf8');
 const source=html.slice(html.indexOf('/* ===================== GESTÃO OPERACIONAL'),html.indexOf('function mgHistory('));
-const ctx={console,Date,Map,Set,Number,Math,ON:false,me:null,OPSALL:{},GN:{},S:{ops:[],waves:[],metas:{},cfg:{gap:30,tol:15,turnos:{1:{ini:7,fim:16},2:{ini:16,fim:23}}}},
+const ctx={console,Date,Map,Set,Number,Math,GAP:()=>30,ON:false,me:null,OPSALL:{},GN:{},S:{ops:[],waves:[],metas:{},cfg:{gap:30,tol:15,turnos:{1:{ini:7,fim:16},2:{ini:16,fim:23}}}},
  $:s=>ctx.fields[s],fields:{'#iPer':{value:'1'},'#day':{value:''}},restricted:()=>false,myG:()=>'',inView:()=>true,
  dk:t=>{const d=new Date(t);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')},
  turnoOf:o=>ctx.S.cfg.turnos[o.t===2?2:1]};
