@@ -408,6 +408,11 @@ await T("63 Histórico em subabas: Evolução, Tipos de onda, Procurando e Pesso
  ok(await vis()==='evo','começa em evolução: '+await vis());
  for(const k of ['tipo','pro','pes','evo']){await p.click('#hsub [data-hs="'+k+'"]');ok(await vis()===k,k+': '+await vis())}
  await p.click('#hsub [data-hs="pes"]');await p.selectOption('#hMet','o');ok(await vis()==='pes','mantém a subaba ao trocar filtro: '+await vis())});
+await T("64 Gráfico por hora logado: a meta necessária alta não achata as barras",async()=>{
+ const p=await page(b,base());
+ const r=await p.evaluate(()=>{const a=Array(24).fill(0);a[9]=2400;a[10]=2800;a[13]=5700;const svg=barsSvg(a,8,14,{need:18062,avg:2302});const hs=[...svg.matchAll(/<path d="M[\d.]+ [\d.]+V([\d.]+)Q/g)].map(m=>+m[1]);return{svg,tops:hs}});
+ ok(r.svg.includes('acima da escala'),'sem aviso de escala');ok(r.tops.length>=3&&Math.min(...r.tops)<100,'barras achatadas, topo mais alto em y='+Math.min(...r.tops));
+ const r2=await p.evaluate(()=>barsSvg(Array(24).fill(0).map((_,i)=>i===9?3000:0),8,10,{need:2000}));ok(!r2.includes('acima da escala'),'meta dentro da escala não deveria avisar')});
 await b.close();
 const w=Math.max(...R.map(r=>r[1].length));for(const r of R)console.log((r[0]==="PASS"?"✅":"❌")+" "+r[1].padEnd(w)+"  "+r[2]);
 console.log(`\n${R.filter(r=>r[0]==="PASS").length}/${R.length} passaram`)})();
