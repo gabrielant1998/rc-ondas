@@ -226,19 +226,29 @@ await T("34 Gestão: meta coletiva soma produção uma vez e mantém tipos",asyn
 
 const HR=(h,m)=>{const d=new Date();d.setHours(h,m,0,0);return d.getTime()};
 const WV=(id,wn,ty,qty,t,op='CL001',opn='Ana Souza',st=0)=>({id,wn,op,opn,gal:'Galpão 1',ty,qty,st,ts:t,fin:st===0?t:null,sync:1});
-await T("43 Procurando: bipar onda existente pede SKU, tira da produção e Encontrada devolve",async()=>{
+await T("43 Procurando em 3 etapas: pendente com SKU, encontrada vai ao histórico, baixa com nome",async()=>{
  const p=await page(b,base({waves:[WV('a','00123','Vários artigos',10,HR(9,0)),WV('b','456','Vários artigos',20,HR(9,10))]}));
+ const prod=()=>p.evaluate(()=>prod(S.waves).reduce((a,w)=>a+w.qty,0));
  await p.evaluate(()=>go('op'));await p.click('#sub [data-s="pro"]');
  await p.fill('#prBip','123');await p.press('#prBip','Enter');ok(await p.isVisible('#prSku'),'formulário não abriu');
  await p.press('#prSku','Enter');ok((await p.textContent('#toast')).includes('SKU'),'deixou salvar sem SKU');
- await p.fill('#prNome','Maria');await p.fill('#prSku','SKU-9');await p.fill('#prLoc','A-01');await p.press('#prLoc','Enter');
- const lista=await p.textContent('#prList');ok(lista.includes('123')&&lista.includes('SKU-9')&&lista.includes('A-01')&&lista.includes('Maria'),'lista: '+lista);
- await p.evaluate(()=>go('painel'));const k=await p.textContent('#kpis');ok(/Procurando\s*1/.test(k.replace(/\s+/g,' ')),'painel não mostra 1 procurando: '+k.replace(/\s+/g,' ').slice(0,300));
- const prod=await p.evaluate(()=>prod(S.waves).reduce((a,w)=>a+w.qty,0));ok(prod===20,'produção deveria ser 20, é '+prod);
- await p.reload();const w=await p.evaluate(()=>S.waves.find(x=>x.id==='a'));ok(w.st===1&&w.sku==='SKU-9'&&w.loc==='A-01'&&w.pn==='Maria','não persistiu: '+JSON.stringify(w));
- await p.evaluate(()=>go('op'));await p.click('#sub [data-s="pro"]');await p.click('[data-prf="a"]');
- const w2=(await st(p)).waves.find(x=>x.id==='a');ok(w2.st===0&&w2.fin,'não voltou ao status 0');
- const prod2=await p.evaluate(()=>prod(S.waves).reduce((a,w)=>a+w.qty,0));ok(prod2===30,'produção deveria voltar a 30, é '+prod2)});
+ await p.fill('#prSku','SKU-9');await p.fill('#prLoc','A-01');await p.press('#prLoc','Enter');
+ const lista=await p.textContent('#prList');ok(lista.includes('123')&&lista.includes('SKU-9')&&lista.includes('A-01')&&lista.includes('Ana Souza'),'pendentes: '+lista);
+ await p.evaluate(()=>go('painel'));const k=(await p.textContent('#kpis')).replace(/\s+/g,' ');ok(/Procurando1/.test(k),'painel não mostra 1 procurando: '+k.slice(0,300));
+ ok(await prod()===20,'produção deveria ser 20, é '+await prod());
+ await p.reload();const w=await p.evaluate(()=>S.waves.find(x=>x.id==='a'));ok(w.st===1&&w.sku==='SKU-9'&&w.loc==='A-01'&&w.hist.length===1,'não persistiu: '+JSON.stringify(w));
+ await p.evaluate(()=>go('op'));await p.click('#sub [data-s="pro"]');
+ await p.fill('#prBip','00123');await p.press('#prBip','Enter');ok(await p.isVisible('#prAOk')&&!(await p.isVisible('#prSku')),'segunda bipagem deveria pedir "encontrada"');
+ await p.click('#prAOk');ok((await p.textContent('#prList')).includes('Nenhuma'),'ainda pendente');
+ ok(await prod()===30,'produção deveria voltar a 30, é '+await prod());
+ let h=(await p.textContent('#prHist')).replace(/\s+/g,' ');ok(h.includes('123')&&h.includes('SKU-9')&&h.includes('A-01')&&h.includes('Dar baixa')&&/\d\d\/\d\d\/\d\d/.test(h),'histórico: '+h);
+ await p.fill('#prBip','123');await p.press('#prBip','Enter');ok(await p.isVisible('#prNome'),'terceira bipagem deveria pedir o nome');
+ await p.press('#prNome','Enter');ok((await p.textContent('#toast')).includes('nome'),'deixou dar baixa sem nome');
+ await p.fill('#prNome','Maria Souza');await p.press('#prNome','Enter');
+ h=(await p.textContent('#prHist')).replace(/\s+/g,' ');ok(h.includes('Maria Souza')&&!h.includes('Dar baixa'),'baixa não apareceu: '+h);
+ await p.fill('#prBip','123');await p.press('#prBip','Enter');ok(!(await p.isVisible('#prNome'))&&(await p.textContent('#prRes')).includes('já tem baixa'),'onda baixada deveria só informar');
+ await p.fill('#prQ','maria');ok((await p.textContent('#prHist')).includes('123'),'pesquisa por nome não achou');
+ await p.fill('#prQ','zzzz');ok((await p.textContent('#prHist')).includes('Nada encontrado'),'pesquisa sem resultado')});
 await T("44 Procurando: WN inexistente e onda em difícil acesso não abrem formulário",async()=>{
  const p=await page(b,base({waves:[WV('a','900','Vários artigos',10,HR(9,0),'CL001','Ana Souza',2)]}));
  await p.evaluate(()=>go('op'));await p.click('#sub [data-s="pro"]');
