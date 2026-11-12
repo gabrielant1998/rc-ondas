@@ -357,6 +357,28 @@ await T("58 Histórico por hora: só com hoje já mostra a média por hora; filt
  let t=(await p.textContent('#hBody')).replace(/\s+/g,' ');ok(/Dias na base1só hoje/.test(t)&&t.includes('Média por hora'),'só hoje: '+t.slice(0,260));
  ok((await p.$$('#hBody svg.ch rect')).length>=2,'barras no gráfico');
  await p.selectOption('#hMet','o');await p.waitForTimeout(100);ok((await p.textContent('#hBody')).includes('Média por hora: ondas'),'filtro ondas')});
+await T("59 Individual: cards de destaque (mais rápido, volumes, ondas, por tipo, procurando)",async()=>{
+ const b0=HR(9,0);const W=[WV('d1','D1','Vários artigos',100,b0),WV('d2','D2','Itens Únicos',40,b0+10*60000),WV('d3','D3','Vários artigos',60,b0+20*60000),WV('d4','D4','Vários artigos',60,b0+30*60000),
+  WV('e1','E1','Itens Únicos',10,b0,'CL002','Bruno Lima'),WV('e2','E2','Itens Únicos',10,b0+20*60000,'CL002','Bruno Lima'),WV('e3','E3','Itens Únicos',5,b0+40*60000,'CL002','Bruno Lima',1)];
+ const p=await page(b,base({waves:W}));await p.evaluate(()=>go('ind'));await p.waitForTimeout(200);
+ const cards=await p.$$eval('#iBody .hl',a=>a.map(e=>e.textContent.replace(/\s+/g,' ')));
+ ok(cards.length===11,'11 cards: '+cards.length);
+ const by=n=>cards.find(c=>c.startsWith(n));
+ ok(by('Coleta mais volumes').includes('Ana Souza')&&by('Coleta mais volumes').includes('260'),'volumes: '+by('Coleta mais volumes'));
+ ok(by('Finaliza mais ondas').includes('Ana Souza')&&by('Finaliza mais ondas').includes('4 ondas'),'ondas');
+ ok(by('Itens Únicos').includes('Ana Souza')&&by('Itens Únicos').includes('40 un.'),'tipo: '+by('Itens Únicos'));
+ ok(by('Mais ondas em procurando').includes('Bruno Lima')&&by('Mais ondas em procurando').includes('1 ondas'),'procurando: '+by('Mais ondas em procurando'));
+ ok(by('Coletor mais rápido').includes('Ana Souza'),'rápido: '+by('Coletor mais rápido'))});
+await T("60 Histórico: filtro por operador vale para volume, ondas e tempo por conjunto",async()=>{
+ const b0=HR(9,0)-24*H;const W=[WV('o1','O1','Vários artigos',100,b0),WV('o2','O2','Vários artigos',100,b0+10*60000),WV('o3','O3','Vários artigos',100,b0+25*60000),
+  WV('q1','Q1','Itens Únicos',10,b0,'CL002','Bruno Lima'),WV('q2','Q2','Itens Únicos',10,b0+30*60000,'CL002','Bruno Lima')];
+ const p=await page(b,base({waves:W}));await p.evaluate(()=>go('his'));await p.waitForTimeout(200);
+ ok((await p.$$eval('#hOp option',a=>a.map(o=>o.textContent))).join('|').includes('Bruno Lima'),'lista de operadores');
+ await p.selectOption('#hMet','t');await p.waitForTimeout(100);
+ const tot=async()=>(await p.textContent('#hBody')).replace(/\s+/g,' ');
+ await p.selectOption('#hOp','CL002');await p.waitForTimeout(100);let t=await tot();ok(t.includes('30:00')&&!t.includes('Ana Souza'),'Bruno 30 min: '+t.slice(0,260));
+ await p.selectOption('#hMet','u');await p.waitForTimeout(100);t=await tot();ok(t.includes('Total no período20')&&t.includes('Bruno Lima'),'Bruno 20 un: '+t.slice(0,200));
+ await p.selectOption('#hOp','');await p.waitForTimeout(100);ok((await tot()).includes('Total no período320'),'todos')});
 await b.close();
 const w=Math.max(...R.map(r=>r[1].length));for(const r of R)console.log((r[0]==="PASS"?"✅":"❌")+" "+r[1].padEnd(w)+"  "+r[2]);
 console.log(`\n${R.filter(r=>r[0]==="PASS").length}/${R.length} passaram`)})();

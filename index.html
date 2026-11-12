@@ -115,6 +115,7 @@ svg.ch{width:100%;height:auto;display:block}svg text{fill:var(--mut);font:600 12
 .sumline{font-size:14px;color:var(--mut);margin-bottom:12px}.sumline b{color:var(--ink);font-weight:600}
 #opName{font-weight:600;color:var(--ink)!important;min-height:22px}
 .hp{border-top:1px solid var(--line)}.hp summary{cursor:pointer;padding:12px 4px;display:flex;flex-wrap:wrap;gap:4px 12px;align-items:baseline;list-style:none}.hp summary::-webkit-details-marker{display:none}.hp summary::before{content:'▸';color:var(--mut)}.hp[open] summary::before{content:'▾'}.hps{margin-left:auto;font-weight:600}.hpt2{flex-basis:100%;color:var(--mut)}.hpb{padding:0 4px 14px}.hpb input{margin-bottom:8px;max-width:320px}
+.hlg{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px}.hl{padding:16px}.hlt{font:600 13px var(--fb);color:var(--mut);margin-bottom:8px}.hl1{font-size:15px}.hlv{font-size:26px;margin:2px 0}.hld{color:var(--mut);font-size:13px;margin-bottom:8px}.hl2{display:flex;justify-content:space-between;gap:8px;font-size:13px;border-top:1px solid var(--line);padding:5px 0}.hls{font-size:12px;color:var(--mut);margin-top:8px}
 .hm{float:right;display:inline-flex;gap:4px}.hm button{all:unset;cursor:pointer;padding:5px 11px;border:1px solid var(--line);border-radius:4px;font:600 12.5px var(--fb);color:var(--mut)}.hm button.on{background:var(--ink);color:var(--card);border-color:var(--ink)}.hm button:focus-visible{outline:2px solid var(--a);outline-offset:2px}
 .seg{display:flex;flex-wrap:wrap;gap:8px}
 .seg button{all:unset;cursor:pointer;flex:1 1 120px;text-align:center;padding:12px 8px;border:1px solid var(--field);border-radius:4px;font-weight:600;font-size:14.5px;background:var(--card);min-height:20px;box-sizing:border-box;min-height:46px}
@@ -291,7 +292,7 @@ a[data-pick]{display:inline-block;padding:8px 0 2px;color:var(--gx);font-weight:
 
 <!-- ======================= HISTÓRICO ======================= -->
 <section id="his" class="hide">
- <div class="ctl" style="margin-bottom:12px"><select id="hVis" aria-label="Visão"><option value="dia">Por dia</option><option value="hora">Por hora</option><option value="mes">Por mês</option></select><select id="hPer" aria-label="Período"></select><select id="hMet" aria-label="Métrica"><option value="u">Unidades</option><option value="o">Ondas</option><option value="t">Tempo médio ponderado por conjunto</option></select><select id="hGal" aria-label="Galpão"></select></div>
+ <div class="ctl" style="margin-bottom:12px"><select id="hVis" aria-label="Visão"><option value="dia">Por dia</option><option value="hora">Por hora</option><option value="mes">Por mês</option></select><select id="hPer" aria-label="Período"></select><select id="hMet" aria-label="Métrica"><option value="u">Unidades</option><option value="o">Ondas</option><option value="t">Tempo médio ponderado por conjunto</option></select><select id="hGal" aria-label="Galpão"></select><select id="hOp" aria-label="Operador"><option value="">Todos os operadores</option></select></div>
  <div id="hStatus" class="legend hide" role="status"></div><div id="hBody"></div>
 </section>
 
@@ -634,6 +635,7 @@ function conjuntos(list){const by={},out=[];
 function durs(list){const gap=(S.cfg.gap||30)*6e4;return conjuntos(list).filter(c=>c.d!=null&&c.d>0&&c.d<=gap)}
 function foraLim(list){const gap=(S.cfg.gap||30)*6e4,n=conjuntos(list).filter(c=>c.d!=null&&c.d>gap).length;return n?`<div class="legend" style="color:var(--o)">${n} ${n===1?'conjunto passou':'conjuntos passaram'} de ${S.cfg.gap||30} min e ficou de fora. Se foram tempos normais de trabalho, aumente o intervalo máximo em Configurações, Operação.</div>`:''}
 function med(a){if(!a.length)return 0;const s=a.slice().sort((x,y)=>x-y),m=s.length>>1;return s.length%2?s[m]:(s[m-1]+s[m])/2}
+const wa=a=>{const q=a.reduce((s,x)=>s+x.q,0);return q?a.reduce((s,x)=>s+x.d*x.q,0)/q:0};
 const avg=a=>a.length?a.reduce((s,v)=>s+v,0)/a.length:0;
 
 /* ===================== gráficos ===================== */
@@ -833,6 +835,22 @@ function mgTempo(o,L){const gap=(S.cfg.gap||30)*6e4,now=Date.now(),C=conjuntos(L
  const lt=C.length?`<table><tr><th>Início</th><th>Ondas</th><th>Tipo</th><th>Unidades</th><th>Tempo</th></tr>`+C.slice(0,40).map(c=>`<tr><td>${new Date(c.t).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit'})}</td><td>${c.ondas}</td><td>${c.tipos.map(esc).join(', ')}</td><td>${fmt(c.qty)}</td><td>${c.d==null?(now-c.t<=gap?'em andamento':'—'):c.d>gap?'pausa':mn(c.d)}</td></tr>`).join('')+'</table>':'<div class="empty">Nenhuma onda no período.</div>';
  return`<div class="grid two" style="margin-top:14px"><div class="card"><h2>Tempo por tipo de onda</h2><div class="tw">${rk}</div><div class="legend">Mediana do tempo de cada conjunto. Ondas bipadas no mesmo instante contam como um conjunto, com um tempo só. Pausas acima de ${S.cfg.gap||30} min ficam de fora.</div></div><div class="card"><h2>Conjuntos de ondas</h2><div class="tw">${lt}</div><div class="legend">Tempo da bipagem do conjunto até a bipagem do próximo. Mostra os 40 mais recentes.</div></div></div>`}
 function mgHistory(list){return list.length?`<table><tr><th>Data e hora</th><th>Onda</th><th>Tipo</th><th>Quantidade</th><th>Situação</th></tr>`+list.map(w=>`<tr><td>${new Date(w.ts).toLocaleString('pt-BR')}</td><td>${esc(w.wn||'—')}</td><td>${esc(w.ty)}</td><td>${fmt(w.qty)}</td><td>${esc(ST[w.st]||'—')}${!w.sync?' · pendente':''}</td></tr>`).join('')+'</table>':'<div class="empty">Nenhuma onda registrada.</div>'}
+function destaques(rows,data){
+ const R=rows.map(x=>{const L=data.days.flatMap(d=>data.byOpDay.get(d+'|'+x.o.m)||[]),P=prod(L),C=durs(L),tm=C.reduce((s,c)=>s+c.d,0),cu=C.reduce((s,c)=>s+c.qty,0);
+  return{o:x.o,L,P,C,qty:x.qty,n:x.n,rate:C.length>=3&&tm>0?cu/(tm/36e5):0,pr:L.filter(w=>w.st===1||(w.hist||[]).some(e=>e.e==='m')).length}});
+ const nm=o=>`<b>${esc(o.n)}</b> <small>${esc(String(o.m).split('~')[0])}</small>`;
+ const card=(t,sub,list,val,det)=>{const a=list.filter(x=>x.v>0).sort((x,y)=>y.v-x.v).slice(0,3);
+  return`<div class="card hl"><div class="hlt">${esc(t)}</div>${a.length?`<div class="hl1">${nm(a[0].o)}</div><div class="hlv num">${val(a[0])}</div><div class="hld">${det(a[0])}</div>${a.slice(1).map((x,i)=>`<div class="hl2"><span>${i+2}º ${esc(x.o.n)}</span><b>${val(x)}</b></div>`).join('')}`:'<div class="hld">Sem dados no período.</div>'}<div class="hls">${esc(sub)}</div></div>`};
+ const c=[];
+ c.push(card('Coletor mais rápido','Unidades por hora de trabalho medido (mínimo 3 conjuntos)',R.map(r=>({o:r.o,v:r.rate,r})),x=>fmt(x.v)+' un./h',x=>x.r.C.length+' conjuntos medidos'));
+ c.push(card('Coleta mais volumes','Unidades concluídas no período',R.map(r=>({o:r.o,v:r.qty,r})),x=>fmt(x.v)+' un.',x=>fmt(x.r.n)+' ondas'));
+ c.push(card('Finaliza mais ondas','Ondas concluídas no período',R.map(r=>({o:r.o,v:r.n,r})),x=>fmt(x.v)+' ondas',x=>fmt(x.r.qty)+' unidades'));
+ TY.forEach(([n])=>c.push(card(n,'Mais unidades neste tipo',R.map(r=>{const q=r.P.filter(w=>w.ty===n);return{o:r.o,v:q.reduce((s,w)=>s+w.qty,0),q,r}}),x=>fmt(x.v)+' un.',x=>{const d=x.r.C.filter(k=>k.w.ty===n).map(k=>({d:k.d,q:k.qty}));return fmt(x.q.length)+' ondas'+(d.length?', '+mm(wa(d))+' por conjunto':'')})));
+ c.push(card('Mais ondas em procurando','Ondas marcadas como procurando no período',R.map(r=>({o:r.o,v:r.pr,r})),x=>fmt(x.v)+' ondas',x=>'de '+fmt(x.r.L.length)+' ondas registradas'));
+ const by={};R.flatMap(r=>r.L).filter(w=>w.pn&&(w.hist||[]).some(e=>e.e==='b')).forEach(w=>{by[w.pn]=(by[w.pn]||0)+1});
+ const bl=Object.entries(by).sort((a,b)=>b[1]-a[1]).slice(0,3);
+ c.push(`<div class="card hl"><div class="hlt">Mais acha em procurando</div>${bl.length?`<div class="hl1"><b>${esc(bl[0][0])}</b></div><div class="hlv num">${fmt(bl[0][1])} ondas</div><div class="hld">baixas feitas no período</div>${bl.slice(1).map((x,i)=>`<div class="hl2"><span>${i+2}º ${esc(x[0])}</span><b>${fmt(x[1])}</b></div>`).join('')}`:'<div class="hld">Sem baixas no período.</div>'}<div class="hls">Quem deu baixa nas ondas encontradas</div></div>`);
+ return`<div class="hlg">${c.join('')}</div>`}
 function individual(){
  const sel=$("#iOp"),v=sel.value,data=mgData(),g=$("#gal").value,t=$("#turnoF").value;
  const ops=data.ops.filter(o=>(g==='__all'||o.g===g)&&(!t||String(o.t)===t)).filter(o=>!o.excluido||data.waves.some(w=>w.op===o.m));
@@ -842,7 +860,7 @@ function individual(){
  const selected=ops.find(o=>o.m===sel.value);
  if(!selected){
   const rows=ops.map(o=>{const L=data.days.flatMap(d=>data.byOpDay.get(d+'|'+o.m)||[]),P=prod(L),days=data.days.map(d=>mgStatus(o,d,data.byOpDay.get(d+'|'+o.m)||[],data)),extra=data.days.map(d=>mgExtra(o,d,data.byOpDay.get(d+'|'+o.m)||[]));return{o,qty:P.reduce((s,w)=>s+w.qty,0),n:P.length,ref:mgReference(o,data),mi:metaInd(o,L),miss:days.filter(x=>x.startsWith('Falta')).length,ms:extra.reduce((s,x)=>s+x.ms,0),ot:extra.reduce((s,x)=>s+x.count,0)}});
-  $("#iBody").innerHTML=`<div class="card"><h2>Equipe no período</h2><div class="tw"><table><tr><th>Operador</th><th>Turno</th><th>Unidades / meta</th><th>Ondas / meta</th><th>Referência individual</th><th>Faltas a conferir</th><th>Hora extra estimada</th></tr>`+
+  $("#iBody").innerHTML=destaques(rows,data)+`<div class="card" style="margin-top:14px"><h2>Equipe no período</h2><div class="tw"><table><tr><th>Operador</th><th>Turno</th><th>Unidades / meta</th><th>Ondas / meta</th><th>Referência individual</th><th>Faltas a conferir</th><th>Hora extra estimada</th></tr>`+
    rows.map(x=>`<tr><td><a href="#" data-pick="${esc(x.o.m)}">${esc(x.o.n)}</a><br><small>${esc(x.o.m.split('~')[0])}</small></td><td>${x.o.t}º</td><td><b>${x.mi.q?vsMeta(x.qty,x.mi.q):fmt(x.qty)}</b></td><td>${x.mi.o?vsMeta(x.n,x.mi.o):x.n}</td><td>${x.ref===null?'Sem meta':fmt(x.ref)+' un.'}</td><td>${x.miss}</td><td>${x.ms?hh(x.ms):x.ot?'Sem medição':'—'}</td></tr>`).join('')+
    `</table></div><div class="legend">As metas individuais (ondas e unidades por dia) vêm de Configurações, Galpões e valem para cada dia com bipagem. A referência divide a meta diária atual do galpão entre as pessoas com bipagem no dia. É uma referência ajustável pelo movimento, não um ranking. Falta indica ausência de bipagem em dia com operação no turno; confirme folgas, afastamentos e outras atividades. Hora extra é estimada pelos intervalos entre bipagens, respeitando o intervalo máximo configurado.</div></div>`;return;
  }
@@ -1012,12 +1030,14 @@ function hisRender(){
  if(HW===undefined){el.innerHTML='<div class="card"><div class="empty">Não foi possível carregar o histórico. Confira a conexão e tente novamente.</div></div>';return}
  if(HW===null){el.innerHTML='<div class="card"><div class="empty">Carregando histórico…</div></div>';return}
  const vis=$("#hVis").value,met=$("#hMet").value,p=+$("#hPer").value,g=restricted()?myG():$("#hGal").value,low=met==='t',f=met==='t'?mm:fmt;
- const L=HW.filter(w=>g==='__all'?visG().includes(w.gal):w.gal===g),P=prod(L),C=durs(L),U={},O={},D={},HU={},HO={},HD={};
+ const LG=HW.filter(w=>g==='__all'?visG().includes(w.gal):w.gal===g),so=$("#hOp"),ov=so.value,om=new Map();LG.forEach(w=>{if(!om.has(w.op))om.set(w.op,(w.opn||'—')+', '+(w.opc||String(w.op).split('~')[0]))});
+ const okey=[...om.entries()].sort((a,b)=>a[1].localeCompare(b[1],'pt-BR')).map(([k,v])=>`<option value="${esc(k)}">${esc(v)}</option>`).join('');if(so.dataset.k!==okey){so.dataset.k=okey;so.innerHTML='<option value="">Todos os operadores</option>'+okey;so.value=om.has(ov)?ov:''}
+ const L=so.value?LG.filter(w=>w.op===so.value):LG,P=prod(L),C=durs(L),U={},O={},D={},HU={},HO={},HD={};
  P.forEach(w=>{const t=w.fin||w.ts,d=dk(t),h=new Date(t).getHours();U[d]=(U[d]||0)+w.qty;O[d]=(O[d]||0)+1;HU[d+'|'+h]=(HU[d+'|'+h]||0)+w.qty;HO[d+'|'+h]=(HO[d+'|'+h]||0)+1});
- const wa=a=>{const q=a.reduce((s,x)=>s+x.q,0);return q?a.reduce((s,x)=>s+x.d*x.q,0)/q:0};C.forEach(c=>{const d=dk(c.t),h=new Date(c.t).getHours(),z={d:c.d,q:c.qty||1};(D[d]=D[d]||[]).push(z);(HD[d+'|'+h]=HD[d+'|'+h]||[]).push(z)});
+ C.forEach(c=>{const d=dk(c.t),h=new Date(c.t).getHours(),z={d:c.d,q:c.qty||1};(D[d]=D[d]||[]).push(z);(HD[d+'|'+h]=HD[d+'|'+h]||[]).push(z)});
  const dayV=d=>met==='u'?(U[d]||0):met==='o'?(O[d]||0):(D[d]?wa(D[d]):0),agg=ds=>met==='t'?wa(ds.flatMap(d=>D[d]||[])):ds.reduce((s,d)=>s+(met==='u'?U[d]||0:O[d]||0),0);
  const today=dk(Date.now()),nome=met==='u'?'unidades':met==='o'?'ondas':'tempo médio ponderado por conjunto';
- if(!P.length){el.innerHTML='<div class="card"><div class="empty">Ainda não há ondas concluídas neste período'+(g!=='__all'?' para '+esc(g):'')+'.</div></div>';return}
+ if(!P.length){el.innerHTML='<div class="card"><div class="empty">Ainda não há ondas concluídas neste período'+(so.value?' para esse operador':g!=='__all'?' para '+esc(g):'')+'.</div></div>';return}
  /* mediana por dia da semana (só dias com produção) -> base da previsão */
  const allDays=[...new Set(P.map(w=>dk(w.fin||w.ts)))].sort(),wdS=Array.from({length:7},(_,i)=>{const a=allDays.filter(d=>d!==today&&new Date(d+'T12:00:00').getDay()===i).map(dayV).filter(v=>v>0);return{n:a.length,m:med(a),lo:pct(a,.25),hi:pct(a,.75)}});
  const fcDay=d=>wdS[new Date(d+'T12:00:00').getDay()];
@@ -1111,7 +1131,7 @@ $("#gal").onchange=e=>{if(e.target.value!=="__all"){S.gal=e.target.value;save()}
 $("#ctlQ").oninput=ctlLive;$("#ctlLive").onclick=e=>{const b=e.target.closest("[data-x]");if(!b)return;const k=b.dataset.x;CTLX.has(k)?CTLX.delete(k):CTLX.add(k);ctlLive()};$("#day").onchange=()=>{renderAll();if(view==="ind")loadManagement()};$("#turnoF").onchange=renderAll;$("#hBody").addEventListener("toggle",e=>{const d=e.target;if(!d.matches||!d.matches("details.hp"))return;const k=d.dataset.hp;d.open?HOPEN.add(k):HOPEN.delete(k);if(d.open)d.querySelector(".hpb").innerHTML=hpBody(k)},true);
 $("#hBody").addEventListener("input",e=>{const k=e.target.dataset&&e.target.dataset.hpq;if(k==null)return;HPQ[k]=e.target.value;const b=e.target.closest(".hpb"),pos=e.target.selectionStart;b.innerHTML=hpBody(k);const n=b.querySelector("input");n.focus();n.setSelectionRange(pos,pos)});
 $("#hBody").addEventListener("keydown",e=>{if(e.target.id==="hUni"&&e.key==="Enter"){e.preventDefault();hUniGo(e.target.value)}});
-let hRz=0;addEventListener("resize",()=>{clearTimeout(hRz);hRz=setTimeout(()=>{if(view==="his")hisRender()},200)});$("#hSeg").onclick=e=>{const m=e.target.dataset.m;if(!m)return;HM=m;try{localStorage.setItem("rc.hm",m)}catch(x){}if(ON&&!me){if(publicData)desenhaPainelPublico(publicData,$("#gal").value,$("#turnoF").value)}else painel()};$("#hVis").onchange=()=>{$("#hPer").innerHTML="";hisFill();loadHis()};["hPer","hMet","hGal"].forEach(i=>$("#"+i).onchange=()=>{if(i==="hPer")loadHis();else hisRender()});
+let hRz=0;addEventListener("resize",()=>{clearTimeout(hRz);hRz=setTimeout(()=>{if(view==="his")hisRender()},200)});$("#hSeg").onclick=e=>{const m=e.target.dataset.m;if(!m)return;HM=m;try{localStorage.setItem("rc.hm",m)}catch(x){}if(ON&&!me){if(publicData)desenhaPainelPublico(publicData,$("#gal").value,$("#turnoF").value)}else painel()};$("#hVis").onchange=()=>{$("#hPer").innerHTML="";hisFill();loadHis()};["hPer","hMet","hGal","hOp"].forEach(i=>$("#"+i).onchange=()=>{if(i==="hPer")loadHis();else hisRender()});
 $("#net").onclick=()=>{S.off=!S.off;save();if(online())flush();renderAll()};
 addEventListener("online",()=>{flush();renderAll();if(ON)pull().then(renderAll).catch(()=>{})});addEventListener("offline",renderAll);
 $("#theme").onclick=()=>{const r=document.documentElement,d=getComputedStyle(r).getPropertyValue("--bg").trim()==="#0e1726";r.dataset.theme=d?"light":"dark"};
