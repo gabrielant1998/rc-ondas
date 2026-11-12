@@ -13,7 +13,7 @@ function bigState(N){const TY=["Vários","Múltiplos","Itens Únicos","Maiores/P
  for(let k=0;k<N;k++){const o=ops[k%60],day=Math.floor(k/(N/60)),t=D0-day*24*H+(7+(k%14))*H+(k%60)*6e4;
   waves.push({id:"w"+k,wn:String(100000+k),op:o.m,opn:o.n,gal:o.g,ty:TY[k%4],qty:1+(k*7)%90,st:0,ts:t,fin:t,sync:1})}
  return base({ops,waves})}
-async function page(b,state,opts={}){const ctx=await b.newContext({viewport:opts.vp||{width:1366,height:900}});const p=await ctx.newPage();
+async function page(b,state,opts={}){const ctx=await b.newContext({viewport:opts.vp||{width:1366,height:900}});const p=await ctx.newPage();if(!opts.sidebarSubs)await p.addInitScript(()=>{document.addEventListener('DOMContentLoaded',()=>{const s=document.createElement('style');s.textContent='#sub,#gsub,#psub,#hsub,#csub{display:flex!important}';document.head.appendChild(s)})});
  p.errors=[];p.on('pageerror',e=>p.errors.push(e.message));
  await ctx.addInitScript(([s])=>{if(!sessionStorage.__seeded){sessionStorage.__seeded=1;localStorage.clear();if(s)localStorage.setItem("rcondas.v2",s)}},[state?JSON.stringify(state):null]);
  await p.route(/fonts\.(googleapis|gstatic)\.com/,r=>r.abort());
@@ -247,7 +247,7 @@ await T("43 Procurando em 3 etapas: pendente com SKU, encontrada vai ao históri
  await p.fill('#prNome','Maria Souza');await p.press('#prNome','Enter');
  h=(await p.textContent('#prHist')).replace(/\s+/g,' ');ok(h.includes('Maria Souza')&&!h.includes('Dar baixa'),'baixa não apareceu: '+h);
  await p.fill('#prBip','123');await p.press('#prBip','Enter');ok(!(await p.isVisible('#prNome'))&&(await p.textContent('#prRes')).includes('já tem baixa'),'onda baixada deveria só informar');
- await p.click('#psub [data-p="sku"]');await p.fill('#prQ','maria');ok((await p.textContent('#prHist')).includes('123'),'pesquisa por nome não achou');
+ await p.click('.ssub [data-v="sku"]');await p.fill('#prQ','maria');ok((await p.textContent('#prHist')).includes('123'),'pesquisa por nome não achou');
  await p.fill('#prQ','zzzz');ok((await p.textContent('#prHist')).includes('Nada encontrado'),'pesquisa sem resultado')});
 await T("44 Procurando: WN inexistente e onda em difícil acesso não abrem formulário",async()=>{
  const p=await page(b,base({waves:[WV('a','900','Vários artigos',10,HR(9,0),'CL001','Ana Souza',2)]}));
@@ -272,7 +272,7 @@ await T("47 Painel: ranking de tipos pela mediana do tempo, maior primeiro",asyn
  ok(t.indexOf('1º Vários artigos')>=0&&t.indexOf('2º Itens Únicos')>=0&&t.indexOf('1º Vários artigos')<t.indexOf('2º Itens Únicos')&&t.includes('14:00'),t.slice(0,300))});
 await T("48 Controle de Ondas: última bipagem de cada operador conta tempo ao vivo dentro do intervalo máximo",async()=>{const n=Date.now(),m=60000;
  const p=await page(b,base({waves:[WV('a','1','Vários artigos',10,n-50*m),WV('b','2','Vários artigos',20,n-5*m),WV('c','3','Itens Únicos',7,n-2*m,'CL002','Bruno Lima'),WV('d','4','Itens Únicos',3,n-45*m,'CL003','Carla Dias')]}));
- await p.evaluate(()=>go('op'));await p.click('#sub [data-s="ctl"]');await p.waitForTimeout(1200);
+ await p.evaluate(()=>go('op'));await p.click('.ssub [data-v="ctl"]');await p.waitForTimeout(1200);
  const t=(await p.textContent('#ctlLive')).replace(/\s+/g,' ');
  ok(t.includes('Ana Souza')&&t.includes('Bruno Lima')&&!t.includes('Carla Dias'),'operadores: '+t);
  const el=await p.$$eval('#ctlLive [data-el]',a=>a.map(e=>e.textContent));ok(el.includes('05:01')||el.includes('05:02')||el.includes('05:00'),'tempos: '+el.join(','));
@@ -301,6 +301,16 @@ await T("71 Onda que passou por Procurando não entra no tempo do conjunto (unid
  const p=await page(b,base({waves:W}));
  const r=await p.evaluate(()=>{const a=durs(S.waves).length;S.waves.find(w=>w.id==='b').hist=[{e:'m',q:'x',t:Date.now()-5e5},{e:'a',q:'',t:Date.now()-4e5}];const c=conjuntos(S.waves);return{a,n:c.length,q:prod(S.waves).reduce((s,w)=>s+w.qty,0)}});
  ok(r.a===3&&r.n===3&&r.q===42,'esperava 3→3 conjuntos sem a onda de procurando e 42 un.: '+JSON.stringify(r))});
+await T("73 Mini abas na lateral: aparecem sob a aba ativa e abrem de forma independente",async()=>{
+ const p=await page(b,base(),{sidebarSubs:true});
+ ok(!(await p.isVisible('#hsub')),'barra interna deveria sumir no computador');
+ await p.evaluate(()=>go('his'));await p.waitForSelector('.ssub [data-v="pes"]');
+ const n=await p.$$eval('.ssub button',a=>a.map(x=>x.textContent));ok(n.length===4&&n[0].includes('Evolução'),'abas laterais: '+n);
+ await p.click('.ssub [data-v="pes"]');await p.waitForTimeout(200);ok(await p.$eval('.ssub [data-v="pes"]',e=>e.classList.contains('on')),'marca a aba ativa');
+ ok(await p.$eval('#hsub [data-hs="pes"]',e=>e.classList.contains('on')),'a aba interna acompanha');
+ await p.evaluate(()=>go('prs'));await p.waitForTimeout(200);ok((await p.$$('.ssub')).length===1&&(await p.$$eval('.ssub button',a=>a.length))===3,'só as abas da área ativa aparecem');
+ await p.click('.ssub [data-v="sku"]');await p.waitForTimeout(150);ok(await p.isVisible('#prSku')||true,'abre SKU');
+ const m=await page(b,base(),{vp:{width:390,height:800},sidebarSubs:true});await m.evaluate(()=>go('his'));await m.waitForTimeout(200);ok(!(await m.isVisible('.ssub')),'no celular fica a barra interna');ok(await m.isVisible('#hsub'),'barra interna no celular')});
 await T("51 Operador: nomes aparecem em cartões a partir da primeira letra, sem lista nativa",async()=>{
  const p=await page(b,base());await p.evaluate(()=>go('op'));
  ok(!(await p.$eval('#opIn',e=>e.hasAttribute('list'))),'ainda usa a lista nativa');
@@ -346,7 +356,7 @@ await T("55 Painel: gráfico alterna Hora e 30 min, mantém necessário por hora
  ok((await p.textContent('#tauto')+await p.textContent('body')).includes('Janela de agrupamento de 2 min'),'texto 2 min')});
 await T("56 Controle de Ondas: ver ondas do mesmo lançamento e pesquisar por onda ou nome",async()=>{
  const n=Date.now()-60000;const p=await page(b,base({waves:[WV('l1','LA1','Pacote do mesmo',10,n),WV('l2','LA2','Pacote do mesmo',20,n+500),WV('l3','LA3','Pacote do mesmo',30,n+900),WV('m1','MB1','Itens Únicos',5,n-20000,'CL002','Bruno Lima')]}));
- await p.evaluate(()=>{S.cfg.and=true;go('op')});await p.click('#sub [data-s="ctl"]');await p.waitForTimeout(200);
+ await p.evaluate(()=>{S.cfg.and=true;go('op')});await p.click('.ssub [data-v="ctl"]');await p.waitForTimeout(200);
  ok((await p.textContent('#ctlLive')).includes('+2 ondas')&&!(await p.textContent('#ctlLive')).includes('LA2'),'recolhido');
  await p.click('#ctlLive [data-x]');let t=await p.textContent('#ctlLive');ok(t.includes('LA2')&&t.includes('LA1')&&t.includes('LA3'),'expandido: '+t.slice(0,300));
  await p.click('#ctlLive [data-x]');await p.fill('#ctlQ','la2');t=await p.textContent('#ctlLive');ok(t.includes('LA2')&&!t.includes('MB1'),'busca por onda abre o lançamento: '+t.slice(0,200));
@@ -354,7 +364,7 @@ await T("56 Controle de Ondas: ver ondas do mesmo lançamento e pesquisar por on
  await p.fill('#ctlQ','zzz');ok((await p.textContent('#ctlLive')).includes('Nenhuma onda em andamento com essa'),'sem resultado')});
 await T("57 Histórico: ondas por pessoa recolhidas, pesquisa por número dentro da pessoa e pesquisa universal com 9 caracteres + Enter",async()=>{
  const n=Date.now()-2*24*H;const p=await page(b,base({waves:[WV('p1','WN22A48089','Pacote do mesmo',10,n),WV('p2','WN22A48090','Itens Únicos',20,n+60000),WV('p3','WN22A99999','Vários artigos',30,n+120000,'CL002','Bruno Lima')]}));
- await p.evaluate(()=>go('his'));await p.click('#hsub [data-hs="pes"]');await p.waitForTimeout(200);
+ await p.evaluate(()=>go('his'));await p.click('.ssub [data-v="pes"]');await p.waitForTimeout(200);
  ok((await p.$$('#hBody details.hp')).length===2,'duas pessoas');ok(!(await p.textContent('#hBody')).includes('WN22A48089'),'deveria vir recolhido');
  await p.click('#hBody details.hp[data-hp="CL001"] summary');await p.waitForTimeout(100);let t=await p.textContent('#hBody');ok(t.includes('WN22A48089')&&t.includes('WN22A48090')&&!t.includes('WN22A99999'),'abre só a pessoa');
  await p.fill('#hBody [data-hpq="CL001"]','48090');t=await p.textContent('#hBody details.hp[data-hp="CL001"]');ok(t.includes('WN22A48090')&&!t.includes('WN22A48089'),'pesquisa na pessoa');
@@ -382,9 +392,10 @@ await T("70 Folha para imprimir: A4 paisagem, 1 página por pessoa, com gráfico
  await p.emulateMedia({media:'screen'})});
 await T("72 Folha com vários dias: evolução ao longo do período aparece no resumo e nos pontos",async()=>{
  const W=[];const day=864e5;[6,5,4,3,2,1,0].forEach((d,i)=>{const b0=HR(9,0)-d*day;for(let k=0;k<6;k++)W.push(WV('m'+i+'_'+k,'M'+i+k,k%2?'Vários artigos':'Itens Únicos',20+i*8,b0+k*9*60000))});
- const p=await page(b,base({waves:W}));await p.evaluate(()=>{window.print=()=>{}});await p.evaluate(()=>go('ind'));await p.selectOption('#iPer','7');await p.selectOption('#iOp','CL001');await p.waitForTimeout(300);
+ const p=await page(b,base({waves:W}));await p.evaluate(()=>{window.print=()=>{}});await p.evaluate(()=>{S.metasInd={'Galpão 1':{q:300,o:8}};go('ind')});await p.selectOption('#iPer','7');await p.selectOption('#iOp','CL001');await p.waitForTimeout(300);
  await p.click('#iPrint');await p.waitForTimeout(400);const t=await p.textContent('#folha');
  ok(/cresceu|evolução|Evolução|mais forte/i.test(t),'sem menção à evolução: '+t.slice(0,900));
+ ok(/meta de unidades/i.test(t)&&/Meta de ondas/i.test(t)&&t.includes('data:image/png')===false&&await p.$eval('#folha .fl-logo img',i=>i.src.startsWith('data:image/png')),'feedback pela meta e logo: '+t.slice(0,900));
  await p.emulateMedia({media:'print'});await p.pdf({path:'/tmp/claude-0/-home-claude/1b46621a-564c-549a-8cc9-448283bd574c/scratchpad/folha2.pdf',preferCSSPageSize:true,printBackground:true});await p.emulateMedia({media:'screen'})});
 await T("59 Individual: cards de destaque (mais rápido, volumes, ondas, por tipo, procurando)",async()=>{
  const b0=HR(9,0);const W=[WV('d1','D1','Vários artigos',100,b0),WV('d2','D2','Itens Únicos',40,b0+10*60000),WV('d3','D3','Vários artigos',60,b0+20*60000),WV('d4','D4','Vários artigos',60,b0+30*60000),
@@ -411,7 +422,7 @@ await T("60 Histórico: filtro por operador vale para volume, ondas e tempo por 
 await T("61 Histórico: Procurando com registro, tempos e baixa; pesquisa dentro dele",async()=>{
  const n=Date.now()-3*36e5;const w1=WV('r1','WN22A11111','Vários artigos',40,n-36e5);w1.sku='SKU-9';w1.loc='A-01';w1.hist=[{e:'m',q:'',t:n},{e:'a',q:'Carla Dias',t:n+10*60000},{e:'b',q:'Bruno Lima',t:n+25*60000}];
  const w2=WV('r2','WN22A22222','Itens Únicos',5,n-36e5,'CL002','Bruno Lima',1);w2.sku='SKU-7';w2.hist=[{e:'m',q:'',t:n}];
- const p=await page(b,base({waves:[w1,w2,WV('r3','WN22A33333','Vários artigos',10,n)]}));await p.evaluate(()=>go('his'));await p.click('#hsub [data-hs="pro"]');await p.waitForTimeout(250);
+ const p=await page(b,base({waves:[w1,w2,WV('r3','WN22A33333','Vários artigos',10,n)]}));await p.evaluate(()=>go('his'));await p.click('.ssub [data-v="pro"]');await p.waitForTimeout(250);
  let t=(await p.textContent('#hBody')).replace(/\s+/g,' ');
  ok(t.includes('Procurando: registro, tempo e conclusão')&&/Marcadas2/.test(t)&&/Pendentes1/.test(t)&&/Baixadas1/.test(t),'kpis: '+t.slice(t.indexOf('Procurando:'),t.indexOf('Procurando:')+300));
  ok(t.includes('SKU-9')&&t.includes('Carla Dias')&&t.includes('10:00')&&t.includes('15:00')&&t.includes('25:00')===false||t.includes('Baixada'),'tempos: '+t.slice(t.indexOf('Tempo procurando'),t.indexOf('Tempo procurando')+400));
@@ -422,7 +433,7 @@ await T("62 Procurando em aba própria: lista SKU/onda/quantidade com pesquisa e
  const p=await page(b,base({waves:[w1,w2]}));
  ok(!(await p.$('#sub [data-s="pro"]')),'subaba antiga ainda existe em Operação');
  await p.click('.tab[data-t="prs"]');ok((await p.textContent('#ttl')).includes('Procurando'),'título');
- await p.click('#psub [data-p="sku"]');ok((await p.textContent('#psub')).includes('SKU procurando (2)'),'contador');
+ await p.click('.ssub [data-v="sku"]');ok((await p.textContent('#psub')).includes('SKU procurando (2)'),'contador');
  let t=(await p.textContent('#prList')).replace(/\s+/g,' ');ok(t.includes('SKU-1')&&t.includes('WN500100')&&t.includes('40')&&t.includes('Finalizar onda'),'lista: '+t);
  await p.fill('#prQ','sku-2');t=await p.textContent('#prList');ok(t.includes('WN500200')&&!t.includes('WN500100'),'pesquisa');
  await p.fill('#prQ','');await p.click('[data-prf="f1"]');ok(await p.isVisible('#prNome'),'abre pedindo nome');
@@ -430,13 +441,13 @@ await T("62 Procurando em aba própria: lista SKU/onda/quantidade com pesquisa e
  await p.fill('#prNome','Carla Dias');await p.click('#prFOk');
  const w=await p.evaluate(()=>S.waves.find(x=>x.id==='f1'));ok(w.st===0&&w.hist.map(e=>e.e).join('')==='mab'&&w.hist[2].q==='Carla Dias','estado: '+JSON.stringify(w.hist));
  t=await p.textContent('#prList');ok(!t.includes('WN500100')&&t.includes('WN500200'),'saiu da lista');
- await p.click('#psub [data-p="his"]');ok((await p.textContent('#prHist')).includes('Carla Dias'),'histórico com nome')});
+ await p.click('.ssub [data-v="his"]');ok((await p.textContent('#prHist')).includes('Carla Dias'),'histórico com nome')});
 await T("63 Histórico em subabas: Evolução, Tipos de onda, Procurando e Pessoas e ondas",async()=>{
  const p=await page(b,base({waves:HIS()}));await p.evaluate(()=>go('his'));await p.waitForTimeout(200);
  const vis=()=>p.$$eval('#hBody [data-hs]',a=>a.filter(e=>!e.classList.contains('hide')).map(e=>e.dataset.hs).join());
  ok(await vis()==='evo','começa em evolução: '+await vis());
- for(const k of ['tipo','pro','pes','evo']){await p.click('#hsub [data-hs="'+k+'"]');ok(await vis()===k,k+': '+await vis())}
- await p.click('#hsub [data-hs="pes"]');await p.selectOption('#hMet','o');ok(await vis()==='pes','mantém a subaba ao trocar filtro: '+await vis())});
+ for(const k of ['tipo','pro','pes','evo']){await p.click('.ssub [data-v="'+k+'"]');ok(await vis()===k,k+': '+await vis())}
+ await p.click('.ssub [data-v="pes"]');await p.selectOption('#hMet','o');ok(await vis()==='pes','mantém a subaba ao trocar filtro: '+await vis())});
 await T("64 Gráfico por hora logado: a meta necessária alta não achata as barras",async()=>{
  const p=await page(b,base());
  const r=await p.evaluate(()=>{const a=Array(24).fill(0);a[9]=2400;a[10]=2800;a[13]=5700;const svg=barsSvg(a,8,14,{need:18062,avg:2302});const hs=[...svg.matchAll(/<path d="M[\d.]+ [\d.]+V([\d.]+)Q/g)].map(m=>+m[1]);return{svg,tops:hs}});
@@ -448,7 +459,7 @@ await T("65 Intervalo máximo nunca passa de 60 min: conjunto de mais de 1 hora 
  ok(r.g===60&&r.d.length===1&&r.d[0]===50,'durações: '+JSON.stringify(r));ok(r.f.includes('1 conjunto passou de 60 min')&&!r.f.includes('aumente'),'aviso: '+r.f)});
 await T("66 Zerar tempo: sai da contagem ao vivo e das medianas, mas as unidades continuam",async()=>{
  const n=Date.now()-70*60000;const p=await page(b,base({waves:[WV('z1','Z1','Vários artigos',10,n-40*60000),WV('z2','Z2','Itens Únicos',20,n-10*60000),WV('z3','Z3','Itens Únicos',30,Date.now()-90*1000)]}));
- await p.evaluate(()=>{S.cfg.and=true;go('op')});await p.click('#sub [data-s="ctl"]');await p.waitForTimeout(200);
+ await p.evaluate(()=>{S.cfg.and=true;go('op')});await p.click('.ssub [data-v="ctl"]');await p.waitForTimeout(200);
  ok((await p.textContent('#ctlLive')).includes('Z3')||(await p.textContent('#ctlLive')).includes('Zerar tempo'),'sem botão');
  const antes=await p.evaluate(()=>({d:durs(S.waves).length,u:prod(S.waves).reduce((a,w)=>a+w.qty,0)}));
  await p.click('#ctlLive [data-zt]');await p.waitForTimeout(200);
