@@ -211,6 +211,31 @@ a[data-pick]{display:inline-block;padding:8px 0 2px;color:var(--gx);font-weight:
 @media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 
 
+
+/* Meta batida: placar dourado + celebração em tela cheia */
+.placar.win{position:relative;overflow:hidden;background:linear-gradient(120deg,#0d2a5e 0%,#1747a8 45%,#0d2a5e 100%);box-shadow:inset 0 0 0 2px #f5c542}
+.placar.win:after{content:"";position:absolute;inset:0;background:linear-gradient(105deg,transparent 35%,rgba(255,215,90,.22) 50%,transparent 65%);background-size:250% 100%;animation:mbShine 3.2s linear infinite;pointer-events:none}
+.placar.win .num{background:linear-gradient(180deg,#fff6cf,#f5c542 55%,#d99a0b);-webkit-background-clip:text;background-clip:text;color:transparent}
+.placar.win .regua .trk b{background:linear-gradient(90deg,#f5c542,#ffe48a,#f5c542)!important}
+.mbBadge{display:inline-flex;align-items:center;gap:6px;margin-top:10px;padding:5px 10px;border-radius:999px;background:#f5c542;color:#3b2a00;font:700 12.5px var(--fb);border:0;cursor:pointer;position:relative;z-index:1}
+.mbBadge:hover{filter:brightness(1.08)}.mbBadge:focus-visible{outline:2px solid #fff;outline-offset:2px}
+@keyframes mbShine{from{background-position:150% 0}to{background-position:-100% 0}}
+#mb{position:fixed;inset:0;z-index:9999;display:grid;place-items:center;background:radial-gradient(circle at 50% 45%,rgba(23,71,168,.93),rgba(4,12,30,.96) 70%);animation:mbIn .35s ease-out;cursor:pointer;overflow:hidden}
+#mb.out{animation:mbOut .5s ease-in forwards}
+#mb canvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+#mb .box{position:relative;text-align:center;color:#fff;padding:24px;max-width:92vw}
+#mb .tro{position:relative;width:min(150px,30vw);height:auto;filter:drop-shadow(0 10px 30px rgba(245,197,66,.55));animation:mbPop .9s cubic-bezier(.2,1.6,.4,1) both}
+#mb .rays{position:absolute;left:50%;top:95px;width:620px;height:620px;margin:-310px 0 0 -310px;background:repeating-conic-gradient(from 0deg,rgba(255,220,120,.16) 0 9deg,transparent 9deg 22deg);border-radius:50%;-webkit-mask:radial-gradient(circle,#000 20%,transparent 68%);mask:radial-gradient(circle,#000 20%,transparent 68%);animation:mbSpin 14s linear infinite;pointer-events:none}
+#mb h2{position:relative;font:800 clamp(44px,9vw,120px)/.95 var(--fd);margin:14px 0 6px;letter-spacing:.02em;text-transform:uppercase;background:linear-gradient(180deg,#fffbe6 0%,#ffe27a 45%,#f0a90f 100%);-webkit-background-clip:text;background-clip:text;color:transparent;animation:mbUp .7s .25s both}
+#mb .n{position:relative;font:800 clamp(40px,7vw,92px)/1 var(--fd);animation:mbUp .7s .45s both}
+#mb .msub{position:relative;font:500 clamp(15px,1.8vw,22px) var(--fb);color:#d6e2ff;margin-top:8px;animation:mbUp .7s .6s both}
+#mb .go{position:relative;margin-top:22px;animation:mbUp .7s .8s both;background:#f5c542;color:#3b2a00;border:0;border-radius:999px;padding:12px 26px;font:700 16px var(--fb);cursor:pointer}
+#mb .go:focus-visible{outline:3px solid #fff;outline-offset:3px}
+@keyframes mbIn{from{opacity:0}to{opacity:1}}@keyframes mbOut{to{opacity:0;visibility:hidden}}
+@keyframes mbPop{0%{transform:scale(.2) rotate(-20deg);opacity:0}100%{transform:none;opacity:1}}
+@keyframes mbUp{from{transform:translateY(24px);opacity:0}to{transform:none;opacity:1}}
+@keyframes mbSpin{to{transform:rotate(360deg)}}
+@media(prefers-reduced-motion:reduce){.placar.win:after,#mb .rays{animation:none}#mb canvas{display:none}}
 /* mini abas na lateral (computador): cada uma abre sozinha */
 .ssub{display:flex;flex-direction:column;gap:1px;margin:1px 0 8px 17px;padding-left:9px;border-left:1px solid rgba(255,255,255,.16)}
 .ssub button{all:unset;cursor:pointer;padding:6px 10px;font-size:13px;line-height:1.25;border-radius:4px;color:#9fb0cf}
@@ -755,7 +780,7 @@ function desenhaPainelPublico(x,g,t){
  const K=(a,b,c)=>`<div class="kpi"><dt>${a}</dt><dd class="num">${b}</dd><dd class="sm">${c||''}</dd></div>`;
  const metaTxt=t?'Meta diária do galpão completo':meta?'Meta diária: '+fmt(meta)+' unidades':'Meta diária não cadastrada';
  $("#kpis").innerHTML=`<div class="placar"><div><div class="num">${fmt(tot)}</div><div class="un">unidades produzidas</div></div><div class="regua"><div class="hd"><span>${metaTxt}</span><b>${!t&&meta?fmt(tot/meta*100)+'% da meta':''}</b></div><div class="trk"><b style="width:${!t&&meta?Math.min(100,tot/meta*100):0}%"></b></div></div></div><dl class="stats">`+
- K('Ondas concluídas',fmt(n),'')+K('Pessoas',fmt(pes),'com produção')+K('Tempo médio ponderado por conjunto',x.dur_n?mm(+(x.dur_pond!=null?x.dur_pond:x.dur_mediana)||0):'—',x.dur_n?fmt(x.dur_n)+' conjuntos':'sem medições')+K('Unidades por onda',n?fmt(tot/n):'0','em média')+K('Procurando',fmt((x.procurando||{}).ondas||0),fmt((x.procurando||{}).qtd||0)+' unidades')+K('Produção fora do turno',fmt(x.extra_un||0),'unidades em '+fmt(x.extra_ondas||0)+' ondas')+'</dl>';
+ K('Ondas concluídas',fmt(n),'')+K('Pessoas',fmt(pes),'com produção')+K('Tempo médio ponderado por conjunto',x.dur_n?mm(+(x.dur_pond!=null?x.dur_pond:x.dur_mediana)||0):'—',x.dur_n?fmt(x.dur_n)+' conjuntos':'sem medições')+K('Unidades por onda',n?fmt(tot/n):'0','em média')+K('Procurando',fmt((x.procurando||{}).ondas||0),fmt((x.procurando||{}).qtd||0)+' unidades')+K('Produção fora do turno',fmt(x.extra_un||0),'unidades em '+fmt(x.extra_ondas||0)+' ondas')+'</dl>';if(!t)metaCheck(tot,meta,g);
  const a=Array(24).fill(0);(x.horas||[]).forEach(z=>a[z.hora]=+z.qtd);const a2=x.meias?Array(48).fill(0):null;if(a2)x.meias.forEach(z=>a2[z.slot]=+z.qtd);$("#chH").innerHTML=chartH(a,a2);$("#peak").textContent=tot?peakTxt(a,a2):'';
  const types=x.tipos||[];$("#chT").innerHTML=TY.map(([name,c])=>{const z=types.find(v=>v.tipo===name)||{};return `<div class="trow" style="--c:${c}">${ico(name)}<b>${name}</b><span class="v"><span class="num">${fmt(z.qtd||0)}</span><small>${fmt(z.ondas||0)} ondas</small></span></div>`}).join('');
  $("#gals").innerHTML=bars((x.galpoes||[]).map(z=>({k:z.nome,v:+z.qtd||0,s:fmt(z.ondas)+' ondas, '+fmt(z.pessoas)+' pessoas',c:'var(--g)'})));
@@ -792,7 +817,7 @@ function painel(){
   K("Tempo médio ponderado por conjunto",D.length?mm(md):"—",D.length?"em "+D.length+" conjuntos":"sem medições")+
   K("Unidades por onda",ond?fmt(tot/ond):"0","em média")+
   K("Procurando",fmt(PR.length),fmt(PR.reduce((a,w)=>a+w.qty,0))+" unidades")+
-  K("Hora extra",fmt(ot.reduce((s,w)=>s+w.qty,0)),"unidades em "+ot.length+" ondas")+"</dl>";
+  K("Hora extra",fmt(ot.reduce((s,w)=>s+w.qty,0)),"unidades em "+ot.length+" ondas")+"</dl>";metaCheck(tot,metaT,g);
  $("#chH").innerHTML=chartH(a,a2,{need:need,avg:avgH});
  $("#pace").innerHTML=metaT&&isNow&&faltam>0&&remain>0?"Para bater a meta é preciso fazer <b>"+fmt(need)+" unidades por hora</b>"+(upw?", perto de "+ondH.toLocaleString("pt-BR",{maximumFractionDigits:1})+" ondas por hora":"")+". A média até agora é de "+fmt(avgH)+" por hora.":"";
  $("#peak").textContent=mx?peakTxt(a,a2):"";
@@ -1565,6 +1590,38 @@ function sideSubs(){
  [...bar.querySelectorAll("button")].filter(b=>!b.classList.contains("hide")&&b.style.display!=="none").forEach(b=>{const x=document.createElement("button");x.type="button";x.textContent=b.textContent;x.className=b.classList.contains("on")?"on":"";x.dataset.v=b.dataset[k[1]];x.onclick=()=>{b.click();sideSubs()};box.appendChild(x)});
  tab.insertAdjacentElement("afterend",box)}
 (function(){let tm=0;const re=()=>{clearTimeout(tm);tm=setTimeout(sideSubs,30)};Object.values(SUBS).forEach(([id])=>{const b=document.getElementById(id);if(b)new MutationObserver(re).observe(b,{attributes:true,subtree:true,childList:true,attributeFilter:["class","style"]})});sideSubs()})();
+
+/* ===== Meta batida: celebração ===== */
+const TROFEU='<svg class="tro" viewBox="0 0 120 120" aria-hidden="true"><defs><linearGradient id="tg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff3b0"/><stop offset=".5" stop-color="#f5c542"/><stop offset="1" stop-color="#c98a06"/></linearGradient></defs><path d="M34 22H18c0 16 8 26 20 28M86 22h16c0 16-8 26-20 28" fill="none" stroke="#f5c542" stroke-width="6" stroke-linecap="round"/><path d="M34 14h52v22c0 18-11 32-26 34-15-2-26-16-26-34z" fill="url(#tg)"/><rect x="54" y="68" width="12" height="18" fill="#d99a0b"/><rect x="38" y="86" width="44" height="10" rx="3" fill="url(#tg)"/><rect x="32" y="96" width="56" height="12" rx="3" fill="#b77a04"/><path d="m60 26 4 9 10 1-7 7 2 10-9-5-9 5 2-10-7-7 10-1z" fill="#fff8d6"/></svg>';
+function mbSom(){try{const A=window.AudioContext||window.webkitAudioContext;if(!A)return;const c=new A(),t=c.currentTime,g=c.createGain();g.gain.value=.08;g.connect(c.destination);[523.25,659.25,783.99,1046.5,783.99,1046.5].forEach((f,i)=>{const o=c.createOscillator(),e=c.createGain();o.type='triangle';o.frequency.value=f;o.connect(e);e.connect(g);const s=t+i*.13+(i>3?.12:0),d=i===5?.9:.22;e.gain.setValueAtTime(0,s);e.gain.linearRampToValueAtTime(1,s+.02);e.gain.exponentialRampToValueAtTime(.001,s+d);o.start(s);o.stop(s+d+.05)});setTimeout(()=>c.close(),3000)}catch(e){}}
+function celebrar(tot,meta,onde){
+ if($("#mb")||window.__semFesta)return;const red=matchMedia('(prefers-reduced-motion: reduce)').matches,el=document.createElement('div');el.id='mb';el.setAttribute('role','dialog');el.setAttribute('aria-modal','true');el.setAttribute('aria-label','Meta batida');
+ el.innerHTML=`<canvas></canvas><div class="box"><div class="rays"></div>${TROFEU}<h2>Meta batida!</h2><div class="n num">0</div><div class="msub">unidades · ${Math.round(tot/meta*100)}% da meta de ${fmt(meta)}${onde?' · '+esc(onde):''}</div><button class="go" type="button">Bora pra cima! 🚀</button></div>`;
+ document.body.appendChild(el);const btn=el.querySelector('.go');try{btn.focus({preventScroll:true})}catch(e){}
+ let vivo=true,auto=0;const kd=e=>{if(e.key==='Escape'||e.key==='Enter')fecha()},fecha=()=>{if(!vivo)return;vivo=false;clearTimeout(auto);removeEventListener('keydown',kd);removeEventListener('resize',rs);el.classList.add('out');setTimeout(()=>el.remove(),520)};
+ el.onclick=fecha;addEventListener('keydown',kd);auto=setTimeout(fecha,10000);mbSom();
+ const nEl=el.querySelector('.n'),t0=performance.now(),D=red?0:1600;(function up(n){const k=D?Math.min((n-t0)/D,1):1,e=1-Math.pow(1-k,3);nEl.textContent=fmt(Math.round(tot*e));if(k<1&&vivo)requestAnimationFrame(up)})(t0);
+ const cv=el.querySelector('canvas'),cx=cv.getContext('2d'),dpr=Math.min(devicePixelRatio||1,2);let W=0,H=0;function rs(){W=cv.width=innerWidth*dpr;H=cv.height=innerHeight*dpr}rs();addEventListener('resize',rs);
+ if(red)return;
+ const COR=['#f5c542','#ffe48a','#ffffff','#3d7be8','#0f4bd0','#d0021b','#ff5a6e','#34d0b8'],P=[],R=(a,b)=>a+Math.random()*(b-a);
+ const confete=(x,y,n,ang,sp)=>{for(let i=0;i<n;i++){const a=ang+R(-.45,.45),v=R(sp*.5,sp);P.push({k:'c',x,y,vx:Math.cos(a)*v,vy:Math.sin(a)*v,w:R(6,12)*dpr,h:R(8,16)*dpr,r:R(0,6),vr:R(-.25,.25),c:COR[i%COR.length],l:R(160,260),t:0})}};
+ const fogo=(x,y)=>{const c=COR[(Math.random()*COR.length)|0],n=70;for(let i=0;i<n;i++){const a=i/n*Math.PI*2,v=R(3,7)*dpr;P.push({k:'f',x,y,vx:Math.cos(a)*v,vy:Math.sin(a)*v,c,l:R(55,85),t:0,s:R(1.6,3)*dpr})}};
+ confete(0,H*.9,140,-Math.PI/3,26*dpr);confete(W,H*.9,140,-Math.PI*2/3,26*dpr);
+ let fr=0;const fim=performance.now()+8500;
+ (function loop(now){if(!vivo)return;fr++;
+  if(now<fim-2500){if(fr%28===0)fogo(R(W*.15,W*.85),R(H*.12,H*.45));if(fr%6===0)for(let i=0;i<3;i++)P.push({k:'c',x:R(0,W),y:-20,vx:R(-1,1),vy:R(2,5)*dpr,w:R(6,11)*dpr,h:R(8,15)*dpr,r:R(0,6),vr:R(-.2,.2),c:COR[(Math.random()*COR.length)|0],l:400,t:0})}
+  cx.clearRect(0,0,W,H);
+  for(let i=P.length-1;i>=0;i--){const p=P[i];p.t++;if(p.k==='c'){p.vx*=.985;p.vy=p.vy*.985+.32*dpr;p.x+=p.vx;p.y+=p.vy;p.r+=p.vr;const sq=Math.abs(Math.cos(p.t*.12));cx.save();cx.translate(p.x,p.y);cx.rotate(p.r);cx.fillStyle=p.c;cx.fillRect(-p.w/2,-p.h*sq/2,p.w,p.h*sq);cx.restore()}
+   else{p.vx*=.955;p.vy=p.vy*.955+.06*dpr;p.x+=p.vx;p.y+=p.vy;cx.globalAlpha=Math.max(1-p.t/p.l,0);cx.fillStyle=p.c;cx.beginPath();cx.arc(p.x,p.y,p.s,0,7);cx.fill();cx.globalAlpha=1}
+   if(p.t>p.l||p.y>H+40)P.splice(i,1)}
+  if(now<fim||P.length)requestAnimationFrame(loop)})(performance.now())}
+/* placar dourado sempre que a meta está batida; a festa em tela cheia aparece uma vez por dia e galpão (e no botão) */
+function metaCheck(tot,meta,g){
+ const pl=document.querySelector('#kpis .placar');if(!pl)return;const d=$("#day").value,hoje=d===dk(Date.now()),ok=meta>0&&tot>=meta;
+ pl.classList.toggle('win',ok);if(!ok)return;
+ const onde=g&&g!=='__all'?g:'',b=document.createElement('button');b.type='button';b.className='mbBadge';b.textContent='🏆 Meta batida · comemorar';b.onclick=()=>celebrar(tot,meta,onde);const alvo=pl.querySelector('.un');if(alvo)alvo.after(b);
+ if(!hoje)return;const k='rc.mb.'+d+'|'+(onde||'todos');let ja=false;try{ja=localStorage.getItem(k)==='1'}catch(e){}
+ if(!ja){try{localStorage.setItem(k,'1')}catch(e){}celebrar(tot,meta,onde)}}
 </script>
 </body>
 </html>
