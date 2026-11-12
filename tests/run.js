@@ -379,6 +379,14 @@ await T("60 Histórico: filtro por operador vale para volume, ondas e tempo por 
  await p.selectOption('#hOp','CL002');await p.waitForTimeout(100);let t=await tot();ok(t.includes('30:00')&&!t.includes('Ana Souza'),'Bruno 30 min: '+t.slice(0,260));
  await p.selectOption('#hMet','u');await p.waitForTimeout(100);t=await tot();ok(t.includes('Total no período20')&&t.includes('Bruno Lima'),'Bruno 20 un: '+t.slice(0,200));
  await p.selectOption('#hOp','');await p.waitForTimeout(100);ok((await tot()).includes('Total no período320'),'todos')});
+await T("61 Histórico: Procurando com registro, tempos e baixa; pesquisa dentro dele",async()=>{
+ const n=Date.now()-3*36e5;const w1=WV('r1','WN22A11111','Vários artigos',40,n-36e5);w1.sku='SKU-9';w1.loc='A-01';w1.hist=[{e:'m',q:'',t:n},{e:'a',q:'Carla Dias',t:n+10*60000},{e:'b',q:'Bruno Lima',t:n+25*60000}];
+ const w2=WV('r2','WN22A22222','Itens Únicos',5,n-36e5,'CL002','Bruno Lima',1);w2.sku='SKU-7';w2.hist=[{e:'m',q:'',t:n}];
+ const p=await page(b,base({waves:[w1,w2,WV('r3','WN22A33333','Vários artigos',10,n)]}));await p.evaluate(()=>go('his'));await p.waitForTimeout(250);
+ let t=(await p.textContent('#hBody')).replace(/\s+/g,' ');
+ ok(t.includes('Procurando: registro, tempo e conclusão')&&/Marcadas2/.test(t)&&/Pendentes1/.test(t)&&/Baixadas1/.test(t),'kpis: '+t.slice(t.indexOf('Procurando:'),t.indexOf('Procurando:')+300));
+ ok(t.includes('SKU-9')&&t.includes('Carla Dias')&&t.includes('10:00')&&t.includes('15:00')&&t.includes('25:00')===false||t.includes('Baixada'),'tempos: '+t.slice(t.indexOf('Tempo procurando'),t.indexOf('Tempo procurando')+400));
+ await p.fill('#hPq','sku-7');t=await p.textContent('#hPt');ok(t.includes('WN22A22222')&&!t.includes('WN22A11111'),'pesquisa procurando')});
 await b.close();
 const w=Math.max(...R.map(r=>r[1].length));for(const r of R)console.log((r[0]==="PASS"?"✅":"❌")+" "+r[1].padEnd(w)+"  "+r[2]);
 console.log(`\n${R.filter(r=>r[0]==="PASS").length}/${R.length} passaram`)})();

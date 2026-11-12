@@ -978,10 +978,20 @@ function hisGalSel(){const g=$("#hGal"),r=restricted();g.style.display=r?"none":
 function hisOpen(){if(!podeVer('his'))return;hisGalSel();if(!$("#hPer").options.length)hisFill();loadHis()}
 function hRange(){const v=$("#hVis").value,p=+$("#hPer").value,e=new Date();e.setHours(23,59,59,999);const s=new Date();s.setHours(0,0,0,0);
  if(v==='mes'){s.setDate(1);s.setMonth(s.getMonth()-(p-1))}else s.setDate(s.getDate()-(2*p-1));return[s,e]}
-const hRow=x=>{const o=OPSALL[x.operador_id];return{id:x.id,wn:x.wn,op:x.operador_id,opn:o?o.nome:'Operador removido',opc:o?String(o.codigo):'—',gal:GN[x.galpao_id]||'—',ty:x.tipo,qty:x.quantidade,st:x.status,ts:Date.parse(x.registrada_em),fin:x.concluida_em?Date.parse(x.concluida_em):null,srv:1}};
+const hRow=x=>{const o=OPSALL[x.operador_id];return{id:x.id,wn:x.wn,op:x.operador_id,opn:o?o.nome:'Operador removido',opc:o?String(o.codigo):'—',gal:GN[x.galpao_id]||'—',ty:x.tipo,qty:x.quantidade,st:x.status,ts:Date.parse(x.registrada_em),fin:x.concluida_em?Date.parse(x.concluida_em):null,srv:1,sku:x.procura_sku||'',loc:x.procura_local||'',pn:x.procura_nome||'',pt:x.procura_em?Date.parse(x.procura_em):0,hist:prHistSrv(x.procura_hist)}};
 const HOPEN=new Set(),HPQ={};let HPBY={},HUQ="",HUR="";
 const hDT=t=>new Date(t).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
 const hST=['Concluída','Procurando','Difícil acesso'];
+let HPR="",HPRR=[];
+function hProcRows(PW){return PW.filter(w=>w.st===1||prEv(w).some(e=>e.e==='m')).map(w=>{const ev=prEv(w),f=e=>ev.find(z=>z.e===e),m=f('m'),a=f('a'),b=f('b'),t0=m?m.t:(w.pt||w.ts);
+ return{w,t0,ta:a?a.t:0,tb:b?b.t:0,qa:a?a.q:'',qb:b?b.q:'',et:prEtapa(w),tp:a?a.t-t0:(w.st===1?Date.now()-t0:0),tbx:a&&b?b.t-a.t:0,tot:b?b.t-t0:0}}).sort((x,y)=>y.t0-x.t0)}
+function hProcTable(){const q=nrm(HPR).trim(),L=q?HPRR.filter(r=>nrm([r.w.wn,r.w.sku,r.w.loc,r.w.opn,r.qa,r.qb,r.w.ty].join(' ')).includes(q)):HPRR;
+ const sit=r=>r.w.st===1?'Pendente':r.et==='a'?'Encontrada, aguardando baixa':r.et==='b'?'Baixada':'—';
+ return L.length?`<div class="tw"><table><tr><th>Onda</th><th>Quem fez</th><th>SKU</th><th>Local</th><th>Marcada</th><th>Achada por</th><th>Baixa por</th><th>Tempo procurando</th><th>Até a baixa</th><th>Situação</th></tr>${L.slice(0,200).map(r=>`<tr><td><b>${esc(r.w.wn||'—')}</b><br><small>${esc(r.w.ty)} · ${fmt(r.w.qty)}</small></td><td>${esc(r.w.opn||'—')}</td><td>${esc(r.w.sku||'—')}</td><td>${esc(r.w.loc||'—')}</td><td>${prDH(r.t0)}</td><td>${r.ta?esc(r.qa||'—')+'<br><small>'+prDH(r.ta)+'</small>':'—'}</td><td>${r.tb?esc(r.qb||'—')+'<br><small>'+prDH(r.tb)+'</small>':'—'}</td><td>${r.tp?mm(r.tp):'—'}${r.w.st===1?' <small>em aberto</small>':''}</td><td>${r.tbx?mm(r.tbx):'—'}</td><td>${sit(r)}</td></tr>`).join('')}</table></div><div class="legend">${L.length>200?'Mostrando 200 de '+L.length+'. Pesquise para achar as demais.':L.length+' '+(L.length===1?'registro':'registros')+'.'}</div>`:'<div class="empty">Nenhum registro de procurando com esses filtros.</div>'}
+function hisProc(PW){if(PW===undefined)return'<div class="card" style="margin-top:14px"><h2>Procurando</h2><div class="empty">Não foi possível carregar o procurando agora.</div></div>';
+ const R=hProcRows(PW||[]);HPRR=R;const n=x=>R.filter(x).length,md=a=>a.length?mm(med(a)):'—';
+ const kp=hK('Marcadas',fmt(R.length),'no período')+hK('Pendentes',fmt(n(r=>r.w.st===1)),'ainda procurando')+hK('Aguardando baixa',fmt(n(r=>r.w.st!==1&&r.et==='a')),'encontradas')+hK('Baixadas',fmt(n(r=>r.et==='b')),'concluídas')+hK('Tempo mediano procurando',md(R.filter(r=>r.ta).map(r=>r.tp)),'da marcação até achar')+hK('Tempo mediano até a baixa',md(R.filter(r=>r.tbx).map(r=>r.tbx)),'do achado até a baixa')+hK('Tempo mediano total',md(R.filter(r=>r.tb).map(r=>r.tot)),'da marcação até a baixa');
+ return`<div class="card" style="margin-top:14px"><h2>Procurando: registro, tempo e conclusão</h2><dl class="stats solo">${kp}</dl><label class="hint" style="display:block;margin:12px 0 8px">Pesquisar<input id="hPq" type="search" value="${esc(HPR)}" placeholder="Onda, SKU, local ou nome" autocomplete="off"></label><div id="hPt">${hProcTable()}</div></div>`}
 function hisPessoas(P){HPBY={};P.forEach(w=>{(HPBY[w.op]=HPBY[w.op]||[]).push(w)});
  const L=Object.entries(HPBY).map(([op,a])=>({op,a,n:a[0].opn||'—',c:a[0].opc||String(op).split('~')[0],q:a.reduce((s,w)=>s+w.qty,0)})).sort((x,y)=>y.q-x.q);
  return`<div class="card" style="margin-top:14px"><h2>Ondas por pessoa</h2>
@@ -998,18 +1008,21 @@ async function hUniGo(raw){const q=raw.trim();HUQ=raw;const box=$("#hUniRes");
   else rows=S.waves.filter(w=>nrm(String(w.wn||'')).includes(nrm(q))&&visG().includes(w.gal)).map(w=>Object.assign({opc:String(w.op).split('~')[0]},w))}
  catch(e){HUR='<div class="legend">Não foi possível buscar agora. Confira a conexão.</div>';box.innerHTML=HUR;return}
  HUR=rows.length?`<div class="tw"><table><tr><th>Onda</th><th>Pessoa</th><th>Galpão</th><th>Tipo</th><th>Qtd</th><th>Situação</th><th>Data e hora</th></tr>${rows.map(w=>`<tr><td><b>${esc(w.wn||'—')}</b></td><td>${esc(w.opn)} <small>${esc(w.opc||'')}</small></td><td>${esc(w.gal)}</td><td>${esc(w.ty)}</td><td class="num">${fmt(w.qty)}</td><td>${hST[w.st]||''}</td><td>${hDT(w.fin||w.ts)}</td></tr>`).join('')}</table></div>`:'<div class="legend">Nenhuma onda encontrada com esse número.</div>';box.innerHTML=HUR}
+let HPW=null,hBusy=false;
+async function hFetchAll(path){const out=[];for(let off=0;;off+=4000){const r=await Promise.all([0,1,2,3].map(k=>api(path+'&limit=1000&offset='+(off+k*1000))));let cut=false;for(const p of r){out.push(...p);if(p.length<1000){cut=true;break}}if(cut||off>=80000)break}return out}
 async function loadHis(force){
  if(!podeVer('his')||view!=='his')return;
  const key=$("#hVis").value+'|'+$("#hPer").value;
  if(!force&&key===hKey&&HW&&Date.now()-hAt<60000){hisRender();return}
- hKey=key;const seq=++hSeq,[s,e]=hRange();
- if(!ON){HW=S.waves.filter(w=>w.ts>=s.getTime()&&w.ts<=e.getTime());hAt=Date.now();hisRender();return}
- HW=null;hisRender();
- try{const arr=[];for(let off=0;;off+=1000){const q='/rest/v1/ondas?select=id,wn,operador_id,galpao_id,tipo,quantidade,status,registrada_em,concluida_em&status=eq.0&registrada_em=gte.'+encodeURIComponent(s.toISOString())+'&registrada_em=lt.'+encodeURIComponent(e.toISOString())+'&order=registrada_em.asc,id.asc&limit=1000&offset='+off;
-  const part=await api(q);if(seq!==hSeq)return;arr.push(...part);if(part.length<1000)break}
-  const rows=arr.map(hRow),ids=new Set(rows.map(w=>w.id));
-  HW=rows.concat(S.waves.filter(w=>!w.srv&&!ids.has(w.id)&&w.ts>=s.getTime()&&w.ts<=e.getTime()));hAt=Date.now();hisRender();
- }catch(err){if(seq!==hSeq)return;HW=undefined;hisRender()}
+ hKey=key;const seq=++hSeq,[s,e]=hRange(),de=encodeURIComponent(s.toISOString()),ate=encodeURIComponent(e.toISOString());
+ if(!ON){HW=S.waves.filter(w=>w.ts>=s.getTime()&&w.ts<=e.getTime());HPW=HW.filter(w=>w.st!==0||(w.hist||[]).length);hAt=Date.now();hisRender();return}
+ HW=null;HPW=null;hBusy=true;hisRender();
+ try{const cols='id,wn,operador_id,galpao_id,tipo,quantidade,status,registrada_em,concluida_em',win='&registrada_em=gte.'+de+'&registrada_em=lt.'+ate+'&order=registrada_em.asc,id.asc';
+  const [arr,parr]=await Promise.all([hFetchAll('/rest/v1/ondas?select='+cols+'&status=eq.0'+win),hFetchAll('/rest/v1/ondas?select='+cols+',procura_sku,procura_local,procura_nome,procura_em,procura_hist&or=(status.neq.0,procura_hist.not.is.null)'+win).catch(()=>undefined)]);
+  if(seq!==hSeq)return;
+  const rows=arr.map(hRow),ids=new Set(rows.map(w=>w.id)),mine=S.waves.filter(w=>!w.srv&&!ids.has(w.id)&&w.ts>=s.getTime()&&w.ts<=e.getTime());
+  HW=rows.concat(mine);HPW=parr?parr.map(hRow).concat(mine.filter(w=>w.st!==0||(w.hist||[]).length)):undefined;hAt=Date.now();hBusy=false;hisRender();
+ }catch(err){if(seq!==hSeq)return;HW=undefined;hBusy=false;hisRender()}
 }
 function hChart(items,o){o=o||{};const n=items.length,cw=($('#hBody')||{}).clientWidth||0,W=Math.round(Math.min(Math.max((cw||innerWidth)-48,300),960)),H=240,pl=44,pr=8,pt=16,pb=34,f=o.f||fmt,
  mx=nice(Math.max(...items.map(i=>Math.max(i.v||0,i.hi||0)),o.line||0,1)),bw=(W-pl-pr)/Math.max(n,1),bwid=Math.max(Math.min(bw*.62,34),3),Y=v=>H-pb-v/mx*(H-pb-pt),step=Math.ceil(n/(innerWidth<760?8:16)),
@@ -1027,8 +1040,8 @@ const hK=(t,v,sub)=>`<div class="kpi"><dt>${t}</dt><dd class="num">${v}</dd><dd 
 const hVar=(c,p,low)=>{if(!p)return'';const d=(c-p)/p*100,good=low?d<0:d>0;return`<span style="color:var(--${Math.abs(d)<1?'mut':good?'g':'r'})">${d>0?'▲':'▼'} ${Math.abs(d).toLocaleString('pt-BR',{maximumFractionDigits:1})}% vs período anterior</span>`};
 function hisRender(){
  const el=$("#hBody"),st=$("#hStatus");if(!el||!podeVer('his'))return;st.classList.add('hide');
- if(HW===undefined){el.innerHTML='<div class="card"><div class="empty">Não foi possível carregar o histórico. Confira a conexão e tente novamente.</div></div>';return}
- if(HW===null){el.innerHTML='<div class="card"><div class="empty">Carregando histórico…</div></div>';return}
+ if(HW===undefined){el.innerHTML='<div class="card"><div class="empty">Não foi possível carregar o histórico. Confira a conexão e tente novamente.<br><button class="btn sm" data-hretry="1" style="margin-top:10px">Tentar de novo</button></div></div>';return}
+ if(HW===null){el.innerHTML='<div class="card"><div class="empty">Carregando histórico…</div></div>';if(!hBusy&&view==='his')setTimeout(()=>loadHis(true),0);return}
  const vis=$("#hVis").value,met=$("#hMet").value,p=+$("#hPer").value,g=restricted()?myG():$("#hGal").value,low=met==='t',f=met==='t'?mm:fmt;
  const LG=HW.filter(w=>g==='__all'?visG().includes(w.gal):w.gal===g),so=$("#hOp"),ov=so.value,om=new Map();LG.forEach(w=>{if(!om.has(w.op))om.set(w.op,(w.opn||'—')+', '+(w.opc||String(w.op).split('~')[0]))});
  const okey=[...om.entries()].sort((a,b)=>a[1].localeCompare(b[1],'pt-BR')).map(([k,v])=>`<option value="${esc(k)}">${esc(v)}</option>`).join('');if(so.dataset.k!==okey){so.dataset.k=okey;so.innerHTML='<option value="">Todos os operadores</option>'+okey;so.value=om.has(ov)?ov:''}
@@ -1081,7 +1094,7 @@ function hisRender(){
  }
  /* quebra por tipo */
  const tr=TY.map(([n,c])=>{const q=P.filter(w=>w.ty===n),d=C.filter(x=>x.w.ty===n).map(x=>({d:x.d,q:x.qty||1}));return`<tr><td><b>${esc(n)}</b></td><td class="num">${fmt(q.length)}</td><td class="num">${fmt(q.reduce((a,w)=>a+w.qty,0))}</td><td class="num">${d.length?mm(wa(d)):'—'}</td></tr>`}).join('');
- el.innerHTML=`<dl class="stats solo">${kp}</dl><div class="card" style="margin-top:14px"><h2>${ttl}${nome}</h2>${ch}${ex}</div>${tb}<div class="card" style="margin-top:14px"><h2>Por tipo de onda no período</h2><div class="tw"><table><tr><th>Tipo</th><th>Ondas</th><th>Unidades</th><th>Tempo médio ponderado por conjunto</th></tr>${tr}</table></div><div class="legend">Tempo médio ponderado: cada conjunto pesa pelas unidades que produziu, então conjuntos grandes influenciam mais que os pequenos.</div>${foraLim(L)}</div>${hisPessoas(P)}`;
+ el.innerHTML=`<dl class="stats solo">${kp}</dl><div class="card" style="margin-top:14px"><h2>${ttl}${nome}</h2>${ch}${ex}</div>${tb}<div class="card" style="margin-top:14px"><h2>Por tipo de onda no período</h2><div class="tw"><table><tr><th>Tipo</th><th>Ondas</th><th>Unidades</th><th>Tempo médio ponderado por conjunto</th></tr>${tr}</table></div><div class="legend">Tempo médio ponderado: cada conjunto pesa pelas unidades que produziu, então conjuntos grandes influenciam mais que os pequenos.</div>${foraLim(L)}</div>${hisProc(HPW===undefined?undefined:(HPW||[]).filter(w=>(g==='__all'?visG().includes(w.gal):w.gal===g)&&(!so.value||w.op===so.value)))}${hisPessoas(P)}`;
 }
 
 /* ===================== acesso ===================== */
@@ -1090,7 +1103,8 @@ const isI=t=>t==="ind"||t==="his";
 /* aba só aparece se o perfil atual pode abri-la; o que não é acessível fica oculto */
 function podeVer(t){if(t==="op"||t==="painel")return true;if(ON)return !!me&&(isI(t)?!!me.pI:!!me.pC);if(t==="painel")return true;return !needAuth(t)}
 function updTabs(){$$(".tab[data-t]").forEach(b=>{b.style.display=podeVer(b.dataset.t)?"":"none"});$$('#csub [data-c="cga"]').forEach(b=>{b.textContent=soMeta()?"Meta do dia":"Galpões"});$$('#csub [data-c="cge"]').forEach(b=>{b.style.display=soMeta()?"none":""});$$('#csub [data-c="cma"]').forEach(b=>{b.style.display=(!ON||(me&&me.adm))?"":"none"});if(!podeVer(view)){view="op";["painel","op","ind","his","cfg"].forEach(s=>$("#"+s).classList.toggle("hide",s!=="op"));$$(".tab[data-t]").forEach(b=>b.classList.toggle("on",b.dataset.t==="op"))}}
-function authUI(){hKey="";HW=null;$("#who").textContent=me?"Gestor: "+me.n:"";$("#logtx").textContent=me?"Sair":"Entrar";updTabs()}
+let hWho="";
+function authUI(){const w=me?me.n+"|"+(me.g||"")+"|"+(me.adm?1:0):"";if(w!==hWho){hWho=w;hKey="";HW=null;HPW=null}$("#who").textContent=me?"Gestor: "+me.n:"";$("#logtx").textContent=me?"Sair":"Entrar";updTabs()}
 function go(t){
  updTabs();
  if((t==="cfg"||isI(t))&&needAuth(t)){$("#login").classList.remove("hide");$("#lU").focus();pend=t;return}
@@ -1129,7 +1143,8 @@ function renderAll(){netUI();galSel();if(ON&&!me){if(view==="painel")painelPubli
 $("#day").value=dk(Date.now());galSel();$("#gal").value=S.gal;
 $("#gal").onchange=e=>{if(e.target.value!=="__all"){S.gal=e.target.value;save()}renderAll()};
 $("#ctlQ").oninput=ctlLive;$("#ctlLive").onclick=e=>{const b=e.target.closest("[data-x]");if(!b)return;const k=b.dataset.x;CTLX.has(k)?CTLX.delete(k):CTLX.add(k);ctlLive()};$("#day").onchange=()=>{renderAll();if(view==="ind")loadManagement()};$("#turnoF").onchange=renderAll;$("#hBody").addEventListener("toggle",e=>{const d=e.target;if(!d.matches||!d.matches("details.hp"))return;const k=d.dataset.hp;d.open?HOPEN.add(k):HOPEN.delete(k);if(d.open)d.querySelector(".hpb").innerHTML=hpBody(k)},true);
-$("#hBody").addEventListener("input",e=>{const k=e.target.dataset&&e.target.dataset.hpq;if(k==null)return;HPQ[k]=e.target.value;const b=e.target.closest(".hpb"),pos=e.target.selectionStart;b.innerHTML=hpBody(k);const n=b.querySelector("input");n.focus();n.setSelectionRange(pos,pos)});
+$("#hBody").addEventListener("click",e=>{if(e.target.closest("[data-hretry]"))loadHis(true)});
+$("#hBody").addEventListener("input",e=>{if(e.target.id==="hPq"){HPR=e.target.value;$("#hPt").innerHTML=hProcTable();return}const k=e.target.dataset&&e.target.dataset.hpq;if(k==null)return;HPQ[k]=e.target.value;const b=e.target.closest(".hpb"),pos=e.target.selectionStart;b.innerHTML=hpBody(k);const n=b.querySelector("input");n.focus();n.setSelectionRange(pos,pos)});
 $("#hBody").addEventListener("keydown",e=>{if(e.target.id==="hUni"&&e.key==="Enter"){e.preventDefault();hUniGo(e.target.value)}});
 let hRz=0;addEventListener("resize",()=>{clearTimeout(hRz);hRz=setTimeout(()=>{if(view==="his")hisRender()},200)});$("#hSeg").onclick=e=>{const m=e.target.dataset.m;if(!m)return;HM=m;try{localStorage.setItem("rc.hm",m)}catch(x){}if(ON&&!me){if(publicData)desenhaPainelPublico(publicData,$("#gal").value,$("#turnoF").value)}else painel()};$("#hVis").onchange=()=>{$("#hPer").innerHTML="";hisFill();loadHis()};["hPer","hMet","hGal","hOp"].forEach(i=>$("#"+i).onchange=()=>{if(i==="hPer")loadHis();else hisRender()});
 $("#net").onclick=()=>{S.off=!S.off;save();if(online())flush();renderAll()};

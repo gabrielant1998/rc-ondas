@@ -299,6 +299,12 @@ await T('S26 Histórico no servidor: gestor do galpão vê só o dele; aba exige
  ok(await p.$eval('#hGal',e=>e.style.display==='none'),'gestor não deveria escolher galpão');
  await p.click('#logbtn');await login(p,'adm@x.com','senha1234');await p.evaluate(()=>go('his'));await p.selectOption('#hMet','o');await p.selectOption('#hMet','u');await p.waitForTimeout(600);
  x=(await p.textContent('#hBody')).replace(/\s+/g,' ');ok(x.includes('326'),'admin deveria somar tudo (326): '+x.slice(0,260))});
+await T('S27 Histórico não fica preso em Carregando quando a conta atualiza (authUI)',async()=>{const db=banco();const p=await page(b,db);
+ db.ondas.push({id:'hz1',wn:'HZ1',operador_id:db.operadores[0].id,galpao_id:G1,tipo:'Vários artigos',quantidade:50,status:0,registrada_em:new Date(Date.now()-36e5).toISOString(),concluida_em:new Date(Date.now()-36e5).toISOString(),encerrada_auto:false});
+ await login(p,'adm@x.com','senha1234');await p.evaluate(()=>go('his'));await p.waitForTimeout(700);
+ ok(!(await p.textContent('#hBody')).includes('Carregando'),'não carregou');
+ await p.evaluate(()=>{authUI();renderAll()});await p.waitForTimeout(300);ok(!(await p.textContent('#hBody')).includes('Carregando'),'ficou carregando após authUI');
+ await p.evaluate(()=>{HW=null;hKey='';hisRender()});await p.waitForTimeout(900);ok(!(await p.textContent('#hBody')).includes('Carregando')&&(await p.textContent('#hBody')).includes('Total no período'),'não se recuperou sozinho')});
 await b.close();
 const w=Math.max(...R.map(r=>r[1].length));for(const r of R)console.log((r[0]==='PASS'?'✅':'❌')+' '+r[1].padEnd(w)+'  '+r[2]);
 console.log(`\n${R.filter(r=>r[0]==='PASS').length}/${R.length} passaram`)})();
