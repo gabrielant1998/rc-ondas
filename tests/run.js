@@ -413,6 +413,19 @@ await T("64 Gráfico por hora logado: a meta necessária alta não achata as bar
  const r=await p.evaluate(()=>{const a=Array(24).fill(0);a[9]=2400;a[10]=2800;a[13]=5700;const svg=barsSvg(a,8,14,{need:18062,avg:2302});const hs=[...svg.matchAll(/<path d="M[\d.]+ [\d.]+V([\d.]+)Q/g)].map(m=>+m[1]);return{svg,tops:hs}});
  ok(r.svg.includes('acima da escala'),'sem aviso de escala');ok(r.tops.length>=3&&Math.min(...r.tops)<100,'barras achatadas, topo mais alto em y='+Math.min(...r.tops));
  const r2=await p.evaluate(()=>barsSvg(Array(24).fill(0).map((_,i)=>i===9?3000:0),8,10,{need:2000}));ok(!r2.includes('acima da escala'),'meta dentro da escala não deveria avisar')});
+await T("65 Intervalo máximo nunca passa de 60 min: conjunto de mais de 1 hora fica de fora",async()=>{
+ const b0=HR(8,0);const p=await page(b,base({waves:[WV('g1','G1','Vários artigos',10,b0),WV('g2','G2','Itens Únicos',10,b0+50*60000),WV('g3','G3','Itens Únicos',10,b0+50*60000+90*60000)]}));
+ const r=await p.evaluate(()=>{S.cfg.gap=120;return{g:GAP(),d:durs(S.waves).map(c=>c.d/60000),f:foraLim(S.waves)}});
+ ok(r.g===60&&r.d.length===1&&r.d[0]===50,'durações: '+JSON.stringify(r));ok(r.f.includes('1 conjunto passou de 60 min')&&!r.f.includes('aumente'),'aviso: '+r.f)});
+await T("66 Zerar tempo: sai da contagem ao vivo e das medianas, mas as unidades continuam",async()=>{
+ const n=Date.now()-70*60000;const p=await page(b,base({waves:[WV('z1','Z1','Vários artigos',10,n-40*60000),WV('z2','Z2','Itens Únicos',20,n-10*60000),WV('z3','Z3','Itens Únicos',30,Date.now()-90*1000)]}));
+ await p.evaluate(()=>{S.cfg.and=true;go('op')});await p.click('#sub [data-s="ctl"]');await p.waitForTimeout(200);
+ ok((await p.textContent('#ctlLive')).includes('Z3')||(await p.textContent('#ctlLive')).includes('Zerar tempo'),'sem botão');
+ const antes=await p.evaluate(()=>({d:durs(S.waves).length,u:prod(S.waves).reduce((a,w)=>a+w.qty,0)}));
+ await p.click('#ctlLive [data-zt]');await p.waitForTimeout(200);
+ const dep=await p.evaluate(()=>({d:durs(S.waves).length,u:prod(S.waves).reduce((a,w)=>a+w.qty,0),zt:S.waves.filter(w=>w.zt).length,live:liveWaves().length}));
+ ok(dep.u===antes.u&&dep.u===60,'unidades mudaram: '+JSON.stringify(dep));ok(dep.zt>=1&&dep.live===0,'não saiu da contagem ao vivo: '+JSON.stringify(dep));
+ await p.reload();ok(await p.evaluate(()=>S.waves.some(w=>w.zt)),'não persistiu')});
 await b.close();
 const w=Math.max(...R.map(r=>r[1].length));for(const r of R)console.log((r[0]==="PASS"?"✅":"❌")+" "+r[1].padEnd(w)+"  "+r[2]);
 console.log(`\n${R.filter(r=>r[0]==="PASS").length}/${R.length} passaram`)})();

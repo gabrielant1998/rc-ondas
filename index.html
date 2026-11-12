@@ -310,7 +310,7 @@ a[data-pick]{display:inline-block;padding:8px 0 2px;color:var(--gx);font-weight:
   <div class="card"><h2>Ondas</h2><div class="f">
    <div id="storInfo" style="font-size:13px;color:var(--mut)"></div>
    <label class="row"><input type="checkbox" id="and" style="min-height:auto"> Modo de ondas em andamento</label>
-   <label>Intervalo máximo entre ondas do mesmo operador para contar como tempo de onda (min)<input type="number" id="gap" min="1" max="120"></label>
+   <label>Intervalo máximo entre ondas do mesmo operador para contar como tempo de onda (min, até 60)<input type="number" id="gap" min="1" max="60"></label>
    <label>Tolerância de hora extra (min)<input type="number" id="tol" min="0" max="120"></label></div></div>
  </div>
 
@@ -389,7 +389,7 @@ const DEF={cfg:{lim:{"Vários artigos":1000,"Múltiplas quantidades":1000,"Itens
  turnos:{1:{ini:7,fim:16},2:{ini:16,fim:23}}},gals:["Galpão 1","Galpão 2","Galpão 3"],ops:[],ges:[],waves:[],gal:"Galpão 1",off:false,man:{log:[]}};
 let S;try{S=JSON.parse(localStorage.getItem(LS))}catch(e){}
 /* formato compacto: ondas como listas, cabe ~2x mais no aparelho */
-if(S&&S.wv){S.waves=S.wv.map(a=>{const w={id:a[0],wn:a[1],op:a[2],opn:a[3],gal:a[4],ty:(TY[a[5]]||TY[0])[0],qty:a[6],st:a[7],ts:a[8],fin:a[9]<0?null:a[8]+a[9],sync:a[10]};if(a[11])w.auto=1;if(a[12])w.oid=a[12];if(a[13])w.err=a[13];if(a[14]){w.sku=a[14][0];w.loc=a[14][1];w.pn=a[14][2];w.pt=a[14][3];w.hist=a[14][4]||[]}return w});delete S.wv}
+if(S&&S.wv){S.waves=S.wv.map(a=>{const w={id:a[0],wn:a[1],op:a[2],opn:a[3],gal:a[4],ty:(TY[a[5]]||TY[0])[0],qty:a[6],st:a[7],ts:a[8],fin:a[9]<0?null:a[8]+a[9],sync:a[10]};if(a[11])w.auto=1;if(a[12])w.oid=a[12];if(a[13])w.err=a[13];if(a[15])w.zt=1;if(a[14]){w.sku=a[14][0];w.loc=a[14][1];w.pn=a[14][2];w.pt=a[14][3];w.hist=a[14][4]||[]}return w});delete S.wv}
 const LIM_STORE=5.2e6;
 if(!S){ /* migra base antiga, se existir */
  let old=null;try{old=ON?null:JSON.parse(localStorage.getItem("rcondas.v1"))}catch(e){}
@@ -413,7 +413,7 @@ TY.forEach(([n])=>{if(S.cfg.lim[n]==null)S.cfg.lim[n]=DEF.cfg.lim[n]||1000});
 if(!ON&&!S.gals.length)S.gals=["Galpão 1"];
 if(!S.gals.includes(S.gal))S.gal=S.gals[0];
 let ty=TY[0][0],st=0,draft=[],tim={op:null,t0:0},view="painel",me=null,uT=1,csub="cop",gsub="mi";
-const ser=()=>{const o=Object.assign({},S);delete o.waves;o.wv=(ON?S.waves.filter(w=>!w.srv):S.waves).map(w=>{const a=[w.id,w.wn,w.op,w.opn,w.gal,Math.max(0,TY.findIndex(t=>t[0]===w.ty)),w.qty,w.st,w.ts,w.fin==null?-1:w.fin-w.ts,w.sync?1:0,w.auto?1:0];if(w.oid||w.err)a.push(w.oid||0);if(w.err)a.push(w.err);if(w.sku||w.pn||w.loc||w.pt||(w.hist&&w.hist.length)){while(a.length<14)a.push(0);a.push([w.sku||"",w.loc||"",w.pn||"",w.pt||0,w.hist||[]])}return a});return JSON.stringify(o)};
+const ser=()=>{const o=Object.assign({},S);delete o.waves;o.wv=(ON?S.waves.filter(w=>!w.srv):S.waves).map(w=>{const a=[w.id,w.wn,w.op,w.opn,w.gal,Math.max(0,TY.findIndex(t=>t[0]===w.ty)),w.qty,w.st,w.ts,w.fin==null?-1:w.fin-w.ts,w.sync?1:0,w.auto?1:0];if(w.oid||w.err)a.push(w.oid||0);if(w.err)a.push(w.err);if(w.sku||w.pn||w.loc||w.pt||(w.hist&&w.hist.length)){while(a.length<14)a.push(0);a.push([w.sku||"",w.loc||"",w.pn||"",w.pt||0,w.hist||[]])}if(w.zt){while(a.length<15)a.push(0);a.push(1)}return a});return JSON.stringify(o)};
 let storeLen=0,storeWarned=false;
 const save=()=>{try{const s=ser();localStorage.setItem(LS,s);storeLen=s.length;
   if(storeLen>LIM_STORE*.8&&!storeWarned){storeWarned=true;setTimeout(()=>toast("Atenção: memória do aparelho em "+Math.round(storeLen/LIM_STORE*100)+"%. Ligue um banco de dados antes que encha.",9000),2600)}
@@ -466,7 +466,7 @@ async function pull(){
  GID={};GN={};gs.forEach(g=>{GID[g.nome]=g.id;GN[g.id]=g.nome});
  S.gals=gs.map(g=>g.nome);S.metasInd={};gs.forEach(g=>{if(g.meta_ind_ondas||g.meta_ind_qtd)S.metasInd[g.nome]={o:g.meta_ind_ondas||0,q:g.meta_ind_qtd||0}});
  ts.forEach(t=>{S.cfg.lim[t.nome]=t.limite});
- const c=cf[0];if(c){S.cfg.turnos={1:{ini:c.turno1_ini,fim:c.turno1_fim},2:{ini:c.turno2_ini,fim:c.turno2_fim}};S.cfg.gap=c.intervalo_max_min;S.cfg.tol=c.tolerancia_min;S.cfg.and=c.ondas_em_andamento}
+ const c=cf[0];if(c){S.cfg.turnos={1:{ini:c.turno1_ini,fim:c.turno1_fim},2:{ini:c.turno2_ini,fim:c.turno2_fim}};S.cfg.gap=Math.min(+c.intervalo_max_min||30,60);S.cfg.tol=c.tolerancia_min;S.cfg.and=c.ondas_em_andamento}
  OPSALL={};os.forEach(o=>{OPSALL[o.id]=o});
  S.ops=os.filter(o=>!o.excluido_em).map(o=>({id:o.id,m:o.codigo,n:o.nome,t:o.turno,g:GN[o.galpao_id],criado:o.criado_em}));
  if(!S.gals.includes(S.gal))S.gal=S.gals[0];
@@ -481,8 +481,8 @@ async function pull(){
  else{S.ges=[];me=null;SOL=[]}
  const mine=S.waves.filter(w=>!w.srv);
  if(me){const de=new Date(Date.now()-35*864e5).toISOString(),srv=[];
-  for(let off=0;;off+=1000){const p=await api("/rest/v1/ondas?select=id,wn,operador_id,galpao_id,tipo,quantidade,status,registrada_em,concluida_em,encerrada_auto,procura_sku,procura_local,procura_nome,procura_em,procura_hist&registrada_em=gte."+encodeURIComponent(de)+"&order=registrada_em.asc&limit=1000&offset="+off);
-   p.forEach(x=>{const o=OPSALL[x.operador_id];srv.push({id:x.id,wn:x.wn,oid:x.operador_id,op:o?(o.excluido_em?o.codigo+"~"+o.id.slice(0,6):o.codigo):"—",opn:o?o.nome:"Operador removido",gal:GN[x.galpao_id]||"—",ty:x.tipo,qty:x.quantidade,st:x.status,ts:Date.parse(x.registrada_em),fin:x.concluida_em?Date.parse(x.concluida_em):null,sync:1,srv:1,auto:x.encerrada_auto?1:0,sku:x.procura_sku||"",loc:x.procura_local||"",pn:x.procura_nome||"",pt:x.procura_em?Date.parse(x.procura_em):0,hist:prHistSrv(x.procura_hist)})});
+  for(let off=0;;off+=1000){const p=await api("/rest/v1/ondas?select=id,wn,operador_id,galpao_id,tipo,quantidade,status,registrada_em,concluida_em,encerrada_auto,procura_sku,procura_local,procura_nome,procura_em,procura_hist,tempo_zerado&registrada_em=gte."+encodeURIComponent(de)+"&order=registrada_em.asc&limit=1000&offset="+off);
+   p.forEach(x=>{const o=OPSALL[x.operador_id];srv.push({id:x.id,wn:x.wn,oid:x.operador_id,op:o?(o.excluido_em?o.codigo+"~"+o.id.slice(0,6):o.codigo):"—",opn:o?o.nome:"Operador removido",gal:GN[x.galpao_id]||"—",ty:x.tipo,qty:x.quantidade,st:x.status,ts:Date.parse(x.registrada_em),fin:x.concluida_em?Date.parse(x.concluida_em):null,sync:1,srv:1,auto:x.encerrada_auto?1:0,sku:x.procura_sku||"",loc:x.procura_local||"",pn:x.procura_nome||"",pt:x.procura_em?Date.parse(x.procura_em):0,hist:prHistSrv(x.procura_hist),zt:x.tempo_zerado?1:0})});
    if(p.length<1000||off>=59000)break}
   const ids=new Set(srv.map(w=>w.id));S.waves=srv.concat(mine.filter(w=>!ids.has(w.id)))}
  else{const corte=Date.now()-3*864e5;S.waves=mine.filter(w=>!w.sync||w.err||w.ts>corte)}
@@ -507,7 +507,7 @@ async function rem(fn,msg){
 function remChange(e){const d=e.target.dataset,id=e.target.id,v=e.target.value;
  if(d.lim)return rem(()=>mut("/rest/v1/tipos_onda?nome=eq."+encodeURIComponent(d.lim),"PATCH",{limite:Math.max(1,Math.floor(+v)||1)}),"Limite atualizado");
  if(d.tn)return rem(()=>mut(CFGP,"PATCH",{["turno"+d.tn+"_"+d.k]:Math.max(0,Math.min(24,Math.floor(+v)||0))}),"Turno atualizado");
- if(id==="gap")return rem(()=>mut(CFGP,"PATCH",{intervalo_max_min:Math.max(1,Math.floor(+v)||30)}),"Configuração atualizada");
+ if(id==="gap")return rem(()=>mut(CFGP,"PATCH",{intervalo_max_min:Math.min(60,Math.max(1,Math.floor(+v)||30))}),"Configuração atualizada");
  if(id==="tol")return rem(()=>mut(CFGP,"PATCH",{tolerancia_min:Math.max(0,Math.floor(+v)||0)}),"Configuração atualizada");
  if(id==="and"){const on=e.target.checked;return rem(async()=>{await mut(CFGP,"PATCH",{ondas_em_andamento:on});
    if(!on)await api("/rest/v1/ondas?status=neq.0",{method:"PATCH",body:{status:0,concluida_em:new Date().toISOString(),encerrada_auto:true},prefer:"return=minimal"})},on?"Ondas em andamento ligadas":"Ondas em aberto foram concluídas")}
@@ -635,9 +635,10 @@ function hourWindow(a){let f=a.findIndex(v=>v>0),l=-1;a.forEach((v,i)=>{if(v>0)l
 function conjuntos(list){const by={},out=[];
  prod(list).slice().sort((x,y)=>(x.fin||x.ts)-(y.fin||y.ts)).forEach(w=>{(by[w.op]=by[w.op]||[]).push(w)});
  Object.values(by).forEach(a=>{const gs=[];a.forEach(w=>{const t=w.fin||w.ts,g=gs[gs.length-1];if(g&&t-g.t0<=3000)g.w.push(w);else gs.push({t0:t,w:[w]})});
-  gs.forEach((g,i)=>{const dom=g.w.slice().sort((x,y)=>y.qty-x.qty)[0];out.push({op:dom.op,t:g.t0,ondas:g.w.length,qty:g.w.reduce((q,w)=>q+w.qty,0),w:dom,tipos:[...new Set(g.w.map(x=>x.ty))],d:gs[i+1]?gs[i+1].t0-g.t0:null})})});return out}
-function durs(list){const gap=(S.cfg.gap||30)*6e4;return conjuntos(list).filter(c=>c.d!=null&&c.d>0&&c.d<=gap)}
-function foraLim(list){const gap=(S.cfg.gap||30)*6e4,n=conjuntos(list).filter(c=>c.d!=null&&c.d>gap).length;return n?`<div class="legend" style="color:var(--o)">${n} ${n===1?'conjunto passou':'conjuntos passaram'} de ${S.cfg.gap||30} min e ficou de fora. Se foram tempos normais de trabalho, aumente o intervalo máximo em Configurações, Operação.</div>`:''}
+  gs.forEach((g,i)=>{const dom=g.w.slice().sort((x,y)=>y.qty-x.qty)[0];out.push({op:dom.op,t:g.t0,zt:g.w.some(x=>x.zt),ondas:g.w.length,qty:g.w.reduce((q,w)=>q+w.qty,0),w:dom,tipos:[...new Set(g.w.map(x=>x.ty))],d:gs[i+1]?gs[i+1].t0-g.t0:null})})});return out}
+function durs(list){const gap=GAP()*6e4;return conjuntos(list).filter(c=>c.d!=null&&c.d>0&&c.d<=gap&&!c.zt)}
+const GAP=()=>Math.min(Math.max(+S.cfg.gap||30,1),60);
+function foraLim(list){const gap=GAP()*6e4,n=conjuntos(list).filter(c=>c.d!=null&&c.d>gap&&!c.zt).length;return n?`<div class="legend" style="color:var(--o)">${n} ${n===1?'conjunto passou':'conjuntos passaram'} de ${GAP()} min entre uma bipagem e a seguinte e ficaram de fora, pois provavelmente foram pausas e não tempo de onda.</div>`:''}
 function med(a){if(!a.length)return 0;const s=a.slice().sort((x,y)=>x-y),m=s.length>>1;return s.length%2?s[m]:(s[m-1]+s[m])/2}
 const wa=a=>{const q=a.reduce((s,x)=>s+x.q,0);return q?a.reduce((s,x)=>s+x.d*x.q,0)/q:0};
 const avg=a=>a.length?a.reduce((s,v)=>s+v,0)/a.length:0;
@@ -677,7 +678,7 @@ function desenhaPainelPublico(x,g,t){
  const a=Array(24).fill(0);(x.horas||[]).forEach(z=>a[z.hora]=+z.qtd);const a2=x.meias?Array(48).fill(0):null;if(a2)x.meias.forEach(z=>a2[z.slot]=+z.qtd);$("#chH").innerHTML=chartH(a,a2);$("#peak").textContent=tot?peakTxt(a,a2):'';
  const types=x.tipos||[];$("#chT").innerHTML=TY.map(([name,c])=>{const z=types.find(v=>v.tipo===name)||{};return `<div class="trow" style="--c:${c}">${ico(name)}<b>${name}</b><span class="v"><span class="num">${fmt(z.qtd||0)}</span><small>${fmt(z.ondas||0)} ondas</small></span></div>`}).join('');
  $("#gals").innerHTML=bars((x.galpoes||[]).map(z=>({k:z.nome,v:+z.qtd||0,s:fmt(z.ondas)+' ondas, '+fmt(z.pessoas)+' pessoas',c:'var(--g)'})));
- const dt=x.dur_tipos||[];const rk=v=>{const z=dt.find(q=>q.tipo===v)||{};return +z.n?(+z.mediana||0):0},TYR=TY.slice().sort((a,b)=>rk(b[0])-rk(a[0]));$("#tmp").innerHTML=TYR.map(([name,c])=>{const z=dt.find(v=>v.tipo===name)||{},n=+z.n||0,ms=n?(+z.mediana||0):0;return `<div class="gal"><div class="r"><b>${n?(TYR.findIndex(q=>q[0]===name)+1)+'º ':''}${name}</b><span>${n?mm(ms):'—'} <small style="color:var(--mut)">${n} ${n===1?'conjunto':'conjuntos'}</small></span></div><div class="bar"><b style="width:${n?Math.min(ms/((S.cfg.gap||30)*6e4)*100,100):0}%;--c:${c}"></b></div></div>`}).join('')+`<div class="legend">Mediana do tempo de cada conjunto de ondas, até ${S.cfg.gap||30} min.</div>`;
+ const dt=x.dur_tipos||[];const rk=v=>{const z=dt.find(q=>q.tipo===v)||{};return +z.n?(+z.mediana||0):0},TYR=TY.slice().sort((a,b)=>rk(b[0])-rk(a[0]));$("#tmp").innerHTML=TYR.map(([name,c])=>{const z=dt.find(v=>v.tipo===name)||{},n=+z.n||0,ms=n?(+z.mediana||0):0;return `<div class="gal"><div class="r"><b>${n?(TYR.findIndex(q=>q[0]===name)+1)+'º ':''}${name}</b><span>${n?mm(ms):'—'} <small style="color:var(--mut)">${n} ${n===1?'conjunto':'conjuntos'}</small></span></div><div class="bar"><b style="width:${n?Math.min(ms/(GAP()*6e4)*100,100):0}%;--c:${c}"></b></div></div>`}).join('')+`<div class="legend">Mediana do tempo de cada conjunto de ondas, até ${GAP()} min.</div>`;
  $("#pace").innerHTML='<span class="legend">Painel público com totais consolidados. Registros ainda offline aparecem após a sincronização.</span>';
 }
 
@@ -722,8 +723,8 @@ function painel(){
  const Dg=durs(L);
  const TYR=TY.slice().sort((a,b)=>med(Dg.filter(x=>x.w.ty===b[0]).map(x=>x.d))-med(Dg.filter(x=>x.w.ty===a[0]).map(x=>x.d)));
  $("#tmp").innerHTML=TYR.map(([n,c])=>{const d=Dg.filter(x=>x.w.ty===n).map(x=>x.d);
-  return`<div class="gal"><div class="r"><b>${d.length?(TYR.findIndex(z=>z[0]===n)+1)+"º ":""}${n}</b><span>${d.length?mm(med(d)):"—"} <small style="color:var(--mut)">${d.length} ${d.length===1?"conjunto":"conjuntos"}</small></span></div><div class="bar"><b style="width:${d.length?Math.min(med(d)/((S.cfg.gap||30)*6e4)*100,100):0}%;--c:${c}"></b></div></div>`}).join("")
-  +`<div class="legend">Mediana do tempo de cada conjunto de ondas (ondas bipadas no mesmo instante contam uma vez), da bipagem até a seguinte do mesmo operador. Pausas acima de ${S.cfg.gap||30} min ficam de fora.</div>`+foraLim(L);
+  return`<div class="gal"><div class="r"><b>${d.length?(TYR.findIndex(z=>z[0]===n)+1)+"º ":""}${n}</b><span>${d.length?mm(med(d)):"—"} <small style="color:var(--mut)">${d.length} ${d.length===1?"conjunto":"conjuntos"}</small></span></div><div class="bar"><b style="width:${d.length?Math.min(med(d)/(GAP()*6e4)*100,100):0}%;--c:${c}"></b></div></div>`}).join("")
+  +`<div class="legend">Mediana do tempo de cada conjunto de ondas (ondas bipadas no mesmo instante contam uma vez), da bipagem até a seguinte do mesmo operador. Pausas acima de ${GAP()} min ficam de fora.</div>`+foraLim(L);
 }
 
 /* ===================== OPERAÇÃO ===================== */
@@ -761,8 +762,8 @@ function operacao(){const L=dayWaves().slice().reverse();$("#cnt").textContent=L
  $("#subCtl").classList.toggle("hide",!S.cfg.and);
  const open=S.waves.filter(w=>w.st!==0&&inView(w)&&(!$("#fOp").value||w.op===$("#fOp").value)&&(!$("#fTy").value||w.ty===$("#fTy").value)&&(!$("#fSt").value||w.st==$("#fSt").value));
  $("#ctlList").innerHTML=open.length?'<div style="font-weight:600;margin:4px 0 8px">Procurando e difícil acesso</div>'+opRows(open.reverse(),1):'';ctlLive()}
-function liveWaves(){const gap=(S.cfg.gap||30)*6e4,now=Date.now(),by={};
- S.waves.filter(w=>w.st===0&&!w.err&&inView(w)&&w.ts<=now&&now-w.ts<=gap&&(!$("#fOp").value||w.op===$("#fOp").value)&&(!$("#fTy").value||w.ty===$("#fTy").value)).forEach(w=>{(by[w.op]=by[w.op]||[]).push(w)});
+function liveWaves(){const gap=GAP()*6e4,now=Date.now(),by={};
+ S.waves.filter(w=>w.st===0&&!w.err&&!w.zt&&inView(w)&&w.ts<=now&&now-w.ts<=gap&&(!$("#fOp").value||w.op===$("#fOp").value)&&(!$("#fTy").value||w.ty===$("#fTy").value)).forEach(w=>{(by[w.op]=by[w.op]||[]).push(w)});
  return Object.values(by).map(a=>{a.sort((x,y)=>y.ts-x.ts);const u=a[0];return{u,g:a.filter(x=>u.ts-x.ts<=3000)}}).sort((x,y)=>y.u.ts-x.u.ts)}
 const CTLX=new Set();
 function ctlLive(){const el=$("#ctlLive");if(!el)return;let L=S.cfg.and?liveWaves():[];const q=nrm($("#ctlQ")?$("#ctlQ").value:"").trim(),all=L.length;
@@ -770,7 +771,7 @@ function ctlLive(){const el=$("#ctlLive");if(!el)return;let L=S.cfg.and?liveWave
  const hh=t=>new Date(t).toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit",second:"2-digit"});
  el.innerHTML='<div style="font-weight:600;margin:4px 0 8px">Contando tempo</div>'+(L.length?`<table><tr><th>Operador</th><th>Onda</th><th>Tipo</th><th>Qtd</th><th>Início</th><th>Tempo</th></tr>`+L.map(({u,g})=>{
   const open=CTLX.has(u.op)||(q&&g.length>1&&g.some(x=>nrm(String(x.wn||"")).includes(q))),hit=x=>q&&nrm(String(x.wn||"")).includes(q);
-  return`<tr><td><div class="who2">${av(u.opn)}<div>${esc(u.opn)}<br><small>${esc(u.op.split("~")[0])}, ${esc(u.gal)}</small></div></div></td><td><b>${esc(u.wn||"—")}</b>${g.length>1?`<br><button type="button" class="pill" data-x="${esc(u.op)}" aria-expanded="${open}" style="min-height:28px;padding:2px 8px;margin-top:4px">${open?"Ocultar":"Ver"} +${g.length-1} ${g.length-1===1?"onda":"ondas"} do mesmo lançamento</button>`:""}</td><td>${esc(u.ty)}</td><td><b>${fmt(g.reduce((a,x)=>a+x.qty,0))}</b></td><td>${new Date(u.ts).toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"})}</td><td><b data-el="${u.ts}">${mm(Date.now()-u.ts)}</b></td></tr>`
+  return`<tr><td><div class="who2">${av(u.opn)}<div>${esc(u.opn)}<br><small>${esc(u.op.split("~")[0])}, ${esc(u.gal)}</small></div></div></td><td><b>${esc(u.wn||"—")}</b>${g.length>1?`<br><button type="button" class="pill" data-x="${esc(u.op)}" aria-expanded="${open}" style="min-height:28px;padding:2px 8px;margin-top:4px">${open?"Ocultar":"Ver"} +${g.length-1} ${g.length-1===1?"onda":"ondas"} do mesmo lançamento</button>`:""}</td><td>${esc(u.ty)}</td><td><b>${fmt(g.reduce((a,x)=>a+x.qty,0))}</b></td><td>${new Date(u.ts).toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"})}</td><td><b data-el="${u.ts}">${mm(Date.now()-u.ts)}</b><br><button type="button" class="pill" data-zt="${esc(g.map(x=>x.id).join(","))}" style="min-height:28px;padding:2px 8px;margin-top:4px" title="Tira esta espera da contagem de tempo. As unidades continuam contando.">Zerar tempo</button></td></tr>`
   +(open&&g.length>1?`<tr><td></td><td colspan="5"><table class="lanc"><tr><th>Onda</th><th>Tipo</th><th>Qtd</th><th>Hora</th></tr>${g.slice().sort((a,b)=>b.ts-a.ts).map(x=>`<tr${hit(x)?' style="background:var(--field)"':""}><td><b>${esc(x.wn||"—")}</b></td><td>${esc(x.ty)}</td><td>${fmt(x.qty)}</td><td>${hh(x.ts)}</td></tr>`).join("")}</table></td></tr>`:"")}).join("")+"</table>":`<div class="empty">${q&&all?"Nenhuma onda em andamento com essa onda ou nome.":"Nenhuma onda contando tempo agora."}</div>`)}
 function filters(){const f=(id,h,o)=>{const e=$(id),v=e.value;e.innerHTML=`<option value="">${h}</option>`+o.map(([a,b])=>`<option value="${a}">${esc(b)}</option>`).join("");e.value=v};
  f("#fOp","Operador",S.ops.map(o=>[o.m,o.n]));f("#fTy","Tipo",TY.map(t=>[t[0],t[0]]));f("#fSt","Status",[[1,"Procurando"],[2,"Difícil acesso"]])}
@@ -796,9 +797,9 @@ async function loadManagement(){
  const seq=++mgSeq,days=mgDates(),start=new Date(days[0]+'T00:00:00'),end=new Date(days[days.length-1]+'T00:00:00');end.setDate(end.getDate()+1);
  mgState='Carregando histórico do período…';MGW=null;$("#mgStatus").textContent=mgState;$("#mgStatus").classList.remove('hide');
  try{
-  const arr=[];for(let off=0;;off+=1000){const q='/rest/v1/ondas?select=id,wn,operador_id,galpao_id,tipo,quantidade,status,registrada_em,concluida_em,encerrada_auto,procura_sku,procura_local,procura_nome,procura_em,procura_hist&registrada_em=gte.'+encodeURIComponent(start.toISOString())+'&registrada_em=lt.'+encodeURIComponent(end.toISOString())+'&order=registrada_em.asc,id.asc&limit=1000&offset='+off;
+  const arr=[];for(let off=0;;off+=1000){const q='/rest/v1/ondas?select=id,wn,operador_id,galpao_id,tipo,quantidade,status,registrada_em,concluida_em,encerrada_auto,procura_sku,procura_local,procura_nome,procura_em,procura_hist,tempo_zerado&registrada_em=gte.'+encodeURIComponent(start.toISOString())+'&registrada_em=lt.'+encodeURIComponent(end.toISOString())+'&order=registrada_em.asc,id.asc&limit=1000&offset='+off;
    const part=await api(q);if(seq!==mgSeq)return;arr.push(...part);if(part.length<1000)break}
-  const rows=arr.map(x=>{const o=OPSALL[x.operador_id];return{id:x.id,wn:x.wn,oid:x.operador_id,op:o?(o.excluido_em?o.codigo+'~'+o.id.slice(0,6):o.codigo):'—',opn:o?o.nome:'Operador removido',gal:GN[x.galpao_id]||'—',ty:x.tipo,qty:x.quantidade,st:x.status,ts:Date.parse(x.registrada_em),fin:x.concluida_em?Date.parse(x.concluida_em):null,sync:1,srv:1,auto:x.encerrada_auto?1:0,sku:x.procura_sku||"",loc:x.procura_local||"",pn:x.procura_nome||"",pt:x.procura_em?Date.parse(x.procura_em):0,hist:prHistSrv(x.procura_hist)}});
+  const rows=arr.map(x=>{const o=OPSALL[x.operador_id];return{id:x.id,wn:x.wn,oid:x.operador_id,op:o?(o.excluido_em?o.codigo+'~'+o.id.slice(0,6):o.codigo):'—',opn:o?o.nome:'Operador removido',gal:GN[x.galpao_id]||'—',ty:x.tipo,qty:x.quantidade,st:x.status,ts:Date.parse(x.registrada_em),fin:x.concluida_em?Date.parse(x.concluida_em):null,sync:1,srv:1,auto:x.encerrada_auto?1:0,sku:x.procura_sku||"",loc:x.procura_local||"",pn:x.procura_nome||"",pt:x.procura_em?Date.parse(x.procura_em):0,hist:prHistSrv(x.procura_hist),zt:x.tempo_zerado?1:0}});
   const ids=new Set(rows.map(w=>w.id));MGW=rows.concat(S.waves.filter(w=>!w.srv&&!ids.has(w.id)&&w.ts>=start.getTime()&&w.ts<end.getTime()));
   mgState='';$("#mgStatus").classList.add('hide');individual();coletiva();
  }catch(e){if(seq!==mgSeq)return;MGW=null;mgState='Não foi possível carregar o período. Confira a conexão e tente novamente.';$("#mgStatus").textContent=mgState;$("#mgStatus").classList.remove('hide');$("#iBody").innerHTML='';$("#coBody").innerHTML=''}
@@ -824,7 +825,7 @@ function mgStatus(o,d,L,data){
 function mgExtra(o,d,L){
  const times=L.map(w=>w.fin||w.ts).filter(Number.isFinite).sort((a,b)=>a-b),t=turnoOf(o),day=new Date(d+'T00:00:00'),start=day.getTime()+t.ini*36e5-(S.cfg.tol||0)*6e4;
  let end=day.getTime()+t.fim*36e5+(S.cfg.tol||0)*6e4;if(t.fim<=t.ini)end+=864e5;
- let ms=0;for(let i=1;i<times.length;i++){const a=times[i-1],b=times[i];if(b<=a||b-a>(S.cfg.gap||30)*6e4)continue;ms+=Math.max(0,Math.min(b,start)-a)+Math.max(0,b-Math.max(a,end))}
+ let ms=0;for(let i=1;i<times.length;i++){const a=times[i-1],b=times[i];if(b<=a||b-a>GAP()*6e4)continue;ms+=Math.max(0,Math.min(b,start)-a)+Math.max(0,b-Math.max(a,end))}
  return {ms,count:times.filter(x=>x<start||x>end).length};
 }
 function mgReference(o,data){let sum=0,has=false;for(const d of data.days){const own=data.byOpDay.get(d+'|'+o.m)||[],people=data.byGalDay.get(d+'|'+o.g),meta=+MT()[o.g]||0;if(own.length&&people&&people.size&&meta){sum+=meta/people.size;has=true}}return has?sum:null}
@@ -832,12 +833,12 @@ function metaInd(o,L){const m=MI()[o.g]||{},dias=Math.max(new Set(prod(L).map(w=
 const vsMeta=(v,m)=>m?`${fmt(v)} / ${fmt(m)} <small>${Math.round(v/m*100)}%</small>`:"—";
 const mgK=(t,v,sub)=>`<div class="kpi"><dt>${t}</dt><dd class="num">${v}</dd><dd class="sm">${sub||''}</dd></div>`;
 const mn=ms=>{const m=Math.floor(ms/6e4),sg=Math.round(ms%6e4/1e3);return m+" min"+(sg?" "+String(sg).padStart(2,"0")+" s":"")};
-function mgTempo(o,L){const gap=(S.cfg.gap||30)*6e4,now=Date.now(),C=conjuntos(L).sort((a,b)=>b.t-a.t),by={};
+function mgTempo(o,L){const gap=GAP()*6e4,now=Date.now(),C=conjuntos(L).sort((a,b)=>b.t-a.t),by={};
  C.filter(c=>c.d!=null&&c.d>0&&c.d<=gap).forEach(c=>{const x=by[c.w.ty]=by[c.w.ty]||{ty:c.w.ty,d:[],q:0,t:0};x.d.push(c.d);x.q+=c.qty;x.t+=c.d});
  const R=Object.values(by).map(x=>Object.assign(x,{m:med(x.d),uh:x.t?x.q/(x.t/36e5):0})).sort((a,b)=>a.m-b.m);
  const rk=R.length?`<table><tr><th>Tipo</th><th>Conjuntos medidos</th><th>Tempo mediano</th><th>Unidades por hora</th><th></th></tr>`+R.map((x,i)=>`<tr><td><b>${esc(x.ty)}</b></td><td>${x.d.length}</td><td>${mn(x.m)}</td><td>${fmt(Math.round(x.uh))}</td><td>${i===0&&R.length>1?'<span class="tag">mais rápido</span>':''}</td></tr>`).join('')+'</table>':'<div class="empty">Sem conjuntos medidos neste período.</div>';
  const lt=C.length?`<table><tr><th>Início</th><th>Ondas</th><th>Tipo</th><th>Unidades</th><th>Tempo</th></tr>`+C.slice(0,40).map(c=>`<tr><td>${new Date(c.t).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit'})}</td><td>${c.ondas}</td><td>${c.tipos.map(esc).join(', ')}</td><td>${fmt(c.qty)}</td><td>${c.d==null?(now-c.t<=gap?'em andamento':'—'):c.d>gap?'pausa':mn(c.d)}</td></tr>`).join('')+'</table>':'<div class="empty">Nenhuma onda no período.</div>';
- return`<div class="grid two" style="margin-top:14px"><div class="card"><h2>Tempo por tipo de onda</h2><div class="tw">${rk}</div><div class="legend">Mediana do tempo de cada conjunto. Ondas bipadas no mesmo instante contam como um conjunto, com um tempo só. Pausas acima de ${S.cfg.gap||30} min ficam de fora.</div></div><div class="card"><h2>Conjuntos de ondas</h2><div class="tw">${lt}</div><div class="legend">Tempo da bipagem do conjunto até a bipagem do próximo. Mostra os 40 mais recentes.</div></div></div>`}
+ return`<div class="grid two" style="margin-top:14px"><div class="card"><h2>Tempo por tipo de onda</h2><div class="tw">${rk}</div><div class="legend">Mediana do tempo de cada conjunto. Ondas bipadas no mesmo instante contam como um conjunto, com um tempo só. Pausas acima de ${GAP()} min ficam de fora.</div></div><div class="card"><h2>Conjuntos de ondas</h2><div class="tw">${lt}</div><div class="legend">Tempo da bipagem do conjunto até a bipagem do próximo. Mostra os 40 mais recentes.</div></div></div>`}
 function mgHistory(list){return list.length?`<table><tr><th>Data e hora</th><th>Onda</th><th>Tipo</th><th>Quantidade</th><th>Situação</th></tr>`+list.map(w=>`<tr><td>${new Date(w.ts).toLocaleString('pt-BR')}</td><td>${esc(w.wn||'—')}</td><td>${esc(w.ty)}</td><td>${fmt(w.qty)}</td><td>${esc(ST[w.st]||'—')}${!w.sync?' · pendente':''}</td></tr>`).join('')+'</table>':'<div class="empty">Nenhuma onda registrada.</div>'}
 function destaques(rows,data){
  const R=rows.map(x=>{const L=data.days.flatMap(d=>data.byOpDay.get(d+'|'+x.o.m)||[]),P=prod(L),C=durs(L),tm=C.reduce((s,c)=>s+c.d,0),cu=C.reduce((s,c)=>s+c.qty,0);
@@ -895,7 +896,7 @@ function coletiva(){
  const types=TY.map(([n,c])=>({k:n,v:P.filter(w=>w.ty===n).reduce((s,w)=>s+w.qty,0),s:P.filter(w=>w.ty===n).length+' ondas',c}));
  target.innerHTML=`<dl class="stats solo">`+mgK('Produção coletiva',fmt(total),'unidades concluídas')+mgK('Pessoas com bipagem',fmt(people),'no período')+mgK('Ondas concluídas',fmt(P.length),'compartilhadas pela equipe')+mgK('Procurando',fmt(W.filter(w=>w.st===1).length),fmt(W.filter(w=>w.st===1).reduce((a,w)=>a+w.qty,0))+' unidades')+mgK('Meta coletiva',canCompare?fmt(configured):'—',t?'disponível em todos os turnos':missing.length?'configure a meta dos galpões':'dias com operação')+mgK('Atingimento',canCompare?fmt(total/configured*100)+'%':'—',canCompare?'da meta coletiva':'sem comparação disponível')+`</dl>
  <div class="grid two" style="margin-top:14px"><div class="card"><h2>Produção por tipo de onda</h2>${bars(types)}</div><div class="card"><h2>Critério da meta coletiva</h2><div class="ins"><div>Somamos as unidades concluídas da equipe, sem ranking de pessoas.</div><div>A meta é a soma da meta diária atual dos galpões nos dias com bipagem registrada e no dia de hoje.</div><div>A meta cadastrada cobre o dia inteiro. Por isso, a comparação aparece somente com todos os turnos selecionados.</div><div>Faltas e horas extras não geram descontos automáticos. Os tipos são mostrados separadamente porque têm dificuldades diferentes. No histórico usamos a meta e os turnos atualmente cadastrados.</div></div></div></div>
- <div class="card" style="margin-top:14px"><h2>Total por tipo e tempo entre ondas</h2><div class="tw">${coTipos(W,P,people)}</div><div class="legend">Tempo por conjunto: da bipagem de um conjunto de ondas (bipadas no mesmo instante) até a bipagem seguinte do mesmo operador, ignorando pausas acima de ${S.cfg.gap||30} min. A média por pessoa divide o total pelas ${fmt(people)} pessoas com bipagem no período.</div></div>
+ <div class="card" style="margin-top:14px"><h2>Total por tipo e tempo entre ondas</h2><div class="tw">${coTipos(W,P,people)}</div><div class="legend">Tempo por conjunto: da bipagem de um conjunto de ondas (bipadas no mesmo instante) até a bipagem seguinte do mesmo operador, ignorando pausas acima de ${GAP()} min. A média por pessoa divide o total pelas ${fmt(people)} pessoas com bipagem no período.</div></div>
  ${missing.length?`<div class="legend">Galpões sem meta diária: ${missing.map(esc).join(', ')}. Cadastre em Config → Galpões.</div>`:''}`;
 }
 
@@ -907,7 +908,7 @@ function cfgOp(){
   if(L)$("#storInfo").innerHTML+="<br>Dados antigos neste aparelho: "+fmt(L.waves.length)+" ondas e "+L.ops.length+" operadores"+(ja?", já enviados":"")+'. <button class="btn alt sm" id="impB" style="margin-top:6px">'+(ja?"Enviar de novo":"Enviar para o banco")+"</button>"}
  $("#lims").innerHTML=TY.map(([n])=>`<label>${n}<input type="number" min="1" data-lim="${n}" value="${S.cfg.lim[n]}"></label>`).join("");
  $("#turnos").innerHTML=[1,2].map(t=>`<label>Início do ${t}º turno (hora)<input type="number" min="0" max="23" data-tn="${t}" data-k="ini" value="${S.cfg.turnos[t].ini}"></label><label>Fim do ${t}º turno (hora)<input type="number" min="1" max="24" data-tn="${t}" data-k="fim" value="${S.cfg.turnos[t].fim}"></label>`).join("");
- $("#and").checked=!!S.cfg.and;$("#gap").value=S.cfg.gap;$("#tol").value=S.cfg.tol}
+ $("#and").checked=!!S.cfg.and;$("#gap").value=GAP();$("#tol").value=S.cfg.tol}
 function cfgUsers(){
  $("#nextCode").textContent="próximo: "+nextCode();
  $("#uT").innerHTML=[1,2].map(t=>`<button data-ut="${t}" class="${uT===t?"on":""}" style="--c:${t===1?"var(--g)":"var(--v)"}">${t}º turno</button>`).join("");
@@ -982,7 +983,7 @@ function hisGalSel(){const g=$("#hGal"),r=restricted();g.style.display=r?"none":
 function hisOpen(){if(!podeVer('his'))return;hisGalSel();if(!$("#hPer").options.length)hisFill();loadHis()}
 function hRange(){const v=$("#hVis").value,p=+$("#hPer").value,e=new Date();e.setHours(23,59,59,999);const s=new Date();s.setHours(0,0,0,0);
  if(v==='mes'){s.setDate(1);s.setMonth(s.getMonth()-(p-1))}else s.setDate(s.getDate()-(2*p-1));return[s,e]}
-const hRow=x=>{const o=OPSALL[x.operador_id];return{id:x.id,wn:x.wn,op:x.operador_id,opn:o?o.nome:'Operador removido',opc:o?String(o.codigo):'—',gal:GN[x.galpao_id]||'—',ty:x.tipo,qty:x.quantidade,st:x.status,ts:Date.parse(x.registrada_em),fin:x.concluida_em?Date.parse(x.concluida_em):null,srv:1,sku:x.procura_sku||'',loc:x.procura_local||'',pn:x.procura_nome||'',pt:x.procura_em?Date.parse(x.procura_em):0,hist:prHistSrv(x.procura_hist)}};
+const hRow=x=>{const o=OPSALL[x.operador_id];return{id:x.id,wn:x.wn,op:x.operador_id,opn:o?o.nome:'Operador removido',opc:o?String(o.codigo):'—',gal:GN[x.galpao_id]||'—',ty:x.tipo,qty:x.quantidade,st:x.status,ts:Date.parse(x.registrada_em),fin:x.concluida_em?Date.parse(x.concluida_em):null,srv:1,sku:x.procura_sku||'',loc:x.procura_local||'',pn:x.procura_nome||'',pt:x.procura_em?Date.parse(x.procura_em):0,hist:prHistSrv(x.procura_hist),zt:x.tempo_zerado?1:0}};
 const HOPEN=new Set(),HPQ={};let HPBY={},HUQ="",HUR="";
 const hDT=t=>new Date(t).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
 const hST=['Concluída','Procurando','Difícil acesso'];
@@ -1023,7 +1024,7 @@ async function loadHis(force){
  hKey=key;const seq=++hSeq,[s,e]=hRange(),de=encodeURIComponent(s.toISOString()),ate=encodeURIComponent(e.toISOString());
  if(!ON){HW=S.waves.filter(w=>w.ts>=s.getTime()&&w.ts<=e.getTime());HPW=HW.filter(w=>w.st!==0||(w.hist||[]).length);hAt=Date.now();hisRender();return}
  HW=null;HPW=null;hBusy=true;hisRender();
- try{const cols='id,wn,operador_id,galpao_id,tipo,quantidade,status,registrada_em,concluida_em',win='&registrada_em=gte.'+de+'&registrada_em=lt.'+ate+'&order=registrada_em.asc,id.asc';
+ try{const cols='id,wn,operador_id,galpao_id,tipo,quantidade,status,registrada_em,concluida_em,tempo_zerado',win='&registrada_em=gte.'+de+'&registrada_em=lt.'+ate+'&order=registrada_em.asc,id.asc';
   const [arr,parr]=await Promise.all([hFetchAll('/rest/v1/ondas?select='+cols+'&status=eq.0'+win),hFetchAll('/rest/v1/ondas?select='+cols+',procura_sku,procura_local,procura_nome,procura_em,procura_hist&or=(status.neq.0,procura_hist.not.is.null)'+win).catch(()=>undefined)]);
   if(seq!==hSeq)return;
   const rows=arr.map(hRow),ids=new Set(rows.map(w=>w.id)),mine=S.waves.filter(w=>!w.srv&&!ids.has(w.id)&&w.ts>=s.getTime()&&w.ts<=e.getTime());
@@ -1148,7 +1149,10 @@ function renderAll(){netUI();galSel();if(ON&&!me){if(view==="painel")painelPubli
 /* ===================== eventos ===================== */
 $("#day").value=dk(Date.now());galSel();$("#gal").value=S.gal;
 $("#gal").onchange=e=>{if(e.target.value!=="__all"){S.gal=e.target.value;save()}renderAll()};
-$("#ctlQ").oninput=ctlLive;$("#ctlLive").onclick=e=>{const b=e.target.closest("[data-x]");if(!b)return;const k=b.dataset.x;CTLX.has(k)?CTLX.delete(k):CTLX.add(k);ctlLive()};$("#day").onchange=()=>{renderAll();if(view==="ind")loadManagement()};$("#turnoF").onchange=renderAll;$("#hBody").addEventListener("toggle",e=>{const d=e.target;if(!d.matches||!d.matches("details.hp"))return;const k=d.dataset.hp;d.open?HOPEN.add(k):HOPEN.delete(k);if(d.open)d.querySelector(".hpb").innerHTML=hpBody(k)},true);
+$("#ctlQ").oninput=ctlLive;async function zerarTempo(ids){const L=S.waves.filter(w=>ids.includes(w.id));if(!L.length)return;
+ if(ON){const wns=L.filter(w=>w.srv||w.sync).map(w=>w.wn);if(wns.length){try{await api("/rest/v1/rpc/zerar_tempo_ondas",{method:"POST",body:{p_wns:wns}})}catch(e){toast(errMsg(e));return}}}
+ L.forEach(w=>{w.zt=1});save();renderAll();ctlLive();toast("Tempo zerado: as unidades continuam contando")}
+$("#ctlLive").onclick=e=>{const z=e.target.closest("[data-zt]");if(z){zerarTempo(z.dataset.zt.split(","));return}const b=e.target.closest("[data-x]");if(!b)return;const k=b.dataset.x;CTLX.has(k)?CTLX.delete(k):CTLX.add(k);ctlLive()};$("#day").onchange=()=>{renderAll();if(view==="ind")loadManagement()};$("#turnoF").onchange=renderAll;$("#hBody").addEventListener("toggle",e=>{const d=e.target;if(!d.matches||!d.matches("details.hp"))return;const k=d.dataset.hp;d.open?HOPEN.add(k):HOPEN.delete(k);if(d.open)d.querySelector(".hpb").innerHTML=hpBody(k)},true);
 $("#hsub").onclick=e=>{const k=e.target.dataset.hs;if(!k)return;HS=k;hsShow()};
 $("#hBody").addEventListener("click",e=>{if(e.target.closest("[data-hretry]"))loadHis(true)});
 $("#hBody").addEventListener("input",e=>{if(e.target.id==="hPq"){HPR=e.target.value;$("#hPt").innerHTML=hProcTable();return}const k=e.target.dataset&&e.target.dataset.hpq;if(k==null)return;HPQ[k]=e.target.value;const b=e.target.closest(".hpb"),pos=e.target.selectionStart;b.innerHTML=hpBody(k);const n=b.querySelector("input");n.focus();n.setSelectionRange(pos,pos)});
@@ -1352,7 +1356,7 @@ document.addEventListener("change",e=>{const d=e.target.dataset,id=e.target.id;l
  if(d.tn){S.cfg.turnos[d.tn][d.k]=Math.max(0,Math.min(24,+e.target.value||0));r=true}
  if(id==="and"){S.cfg.and=e.target.checked;
   if(!S.cfg.and){let n=0;S.waves.forEach(w=>{if(w.st!==0){w.st=0;w.fin=Date.now();w.auto=1;w.sync=online()?1:0;n++}});toast(n+" onda(s) finalizada(s) automaticamente")}r=true}
- if(id==="gap"){S.cfg.gap=Math.max(1,+e.target.value||30);r=true}
+ if(id==="gap"){S.cfg.gap=Math.min(60,Math.max(1,+e.target.value||30));e.target.value=S.cfg.gap;r=true}
  if(id==="tol"){S.cfg.tol=Math.max(0,+e.target.value||0);r=true}
  if(d.ut2){const o=opOf(d.ut2);if(o){o.t=+e.target.value;r=true;toast(o.n+" → "+o.t+"º turno")}}
  if(d.ug2){const o=opOf(d.ug2);if(o){o.g=e.target.value;r=true}}

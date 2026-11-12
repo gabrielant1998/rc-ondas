@@ -92,6 +92,7 @@ function fake(db){const cors={'access-control-allow-origin':'*','access-control-
    Object.assign(o,{status:1,concluida_em:null,procura_sku:body.p_sku,procura_local:body.p_local,procura_nome:op?op.nome:'',procura_em:new Date().toISOString()});
    return J(route,200,{id:o.id,wn:o.wn,tipo:o.tipo,quantidade:o.quantidade,galpao_id:o.galpao_id,operador_id:o.operador_id,registrada_em:o.registrada_em,procura_em:o.procura_em,procura_nome:o.procura_nome,procura_hist:o.procura_hist})}
   if(t==='rpc/encontrar_procurando'&&m==='POST'){const o=db.ondas.find(x=>x.wn===body.p_wn&&x.status===1);if(o){o.status=0;o.concluida_em=new Date().toISOString();o.procura_hist.push({e:'a',t:new Date().toISOString()})}return J(route,200,!!o)}
+  if(t==='rpc/zerar_tempo_ondas'&&m==='POST'){const ws=(body.p_wns||[]).map(x=>String(x).replace(/^0+/,''));const hit=db.ondas.filter(o=>o.status===0&&ws.includes(String(o.wn).replace(/^0+/,'')));if(!hit.length)return J(route,404,{code:'P0002',message:'onda_nao_encontrada'});hit.forEach(o=>o.tempo_zerado=true);return J(route,200,hit.length)}
   if(t==='rpc/baixar_procurando'&&m==='POST'){if(!body.p_nome||body.p_nome.trim().length<2)return J(route,400,{code:'22023',message:'Informe o nome de quem fez (2 a 80 caracteres)'});
    const o=db.ondas.find(x=>x.wn===body.p_wn&&x.status===0&&!x.procura_achou_por&&(x.procura_hist||[]).slice(-1)[0]&&x.procura_hist.slice(-1)[0].e==='a');
    if(o){o.procura_achou_por=body.p_nome;o.procura_hist.push({e:'b',q:body.p_nome,t:new Date().toISOString()})}return J(route,200,!!o)}
@@ -305,6 +306,13 @@ await T('S27 Histórico não fica preso em Carregando quando a conta atualiza (a
  ok(!(await p.textContent('#hBody')).includes('Carregando'),'não carregou');
  await p.evaluate(()=>{authUI();renderAll()});await p.waitForTimeout(300);ok(!(await p.textContent('#hBody')).includes('Carregando'),'ficou carregando após authUI');
  await p.evaluate(()=>{HW=null;hKey='';hisRender()});await p.waitForTimeout(900);ok(!(await p.textContent('#hBody')).includes('Carregando')&&(await p.textContent('#hBody')).includes('Total no período'),'não se recuperou sozinho')});
+await T('S28 Zerar tempo grava no servidor e some da contagem',async()=>{const db=banco();const p=await page(b,db);
+ db.ondas.push({id:'zz1',wn:'ZT1',operador_id:db.operadores[0].id,galpao_id:G1,tipo:'Vários artigos',quantidade:50,status:0,registrada_em:new Date(Date.now()-60000).toISOString(),concluida_em:new Date(Date.now()-60000).toISOString(),encerrada_auto:false});
+ await login(p,'adm@x.com','senha1234');await p.evaluate(()=>pull());await p.waitForTimeout(600);
+ const ok0=await p.evaluate(()=>S.waves.some(w=>w.wn==='ZT1'));ok(ok0,'onda não veio do servidor');
+ await p.evaluate(()=>zerarTempo(S.waves.filter(w=>w.wn==='ZT1').map(w=>w.id)));await p.waitForTimeout(500);
+ ok(db.ondas.find(o=>o.id==='zz1').tempo_zerado===true,'servidor não marcou');
+ ok(await p.evaluate(()=>S.waves.find(w=>w.wn==='ZT1').zt===1),'cliente não marcou')});
 await b.close();
 const w=Math.max(...R.map(r=>r[1].length));for(const r of R)console.log((r[0]==='PASS'?'✅':'❌')+' '+r[1].padEnd(w)+'  '+r[2]);
 console.log(`\n${R.filter(r=>r[0]==='PASS').length}/${R.length} passaram`)})();
