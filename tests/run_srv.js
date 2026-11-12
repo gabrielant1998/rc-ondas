@@ -85,6 +85,11 @@ function fake(db){const cors={'access-control-allow-origin':'*','access-control-
    if(m==='GET')return J(route,200,!g?[]:db.metas.filter(x=>x.data===eq('data')&&escopo(x.galpao_id)));
    if(m==='POST'){if(!podeC(body.galpao_id))return J(route,403,{code:'42501',message:'rls'});const i=db.metas.findIndex(x=>x.galpao_id===body.galpao_id&&x.data===body.data);if(i>=0)db.metas[i]=body;else db.metas.push(body);return J(route,201,[body])}
    if(m==='DELETE'){const gid=eq('galpao_id'),dt=eq('data');if(!podeC(gid))return J(route,200,[]);const had=db.metas.filter(x=>x.galpao_id===gid&&x.data===dt);db.metas=db.metas.filter(x=>!had.includes(x));return J(route,200,had)}}
+  if(t==='rpc/apagar_ondas'&&m==='POST'){if(!(g&&g.admin))return J(route,403,{code:'42501',message:'Somente o administrador pode apagar registros'});
+   const ini=Date.parse(body.p_de+'T00:00:00-03:00'),fim=Date.parse(body.p_ate+'T00:00:00-03:00')+864e5;
+   const alvo=db.ondas.filter(o=>{const t0=Date.parse(o.registrada_em);return t0>=ini&&t0<fim&&(!body.p_galpao||o.galpao_id===body.p_galpao)});
+   if(!body.p_so_contar)db.ondas=db.ondas.filter(o=>!alvo.includes(o));
+   return J(route,200,alvo.length)}
   return J(route,404,{message:'rota não simulada: '+m+' '+p})}}
 async function page(b,db,opts={}){const ctx=await b.newContext({viewport:opts.vp||{width:1366,height:900}});const p=await ctx.newPage();
  p.errors=[];p.on('pageerror',e=>p.errors.push(e.message));p.on('dialog',d=>d.accept());
@@ -173,6 +178,18 @@ await T('S19 Abas: sem login aparecem Operação e Painel; com login, as abas do
  await login(p,'g2@x.com','senha1234');await p.waitForTimeout(300);
  const com=[await vis('op'),await vis('painel'),await vis('ind'),await vis('cfg')];
  ok(sem.join()==='true,true,false,false'&&com.join()==='true,true,true,true','sem login '+sem+' | gestor '+com);});
+await T('S20 Manutenção: só o administrador vê; apaga o período escolhido depois de confirmar',async()=>{const db=banco();
+ db.ondas.push({id:'m1',wn:'M1',operador_id:db.operadores[0].id,galpao_id:G1,tipo:'Vários artigos',quantidade:5,status:0,registrada_em:'2026-11-05T12:00:00-03:00',concluida_em:'2026-11-05T12:05:00-03:00',encerrada_auto:false});
+ db.ondas.push({id:'m2',wn:'M2',operador_id:db.operadores[0].id,galpao_id:G1,tipo:'Vários artigos',quantidade:5,status:0,registrada_em:'2026-11-20T12:00:00-03:00',concluida_em:'2026-11-20T12:05:00-03:00',encerrada_auto:false});
+ const pg=await page(b,db);await login(pg,'g2@x.com','senha1234');await pg.waitForTimeout(300);
+ const gestorVe=await pg.isVisible('#csub [data-c="cma"]');
+ const p=await page(b,db);await login(p,'adm@x.com','senha1234');await p.click('.tab[data-t="cfg"]');
+ const admVe=await p.isVisible('#csub [data-c="cma"]');
+ await p.click('[data-c="cma"]');await p.fill('#xDe','2026-11-01');await p.fill('#xAte','2026-11-10');await p.click('#xCont');await p.waitForTimeout(400);
+ const contou=(await p.textContent('#xRes')).includes('1 registro');
+ const travado=await p.isDisabled('#xDel');
+ await p.fill('#xCon','APAGAR');await p.click('#xDel');await p.waitForTimeout(700);
+ ok(!gestorVe&&admVe&&contou&&travado&&db.ondas.length===1&&db.ondas[0].id==='m2','gestor '+gestorVe+', admin '+admVe+', contou '+contou+', travado '+travado+', restam '+db.ondas.length)});
 await T('S12 Admin: galpão, meta, limite, turno e gestor gravam no banco',async()=>{const db=banco();const p=await page(b,db);await login(p,'adm@x.com','senha1234');await p.click('.tab[data-t="cfg"]');
  await p.fill('[data-lim="Itens Únicos"]','250');await p.press('[data-lim="Itens Únicos"]','Tab');await p.waitForTimeout(400);
  await p.fill('[data-tn="1"][data-k="fim"]','17');await p.press('[data-tn="1"][data-k="fim"]','Tab');await p.waitForTimeout(400);

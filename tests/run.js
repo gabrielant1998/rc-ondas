@@ -209,6 +209,13 @@ await T("40 Configurações: cartões da Operação recolhem e expandem",async()
  const abriu=await p.isVisible('#lims');
  ok(cartoes===3&&recolheu&&abriu,'cartões '+cartoes+', recolheu '+recolheu+', abriu '+abriu)});
 
+await T("41 Manutenção local: apaga só o período escolhido, depois de digitar APAGAR",async()=>{const S0=base({waves:[{id:"a",wn:"1",op:"CL001",opn:"Ana Souza",gal:"Galpão 1",ty:"Vários",qty:5,st:0,ts:Date.parse("2026-11-05T12:00:00-03:00"),fin:Date.parse("2026-11-05T12:05:00-03:00"),sync:1},{id:"b",wn:"2",op:"CL001",opn:"Ana Souza",gal:"Galpão 1",ty:"Vários",qty:5,st:0,ts:Date.parse("2026-11-20T12:00:00-03:00"),fin:Date.parse("2026-11-20T12:05:00-03:00"),sync:1}]});
+ const p=await page(b,S0);p.on('dialog',d=>d.accept());await p.click('.tab[data-t="cfg"]');await p.click('[data-c="cma"]');await p.fill('#xDe','2026-11-01');await p.fill('#xAte','2026-11-10');
+ await p.click('#xCont');await p.waitForTimeout(150);const res=await p.textContent('#xRes');
+ await p.fill('#xCon','APAGAR');await p.click('#xDel');await p.waitForTimeout(300);
+ const restam=await p.evaluate(()=>S.waves.map(w=>w.id));
+ ok(res.includes('1 registro')&&restam.join()==='b','contou: '+res+' | restam: '+restam.join())});
+
 await T("34 Gestão: meta coletiva soma produção uma vez e mantém tipos",async()=>{const now=Date.now(),waves=[{id:'a',wn:'a',op:'CL001',opn:'Ana Souza',gal:'Galpão 1',ty:'Vários artigos',qty:10,st:0,ts:now,fin:now,sync:1},{id:'b',wn:'b',op:'CL002',opn:'Bruno Lima',gal:'Galpão 1',ty:'Retrabalho',qty:20,st:0,ts:now,fin:now,sync:1}];
  const p=await page(b,base({waves}));await p.evaluate(()=>{go('ind');document.querySelector('[data-gs="mc"]').click()});const txt=await p.textContent('#coBody');ok(txt.includes('30')&&txt.includes('10.000')&&txt.includes('Retrabalho'),'coletiva: '+txt);
 });

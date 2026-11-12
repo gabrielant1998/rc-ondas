@@ -271,7 +271,7 @@ a[data-pick]{display:inline-block;padding:8px 0 2px;color:var(--gx);font-weight:
 
 <!-- ======================= CONFIG ======================= -->
 <section id="cfg" class="hide">
- <div class="sub" id="csub"><button data-c="cop" class="on">Operação</button><button data-c="cus">Usuários</button><button data-c="cga">Galpões</button><button data-c="cge">Gestores</button></div>
+ <div class="sub" id="csub"><button data-c="cop" class="on">Operação</button><button data-c="cus">Usuários</button><button data-c="cga">Galpões</button><button data-c="cge">Gestores</button><button data-c="cma">Manutenção</button></div>
 
  <div id="cop" class="grid two">
   <div class="card"><h2>Limite por onda</h2><div class="f" id="lims"></div></div>
@@ -300,7 +300,15 @@ a[data-pick]{display:inline-block;padding:8px 0 2px;color:var(--gx);font-weight:
   <div class="card"><h2>Galpões</h2><div class="tw" id="gL"></div><div class="legend">A meta vale só para o dia de hoje: cada dia começa sem meta e você preenche de novo. Os dias anteriores ficam salvos. Renomear um galpão atualiza os registros já lançados.</div></div>
  </div>
 
- <div id="cge" class="grid two hide">
+ <div id="cma" class="grid two hide"><div class="card"><h2>Apagar registros do banco</h2>
+ <p class="legend">Apaga as ondas registradas no período escolhido. Só o administrador vê esta opção. Não tem volta: use "Ver quantos" antes.</p>
+ <div class="f"><label>De<input type="date" id="xDe"></label><label>Até<input type="date" id="xAte"></label>
+ <label>Galpão<select id="xGal"></select></label></div>
+ <div class="ctl2"><button class="btn alt" id="xCont">Ver quantos</button></div>
+ <div id="xRes" class="legend" aria-live="polite"></div>
+ <div class="f"><label>Digite APAGAR para liberar o botão<input id="xCon" autocomplete="off"></label></div>
+ <button class="btn d" id="xDel" disabled>Apagar registros</button></div></div>
+<div id="cge" class="grid two hide">
   <div class="card"><h2>Novo gestor</h2><div class="f">
    <label>Nome<input id="mN" placeholder="Nome do gestor" autocomplete="off"></label>
    <label>Usuário de login<input id="mU" placeholder="gabriel" autocomplete="off"></label>
@@ -815,7 +823,28 @@ function cfgGes(){
  $("#mL").innerHTML=S.ges.length?`<table><tr><th>Gestor</th><th>Login</th><th>Permissões</th><th></th></tr>`+S.ges.map((m,i)=>
   `<tr><td>${esc(m.n)}<br><small style="color:var(--mut)">${esc(m.g||"sem galpão")}</small>${m.adm?' <span class="tag">admin</span>':""}</td><td>${esc(m.u)}${ON?"":m.p?' <span class="tag">senha</span>':' <span class="tag t2">sem senha</span>'}</td><td style="font-size:12px">${[m.pC&&"config",m.pI&&"individual",m.pR&&"registros"].filter(Boolean).join(", ")||"—"}</td><td><button class="btn d sm" data-mdel="${i}">Excluir</button></td></tr>`).join("")+"</table>"
   :'<div class="empty">Nenhum gestor cadastrado. Configurações e Individual estão abertos.</div>'}
-function cfgRender(){cfgOp();cfgUsers();cfgGals();cfgGes()}
+function cfgRender(){cfgOp();cfgUsers();cfgGals();cfgGes();cfgMan()}
+/* manutenção: só o administrador apaga registros por período; o servidor confere a permissão */
+function xMan(){const de=$("#xDe").value,ate=$("#xAte").value,gn=$("#xGal").value;
+ if(!de||!ate){toast("Informe o período (de e até)");return null}
+ if(ate<de){toast("A data final é anterior à inicial");return null}
+ return{de,ate,gn,gid:gn&&ON?GID[gn]:null}}
+function xLocal(q){const a=new Date(q.de+"T00:00:00").getTime(),b=new Date(q.ate+"T00:00:00").getTime()+864e5;return S.waves.filter(w=>w.ts>=a&&w.ts<b&&(!q.gn||w.gal===q.gn))}
+function cfgMan(){const v=$("#xGal").value;$("#xGal").innerHTML='<option value="">Todos os galpões</option>'+S.gals.map(g=>`<option value="${esc(g)}">${esc(g)}</option>`).join("");if(S.gals.includes(v))$("#xGal").value=v}
+async function xContar(){const q=xMan();if(!q)return;
+ try{let n;if(ON)n=Number(await api("/rest/v1/rpc/apagar_ondas",{method:"POST",body:{p_de:q.de,p_ate:q.ate,p_galpao:q.gid||null,p_so_contar:true}}));else n=xLocal(q).length;
+  $("#xRes").textContent=n+(n===1?" registro":" registros")+" neste período"+(q.gn?" do "+q.gn:"")+".";return n}
+ catch(e){toast(errMsg(e),6000)}}
+async function xApagar(){const q=xMan();if(!q)return;
+ if($("#xCon").value!=="APAGAR"){toast('Digite APAGAR para confirmar');return}
+ const br=d=>d.split("-").reverse().join("/");
+ if(!confirm("Apagar definitivamente os registros de "+br(q.de)+" a "+br(q.ate)+(q.gn?" do "+q.gn:" de todos os galpões")+"? Não tem volta."))return;
+ const limpa=()=>{$("#xCon").value="";$("#xDel").disabled=true;$("#xRes").textContent=""};
+ if(ON){rem(async()=>{const n=Number(await api("/rest/v1/rpc/apagar_ondas",{method:"POST",body:{p_de:q.de,p_ate:q.ate,p_galpao:q.gid||null,p_so_contar:false}}));toast(n+(n===1?" registro apagado":" registros apagados"))},null).then(limpa);return}
+ const lista=xLocal(q),ids=new Set(lista.map(w=>w.id));S.waves=S.waves.filter(w=>!ids.has(w.id));save();renderAll();cfgMan();limpa();toast(lista.length+(lista.length===1?" registro apagado":" registros apagados"))}
+$("#xCont").onclick=()=>xContar();
+$("#xDel").onclick=()=>xApagar();
+$("#xCon").oninput=()=>{$("#xDel").disabled=$("#xCon").value!=="APAGAR"};
 /* cartões da Operação podem ser recolhidos; a escolha fica guardada neste aparelho */
 (function(){
  let M={};try{M=JSON.parse(localStorage.getItem("rcondas.min")||"{}")}catch(e){}
@@ -838,7 +867,7 @@ function cfgRender(){cfgOp();cfgUsers();cfgGals();cfgGes()}
 const needAuth=k=>ON?!me:S.ges.length>0&&!(me&&(k==="cfg"?me.pC:me.pI));
 /* aba só aparece se o perfil atual pode abri-la; o que não é acessível fica oculto */
 function podeVer(t){if(t==="op"||t==="painel")return true;if(ON)return !!me&&(t==="ind"?!!me.pI:!!me.pC);if(t==="painel")return true;return !needAuth(t)}
-function updTabs(){$$(".tab[data-t]").forEach(b=>{b.style.display=podeVer(b.dataset.t)?"":"none"});if(!podeVer(view)){view="op";["painel","op","ind","cfg"].forEach(s=>$("#"+s).classList.toggle("hide",s!=="op"));$$(".tab[data-t]").forEach(b=>b.classList.toggle("on",b.dataset.t==="op"))}}
+function updTabs(){$$(".tab[data-t]").forEach(b=>{b.style.display=podeVer(b.dataset.t)?"":"none"});$$('#csub [data-c="cma"]').forEach(b=>{b.style.display=(!ON||(me&&me.adm))?"":"none"});if(!podeVer(view)){view="op";["painel","op","ind","cfg"].forEach(s=>$("#"+s).classList.toggle("hide",s!=="op"));$$(".tab[data-t]").forEach(b=>b.classList.toggle("on",b.dataset.t==="op"))}}
 function authUI(){$("#who").textContent=me?"Gestor: "+me.n:"";$("#logtx").textContent=me?"Sair":"Entrar";updTabs()}
 function go(t){
  updTabs();
@@ -883,7 +912,7 @@ addEventListener("online",()=>{flush();renderAll();if(ON)pull().then(renderAll).
 $("#theme").onclick=()=>{const r=document.documentElement,d=getComputedStyle(r).getPropertyValue("--bg").trim()==="#0e1726";r.dataset.theme=d?"light":"dark"};
 $$(".tab[data-t]").forEach(b=>b.onclick=()=>go(b.dataset.t));
 $("#sub").onclick=e=>{const s=e.target.dataset.s;if(!s)return;$$("#sub button").forEach(b=>b.classList.toggle("on",b===e.target));["reg","ctl","ace"].forEach(x=>$("#"+x).classList.toggle("hide",x!==s));tick()};
-$("#csub").onclick=e=>{const c=e.target.dataset.c;if(!c)return;csub=c;$$("#csub button").forEach(b=>b.classList.toggle("on",b===e.target));["cop","cus","cga","cge"].forEach(x=>$("#"+x).classList.toggle("hide",x!==c));if(c==="cge"&&ON&&me&&me.adm)pull().then(()=>cfgGes()).catch(()=>{})};
+$("#csub").onclick=e=>{const c=e.target.dataset.c;if(!c)return;csub=c;$$("#csub button").forEach(b=>b.classList.toggle("on",b===e.target));["cop","cus","cga","cge","cma"].forEach(x=>$("#"+x).classList.toggle("hide",x!==c));if(c==="cge"&&ON&&me&&me.adm)pull().then(()=>cfgGes()).catch(()=>{});if(c==="cma")cfgMan()};
 $("#iOp").onchange=()=>{mgShown=100;individual()};$("#iPer").onchange=()=>{mgShown=100;individual();coletiva();loadManagement()};
 $("#iBody").addEventListener("click",e=>{if(e.target.id==="mgMore"){mgShown+=100;individual()}});
 $("#gsub").onclick=e=>{const x=e.target.dataset.gs;if(!x)return;gsub=x;$$("#gsub button").forEach(b=>b.classList.toggle("on",b===e.target));$("#iBody").classList.toggle("hide",x!=="mi");$("#coBody").classList.toggle("hide",x!=="mc");$("#iOp").classList.toggle("hide",x!=="mi");if(x==="mc")coletiva();else individual()};
