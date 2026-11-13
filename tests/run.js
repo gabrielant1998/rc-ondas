@@ -627,6 +627,14 @@ await T("85 Acompanhamento: excluir onda pede confirmação; cancelar mantém, c
  const r=await p.evaluate(()=>({n:S.waves.length,ids:S.waves.map(w=>w.id),linhas:document.querySelectorAll('#aceL [data-adel]').length}));
  ok(r.n===1&&r.ids[0]==='x2'&&r.linhas===1,'confirmar não removeu: '+JSON.stringify(r))});
 
+await T("86 Lista de presença: colunas Horário justificado e Motivo do atraso aparecem; sem o gestor só vê texto",async()=>{
+ const p=await page(b,base({waves:[WV('a','1','Vários artigos',30,HR(9,30))]}));
+ await p.evaluate(()=>{go('ind');document.querySelector('[data-gs="chk"]').click()});await p.waitForTimeout(500);
+ await p.evaluate(()=>document.querySelector('#ckBody [data-ckv="sem"]').click());await p.waitForTimeout(500);
+ const h=await p.evaluate(()=>[...document.querySelectorAll('table.wkt th')].map(x=>x.textContent));
+ ok(h.includes('Motivo do atraso')&&h.includes('Horário justificado'),'cabeçalho: '+JSON.stringify(h));
+ ok(await p.evaluate(()=>document.querySelectorAll('input.atrM').length)===0,'campo editável apareceu sem servidor');});
+
 await b.close();
 const w=Math.max(...R.map(r=>r[1].length));for(const r of R)console.log((r[0]==="PASS"?"✅":"❌")+" "+r[1].padEnd(w)+"  "+r[2]);
 console.log(`\n${R.filter(r=>r[0]==="PASS").length}/${R.length} passaram`)})();

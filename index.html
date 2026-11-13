@@ -627,7 +627,7 @@ async function pull(){
   try{const hs2=await api("/rest/v1/presenca_historico?select=operador_id,tabela,campo,valor_anterior,valor_novo,email,alterado_em&order=alterado_em.desc&limit=300");hs2.forEach(x=>{(PHX[x.operador_id]=PHX[x.operador_id]||[]).push({tab:x.tabela,c:x.campo,a:x.valor_anterior,n:x.valor_novo,e:x.email,t:Date.parse(x.alterado_em)})})}catch(e){}
   try{const rs=await api("/rest/v1/presenca_registros?select=id,operador_id,tipo,data_ini,data_fim,horario_ini,horario_fim,observacao,criado_por&cancelado_em=is.null&data_fim=gte."+cd);rs.forEach(r=>{(PRS[r.operador_id]=PRS[r.operador_id]||[]).push({id:r.id,t:r.tipo,i:r.data_ini,f:r.data_fim,hi:r.horario_ini,hf:r.horario_fim,o:r.observacao,e:r.criado_por})})}catch(e){}
   try{const bs=await api("/rest/v1/presenca_baixas?select=id,operador_id,data,saida&data=gte."+cd);bs.forEach(b=>{PBX[b.operador_id+'|'+b.data]={id:b.id,saida:Date.parse(b.saida)}})}catch(e){}
-  try{const at=await api("/rest/v1/presenca_atrasos?select=id,operador_id,data,observacao,criado_por&data=gte."+cd);at.forEach(a=>{ATR[a.operador_id+'|'+a.data]={id:a.id,obs:a.observacao,e:a.criado_por}})}catch(e){}}
+  try{const at=await api("/rest/v1/presenca_atrasos?select=id,operador_id,data,observacao,horario_justificado,criado_por&data=gte."+cd);at.forEach(a=>{ATR[a.operador_id+'|'+a.data]={id:a.id,obs:a.observacao,hj:a.horario_justificado,e:a.criado_por}})}catch(e){}}
  const mine=S.waves.filter(w=>!w.srv);
  if(me){const de=new Date(Date.now()-35*864e5).toISOString(),srv=[];
   for(let off=0;;off+=1000){const p=await api("/rest/v1/ondas?select=id,wn,operador_id,galpao_id,tipo,quantidade,status,registrada_em,concluida_em,encerrada_auto,procura_sku,procura_local,procura_nome,procura_em,procura_hist,tempo_zerado"+PIC+"&registrada_em=gte."+encodeURIComponent(de)+"&order=registrada_em.asc&limit=1000&offset="+off);
@@ -1031,6 +1031,7 @@ function mgData(){
 }
 function mgEligible(o,d){return(!o.criado||dk(o.criado)<=d)&&(!o.excluido||dk(o.excluido)>=d)}
 const PRES_LAB={falta:'Falta injustificada',atestado:'Atestado',folga:'Folga',declaracao:'Declaração',presente:'Presente'};
+const hOpts=(a,b,sel)=>{let o='';for(let i=a;i<=b;i++)o+=`<option value="${i}"${i===sel?' selected':''}>${String(i).padStart(2,'0')}h</option>`;return o};
 const presHm=ts=>new Date(ts).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
 const presData=s=>{const[y,m,d]=String(s).split('-');return d+'/'+m+'/'+y};
 /* registro de presença que vale no dia (se houver mais de um, o de maior prioridade) */
@@ -1109,6 +1110,28 @@ async function presSalvar(){
  if(ok)await loadManagement();
 }
 /* observação do gestor sobre o alerta de atraso do dia; o primeiro bipe não é alterado */
+/* Lista de presença (dia): turno, horário justificado e motivo do atraso, salvos ao sair do campo */
+async function atrSalvar(opId,day,campos,msg){const at=ATR[opId+"|"+day];if(!at&&!Object.values(campos).some(v=>v))return;
+ const ok=at?await rem(()=>mut("/rest/v1/presenca_atrasos?id=eq."+at.id,"PATCH",campos),msg)
+            :await rem(()=>mut("/rest/v1/presenca_atrasos","POST",{operador_id:opId,data:day,...campos}),msg);
+ if(ok)await loadManagement()}
+document.addEventListener("change",async e=>{const t=e.target;if(!t.classList)return;
+ if(t.classList.contains("turnoI")||t.classList.contains("turnoF")){
+  if(!ON||!me||!me.pC){toast("Sem permissão para alterar o turno.");return}
+  const o=(INDX&&INDX.ops||[]).find(x=>x.id===t.dataset.ao);if(!o)return;
+  const ini=+(t.classList.contains("turnoI")?t.value:o.ini),fim=+(t.classList.contains("turnoF")?t.value:o.fim);
+  if(!(ini>=0&&ini<=23&&fim>=1&&fim<=24)){toast("Horário inválido.");return}
+  if(ini===o.ini&&fim===o.fim)return;
+  const ok=await rem(()=>mut("/rest/v1/operadores?id=eq."+o.id,"PATCH",{inicio:ini,fim}),"Turno de "+o.n+" atualizado");
+  if(ok)await loadManagement();return}
+ if(t.classList.contains("hjT")){
+  if(!ON||!me||!me.pR){toast("Sem permissão para registrar o horário.");return}
+  const day=t.dataset.ad,v=t.value;
+  if(!v){await atrSalvar(t.dataset.ao,day,{horario_justificado:null},"Horário justificado removido");return}
+  await atrSalvar(t.dataset.ao,day,{horario_justificado:new Date(day+"T"+v+":00").toISOString()},"Horário justificado salvo");return}
+ if(t.classList.contains("atrM")){
+  if(!ON||!me||!me.pR){toast("Sem permissão para registrar o motivo.");return}
+  await atrSalvar(t.dataset.ao,t.dataset.ad,{observacao:t.value.trim()||null},"Motivo do atraso salvo")}});
 async function presAtrSalvar(){
  const o=presOp();
  if(!o||!o.id||!ON||!me||!me.pR){toast("Sem permissão para registrar observação.");return}
@@ -1151,7 +1174,7 @@ const addDias=(s,n)=>{const d=new Date(s+'T12:00:00');d.setDate(d.getDate()+n);r
 const mondayOf=s=>addDias(s,-((new Date(s+'T12:00:00').getDay()+6)%7));
 function wkRotulo(st){if(st.startsWith('Saiu'))return 'Saiu';const base=st.split(' · ')[0];return WKA[base]||base}
 /* minutos entre o início do turno do dia e o primeiro bipe (0 se não houve atraso) */
-function atrasoDia(o,d,L){if(!L.length)return 0;const ts=Math.min(...L.map(w=>w.ts)),t=turnoOf(o,d),ini=new Date(d+'T00:00:00');ini.setHours(t.ini,0,0,0);return Math.max(0,Math.round((ts-ini.getTime())/6e4))}
+function atrasoDia(o,d,L){if(!L.length)return 0;const at=o&&o.id?ATR[o.id+'|'+d]:null,ts=at&&at.hj?Date.parse(at.hj):Math.min(...L.map(w=>w.ts)),t=turnoOf(o,d),ini=new Date(d+'T00:00:00');ini.setHours(t.ini,0,0,0);return Math.max(0,Math.round((ts-ini.getTime())/6e4))}
 /* semana: o período de 7 dias termina no domingo, então a visão usa o mesmo carregamento da aba Individual */
 function semanaSet(mon){WKW=mon;MGOV={end:addDias(mon,6),n:7}}
 function wkTabela(data,ops){
@@ -1206,7 +1229,7 @@ function semanalPag(box){
  const cards=`<div class="ckcards">${card(T.pres,'Presenças')}${card(T.f,'Faltas')}${card(T.a,'Atestados')}${card(T.dc,'Declarações')}${card(T.fo,'Folgas')}${card(T.at,'Atrasos')}${card(T.p,'Pendentes')}</div>`;
  let tabela;
  if(per===7)tabela=wkTabela(data,ops);
- else if(per===1){const d=days[0];tabela=ops.length?`<table class="wkt"><tr><th>Pessoa</th><th>Situação</th><th>Turno</th><th>Primeiro bipe</th><th>Atraso</th></tr>${ops.map(o=>{const L=data.byOpDay.get(d+'|'+o.m)||[],stt=mgStatus(o,d,L,data),r=wkRotulo(stt),m=atrasoDia(o,d,L),tn=turnoOf(o,d);return `<tr><td><b>${esc(o.n)}</b><br><small>${esc(o.m.split('~')[0])}</small></td><td><button class="wkc" type="button" data-s="${esc(r)}" data-m="${esc(o.m)}" data-d="${d}">${esc(r)}</button></td><td>${tn.ini}h às ${tn.fim}h</td><td>${L.length?presHm(Math.min(...L.map(w=>w.ts))):'—'}</td><td>${m>0?hh(m*6e4):'—'}</td></tr>`}).join('')}</table>`:'<div class="empty">Nenhuma pessoa para os filtros selecionados.</div>'}
+ else if(per===1){const d=days[0];tabela=ops.length?`<table class="wkt"><tr><th>Pessoa</th><th>Situação</th><th>Turno</th><th>Primeiro bipe</th><th>Atraso</th><th>Horário justificado</th><th>Motivo do atraso</th></tr>${ops.map(o=>{const L=data.byOpDay.get(d+'|'+o.m)||[],stt=mgStatus(o,d,L,data),r=wkRotulo(stt),m=atrasoDia(o,d,L),tn=turnoOf(o,d),at=o.id?ATR[o.id+'|'+d]:null,obs=at&&at.obs||'',podeM=ON&&me&&me.pR;return `<tr><td><b>${esc(o.n)}</b><br><small>${esc(o.m.split('~')[0])}</small></td><td><button class="wkc" type="button" data-s="${esc(r)}" data-m="${esc(o.m)}" data-d="${d}">${esc(r)}</button></td><td>${o.id&&ON&&me&&me.pC?`<span class="tnE"><select class="turnoI" data-ao="${esc(o.id)}" aria-label="Início do turno de ${esc(o.n)}">${hOpts(0,23,tn.ini)}</select> às <select class="turnoF" data-ao="${esc(o.id)}" aria-label="Fim do turno de ${esc(o.n)}">${hOpts(1,24,tn.fim)}</select></span>`:`${tn.ini}h às ${tn.fim}h`}</td><td>${L.length?presHm(Math.min(...L.map(w=>w.ts))):'—'}</td><td>${m>0?hh(m*6e4):'—'}</td><td>${m>0&&podeM&&o.id?`<input type="time" class="hjT" data-ao="${esc(o.id)}" data-ad="${d}" value="${at&&at.hj?presHm(Date.parse(at.hj)):''}" aria-label="Horário justificado de ${esc(o.n)}">`:(at&&at.hj?presHm(Date.parse(at.hj)):'—')}</td><td>${m>0&&podeM&&o.id?`<input type="text" class="atrM" data-ao="${esc(o.id)}" data-ad="${d}" data-an="${esc(o.n)}" value="${esc(obs)}" maxlength="500" placeholder="Ex.: aguardando onda" aria-label="Motivo do atraso de ${esc(o.n)}" style="min-width:200px">`:(obs?esc(obs):'—')}</td></tr>`}).join('')}</table>`:'<div class="empty">Nenhuma pessoa para os filtros selecionados.</div>'}
  else tabela=ops.length?`<table class="wkt"><tr><th>Pessoa</th><th>Presenças</th><th>Faltas</th><th>Atestados</th><th>Declarações</th><th>Folgas</th><th>Atrasos</th><th>Pendentes</th></tr>${st.rows.map(r=>`<tr><td><b>${esc(r.o.n)}</b><br><small>${esc(r.o.m.split('~')[0])}</small></td><td>${r.c.pres}</td><td><b>${r.c.f}</b></td><td>${r.c.a}</td><td>${r.c.dc}</td><td>${r.c.fo}</td><td>${r.c.at}</td><td>${r.c.p}</td></tr>`).join('')}</table>`:'<div class="empty">Nenhuma pessoa para os filtros selecionados.</div>';
  box.innerHTML=ckAbas()+`<div class="card">${nav}${cards}<div class="tw">${tabela}</div><div class="legend">${per===7||per===1?'Toque na situação para abrir a pessoa naquele dia. ':''}Os números contam pessoa por dia no período.</div></div>`;ckFade(box);
 }
