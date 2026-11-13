@@ -326,7 +326,7 @@ await T("75 Meta batida: placar dourado e a festa abre sozinha uma vez; botão r
  await p.waitForTimeout(2500);ok(await p.isVisible('#mb'),'festa sumiu cedo');
  const fr=p.frames().find(f=>f!==p.mainFrame());ok(fr,'sem o quadro da animação');
  const d=await fr.evaluate(()=>({D:window.__FD,t:document.querySelector('.tit').textContent,pod:document.querySelectorAll('.pp').length,dur:window.__DUR}));
- ok(d.t==='Meta batida'&&d.D.tot===97&&d.D.meta===50&&d.D.top[0].n==='Ana Souza'&&d.D.top[1].n==='Bruno Lima'&&d.D.hora&&d.D.est.length>=4&&d.D.est[d.D.est.length-1].r==='Time em campo'&&d.dur===28,'dados: '+JSON.stringify(d));
+ ok(d.t==='Meta batida'&&d.D.tot===97&&d.D.meta===50&&d.D.top[0].n==='Ana Souza'&&d.D.top[1].n==='Bruno Lima'&&d.D.hora&&d.D.est.length>=4&&d.D.est[d.D.est.length-1].r==='Time em campo'&&d.dur===18+2*d.D.est.length,'dados: '+JSON.stringify(d));
  await fr.evaluate(()=>window.__render(12));await p.waitForTimeout(100);await p.screenshot({path:'/tmp/claude-0/-home-claude/1b46621a-564c-549a-8cc9-448283bd574c/scratchpad/festa.png'});
  await p.click('#mb .x');await p.waitForTimeout(800);ok(!(await p.$('#mb')),'X não fecha');
  await p.evaluate(()=>go('painel'));await p.click('.mbBadge');await p.waitForTimeout(500);ok(await p.isVisible('#mb'),'botão não abre');
@@ -586,7 +586,7 @@ await T("82 Meta mínima: abaixo dela não há festa nem botão; na aba Metas el
  await p.evaluate(()=>go('cfg'));await p.click('[data-c="cme"]');ok(await p.inputValue('#fmin')==='200','mínimo não aparece na aba Metas');
  await p.fill('#fmin','60');await p.press('#fmin','Tab');await p.waitForTimeout(200);
  ok(await p.evaluate(()=>S.cfg.metaMin)===60,'mínimo não salvo');ok((await p.textContent('#fLeg')).includes('60'),'legenda');
- await p.click('#fTeste');await p.waitForTimeout(600);ok(await p.isVisible('#mb'),'festa de teste não abriu');await p.keyboard.press('Escape');await p.waitForTimeout(800);
+ await p.click('#fTeste');await p.waitForTimeout(600);ok(await p.isVisible('#mb'),'festa de teste não abriu');{const f=p.frames().find(x=>x!==p.mainFrame()),q=await f.evaluate(()=>{cancelAnimationFrame(raf);const o=[];for(const k of [11,13,15,17,19]){window.__render(k);o.push(+getComputedStyle(document.querySelector('.est')).opacity>.9?document.querySelector('.er').textContent:'')}window.__render(window.__DUR);o.push(document.querySelectorAll('.pp').length+'|'+getComputedStyle(document.querySelector('.pp.um')).opacity);return o});ok(q.slice(0,5).every(Boolean)&&new Set(q.slice(0,5)).size===5&&q[5]==='3|1','roteiro com buraco: '+JSON.stringify(q))}await p.keyboard.press('Escape');await p.waitForTimeout(800);
  await p.evaluate(()=>go('painel'));await p.waitForTimeout(1400);ok(await p.$('#mb'),'festa não abriu com 85 >= mínimo 60')});
 
 await T("83 Painel mostra gráfico bipado x concluído; Acompanhamento pagina de 50 em 50",async()=>{
@@ -611,7 +611,7 @@ await T("84 Com 'reduzir movimento' ligado: o botão sempre toca a animação; a
  const p=await page(b,base({waves:W}),{festa:true});await p.emulateMedia({reducedMotion:'reduce'});
  await p.evaluate(()=>{MT()['Galpão 1']=50;S.cfg.metaMin=0;save();go('painel');renderAll()});await p.waitForTimeout(1500);
  let fr=p.frames().find(f=>f!==p.mainFrame());ok(fr,'não abriu sozinha');
- const a1=await fr.evaluate(()=>({t:agora,ui:!document.querySelector('#ui').classList.contains('off'),b:document.querySelector('#go').textContent}));ok(a1.ui&&a1.b==='Ver a animação'&&a1.t>=27,'quadro final: '+JSON.stringify(a1));
+ const a1=await fr.evaluate(()=>({t:agora,ui:!document.querySelector('#ui').classList.contains('off'),b:document.querySelector('#go').textContent}));ok(a1.ui&&a1.b==='Ver a animação'&&a1.t>=20,'quadro final: '+JSON.stringify(a1));
  await fr.click('#go');await p.waitForTimeout(1500);const a2=await fr.evaluate(()=>agora);ok(a2>0.5&&a2<10,'não tocou: '+a2);
  await p.keyboard.press('Escape');await p.waitForTimeout(800);
  await p.click('.mbBadge');await p.waitForTimeout(1500);fr=p.frames().find(f=>f!==p.mainFrame());const a3=await fr.evaluate(()=>({t:agora,ui:document.querySelector('#ui').classList.contains('off')}));ok(a3.ui&&a3.t>0.5&&a3.t<10,'botão não tocou: '+JSON.stringify(a3))});
