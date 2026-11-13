@@ -498,23 +498,34 @@ await T("67 Retrabalho pede SKU, aceita várias linhas e não entra na contagem 
 await T("68 Maiores/Pesados aceita várias ondas de uma vez",async()=>{
  const p=await page(b,base());await openReg(p,"CL001","Maiores/Pesados");await typeRows(p,[[8001,3],[8002,4]]);await p.click('#save');await p.waitForTimeout(200);
  const w=await p.evaluate(()=>S.waves.map(x=>x.wn+':'+x.qty).join());ok(w.includes('8001:3')&&w.includes('8002:4'),'registros: '+w)});
-await T("77 Lista de presença: todos os nomes numa lista, opções por pessoa, a semana embaixo e toque no dia abre a pessoa",async()=>{
+await T("77 Lista de presença: três atalhos (Check-in, Semanal, Conferidos), cada um com a sua tela",async()=>{
  const p=await page(b,base());
  await p.evaluate(()=>{go('ind');document.querySelector('#gsub [data-gs="chk"]').click()});
  await p.waitForTimeout(400);
- const r=await p.evaluate(()=>({txt:$('#ckBody').textContent.replace(/\s+/g,' '),btn:[...document.querySelectorAll('#ckBody [data-ck]')].map(b=>b.dataset.ck),vis:$('#ckBody').offsetParent!==null,sem:document.querySelectorAll('#ckBody .wkc').length}));
- ok(r.vis&&/A conferir \(\d+\)/.test(r.txt)&&r.txt.includes('Conferidos'),'cabeçalhos: '+r.txt.slice(0,200));
- ok(['presente','falta','declaracao','atestado','folga'].every(k=>r.btn.includes(k)),'opções: '+r.btn.join());
- ok(r.sem>0&&r.sem%7===0,'tabela da semana: '+r.sem);
+ const v=()=>p.evaluate(()=>({txt:$('#ckBody').textContent.replace(/\s+/g,' '),btn:[...document.querySelectorAll('#ckBody [data-ck]')].map(b=>b.dataset.ck),abas:[...document.querySelectorAll('#ckBody [data-ckv]')].map(b=>b.dataset.ckv),sem:document.querySelectorAll('#ckBody .wkc').length,cards:document.querySelectorAll('#ckBody .ckcard').length,conf:!!document.querySelector('#ckBody [data-ckun]')}));
+ let r=await v();
+ ok(r.abas.join()==='chk,sem,conf','três atalhos: '+r.abas.join());
+ ok(/A conferir \(\d+\)/.test(r.txt)&&['presente','falta','declaracao','atestado','folga'].every(k=>r.btn.includes(k)),'Check-in: '+r.btn.join());
+ ok(r.sem===0&&!/Conferidos \(\d+\)<\/h2>/.test(r.txt),'Check-in não mostra a tabela da semana');
+ await p.evaluate(()=>document.querySelector('#ckBody [data-ckv="sem"]').click());await p.waitForTimeout(500);
+ r=await v();
+ ok(r.sem>0&&r.sem%7===0&&r.cards===7&&r.btn.length===0,'Semanal: tabela e cartões: '+r.sem+' / '+r.cards);
+ await p.evaluate(()=>document.querySelector('#ckBody [data-sper="30"]').click());await p.waitForTimeout(500);
+ r=await v();
+ ok(r.cards===7&&r.sem===0&&r.txt.includes('Presenças'),'Mensal: resumo por pessoa e cartões');
+ await p.evaluate(()=>document.querySelector('#ckBody [data-sper="90"]').click());await p.waitForTimeout(500);
+ const n90=await p.evaluate(()=>{const d=$('#ckBody b:last-of-type');return $('#iPer').value});
+ ok(n90==='90','Trimestral usa 90 dias: '+n90);
+ await p.evaluate(()=>document.querySelector('#ckBody [data-sper="7"]').click());await p.waitForTimeout(500);
  ok(!(await p.evaluate(()=>!!document.querySelector('#gsub [data-gs="sem"]'))),'sem aba Semana');
- const at=await p.evaluate(()=>{document.querySelector('#ckBody [data-ckgo="ckSecS"]').click();return[...document.querySelectorAll('#ckBody [data-ckgo]')].map(x=>x.dataset.ckgo)});
- ok(at.join()==='ckSecC,ckSecS','dois atalhos: '+at.join());
- await p.waitForTimeout(800);
- ok(await p.evaluate(()=>document.getElementById('ckSecS').getBoundingClientRect().top<innerHeight),'atalho leva até a semana');
  await p.evaluate(()=>document.querySelector('#ckBody .wkc[data-m="CL002"][data-d]').click());
  await p.waitForTimeout(400);
  const q=await p.evaluate(()=>({op:$('#iOp').value,per:$('#iPer').value}));
- ok(q.op==='CL002'&&q.per==='1',JSON.stringify(q))});
+ ok(q.op==='CL002'&&q.per==='1',JSON.stringify(q));
+ await p.evaluate(()=>{document.querySelector('#gsub [data-gs="chk"]').click()});await p.waitForTimeout(500);
+ await p.evaluate(()=>document.querySelector('#ckBody [data-ckv="conf"]').click());await p.waitForTimeout(400);
+ r=await v();
+ ok(/Conferidos \(\d+\)/.test(r.txt)&&r.btn.length===0,'Conferidos: '+r.txt.slice(0,120))});
 
 await T("78 Lista de presença: quem bipa uma onda vira presente sozinho e sai da lista",async()=>{
  const t0=new Date();t0.setHours(0,0,0,0);

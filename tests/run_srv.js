@@ -309,7 +309,9 @@ await T('S30 Lista de presença: marcar tira o nome da lista e preenche a semana
  await p.click('#ckBody [data-ck="presente"][data-m="CL002"]');await p.waitForTimeout(500);
  ok((db.presenca||[]).length===1&&db.presenca[0].tipo==='presente'&&db.presenca[0].data_ini===HJ,'não gravou presente: '+JSON.stringify(db.presenca));
  x=(await p.textContent('#ckBody')).replace(/\s+/g,' ');ok(x.includes('A conferir (0)')&&x.includes('Conferidos (1)')&&x.includes('Todos conferidos'),'nome não saiu da lista: '+x.slice(0,240));
+ await p.click('#ckBody [data-ckv="sem"]');await p.waitForTimeout(700);
  ok(await p.$eval('#ckBody .wkc[data-m="CL002"][data-d="'+HJ+'"]',e=>e.textContent.includes('Presente')),'semana não mostra Presente');
+ await p.click('#ckBody [data-ckv="chk"]');await p.waitForTimeout(700);
  await p.click('#ckBody [data-ckun]');await p.waitForTimeout(500);
  ok(db.presenca[0].cancelado_em,'não cancelou');x=(await p.textContent('#ckBody')).replace(/\s+/g,' ');ok(x.includes('A conferir (1)'),'nome não voltou: '+x.slice(0,160));
  await p.fill('#ckBody .ckd[data-m="CL002"]','3');await p.click('#ckBody [data-ck="atestado"][data-m="CL002"]');await p.waitForTimeout(500);
