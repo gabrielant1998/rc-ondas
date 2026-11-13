@@ -8,7 +8,7 @@ const ctx={console,Date,Map,Set,Number,Math,GAP:()=>30,ON:false,me:null,OPSALL:{
  dk:t=>{const d=new Date(t);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')},
  turnoOf:o=>ctx.S.cfg.turnos[o.t===2?2:1]};
 vm.createContext(ctx);vm.runInContext(source,ctx);
-vm.runInContext("let TH={},PRS={},PBX={};",ctx);
+vm.runInContext("let TH={},PRS={},PBX={},view=\"ind\",gsub=\"mi\";",ctx);
 const yesterday=new Date();yesterday.setDate(yesterday.getDate()-1);yesterday.setHours(0,0,0,0);const day=ctx.dk(yesterday);ctx.fields['#day'].value=day;
 const ana={m:'CL001',n:'Ana',t:1,g:'A'},bruno={m:'CL002',n:'Bruno',t:1,g:'A'},carla={m:'CL003',n:'Carla',t:2,g:'A'};
 ctx.S.ops=[ana,bruno,carla];ctx.S.metas={A:1200};ctx.MT=()=>ctx.S.metas;

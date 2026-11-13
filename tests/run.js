@@ -503,6 +503,7 @@ await T("77 Lista de presença: três atalhos (Check-in, Semanal, Conferidos), c
  await p.evaluate(()=>{go('ind');document.querySelector('#gsub [data-gs="chk"]').click()});
  await p.waitForTimeout(400);
  const v=()=>p.evaluate(()=>({txt:$('#ckBody').textContent.replace(/\s+/g,' '),btn:[...document.querySelectorAll('#ckBody [data-ck]')].map(b=>b.dataset.ck),abas:[...document.querySelectorAll('#ckBody [data-ckv]')].map(b=>b.dataset.ckv),sem:document.querySelectorAll('#ckBody .wkc').length,cards:document.querySelectorAll('#ckBody .ckcard').length,conf:!!document.querySelector('#ckBody [data-ckun]')}));
+ const dia0=await p.evaluate(()=>$('#day').value);
  let r=await v();
  ok(r.abas.join()==='chk,sem,conf','três atalhos: '+r.abas.join());
  ok(/A conferir \(\d+\)/.test(r.txt)&&['presente','falta','declaracao','atestado','folga'].every(k=>r.btn.includes(k)),'Check-in: '+r.btn.join());
@@ -514,9 +515,10 @@ await T("77 Lista de presença: três atalhos (Check-in, Semanal, Conferidos), c
  r=await v();
  ok(r.cards===7&&r.sem===0&&r.txt.includes('Presenças'),'Mensal: resumo por pessoa e cartões');
  await p.evaluate(()=>document.querySelector('#ckBody [data-sper="90"]').click());await p.waitForTimeout(500);
- const n90=await p.evaluate(()=>{const d=$('#ckBody b:last-of-type');return $('#iPer').value});
- ok(n90==='90','Trimestral usa 90 dias: '+n90);
+ const n90=await p.evaluate(()=>({n:mgDates().length,dia:$('#day').value}));
+ ok(n90.n===90&&n90.dia===dia0,'Trimestral usa 90 dias sem mudar a data do topo: '+JSON.stringify(n90));
  await p.evaluate(()=>document.querySelector('#ckBody [data-sper="7"]').click());await p.waitForTimeout(500);
+ ok(await p.evaluate(()=>$('#day').value)===dia0,'a data do topo não muda ao navegar na Lista de presença');
  ok(!(await p.evaluate(()=>!!document.querySelector('#gsub [data-gs="sem"]'))),'sem aba Semana');
  await p.evaluate(()=>document.querySelector('#ckBody .wkc[data-m="CL002"][data-d]').click());
  await p.waitForTimeout(400);
