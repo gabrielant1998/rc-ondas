@@ -429,7 +429,7 @@ a[data-pick]{display:inline-block;padding:8px 0 2px;color:var(--gx);font-weight:
 <section id="his" class="hide">
  <div class="sub" id="hsub"><button data-hs="evo" class="on">Evolução e previsão</button><button data-hs="tipo">Tipos de onda</button><button data-hs="pro">Procurando</button><button data-hs="pes">Pessoas e ondas</button></div>
  <div class="ctl" style="margin-bottom:12px"><select id="hVis" aria-label="Visão"><option value="dia">Por dia</option><option value="hora">Por hora</option><option value="mes">Por mês</option></select><select id="hPer" aria-label="Período"></select><select id="hMet" aria-label="Métrica"><option value="u">Unidades</option><option value="o">Ondas</option><option value="t">Tempo médio ponderado por conjunto</option></select><select id="hGal" aria-label="Galpão"></select><select id="hOp" aria-label="Operador"><option value="">Todos os operadores</option></select></div>
- <div id="hStatus" class="legend hide" role="status"></div><div id="hBody"></div>
+ <div id="hStatus" class="legend hide" role="status"></div><div id="hBody"></div><div id="hTurno"></div>
 </section>
 
 <!-- ======================= CONFIG ======================= -->
@@ -1062,21 +1062,21 @@ function mgDia(o,data){
  return{t,p:{ts,diff:Math.round((ts-ini.getTime())/6e4)}};
 }
 function mgTurnoCard(o,data){
- const T=turnoOf(o,data.days[data.days.length-1]),can=!!(ON&&me&&me.pC&&o.id);
+ const T=turnoOf(o,data.days[data.days.length-1]),can=!!(ON&&me&&(me.pC||me.pI)&&o.id);
  const opts=(a,b,sel)=>{let s='';for(let i=a;i<=b;i++)s+=`<option value="${i}"${i===sel?' selected':''}>${String(i).padStart(2,'0')}h</option>`;return s};
  const hist=(TH[o.id]||[]).slice().reverse().slice(0,5).map(h=>`${new Date(h.t).toLocaleString('pt-BR')} · ${h.c==='inicio'?'Início':'Término'} de ${h.a==null?'—':h.a+'h'} para ${h.n}h · ${esc(h.e||'')}`).join('<br>');
  return`<div class="card" style="margin-top:14px"><h2>Turno de ${esc(o.n)}</h2>
  <div class="ctl"><label>Início <select id="mgIni" aria-label="Início do turno">${opts(0,23,T.ini)}</select></label><label>Término <select id="mgFim" aria-label="Término do turno">${opts(1,24,T.fim)}</select></label><button class="btn" id="mgTurnoSave" type="button"${can?'':' disabled'}>Salvar turno</button></div>
- <div class="legend">Vale a partir de agora. Dias anteriores mantêm o horário que valia naquele dia. Alterar o início não muda o término.${can?'':' Só gestores com permissão de configuração podem alterar.'}</div>
+ <div class="legend">Vale para todos os dias, inclusive os anteriores: horas extras e atrasos são recalculados com este horário. Alterar o início não muda o término.${can?'':' Só gestores com permissão de gestão individual ou de configuração podem alterar.'}</div>
  ${hist?`<div class="legend" style="margin-top:8px"><b>Últimas alterações</b><br>${hist}</div>`:'<div class="legend" style="margin-top:8px">Sem alterações de turno registradas.</div>'}</div>`;
 }
 async function mgSalvarTurno(){
  const o=(INDX&&INDX.ops||[]).find(x=>x.m===$("#iOp").value);
- if(!o||!o.id||!ON||!me||!me.pC){toast("Sem permissão para alterar o turno.");return}
+ if(!o||!o.id||!ON||!me||!(me.pC||me.pI)){toast("Sem permissão para alterar o turno.");return}
  const ini=+$("#mgIni").value,fim=+$("#mgFim").value;
  if(!(ini>=0&&ini<=23&&fim>=1&&fim<=24)){toast("Horário inválido.");return}
  if(ini===o.ini&&fim===o.fim){toast("O turno já está com esse horário.");return}
- const ok=await rem(()=>mut("/rest/v1/operadores?id=eq."+o.id,"PATCH",{inicio:ini,fim}),"Turno de "+o.n+" atualizado");
+ const ok=await rem(()=>api("/rest/v1/rpc/alterar_turno",{method:"POST",body:{p_operador:o.id,p_inicio:ini,p_fim:fim}}),"Turno de "+o.n+" atualizado");
  if(ok)await loadManagement();
 }
 /* presença do dia selecionado: situação, registros lançados e baixa */
@@ -1205,7 +1205,7 @@ function semanalPag(box){
  const cards=`<div class="ckcards">${card(T.pres,'Presenças')}${card(T.f,'Faltas')}${card(T.a,'Atestados')}${card(T.dc,'Declarações')}${card(T.fo,'Folgas')}${card(T.at,'Atrasos')}${card(T.p,'Pendentes')}</div>`;
  let tabela;
  if(per===7)tabela=wkTabela(data,ops);
- else if(per===1){const d=days[0];tabela=ops.length?`<table class="wkt"><tr><th>Pessoa</th><th>Situação</th><th>Turno</th><th>Primeiro bipe</th><th>Atraso</th><th>Horário justificado</th><th>Motivo do atraso</th></tr>${ops.map(o=>{const L=data.byOpDay.get(d+'|'+o.m)||[],stt=mgStatus(o,d,L,data),r=wkRotulo(stt),m=atrasoDia(o,d,L),tn=turnoOf(o,d),at=o.id?ATR[o.id+'|'+d]:null,obs=at&&at.obs||'',podeM=ON&&me&&me.pR;return `<tr><td><b>${esc(o.n)}</b><br><small>${esc(o.m.split('~')[0])}</small></td><td><button class="wkc" type="button" data-s="${esc(r)}" data-m="${esc(o.m)}" data-d="${d}">${esc(r)}</button></td><td>${o.id&&ON&&me&&me.pC?`<span class="tnE"><select class="turnoI" data-ao="${esc(o.id)}" aria-label="Início do turno de ${esc(o.n)}">${hOpts(0,23,tn.ini)}</select> às <select class="turnoF" data-ao="${esc(o.id)}" aria-label="Fim do turno de ${esc(o.n)}">${hOpts(1,24,tn.fim)}</select></span>`:`${tn.ini}h às ${tn.fim}h`}</td><td>${L.length?presHm(Math.min(...L.map(w=>w.ts))):'—'}</td><td>${m>0?hh(m*6e4):'—'}</td><td>${m>0&&podeM&&o.id?`<input type="time" class="hjT" data-ao="${esc(o.id)}" data-ad="${d}" value="${at&&at.hj?presHm(Date.parse(at.hj)):''}" aria-label="Horário justificado de ${esc(o.n)}">`:(at&&at.hj?presHm(Date.parse(at.hj)):'—')}</td><td>${m>0&&podeM&&o.id?`<input type="text" class="atrM" data-ao="${esc(o.id)}" data-ad="${d}" data-an="${esc(o.n)}" value="${esc(obs)}" maxlength="500" placeholder="Ex.: aguardando onda" aria-label="Motivo do atraso de ${esc(o.n)}" style="min-width:200px">`:(obs?esc(obs):'—')}</td></tr>`}).join('')}</table>`:'<div class="empty">Nenhuma pessoa para os filtros selecionados.</div>'}
+ else if(per===1){const d=days[0];tabela=ops.length?`<table class="wkt"><tr><th>Pessoa</th><th>Situação</th><th>Turno</th><th>Primeiro bipe</th><th>Atraso</th><th>Horário justificado</th><th>Motivo do atraso</th></tr>${ops.map(o=>{const L=data.byOpDay.get(d+'|'+o.m)||[],stt=mgStatus(o,d,L,data),r=wkRotulo(stt),m=atrasoDia(o,d,L),tn=turnoOf(o,d),at=o.id?ATR[o.id+'|'+d]:null,obs=at&&at.obs||'',podeM=ON&&me&&me.pR;return `<tr><td><b>${esc(o.n)}</b><br><small>${esc(o.m.split('~')[0])}</small></td><td><button class="wkc" type="button" data-s="${esc(r)}" data-m="${esc(o.m)}" data-d="${d}">${esc(r)}</button></td><td>${o.id&&ON&&me&&(me.pC||me.pI)?`<span class="tnE"><select class="turnoI" data-ao="${esc(o.id)}" aria-label="Início do turno de ${esc(o.n)}">${hOpts(0,23,tn.ini)}</select> às <select class="turnoF" data-ao="${esc(o.id)}" aria-label="Fim do turno de ${esc(o.n)}">${hOpts(1,24,tn.fim)}</select></span>`:`${tn.ini}h às ${tn.fim}h`}</td><td>${L.length?presHm(Math.min(...L.map(w=>w.ts))):'—'}</td><td>${m>0?hh(m*6e4):'—'}</td><td>${m>0&&podeM&&o.id?`<input type="time" class="hjT" data-ao="${esc(o.id)}" data-ad="${d}" value="${at&&at.hj?presHm(Date.parse(at.hj)):''}" aria-label="Horário justificado de ${esc(o.n)}">`:(at&&at.hj?presHm(Date.parse(at.hj)):'—')}</td><td>${m>0&&podeM&&o.id?`<input type="text" class="atrM" data-ao="${esc(o.id)}" data-ad="${d}" data-an="${esc(o.n)}" value="${esc(obs)}" maxlength="500" placeholder="Ex.: aguardando onda" aria-label="Motivo do atraso de ${esc(o.n)}" style="min-width:200px">`:(obs?esc(obs):'—')}</td></tr>`}).join('')}</table>`:'<div class="empty">Nenhuma pessoa para os filtros selecionados.</div>'}
  else tabela=ops.length?`<table class="wkt"><tr><th>Pessoa</th><th>Presenças</th><th>Faltas</th><th>Atestados</th><th>Declarações</th><th>Folgas</th><th>Atrasos</th><th>Pendentes</th></tr>${st.rows.map(r=>`<tr><td><b>${esc(r.o.n)}</b><br><small>${esc(r.o.m.split('~')[0])}</small></td><td>${r.c.pres}</td><td><b>${r.c.f}</b></td><td>${r.c.a}</td><td>${r.c.dc}</td><td>${r.c.fo}</td><td>${r.c.at}</td><td>${r.c.p}</td></tr>`).join('')}</table>`:'<div class="empty">Nenhuma pessoa para os filtros selecionados.</div>';
  box.innerHTML=ckAbas()+`<div class="card">${nav}${cards}<div class="tw">${tabela}</div><div class="legend">${per===7||per===1?'Toque na situação para abrir a pessoa naquele dia. ':''}Os números contam pessoa por dia no período.</div></div>`;ckFade(box);
 }
@@ -1498,7 +1498,7 @@ const dAdd=(k,n)=>{const d=new Date(k+'T12:00:00');d.setDate(d.getDate()+n);retu
 const dFmt=k=>{const d=new Date(k+'T12:00:00');return WD[d.getDay()]+' '+String(d.getDate()).padStart(2,'0')+'/'+String(d.getMonth()+1).padStart(2,'0')};
 function hisFill(){const v=$("#hVis").value,p=$("#hPer");const cur=p.value;p.innerHTML=HPER[v].map(([n,t],i)=>`<option value="${n}"${(cur?+cur===n:i===1||v==='mes'&&i===1)?' selected':''}>${t}</option>`).join('');if(!p.value)p.selectedIndex=Math.min(1,HPER[v].length-1)}
 function hisGalSel(){const g=$("#hGal"),r=restricted();g.style.display=r?"none":"";const cur=g.value;g.innerHTML='<option value="__all">Todos os galpões</option>'+S.gals.map(k=>`<option>${esc(k)}</option>`).join('');if(cur&&[...g.options].some(o=>o.value===cur))g.value=cur}
-function hisOpen(){if(!podeVer('his'))return;hisGalSel();if(!$("#hPer").options.length)hisFill();loadHis()}
+function hisOpen(){if(!podeVer('his'))return;hisGalSel();if(!$("#hPer").options.length)hisFill();loadHis();if(ON&&me&&!INDX)loadManagement({cache:true})}
 function hRange(){const v=$("#hVis").value,p=+$("#hPer").value,e=new Date();e.setHours(23,59,59,999);const s=new Date();s.setHours(0,0,0,0);
  if(v==='mes'){s.setDate(1);s.setMonth(s.getMonth()-(p-1))}else s.setDate(s.getDate()-(2*p-1));return[s,e]}
 const hRow=x=>{const o=OPSALL[x.operador_id];return{id:x.id,wn:x.wn,op:x.operador_id,opn:o?o.nome:'Operador removido',opc:o?String(o.codigo):'—',gal:GN[x.galpao_id]||'—',ty:x.tipo,qty:x.quantidade,st:x.status,ts:Date.parse(x.registrada_em),fin:x.concluida_em?Date.parse(x.concluida_em):null,srv:1,sku:x.procura_sku||'',itens:prItensSrv(x.procura_itens),marcas:prMarcasSrv(x.procura_marcas),loc:x.procura_local||'',pn:x.procura_nome||'',pt:x.procura_em?Date.parse(x.procura_em):0,hist:prHistSrv(x.procura_hist),zt:x.tempo_zerado?1:0}};
@@ -1583,8 +1583,17 @@ function hChart(items,o){o=o||{};const n=items.length,cw=($('#hBody')||{}).clien
  return s+`</svg><div class="legend"><span><i style="background:var(--t)"></i>Realizado</span>${items.some(i=>i.fc)?'<span><i style="background:var(--v);opacity:.5"></i>Previsão (faixa = quartis 25% a 75%)</span>':''}${o.cmp?`<span><i style="background:var(--a)"></i>${esc(o.cmpName)}</span>`:''}<span><i style="background:var(--g)"></i>${o.lineName==="média"?"Média":"Mediana"}</span></div>`}
 const hK=(t,v,sub)=>`<div class="kpi"><dt>${t}</dt><dd class="num">${v}</dd><dd class="sm">${sub||''}</dd></div>`;
 const hVar=(c,p,low)=>{if(!p)return'';const d=(c-p)/p*100,good=low?d<0:d>0;return`<span style="color:var(--${Math.abs(d)<1?'mut':good?'g':'r'})">${d>0?'▲':'▼'} ${Math.abs(d).toLocaleString('pt-BR',{maximumFractionDigits:1})}% vs período anterior</span>`};
+function hisTurno(){
+ const el=$("#hTurno");if(!el)return;
+ if(!ON||!me||!podeVer('his')){el.innerHTML='';return}
+ const g=restricted()?myG():$("#hGal").value,so=$("#hOp").value,byId=new Map(((INDX&&INDX.ops)||[]).map(o=>[o.id,o])),L=[];
+ Object.keys(TH).forEach(id=>{const o=byId.get(id);if(!o)return;if(g!=='__all'&&o.g!==g)return;if(so&&o.m!==so)return;TH[id].forEach(h=>L.push({o,h}))});
+ if(!L.length){el.innerHTML='';return}
+ L.sort((a,b)=>b.h.t-a.h.t);
+ el.innerHTML=`<div class="card" style="margin-top:14px"><h2>Alterações de turno · ${fmt(L.length)}</h2><div class="legend">Cada horário alterado vale para todos os dias, inclusive os anteriores. Quem alterou fica registrado.</div><div class="tw"><table><tr><th>Data e hora</th><th>Operador</th><th>Alteração</th><th>Antes</th><th>Depois</th><th>Quem alterou</th></tr>`+L.slice(0,100).map(({o,h})=>`<tr><td>${new Date(h.t).toLocaleString('pt-BR')}</td><td>${esc(o.n)}</td><td>${h.c==='inicio'?'Início':'Término'}</td><td>${h.a==null?'—':h.a+'h'}</td><td>${h.n}h</td><td>${esc(h.e||'')}</td></tr>`).join('')+`</table></div></div>`;
+}
 function hisRender(){
- const el=$("#hBody"),st=$("#hStatus");if(!el||!podeVer('his'))return;st.classList.add('hide');
+ const el=$("#hBody"),st=$("#hStatus");if(!el||!podeVer('his'))return;st.classList.add('hide');hisTurno();
  if(HW===undefined){el.innerHTML='<div class="card"><div class="empty">Não foi possível carregar o histórico. Confira a conexão e tente novamente.<br><button class="btn sm" data-hretry="1" style="margin-top:10px">Tentar de novo</button></div></div>';return}
  if(HW===null){el.innerHTML='<div class="card"><div class="empty">Carregando histórico…</div></div>';if(!hBusy&&view==='his')setTimeout(()=>loadHis(true),0);return}
  const vis=$("#hVis").value,met=$("#hMet").value,p=+$("#hPer").value,g=restricted()?myG():$("#hGal").value,low=met==='t',f=met==='t'?mm:fmt;
@@ -1942,12 +1951,12 @@ async function atrSalvar(opId,day,campos,msg){const at=ATR[opId+"|"+day];if(!at&
  if(ok)await loadManagement()}
 document.addEventListener("change",async e=>{const t=e.target;if(!t.classList)return;
  if(t.classList.contains("turnoI")||t.classList.contains("turnoF")){
-  if(!ON||!me||!me.pC){toast("Sem permissão para alterar o turno.");return}
+  if(!ON||!me||!(me.pC||me.pI)){toast("Sem permissão para alterar o turno.");return}
   const o=(INDX&&INDX.ops||[]).find(x=>x.id===t.dataset.ao);if(!o)return;
   const ini=+(t.classList.contains("turnoI")?t.value:o.ini),fim=+(t.classList.contains("turnoF")?t.value:o.fim);
   if(!(ini>=0&&ini<=23&&fim>=1&&fim<=24)){toast("Horário inválido.");return}
   if(ini===o.ini&&fim===o.fim)return;
-  const ok=await rem(()=>mut("/rest/v1/operadores?id=eq."+o.id,"PATCH",{inicio:ini,fim}),"Turno de "+o.n+" atualizado");
+  const ok=await rem(()=>api("/rest/v1/rpc/alterar_turno",{method:"POST",body:{p_operador:o.id,p_inicio:ini,p_fim:fim}}),"Turno de "+o.n+" atualizado");
   if(ok)await loadManagement();return}
  if(t.classList.contains("hjT")){
   if(!ON||!me||!me.pR){toast("Sem permissão para registrar o horário.");return}
