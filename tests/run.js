@@ -323,11 +323,13 @@ await T("75 Meta batida: placar dourado e a festa abre sozinha uma vez; botão r
  const p=await page(b,base({waves:W}),{festa:true});
  await p.evaluate(()=>{MT()['Galpão 1']=50;save();go('painel');renderAll()});await p.waitForTimeout(900);
  ok(await p.$('#mb'),'festa não abriu sozinha');ok(await p.$eval('#kpis .placar',e=>e.classList.contains('win')),'placar dourado');
- await p.waitForTimeout(4200);ok(await p.isVisible('#mb'),'festa sumiu cedo');
- const t=await p.textContent('#mb');ok(t.includes('BATIDA!')&&t.includes('Ana Souza')&&t.includes('Bruno Lima')&&t.includes('hora da virada'),'conteúdo: '+t);
- const px=await p.$eval('#mb .fx',c=>{const d=c.getContext('2d').getImageData(0,0,c.width,c.height).data;let n=0;for(let i=3;i<d.length;i+=4)if(d[i]>20)n++;return n});ok(px>200,'fogos não desenharam: '+px);
- await p.screenshot({path:'/tmp/claude-0/-home-claude/1b46621a-564c-549a-8cc9-448283bd574c/scratchpad/festa.png'});
- await p.waitForTimeout(1800);await p.screenshot({path:'/tmp/claude-0/-home-claude/1b46621a-564c-549a-8cc9-448283bd574c/scratchpad/festa2.png'});
+ await p.waitForTimeout(2500);ok(await p.isVisible('#mb'),'festa sumiu cedo');
+ const fr=p.frames().find(f=>f!==p.mainFrame());ok(fr,'sem o quadro da animação');
+ const d=await fr.evaluate(()=>({D:window.__FD,t:document.querySelector('.tit').textContent,pod:document.querySelectorAll('.pp').length,dur:window.__DUR}));
+ ok(d.t==='Meta batida'&&d.D.tot===97&&d.D.meta===50&&d.D.top[0].n==='Ana Souza'&&d.D.top[1].n==='Bruno Lima'&&d.D.hora&&d.D.est.length>=4&&d.D.est[d.D.est.length-1].r==='Time em campo'&&d.dur===28,'dados: '+JSON.stringify(d));
+ await fr.evaluate(()=>window.__render(12));await p.waitForTimeout(100);await p.screenshot({path:'/tmp/claude-0/-home-claude/1b46621a-564c-549a-8cc9-448283bd574c/scratchpad/festa.png'});
+ await p.click('#mb .x');await p.waitForTimeout(800);ok(!(await p.$('#mb')),'X não fecha');
+ await p.evaluate(()=>go('painel'));await p.click('.mbBadge');await p.waitForTimeout(500);ok(await p.isVisible('#mb'),'botão não abre');
  await p.keyboard.press('Escape');await p.waitForTimeout(800);ok(!(await p.$('#mb')),'Esc não fecha');
  await p.evaluate(()=>renderAll());await p.waitForTimeout(1200);ok(!(await p.$('#mb')),'abriu de novo no mesmo dia');
  await p.click('.mbBadge');await p.waitForTimeout(500);ok(await p.isVisible('#mb'),'botão não repete a festa');await p.keyboard.press('Escape');await p.waitForTimeout(800);
