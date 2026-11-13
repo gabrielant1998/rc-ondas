@@ -135,10 +135,10 @@ await T('S03 Público registra 3 ondas e elas chegam ao banco',async()=>{const d
  ok(db.ondas.length===3,'banco tem '+db.ondas.length);ok(db.ondas.every(o=>o.galpao_id===G1&&/^[0-9a-f-]{36}$/.test(o.id)),'galpão/id errado');
  const s=await p.evaluate(()=>S.waves.map(w=>w.sync+':'+(w.err||'')).join());ok(s==='1:,1:,1:','local: '+s);return (await p.textContent('#net')).trim()});
 
-await T('S04 Sem internet: guarda na fila e envia quando volta, sem duplicar',async()=>{const db=banco();const p=await page(b,db);await p.click('#net');
+await T('S04 Sem internet: guarda na fila e envia quando volta, sem duplicar',async()=>{const db=banco();const p=await page(b,db);await p.evaluate(()=>$('#net').click());
  await reg(p,'CL001','Pacote do mesmo',[[6001,5],[6002,6]]);ok(db.ondas.length===0,'enviou offline');ok(/2 pendentes/.test(await p.textContent('#net')),'indicador: '+await p.textContent('#net'));
  await p.reload();await p.waitForTimeout(500);ok((await p.evaluate(()=>S.waves.filter(w=>!w.sync).length))===2,'fila perdida ao recarregar');
- await p.click('#net');await p.waitForTimeout(600);ok(db.ondas.length===2,'banco tem '+db.ondas.length);
+ await p.evaluate(()=>$('#net').click());await p.waitForTimeout(600);ok(db.ondas.length===2,'banco tem '+db.ondas.length);
  await p.evaluate(()=>{S.waves.forEach(w=>w.sync=0);return push()});await p.waitForTimeout(300);ok(db.ondas.length===2,'duplicou no reenvio: '+db.ondas.length);
  ok((await p.evaluate(()=>S.waves.filter(w=>!w.sync||w.err).length))===0,'ficou pendente ou com erro após reenvio')});
 

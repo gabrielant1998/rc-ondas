@@ -60,6 +60,8 @@ input[type=checkbox]{width:20px;height:20px;min-height:0;accent-color:var(--g)}
 .wkc[data-s="Bipou"],.wkc[data-s="Presente"],.wkc[data-s="Saiu"]{--c:var(--k)}
 .wkc[data-s="Aguardando"],.wkc[data-s="—"]{--c:var(--field);color:var(--mut);font-weight:500}
 .ckd{width:72px}
+.ckatalho{position:sticky;top:0;z-index:5;background:var(--card);padding:8px 0;margin:6px 0}
+#ckSecA,#ckSecC,#ckSecS{scroll-margin-top:64px}
 .ckul{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin:10px 0;padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:var(--field)}
 .wkt th,.wkt td{padding:8px 6px}.wkt th:first-child,.wkt td:first-child{position:sticky;left:0;background:var(--card);min-width:112px;z-index:1}
 .ckr{display:grid;grid-template-columns:minmax(150px,1fr) minmax(190px,1fr) 3fr;gap:8px 16px;align-items:center;padding:12px 0;border-top:1px solid var(--line)}
@@ -69,7 +71,7 @@ input[type=checkbox]{width:20px;height:20px;min-height:0;accent-color:var(--g)}
 .pill{display:inline-flex;gap:6px;align-items:center;padding:5px 10px;border-radius:4px;font:600 13px var(--fb);background:var(--card);color:var(--ink);border:1px solid var(--line);cursor:pointer;text-decoration:none}
 .pill.off{color:var(--rx);border-color:var(--rx)}.pill.warn{color:var(--mut)}.pill.ot{color:var(--ox);border-color:var(--ox)}
 td .pill{min-height:36px;padding:6px 12px;margin:2px 0}
-#net{min-height:42px;padding:6px 12px}#net:before{content:"";width:8px;height:8px;border-radius:50%;background:var(--k)}#net.off:before{background:var(--r)}
+#net[hidden]{display:none}#net{min-height:42px;padding:6px 12px}#net:before{content:"";width:8px;height:8px;border-radius:50%;background:var(--k)}#net.off:before{background:var(--r)}
 #stor{min-height:42px;cursor:default}
 
 /* painéis */
@@ -1162,10 +1164,11 @@ function checking(){
  const nav=`<div class="ctl"><button class="btn alt sm" type="button" data-ckday="-1">← Dia anterior</button><button class="btn alt sm" type="button" data-ckday="0"${day===dk(Date.now())?' disabled':''}>Hoje</button><button class="btn alt sm" type="button" data-ckday="1">Próximo dia →</button><b>${presData(day)}, ${esc(wd)}</b></div>`;
  box.innerHTML=`<div class="card">${nav}
  <div class="legend" style="margin:8px 0">Quem bipar uma onda vira presente sozinho e sai da lista. Marque a situação das demais. Ao escolher, o nome sai da lista e entra na tabela da semana. Atestado e folga aceitam a quantidade de dias.${can?'':' Só gestores com permissão de registros podem marcar.'}</div>
+ <div class="ctl ckatalho"><button class="btn alt sm" type="button" data-ckgo="ckSecC">↓ Conferidos (${conf.length})</button><button class="btn alt sm" type="button" data-ckgo="ckSecS">↓ Tabela da semana</button></div>
  ${CKULT&&can?`<div class="ckul"><span>Marcado agora: <b>${esc(CKULT.n)}</b> · ${esc(CKULT.l)}</span><button class="btn sm" type="button" data-ckun="${CKULT.id}">↩ Voltar</button></div>`:''}
- <h2>A conferir (${pend.length})</h2><div class="tw">${pend.length?`<div class="ckl">${pend.map(linha).join('')}</div>`:'<div class="empty">Todos conferidos neste dia.</div>'}</div>
- <h2 style="margin-top:16px">Conferidos (${conf.length})</h2><div class="tw">${conf.length?`<table><tr><th>Pessoa</th><th>Situação</th><th></th></tr>${conf.map(feita).join('')}</table>`:'<div class="empty">Nenhum conferido ainda.</div>'}</div></div>
- <div class="card" style="margin-top:14px"><h2>Semana ${presData(data.days[0])} a ${presData(data.days[data.days.length-1])}</h2><div class="tw">${wkTabela(data,ops)}</div><div class="legend">Os dias conferidos aparecem aqui na hora. Toque em um dia para abrir a pessoa.</div></div>`;
+ <h2 id="ckSecA">A conferir (${pend.length})</h2><div class="tw">${pend.length?`<div class="ckl">${pend.map(linha).join('')}</div>`:'<div class="empty">Todos conferidos neste dia.</div>'}</div>
+ <h2 id="ckSecC" style="margin-top:16px">Conferidos (${conf.length})</h2><div class="tw">${conf.length?`<table><tr><th>Pessoa</th><th>Situação</th><th></th></tr>${conf.map(feita).join('')}</table>`:'<div class="empty">Nenhum conferido ainda.</div>'}</div></div>
+ <div class="card" id="ckSecS" style="margin-top:14px"><h2>Semana ${presData(data.days[0])} a ${presData(data.days[data.days.length-1])}</h2><div class="tw">${wkTabela(data,ops)}</div><div class="legend">Os dias conferidos aparecem aqui na hora. Toque em um dia para abrir a pessoa.</div></div>`;
 }
 async function ckRegistrar(m,tipo){
  if(CKBUSY)return;
@@ -1192,6 +1195,7 @@ async function ckDesfazer(id){
  CKBUSY=false;checking();
 }
 $("#ckBody").addEventListener("click",e=>{const b=e.target.closest("[data-ck]");if(b){ckRegistrar(b.dataset.m,b.dataset.ck);return}
+ const go=e.target.closest("[data-ckgo]");if(go){const el=document.getElementById(go.dataset.ckgo);if(el)el.scrollIntoView({behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth',block:'start'});return}
  const u=e.target.closest("[data-ckun]");if(u){ckDesfazer(u.dataset.ckun);return}
  const n=e.target.closest("[data-ckday]");if(n){const off=+n.dataset.ckday;ckIr(off===0?dk(Date.now()):addDias(CKD||dk(Date.now()),off));return}
  const c=e.target.closest(".wkc");if(c)wkAbrir(c.dataset.m,c.dataset.d)});
@@ -1573,7 +1577,7 @@ $("#lB").onclick=()=>{if(ON){entrar();return}const u=$("#lU").value.trim().toLow
 $("#lP").onkeydown=e=>{if(e.key==="Enter")$("#lB").click()};
 
 /* ===================== render geral ===================== */
-function netUI(){const n=$("#net"),o=online(),p=S.waves.filter(w=>!w.sync).length;n.className="pill"+(o?"":" off");n.textContent=o?(ON&&p?"Online, "+p+" a enviar":"Online"):"Offline, "+p+(p===1?" pendente":" pendentes");
+function netUI(){const n=$("#net"),o=online(),p=S.waves.filter(w=>!w.sync).length;n.className="pill"+(o?"":" off");n.hidden=o&&!(ON&&p);n.textContent=o?(ON&&p?"Online, "+p+" a enviar":"Online"):"Offline, "+p+(p===1?" pendente":" pendentes");
  const pc=Math.round(storeLen/LIM_STORE*100),e=$("#stor");e.classList.toggle("hide",pc<70);e.className="pill "+(pc>=90?"off":"warn")+(pc<70?" hide":"");e.textContent="Memória "+pc+"%";e.title="Uso do armazenamento deste aparelho"}
 const myG=()=>(me&&me.g&&S.gals.includes(me.g))?me.g:S.gal;
 const restricted=()=>ON?!!me&&!me.adm:S.ges.length>0&&!(me&&me.adm);

@@ -72,10 +72,10 @@ await T("10 Linha incompleta (só WN, ou só quantidade) é bloqueada",async()=>
  await p.keyboard.type("6300");await p.click('#save');await p.waitForTimeout(150);ok(!(await st(p))||(await st(p)).waves.length===0,"salvou sem quantidade");
  await p.fill('[data-wn="0"]','');await p.fill('[data-q="0"]','5');await p.click('#save');await p.waitForTimeout(150);ok(!(await st(p))||(await st(p)).waves.length===0,"salvou sem WN")});
 
-await T("11 Offline: registra, mostra pendentes e sincroniza sem duplicar",async()=>{const p=await page(b,base());await p.click('#net');
+await T("11 Offline: registra, mostra pendentes e sincroniza sem duplicar",async()=>{const p=await page(b,base());await p.evaluate(()=>$('#net').click());
  await openReg(p,"CL001","Pacote do mesmo");await typeRows(p,[[6401,1],[6402,2],[6403,3]]);await p.click('#save');await p.waitForTimeout(200);
  let s=await st(p);ok(s.waves.length===3&&s.waves.every(w=>!w.sync),"não ficou pendente");ok((await p.textContent('#net')).includes("3 pendente"),"indicador: "+await p.textContent('#net'));
- await p.click('#net');await p.waitForTimeout(150);s=await st(p);ok(s.waves.length===3&&s.waves.every(w=>w.sync),"não sincronizou ou duplicou");return await p.textContent('#toast')});
+ await p.evaluate(()=>$('#net').click());await p.waitForTimeout(150);s=await st(p);ok(s.waves.length===3&&s.waves.every(w=>w.sync),"não sincronizou ou duplicou");return await p.textContent('#toast')});
 
 await T("12 Recarregar a página mantém os registros",async()=>{const p=await page(b,base());await openReg(p,"CL001","Vários");await typeRows(p,[[6501,7]]);await p.click('#save');await p.waitForTimeout(150);
  await p.reload();await p.waitForTimeout(200);ok((await st(p)).waves.length===1,"perdeu ao recarregar")});
@@ -507,6 +507,10 @@ await T("77 Lista de presença: todos os nomes numa lista, opções por pessoa, 
  ok(['presente','falta','declaracao','atestado','folga'].every(k=>r.btn.includes(k)),'opções: '+r.btn.join());
  ok(r.sem>0&&r.sem%7===0,'tabela da semana: '+r.sem);
  ok(!(await p.evaluate(()=>!!document.querySelector('#gsub [data-gs="sem"]'))),'sem aba Semana');
+ const at=await p.evaluate(()=>{document.querySelector('#ckBody [data-ckgo="ckSecS"]').click();return[...document.querySelectorAll('#ckBody [data-ckgo]')].map(x=>x.dataset.ckgo)});
+ ok(at.join()==='ckSecC,ckSecS','dois atalhos: '+at.join());
+ await p.waitForTimeout(800);
+ ok(await p.evaluate(()=>document.getElementById('ckSecS').getBoundingClientRect().top<innerHeight),'atalho leva até a semana');
  await p.evaluate(()=>document.querySelector('#ckBody .wkc[data-m="CL002"][data-d]').click());
  await p.waitForTimeout(400);
  const q=await p.evaluate(()=>({op:$('#iOp').value,per:$('#iPer').value}));
