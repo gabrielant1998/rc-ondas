@@ -636,20 +636,6 @@ await T("86 Lista de presença: colunas Horário justificado e Motivo do atraso 
  ok(h.includes('Motivo do atraso')&&h.includes('Horário justificado'),'cabeçalho: '+JSON.stringify(h));
  ok(await p.evaluate(()=>document.querySelectorAll('input.atrM').length)===0,'campo editável apareceu sem servidor');});
 
-await T("87 Painel: mover e aumentar/diminuir gráficos, com a organização salva",async()=>{const p=await page(b,base({waves:[WV('q1','Q1','Vários artigos',50,HR(9,10))]}));
- await p.evaluate(()=>{try{localStorage.removeItem('rc.painelLayout')}catch(e){}go('painel')});await p.waitForTimeout(150);
- const ordem=()=>p.evaluate(()=>[...document.querySelectorAll('#pGrid [data-pw]')].map(e=>e.dataset.pw).join(','));
- ok((await ordem())==='vivo,hora,tipo,galpao,tempo','ordem inicial: '+await ordem());
- await p.click('[data-pw="vivo"] [aria-label="Mover para depois"]');await p.waitForTimeout(100);
- ok((await ordem()).startsWith('hora,vivo'),'mover: '+await ordem());
- await p.click('[data-pw="hora"] [aria-label="Aumentar gráfico"]');await p.waitForTimeout(150);
- ok(await p.evaluate(()=>document.querySelector('[data-pw="hora"]').style.gridColumn)==='span 2','não aumentou');
- await p.click('[data-pw="hora"] [aria-label="Diminuir gráfico"]');await p.waitForTimeout(100);
- ok(await p.evaluate(()=>document.querySelector('[data-pw="hora"]').style.gridColumn)==='span 1','não diminuiu');
- await p.click('[data-pw="hora"] [aria-label="Aumentar gráfico"]');await p.waitForTimeout(100);
- const salvo=await p.evaluate(()=>localStorage.getItem('rc.painelLayout'));ok(salvo&&salvo.includes('"hora":2'),'não salvou: '+salvo);
- ok(await p.evaluate(()=>document.querySelector('#chH svg')!==null),'gráfico por hora sumiu');
-});
 await b.close();
 const w=Math.max(...R.map(r=>r[1].length));for(const r of R)console.log((r[0]==="PASS"?"✅":"❌")+" "+r[1].padEnd(w)+"  "+r[2]);
 console.log(`\n${R.filter(r=>r[0]==="PASS").length}/${R.length} passaram`)})();

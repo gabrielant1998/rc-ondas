@@ -39,8 +39,7 @@ header.top h1{font:700 34px/1 var(--fd)}
 .grid{display:grid;gap:14px}#painel .two{align-items:start}.two{grid-template-columns:repeat(auto-fit,minmax(300px,1fr))}.g21{grid-template-columns:repeat(auto-fit,minmax(300px,1fr))}
 @media(min-width:1100px){.g21{grid-template-columns:2fr 1fr}}
 .pgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-top:14px}.pw{min-width:0}.pw>.card{height:100%}
-.pwb{display:flex;justify-content:flex-end;gap:4px;margin-bottom:6px}.pwb button{min-height:30px;min-width:30px;padding:2px 8px;font-size:13px}.pwb button:disabled{opacity:.35}
-@media(max-width:760px){.pgrid{grid-template-columns:1fr}.pw{grid-column:1/-1!important}}
+@media(max-width:760px){.pgrid{grid-template-columns:1fr}}
 #painel #chH svg{max-height:240px;width:100%}#vivoLeg{display:flex;gap:18px;flex-wrap:wrap}#vivoLeg i{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:6px;vertical-align:-1px}#vivoLeg i.ln{height:3px;border:0;border-radius:2px;vertical-align:3px;width:18px}#painel .card h2 .pill{margin-left:6px;vertical-align:middle}#vivoL table th,#concL table th{padding:4px 8px}#vivoL table td,#concL table td{padding:3px 8px}#vivoL .big{font-size:inherit}
 .pg{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:10px}.pg span{color:var(--mut);font-size:13px}
 #reg{align-items:start}
@@ -350,13 +349,13 @@ a[data-pick]{display:inline-block;padding:8px 0 2px;color:var(--gx);font-weight:
 <section id="painel">
  <div id="kpis"></div>
  <div class="pgrid" id="pGrid">
-  <div class="pw" id="vivo" data-pw="vivo"><div class="card"><h2>Acumulado do dia: bipado x concluído <span class="pill" id="vivoN"></span><span class="pill" id="concN"></span></h2><div id="vivoC"></div>
+  <div class="pw" id="vivo"><div class="card"><h2>Acumulado do dia: bipado x concluído <span class="pill" id="vivoN"></span><span class="pill" id="concN"></span></h2><div id="vivoC"></div>
   <div class="legend" id="vivoLeg"><span><i style="background:var(--t);opacity:.6"></i>Quantidade bipada (área)</span><span><i class="ln" style="background:var(--g)"></i>Quantidade concluída (linha)</span></div></div>
  </div>
-  <div class="pw" data-pw="hora"><div class="card"><h2><span id="hTit">Produção por hora</span> <span id="peak"></span><span class="hm" id="hSeg" role="group" aria-label="Intervalo do gráfico"><button data-m="h" class="on">Hora</button><button data-m="m">30 min</button></span></h2><div id="chH"></div><div id="pace"></div></div></div>
-  <div class="pw" data-pw="tipo"><div class="card"><h2>Quantidades por tipo de onda</h2><div id="chT"></div></div></div>
-  <div class="pw" data-pw="galpao"><div class="card"><h2>Produção por galpão</h2><div id="gals"></div></div></div>
-  <div class="pw" data-pw="tempo"><div class="card"><h2>Tempo de onda por tipo</h2><div id="tmp"></div></div></div>
+  <div class="pw"><div class="card"><h2><span id="hTit">Produção por hora</span> <span id="peak"></span><span class="hm" id="hSeg" role="group" aria-label="Intervalo do gráfico"><button data-m="h" class="on">Hora</button><button data-m="m">30 min</button></span></h2><div id="chH"></div><div id="pace"></div></div></div>
+  <div class="pw"><div class="card"><h2>Quantidades por tipo de onda</h2><div id="chT"></div></div></div>
+  <div class="pw"><div class="card"><h2>Produção por galpão</h2><div id="gals"></div></div></div>
+  <div class="pw"><div class="card"><h2>Tempo de onda por tipo</h2><div id="tmp"></div></div></div>
  </div>
 </section>
 
@@ -951,20 +950,6 @@ function painelVivo(){const pub=ON&&!me,bx=$("#vivo");if(!bx)return;bx.classList
  let lab='';for(let k=i0;k<=i1;k++)if(k%2===0||n<=10)lab+=`<text x="${x(k)}" y="${Ht-8}" text-anchor="middle" font-size="11" fill="var(--mut)">${k%2?(k>>1)+":30":(k>>1)+"h"}</text>`;
  const ex=x(i1),gap=ab[i1]-ac[i1];
  $("#vivoC").innerHTML=`<svg viewBox="0 0 ${W} ${Ht}" role="img" aria-label="Acumulado do dia: área com a quantidade bipada e linha com a quantidade concluída. Bipado ${fmt(tb)}, concluído ${fmt(tc)}." style="width:100%;height:auto;max-height:200px"><defs><linearGradient id="vvA" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="var(--t)" stop-opacity=".55"/><stop offset="1" stop-color="var(--t)" stop-opacity=".06"/></linearGradient></defs>${g}<polygon points="${x(i0)},${y(0)} ${pb.join(" ")} ${ex},${y(0)}" fill="url(#vvA)"/><polyline points="${pb.join(" ")}" fill="none" stroke="var(--t)" stroke-width="1.6" stroke-dasharray="5 4"/><polyline points="${pc.join(" ")}" fill="none" stroke="var(--g)" stroke-width="2.8" stroke-linejoin="round" stroke-linecap="round"/><circle cx="${ex}" cy="${y(ab[i1])}" r="4" fill="var(--t)"/><circle cx="${ex}" cy="${y(ac[i1])}" r="4.5" fill="var(--g)" stroke="var(--card,#fff)" stroke-width="1.5"/><text x="${ex-8}" y="${y(ab[i1])-8}" text-anchor="end" font-size="12" font-weight="700" fill="var(--mut)">bipado ${fmt(ab[i1])}</text>${gap>0?`<text x="${ex-8}" y="${y(ac[i1])+16}" text-anchor="end" font-size="12" font-weight="700" fill="var(--g)">concluído ${fmt(ac[i1])}</text>`:`<text x="${ex-8}" y="${y(ac[i1])+16}" text-anchor="end" font-size="12" font-weight="700" fill="var(--g)">concluído ${fmt(ac[i1])}</text>`}${lab}</svg>`}
-/* painel: cada gráfico pode ser movido e aumentado/diminuído; a organização fica salva neste navegador */
-const PW_KEY="rc.painelLayout",PW_DEF={order:["vivo","hora","tipo","galpao","tempo"],span:{}},PW_NOME={vivo:"Acumulado do dia",hora:"Produção por hora",tipo:"Quantidades por tipo",galpao:"Produção por galpão",tempo:"Tempo de onda por tipo"};
-let PW={order:PW_DEF.order.slice(),span:{}};try{const x=JSON.parse(localStorage.getItem(PW_KEY)||"null");if(x&&Array.isArray(x.order)){PW.order=PW_DEF.order.filter(k=>x.order.includes(k)).concat(PW_DEF.order.filter(k=>!x.order.includes(k)));PW.span=x.span&&typeof x.span==="object"?x.span:{}}}catch(e){}
-function pwSave(){try{localStorage.setItem(PW_KEY,JSON.stringify(PW))}catch(e){}}
-function pwTools(){$$("#pGrid [data-pw]").forEach(el=>{const k=el.dataset.pw,c=el.querySelector(".card");if(!c||c.querySelector(".pwb"))return;const d=document.createElement("div");d.className="pwb";d.setAttribute("role","toolbar");d.setAttribute("aria-label","Organizar: "+PW_NOME[k]);d.innerHTML='<button type="button" class="btn alt sm" data-pwa="up" title="Mover para antes" aria-label="Mover para antes">◀</button><button type="button" class="btn alt sm" data-pwa="down" title="Mover para depois" aria-label="Mover para depois">▶</button><button type="button" class="btn alt sm" data-pwa="less" title="Diminuir" aria-label="Diminuir gráfico">−</button><button type="button" class="btn alt sm" data-pwa="more" title="Aumentar" aria-label="Aumentar gráfico">+</button>';c.insertBefore(d,c.firstChild)})}
-function pwApply(){const g=$("#pGrid");if(!g)return;PW.order.forEach(k=>{const el=g.querySelector('[data-pw="'+k+'"]');if(el)g.appendChild(el)});
- g.querySelectorAll("[data-pw]").forEach(el=>{const k=el.dataset.pw,big=PW.span[k]===2,i=PW.order.indexOf(k),b=el.querySelector(".pwb");el.style.gridColumn=big?"span 2":"span 1";
-  if(b){b.querySelector('[data-pwa="up"]').disabled=i<=0;b.querySelector('[data-pwa="down"]').disabled=i>=PW.order.length-1;b.querySelector('[data-pwa="less"]').disabled=!big;b.querySelector('[data-pwa="more"]').disabled=big}})}
-$("#pGrid").addEventListener("click",e=>{const b=e.target.closest("[data-pwa]");if(!b||b.disabled)return;const k=b.closest("[data-pw]").dataset.pw,i=PW.order.indexOf(k),a=b.dataset.pwa;
- if(a==="up"&&i>0)[PW.order[i-1],PW.order[i]]=[PW.order[i],PW.order[i-1]];
- else if(a==="down"&&i<PW.order.length-1)[PW.order[i+1],PW.order[i]]=[PW.order[i],PW.order[i+1]];
- else if(a==="less")PW.span[k]=1;else if(a==="more")PW.span[k]=2;else return;
- pwSave();pwApply();renderAll()});
-pwTools();pwApply();
 /* Acompanhamento: ondas concluídas do dia em páginas de 50 linhas */
 let ACEP=0;const ACE_N=50;
 function aceLista(){const el=$("#aceL");if(!el)return;
