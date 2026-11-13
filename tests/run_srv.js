@@ -58,6 +58,8 @@ function fake(db){const cors={'access-control-allow-origin':'*','access-control-
    if(t==='config')return J(route,200,db.config);
    if(t==='operadores')return J(route,200,db.operadores.filter(o=>!o.excluido_em||escopo(o.galpao_id)).sort((a,b)=>a.codigo.localeCompare(b.codigo)));
    if(t==='gestores')return J(route,200,!g?[]:g.admin?db.gestores:[g]);
+   if(t==='presenca_registros'){if(!email)return J(route,401,{message:'permission denied',code:'42501'});return J(route,200,(db.presenca||[]).filter(r=>!r.cancelado_em&&escopo(db.operadores.find(o=>o.id===r.operador_id).galpao_id)))}
+   if(/^presenca_(baixas|atrasos|historico|alteracoes)$/.test(t))return J(route,200,[]);
    if(t==='ondas'){if(!email)return J(route,401,{message:'permission denied for table ondas',code:'42501'});
     const de=(q.get('registrada_em')||'gte.').slice(4),off=+q.get('offset')||0,lim=+q.get('limit')||1000;
     return J(route,200,db.ondas.filter(o=>escopo(o.galpao_id)&&o.registrada_em>=de).sort((a,b)=>a.registrada_em<b.registrada_em?-1:1).slice(off,off+lim))}}
@@ -65,6 +67,9 @@ function fake(db){const cors={'access-control-allow-origin':'*','access-control-
   if(t==='operadores'&&m==='POST'){if(!podeC(body.galpao_id))return J(route,403,{code:'42501',message:'new row violates row-level security policy'});
    if(db.operadores.some(o=>!o.excluido_em&&(o.codigo===body.codigo||o.nome.toLowerCase()===body.nome.toLowerCase())))return J(route,409,{code:'23505',message:'duplicate key value'});
    const row=Object.assign({id:'00000000-0000-4000-8000-'+String(db.seq++).padStart(12,'0'),excluido_em:null},body);db.operadores.push(row);return J(route,201,[row])}
+  if(t==='presenca_registros'&&m==='POST'){const op=db.operadores.find(o=>o.id===body.operador_id);if(!op||!(g&&g.pode_registros&&(g.admin||g.galpao_id===op.galpao_id)))return J(route,403,{code:'42501',message:'new row violates row-level security policy'});
+   const row=Object.assign({id:'pr'+db.seq++,horario_ini:null,horario_fim:null,observacao:null,criado_por:email,cancelado_em:null},body);(db.presenca=db.presenca||[]).push(row);return J(route,201,[row])}
+  if(t==='presenca_registros'&&m==='PATCH'){const r=(db.presenca||[]).find(x=>x.id===eq('id')),op=r&&db.operadores.find(o=>o.id===r.operador_id);if(!r||!(g&&g.pode_registros&&(g.admin||g.galpao_id===op.galpao_id)))return J(route,200,[]);Object.assign(r,body);return J(route,200,[r])}
   if(t==='operadores'&&m==='PATCH'){const o=db.operadores.find(x=>x.id===eq('id'));if(!o||!podeC(o.galpao_id))return J(route,200,[]);Object.assign(o,body);return J(route,200,[o])}
   if(t==='galpoes'&&m==='POST'){if(!(g&&g.admin))return J(route,403,{code:'42501',message:'rls'});const row=Object.assign({id:'00000000-0000-4000-8000-'+String(db.seq++).padStart(12,'0')},body);db.galpoes.push(row);return J(route,201,[row])}
   if(t==='galpoes'&&m==='PATCH'){const o=db.galpoes.find(x=>x.id===eq('id'));if(!o||!(g&&(g.admin||(g.pode_config&&g.galpao_id===o.id))))return J(route,200,[]);Object.assign(o,body);return J(route,200,[o])}
@@ -296,6 +301,23 @@ await T('S29 Site público: turno, galpão e data escondidos sem login; gestor v
  for(const i of ['#turnoF','#gal','#day'])ok(!(await p.isVisible(i)),i+' visível no público');
  await login(p,'g2@x.com','senha1234');await p.waitForTimeout(300);
  for(const i of ['#turnoF','#gal','#day'])ok(await p.isVisible(i),i+' deveria aparecer para gestor')});
+await T('S30 Checking diário: marcar tira o nome da lista e preenche a semana; desfazer devolve; sem permissão não marca',async()=>{const db=banco();const p=await page(b,db);
+ await login(p,'g2@x.com','senha1234');await p.evaluate(()=>go('ind'));await p.waitForTimeout(400);
+ await p.evaluate(()=>document.querySelector('#gsub [data-gs="chk"]').click());await p.waitForTimeout(700);
+ let x=(await p.textContent('#ckBody')).replace(/\s+/g,' ');ok(x.includes('A conferir (1)')&&x.includes('Carla Dias')&&x.includes('Conferidos (0)'),'lista inicial: '+x.slice(0,200));
+ await p.click('#ckBody [data-ck="presente"][data-m="CL002"]');await p.waitForTimeout(500);
+ ok((db.presenca||[]).length===1&&db.presenca[0].tipo==='presente'&&db.presenca[0].data_ini===HJ,'não gravou presente: '+JSON.stringify(db.presenca));
+ x=(await p.textContent('#ckBody')).replace(/\s+/g,' ');ok(x.includes('A conferir (0)')&&x.includes('Conferidos (1)')&&x.includes('Todos conferidos'),'nome não saiu da lista: '+x.slice(0,240));
+ ok(await p.$eval('#ckBody .wkc[data-m="CL002"][data-d="'+HJ+'"]',e=>e.textContent.includes('Presente')),'semana não mostra Presente');
+ await p.click('#ckBody [data-ckun]');await p.waitForTimeout(500);
+ ok(db.presenca[0].cancelado_em,'não cancelou');x=(await p.textContent('#ckBody')).replace(/\s+/g,' ');ok(x.includes('A conferir (1)'),'nome não voltou: '+x.slice(0,160));
+ await p.fill('#ckBody .ckd[data-m="CL002"]','3');await p.click('#ckBody [data-ck="atestado"][data-m="CL002"]');await p.waitForTimeout(500);
+ const at=db.presenca[1];const fimEsp=(()=>{const d=new Date(HJ+'T12:00:00');d.setDate(d.getDate()+2);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')})();
+ ok(at&&at.tipo==='atestado'&&at.data_ini===HJ&&at.data_fim===fimEsp,'atestado de 3 dias: '+JSON.stringify(at));
+ const q=await banco();q.gestores.find(g=>g.email==='g2@x.com').pode_registros=false;const p2=await page(b,q);
+ await login(p2,'g2@x.com','senha1234');await p2.evaluate(()=>go('ind'));await p2.waitForTimeout(400);await p2.evaluate(()=>document.querySelector('#gsub [data-gs="chk"]').click());await p2.waitForTimeout(700);
+ ok(await p2.$eval('#ckBody [data-ck="presente"]',e=>e.disabled),'botão deveria estar desabilitado sem permissão');ok(!(q.presenca||[]).length,'gravou sem permissão')});
+
 await T('S26 Histórico no servidor: gestor do galpão vê só o dele; aba exige login',async()=>{const db=banco();const p=await page(b,db);
  const t=(d,h)=>{const x=new Date();x.setDate(x.getDate()-d);x.setHours(h,0,0,0);return x.toISOString()};
  [[1,G1,100],[2,G1,120],[3,G1,90],[1,G2,7],[2,G2,9]].forEach(([d,g,q],i)=>db.ondas.push({id:'hs'+i,wn:'HS'+i,operador_id:db.operadores.find(o=>o.galpao_id===g).id,galpao_id:g,tipo:'Vários artigos',quantidade:q,status:0,registrada_em:t(d,9),concluida_em:t(d,9),encerrada_auto:false}));

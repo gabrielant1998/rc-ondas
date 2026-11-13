@@ -52,6 +52,18 @@ input[type=checkbox]{width:20px;height:20px;min-height:0;accent-color:var(--g)}
 .btn.alt{background:var(--card);color:var(--ink);border:1px solid var(--field)}.btn.alt:hover{filter:none;border-color:var(--ink)}
 .btn.d{background:var(--r)}.btn.am{background:var(--card);color:var(--ink);border:1px solid var(--field)}
 .btn.sm{padding:8px 14px;min-height:40px;font-size:14px}
+/* visão semanal e checking diário: cada dia é uma etiqueta com texto e cor da situação */
+.wkc{--c:var(--field);font:600 12px/1.2 var(--fb);min-width:76px;min-height:36px;padding:5px 8px;border-radius:7px;border:1px solid color-mix(in srgb,var(--c) 50%,var(--line));background:color-mix(in srgb,var(--c) 13%,var(--card));color:var(--ink);cursor:pointer;display:inline-flex;flex-direction:column;align-items:center;justify-content:center;gap:1px}
+.wkc small{display:block;font-weight:500;font-size:11px;color:var(--mut)}
+.wkc:hover{border-color:var(--ink)}.wkc:focus-visible{outline:3px solid var(--g);outline-offset:2px}
+.wkc[data-s="Falta"]{--c:var(--r)}.wkc[data-s="Atestado"]{--c:var(--a)}.wkc[data-s="Declaração"]{--c:var(--v)}.wkc[data-s="Folga"]{--c:var(--k)}.wkc[data-s="Pendente"]{--c:var(--o)}
+.wkc[data-s="Bipou"],.wkc[data-s="Presente"],.wkc[data-s="Saiu"]{--c:var(--k)}
+.wkc[data-s="Aguardando"],.wkc[data-s="—"]{--c:var(--field);color:var(--mut);font-weight:500}
+.ckd{width:72px}
+.wkt th,.wkt td{padding:8px 6px}.wkt th:first-child,.wkt td:first-child{position:sticky;left:0;background:var(--card);min-width:112px;z-index:1}
+.ckr{display:grid;grid-template-columns:minmax(150px,1fr) minmax(190px,1fr) 3fr;gap:8px 16px;align-items:center;padding:12px 0;border-top:1px solid var(--line)}
+.ckn b{display:block}.ckn small{display:block;color:var(--mut)}.ckm{color:var(--mut);font-size:14px;line-height:1.5}
+@media(max-width:760px){.ckr{grid-template-columns:1fr;gap:6px}.ckb .btn{flex:1 1 30%}.ckb .ckd{flex:1 1 30%}}
 .btn:focus-visible,.tab:focus-visible,.seg button:focus-visible,.sub button:focus-visible,.pill:focus-visible,a:focus-visible{outline:2px solid var(--a);outline-offset:2px}
 .pill{display:inline-flex;gap:6px;align-items:center;padding:5px 10px;border-radius:4px;font:600 13px var(--fb);background:var(--card);color:var(--ink);border:1px solid var(--line);cursor:pointer;text-decoration:none}
 .pill.off{color:var(--rx);border-color:var(--rx)}.pill.warn{color:var(--mut)}.pill.ot{color:var(--ox);border-color:var(--ox)}
@@ -405,9 +417,9 @@ a[data-pick]{display:inline-block;padding:8px 0 2px;color:var(--gx);font-weight:
 
 <!-- ======================= INDIVIDUAL ======================= -->
 <section id="ind" class="hide">
- <div class="sub" id="gsub"><button data-gs="mi" class="on">Meta individual</button><button data-gs="mc">Meta coletiva</button><button data-gs="sem">Semana</button></div>
+ <div class="sub" id="gsub"><button data-gs="mi" class="on">Meta individual</button><button data-gs="mc">Meta coletiva</button><button data-gs="sem">Semana</button><button data-gs="chk">Checking diário</button></div>
  <div class="ctl" style="margin-bottom:12px"><select id="iOp" aria-label="Operador"></select><select id="iPer" aria-label="Período"><option value="1">Dia selecionado</option><option value="7">Últimos 7 dias</option><option value="30">Últimos 30 dias</option><option value="90">Últimos 90 dias</option></select><button class="btn" id="iPrint" type="button">Imprimir folha</button></div>
- <div id="mgStatus" class="legend hide" role="status"></div><div id="iBody"></div><div id="coBody" class="hide"></div><div id="wkBody" class="hide"></div>
+ <div id="mgStatus" class="legend hide" role="status"></div><div id="iBody"></div><div id="coBody" class="hide"></div><div id="wkBody" class="hide"></div><div id="ckBody" class="hide"></div>
 </section>
 
 <!-- ======================= PROCURANDO ======================= -->
@@ -956,7 +968,7 @@ async function loadManagement(){
    const part=await api(q);if(seq!==mgSeq)return;arr.push(...part);if(part.length<1000)break}
   const rows=arr.map(x=>{const o=OPSALL[x.operador_id];return{id:x.id,wn:x.wn,oid:x.operador_id,op:o?(o.excluido_em?o.codigo+'~'+o.id.slice(0,6):o.codigo):'—',opn:o?o.nome:'Operador removido',gal:GN[x.galpao_id]||'—',ty:x.tipo,qty:x.quantidade,st:x.status,ts:Date.parse(x.registrada_em),fin:x.concluida_em?Date.parse(x.concluida_em):null,sync:1,srv:1,auto:x.encerrada_auto?1:0,sku:x.procura_sku||"",loc:x.procura_local||"",pn:x.procura_nome||"",pt:x.procura_em?Date.parse(x.procura_em):0,hist:prHistSrv(x.procura_hist),zt:x.tempo_zerado?1:0}});
   const ids=new Set(rows.map(w=>w.id));MGW=rows.concat(S.waves.filter(w=>!w.srv&&!ids.has(w.id)&&w.ts>=start.getTime()&&w.ts<end.getTime()));
-  mgState='';$("#mgStatus").classList.add('hide');individual();coletiva();if(gsub==='sem')semana();
+  mgState='';$("#mgStatus").classList.add('hide');individual();coletiva();if(gsub==='sem')semana();if(gsub==='chk')checking();
  }catch(e){if(seq!==mgSeq)return;MGW=null;mgState='Não foi possível carregar o período. Confira a conexão e tente novamente.';$("#mgStatus").textContent=mgState;$("#mgStatus").classList.remove('hide');$("#iBody").innerHTML='';$("#coBody").innerHTML=''}
 }
 function mgData(){
@@ -972,15 +984,16 @@ function mgData(){
  return{days,ops,waves,byOpDay,byGalDay,teamDay};
 }
 function mgEligible(o,d){return(!o.criado||dk(o.criado)<=d)&&(!o.excluido||dk(o.excluido)>=d)}
-const PRES_LAB={falta:'Falta injustificada',atestado:'Atestado',folga:'Folga',declaracao:'Declaração'};
+const PRES_LAB={falta:'Falta injustificada',atestado:'Atestado',folga:'Folga',declaracao:'Declaração',presente:'Presente'};
 const presHm=ts=>new Date(ts).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
 const presData=s=>{const[y,m,d]=String(s).split('-');return d+'/'+m+'/'+y};
 /* registro de presença que vale no dia (se houver mais de um, o de maior prioridade) */
-function mgRegDia(o,d){const pr=(PRS[o.id]||[]).filter(r=>r.i<=d&&d<=r.f);if(!pr.length)return null;const ordem=['falta','atestado','folga','declaracao'];return pr.sort((a,b)=>ordem.indexOf(a.t)-ordem.indexOf(b.t))[0]}
+function mgRegDia(o,d){const pr=(PRS[o.id]||[]).filter(r=>r.i<=d&&d<=r.f);if(!pr.length)return null;const ordem=['falta','atestado','folga','declaracao','presente'];return pr.sort((a,b)=>ordem.indexOf(a.t)-ordem.indexOf(b.t))[0]}
 /* ausência nunca é calculada: sem bipe em dia com operação vira "Pendente de conferência" */
 function mgStatus(o,d,L,data){
  if(!mgEligible(o,d))return 'Fora do cadastro';
  const r=mgRegDia(o,d),bx=PBX[o.id+'|'+d];
+ if(r&&r.t==='presente')return L.length?'Bipou':'Presente';
  if(r)return PRES_LAB[r.t]+(L.length&&r.t!=='declaracao'?' · bipou (conferir)':'');
  if(bx)return 'Saiu · baixa às '+presHm(bx.saida);
  if(L.length)return 'Bipou';
@@ -1087,7 +1100,7 @@ function mgHistory(list){return list.length?`<table><tr><th>Data e hora</th><th>
 /* ===================== visão semanal (segunda a domingo) ===================== */
 let WKW=null,WKQ='';
 const WKDIAS=['Seg','Ter','Qua','Qui','Sex','Sáb','Dom'];
-const WKA={'Bipou':'Bipou','Pendente de conferência':'Pendente','Falta injustificada':'Falta','Atestado':'Atestado','Declaração':'Declaração','Folga':'Folga','Aguardando turno':'Aguardando','Fora do cadastro':'—','Sem operação identificada':'—'};
+const WKA={'Bipou':'Bipou','Pendente de conferência':'Pendente','Falta injustificada':'Falta','Atestado':'Atestado','Declaração':'Declaração','Folga':'Folga','Aguardando turno':'Aguardando','Presente':'Presente','Fora do cadastro':'—','Sem operação identificada':'—'};
 const addDias=(s,n)=>{const d=new Date(s+'T12:00:00');d.setDate(d.getDate()+n);return dk(d.getTime())};
 const mondayOf=s=>addDias(s,-((new Date(s+'T12:00:00').getDay()+6)%7));
 function wkRotulo(st){if(st.startsWith('Saiu'))return 'Saiu';const base=st.split(' · ')[0];return WKA[base]||base}
@@ -1096,6 +1109,17 @@ function atrasoDia(o,d,L){if(!L.length)return 0;const ts=Math.min(...L.map(w=>w.
 /* semana: o período de 7 dias termina no domingo, então a visão usa o mesmo carregamento da aba Individual */
 function semanaSet(mon){WKW=mon;$("#day").value=addDias(mon,6);$("#iPer").value="7"}
 async function wkIr(mon){semanaSet(mon);if(ON&&me)await loadManagement();else semana()}
+function wkTabela(data,ops){
+ const days=data.days;
+ const head=`<tr><th>Pessoa</th>${days.map((d,i)=>`<th>${WKDIAS[i]}<br><small>${presData(d).slice(0,5)}</small></th>`).join('')}<th>Faltas</th><th>Atestados</th><th>Declarações</th><th>Folgas</th><th>Atrasos</th><th>Pendentes</th></tr>`;
+ const rows=ops.map(o=>{let f=0,a=0,dc=0,fo=0,at=0,p=0;
+  const cells=days.map(d=>{const L=data.byOpDay.get(d+'|'+o.m)||[],st=mgStatus(o,d,L,data),r=wkRotulo(st),m=atrasoDia(o,d,L);
+   if(st.startsWith('Falta'))f++;if(st.startsWith('Atestado'))a++;if(st.startsWith('Declaração'))dc++;if(st.startsWith('Folga'))fo++;if(st.startsWith('Pendente'))p++;if(m>0)at++;
+   const ext=m>0?'atraso '+hh(m*6e4):'';
+   return `<td><button class="wkc" type="button" data-s="${esc(r)}" data-m="${esc(o.m)}" data-d="${d}" aria-label="${esc(o.n)}, ${presData(d)}: ${esc(r)}${ext?', '+esc(ext):''}">${esc(r)}${ext?'<small>'+esc(ext)+'</small>':''}</button></td>`}).join('');
+  return `<tr><td><b>${esc(o.n)}</b><br><small>${esc(o.m.split('~')[0])}</small></td>${cells}<td><b>${f}</b></td><td>${a}</td><td>${dc}</td><td>${fo}</td><td>${at}</td><td>${p}</td></tr>`}).join('');
+ return ops.length?`<table class="wkt">${head}${rows}</table>`:'<div class="empty">Nenhuma pessoa para os filtros selecionados.</div>';
+}
 function semana(){
  const box=$("#wkBody");if(!box)return;
  if(ON&&me&&MGW===null){box.innerHTML='<div class="card"><div class="empty">'+esc(mgState||'Carregando semana…')+'</div></div>';return}
@@ -1104,16 +1128,70 @@ function semana(){
  const ops=data.ops.filter(o=>(g==='__all'||o.g===g)&&(!t||String(o.t)===t)).filter(o=>!o.excluido||data.waves.some(w=>w.op===o.m)).filter(o=>!q||(o.n+' '+o.m).toLowerCase().includes(q));
  const hoje=mondayOf(dk(Date.now()));
  const nav=`<div class="ctl"><button class="btn alt sm" type="button" data-wk="-7">← Semana anterior</button><button class="btn alt sm" type="button" data-wk="0"${mon===hoje?' disabled':''}>Esta semana</button><button class="btn alt sm" type="button" data-wk="7">Próxima semana →</button><b>${presData(days[0])} a ${presData(days[days.length-1])}</b><label style="margin-left:auto">Pesquisar pessoa <input type="search" id="wkQ" value="${esc(WKQ)}"></label></div>`;
- const head=`<tr><th>Pessoa</th>${days.map((d,i)=>`<th>${WKDIAS[i]}<br><small>${presData(d).slice(0,5)}</small></th>`).join('')}<th>Faltas</th><th>Atestados</th><th>Declarações</th><th>Folgas</th><th>Atrasos</th><th>Pendentes</th></tr>`;
- const rows=ops.map(o=>{let f=0,a=0,dc=0,fo=0,at=0,p=0;
-  const cells=days.map(d=>{const L=data.byOpDay.get(d+'|'+o.m)||[],st=mgStatus(o,d,L,data),r=wkRotulo(st),m=atrasoDia(o,d,L);
-   if(st.startsWith('Falta'))f++;if(st.startsWith('Atestado'))a++;if(st.startsWith('Declaração'))dc++;if(st.startsWith('Folga'))fo++;if(st.startsWith('Pendente'))p++;if(m>0)at++;
-   const ext=m>0?'atraso '+hh(m*6e4):'';
-   return `<td><button class="wkc" type="button" data-m="${esc(o.m)}" data-d="${d}" aria-label="${esc(o.n)}, ${presData(d)}: ${esc(r)}${ext?', '+esc(ext):''}">${esc(r)}${ext?'<small>'+esc(ext)+'</small>':''}</button></td>`}).join('');
-  return `<tr><td><b>${esc(o.n)}</b><br><small>${esc(o.m.split('~')[0])}</small></td>${cells}<td><b>${f}</b></td><td>${a}</td><td>${dc}</td><td>${fo}</td><td>${at}</td><td>${p}</td></tr>`}).join('');
- box.innerHTML=`<div class="card">${nav}<div class="tw">${ops.length?`<table>${head}${rows}</table>`:'<div class="empty">Nenhuma pessoa para os filtros selecionados.</div>'}</div>
+ const tabela=wkTabela(data,ops);
+ box.innerHTML=`<div class="card">${nav}<div class="tw">${tabela}</div>
  <div class="legend">Falta, atestado, declaração e folga são registros lançados pelo gestor; folga e atestado não contam como falta. Pendente é dia sem bipe a conferir. Declaração pode cobrir só parte do dia. Atraso é a diferença entre o início do turno e o primeiro bipe. Toque em um dia para abrir a pessoa naquele dia.</div></div>`;
 }
+/* ===================== checking diário: todos os nomes; cada opção tira a pessoa da lista e preenche a semana ===================== */
+let CKD=null,CKBUSY=false;
+const ckPode=()=>!!(ON&&me&&me.pR);
+async function ckIr(day,force){
+ CKD=day;
+ if(!force&&WKW===mondayOf(day)&&(MGW!==null||!(ON&&me))){checking();return}
+ semanaSet(mondayOf(day));
+ if(ON&&me)await loadManagement();else checking();
+}
+function checking(){
+ const box=$("#ckBody");if(!box)return;
+ if(ON&&me&&MGW===null){box.innerHTML='<div class="card"><div class="empty">'+esc(mgState||'Carregando…')+'</div></div>';return}
+ const day=CKD||dk(Date.now()),data=mgData();
+ if(!data.days.includes(day)){ckIr(day,true);return}
+ const g=$("#gal").value,t=$("#turnoF").value,can=ckPode();
+ const ops=data.ops.filter(o=>(g==='__all'||o.g===g)&&(!t||String(o.t)===t)&&!o.excluido&&mgEligible(o,day));
+ const feito=o=>!!mgRegDia(o,day)||!!PBX[o.id+'|'+day];
+ const pend=ops.filter(o=>!feito(o)),conf=ops.filter(feito);
+ const dis=can?'':' disabled';
+ const btn=(k,rot,m)=>`<button class="btn${k==='presente'?'':' alt'} sm" type="button" data-ck="${k}" data-m="${esc(m)}"${dis}>${rot}</button>`;
+ const linha=o=>{const L=data.byOpDay.get(day+'|'+o.m)||[],tn=turnoOf(o,day),at=atrasoDia(o,day,L),pb=L.length?presHm(Math.min(...L.map(w=>w.ts))):'sem bipe';
+  return `<div class="ckr"><div class="ckn"><b>${esc(o.n)}</b><small>${esc(o.m.split('~')[0])}</small></div><div class="ckm">Turno ${tn.ini}h às ${tn.fim}h<br>Primeiro bipe: ${pb}${at>0?` <span class="tag">atraso ${hh(at*6e4)}</span>`:''}</div><div class="ctl ckb">${btn('presente','Presente',o.m)}${btn('falta','Falta',o.m)}${btn('declaracao','Declaração',o.m)}${btn('atestado','Atestado',o.m)}${btn('folga','Folga',o.m)}<input type="number" class="ckd" data-m="${esc(o.m)}" min="1" max="90" placeholder="dias" aria-label="Dias de atestado ou folga de ${esc(o.n)}"${dis}></div></div>`};
+ const feita=o=>{const r=mgRegDia(o,day),bx=PBX[o.id+'|'+day];
+  return `<tr><td><b>${esc(o.n)}</b><br><small>${esc(o.m.split('~')[0])}</small></td><td>${esc(mgStatus(o,day,data.byOpDay.get(day+'|'+o.m)||[],data))}${r&&r.i!==r.f?`<br><small>${presData(r.i)} a ${presData(r.f)}</small>`:''}</td><td>${r&&can?`<button class="btn alt sm" type="button" data-ckun="${r.id}">Desfazer${r.i!==r.f?' (período inteiro)':''}</button>`:bx?'<small>Baixa registrada</small>':''}</td></tr>`};
+ const wd=new Date(day+'T12:00:00').toLocaleDateString('pt-BR',{weekday:'long'});
+ const nav=`<div class="ctl"><button class="btn alt sm" type="button" data-ckday="-1">← Dia anterior</button><button class="btn alt sm" type="button" data-ckday="0"${day===dk(Date.now())?' disabled':''}>Hoje</button><button class="btn alt sm" type="button" data-ckday="1">Próximo dia →</button><b>${presData(day)}, ${esc(wd)}</b></div>`;
+ box.innerHTML=`<div class="card">${nav}
+ <div class="legend" style="margin:8px 0">Marque a situação de cada pessoa. Ao escolher, o nome sai da lista e entra na tabela da semana. Atestado e folga aceitam a quantidade de dias.${can?'':' Só gestores com permissão de registros podem marcar.'}</div>
+ <h2>A conferir (${pend.length})</h2><div class="tw">${pend.length?`<div class="ckl">${pend.map(linha).join('')}</div>`:'<div class="empty">Todos conferidos neste dia.</div>'}</div>
+ <h2 style="margin-top:16px">Conferidos (${conf.length})</h2><div class="tw">${conf.length?`<table><tr><th>Pessoa</th><th>Situação</th><th></th></tr>${conf.map(feita).join('')}</table>`:'<div class="empty">Nenhum conferido ainda.</div>'}</div></div>
+ <div class="card" style="margin-top:14px"><h2>Semana ${presData(data.days[0])} a ${presData(data.days[data.days.length-1])}</h2><div class="tw">${wkTabela(data,ops)}</div><div class="legend">Os dias conferidos aparecem aqui na hora. Toque em um dia para abrir a pessoa.</div></div>`;
+}
+async function ckRegistrar(m,tipo){
+ if(CKBUSY)return;
+ const o=mgData().ops.find(x=>x.m===m);
+ if(!o||!o.id||!ckPode()){toast("Sem permissão para registrar presença.");return}
+ if(!online()){toast("Sem internet. Registros precisam de conexão.",5000);return}
+ const day=CKD||dk(Date.now()),inp=document.querySelector('.ckd[data-m="'+m.replace(/"/g,'')+'"]'),dias=inp&&+inp.value>0?+inp.value:0;
+ const fim=(tipo==='atestado'||tipo==='folga')&&dias>0?addDias(day,dias-1):day;
+ CKBUSY=true;
+ try{const r=await mut("/rest/v1/presenca_registros","POST",{operador_id:o.id,tipo,data_ini:day,data_fim:fim});const x=r[0];
+  (PRS[o.id]=PRS[o.id]||[]).push({id:x.id,t:x.tipo,i:x.data_ini,f:x.data_fim,hi:x.horario_ini,hf:x.horario_fim,o:x.observacao,e:x.criado_por});
+  toast(PRES_LAB[tipo]+" · "+o.n)}
+ catch(e){toast(errMsg(e),6000)}
+ CKBUSY=false;checking();
+}
+async function ckDesfazer(id){
+ if(CKBUSY)return;
+ if(!ckPode()){toast("Sem permissão para desfazer.");return}
+ if(!online()){toast("Sem internet. Alterações precisam de conexão.",5000);return}
+ CKBUSY=true;
+ try{await mut("/rest/v1/presenca_registros?id=eq."+id,"PATCH",{cancelado_em:new Date().toISOString()});
+  Object.keys(PRS).forEach(k=>{PRS[k]=PRS[k].filter(r=>r.id!==id)});toast("Marcação desfeita")}
+ catch(e){toast(errMsg(e),6000)}
+ CKBUSY=false;checking();
+}
+$("#ckBody").addEventListener("click",e=>{const b=e.target.closest("[data-ck]");if(b){ckRegistrar(b.dataset.m,b.dataset.ck);return}
+ const u=e.target.closest("[data-ckun]");if(u){ckDesfazer(u.dataset.ckun);return}
+ const n=e.target.closest("[data-ckday]");if(n){const off=+n.dataset.ckday;ckIr(off===0?dk(Date.now()):addDias(CKD||dk(Date.now()),off));return}
+ const c=e.target.closest(".wkc");if(c)wkAbrir(c.dataset.m,c.dataset.d)});
 /* abre a pessoa no dia escolhido na aba Meta individual */
 async function wkAbrir(m,d){$("#day").value=d;$("#iPer").value="1";$('#gsub [data-gs="mi"]').click();await loadManagement();$("#iOp").value=m;individual()}
 const PHX_CAMPO={saida:'horário da saída',cancelado_em:'cancelamento',observacao:'observação',data_ini:'data inicial',data_fim:'data final',horario_ini:'horário inicial',horario_fim:'horário final',tipo:'tipo',inicio:'início do turno',fim:'término do turno'};
@@ -1598,7 +1676,7 @@ $("#iBody").addEventListener("click",e=>{if(e.target.id==="mgMore"){mgShown+=100
 $("#wkBody").addEventListener("click",e=>{const b=e.target.closest("[data-wk]");if(b){const off=+b.dataset.wk;wkIr(off===0?hojeSemana():addDias(WKW||mondayOf($("#day").value),off));return}const c=e.target.closest(".wkc");if(c)wkAbrir(c.dataset.m,c.dataset.d)});
 $("#wkBody").addEventListener("input",e=>{if(e.target.id!=="wkQ")return;WKQ=e.target.value;semana();const i=$("#wkQ");if(i){i.focus();i.setSelectionRange(i.value.length,i.value.length)}});
 const hojeSemana=()=>mondayOf(dk(Date.now()));
-$("#gsub").onclick=e=>{const x=e.target.dataset.gs;if(!x)return;gsub=x;$$("#gsub button").forEach(b=>b.classList.toggle("on",b===e.target));$("#iBody").classList.toggle("hide",x!=="mi");$("#coBody").classList.toggle("hide",x!=="mc");$("#wkBody").classList.toggle("hide",x!=="sem");$("#iOp").classList.toggle("hide",x!=="mi");$("#iPrint").classList.toggle("hide",x!=="mi");if(x==="sem")wkIr(WKW||mondayOf($("#day").value));else if(x==="mc")coletiva();else individual()};
+$("#gsub").onclick=e=>{const x=e.target.dataset.gs;if(!x)return;gsub=x;$$("#gsub button").forEach(b=>b.classList.toggle("on",b===e.target));$("#iBody").classList.toggle("hide",x!=="mi");$("#coBody").classList.toggle("hide",x!=="mc");$("#wkBody").classList.toggle("hide",x!=="sem");$("#ckBody").classList.toggle("hide",x!=="chk");$("#iOp").classList.toggle("hide",x!=="mi");$("#iPrint").classList.toggle("hide",x!=="mi");if(x==="chk")ckIr(CKD||dk(Date.now()),true);else if(x==="sem")wkIr(WKW||mondayOf($("#day").value));else if(x==="mc")coletiva();else individual()};
 
 document.addEventListener("click",e=>{const d=e.target.dataset,t=e.target;
  const tyB=t.closest&&t.closest("[data-ty]");if(tyB){ty=tyB.dataset.ty;if(!multiOnda()&&rows.length>1)rows.splice(1);segs();setTimeout(()=>goStep(3),260)}

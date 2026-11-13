@@ -47,6 +47,9 @@ assert.equal(ctx.mgStatus(bru,day,[],ctx.mgData()),'Falta injustificada');
 assert.equal(ctx.mgStatus(bru,day,[{ts:Date.now(),qty:1,ty:'Vários artigos'}],ctx.mgData()),'Falta injustificada · bipou (conferir)');
 setGlob('PRS',{'op-br':[{id:'r4',t:'folga',i:'2000-01-01',f:'2000-01-02',o:'',e:'g@x.z'}]});
 assert.equal(ctx.mgStatus(bru,day,[],ctx.mgData()),'Pendente de conferência');
+setGlob('PRS',{'op-br':[{id:'r5',t:'presente',i:day,f:day,o:'',e:'g@x.z'}]});setGlob('PBX',{});
+assert.equal(ctx.mgStatus(bru,day,[],ctx.mgData()),'Presente');
+assert.equal(ctx.mgStatus(bru,day,[{ts:Date.now(),qty:1,ty:'Vários artigos'}],ctx.mgData()),'Bipou');
 // baixa às 12:00 do dia: ondas depois desse horário saem da contagem individual, mas continuam no total da equipe
 ctx.S.ops.find(o=>o.m==='CL001').id='op-ana';setGlob('PRS',{});setGlob('PBX',{['op-ana|'+day]:{id:'b1',saida:new Date(day+'T12:00:00').getTime()}});
 const antes=new Date(day+'T11:00:00').getTime(),depois=new Date(day+'T13:00:00').getTime();

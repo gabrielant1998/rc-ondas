@@ -513,6 +513,15 @@ await T("76 Semana: segunda a domingo, colunas separadas; toque no dia abre a pe
  ok(q.op==='CL002'&&q.per==='1',JSON.stringify(q));
  });
 
+await T("77 Checking diário: todos os nomes numa lista, opções por pessoa e a semana embaixo",async()=>{
+ const p=await page(b,base());
+ await p.evaluate(()=>{go('ind');document.querySelector('#gsub [data-gs="chk"]').click()});
+ await p.waitForTimeout(400);
+ const r=await p.evaluate(()=>({txt:$('#ckBody').textContent.replace(/\s+/g,' '),btn:[...document.querySelectorAll('#ckBody [data-ck]')].map(b=>b.dataset.ck),vis:$('#ckBody').offsetParent!==null,sem:document.querySelectorAll('#ckBody .wkc').length}));
+ ok(r.vis&&/A conferir \(\d+\)/.test(r.txt)&&r.txt.includes('Conferidos'),'cabeçalhos: '+r.txt.slice(0,200));
+ ok(['presente','falta','declaracao','atestado','folga'].every(k=>r.btn.includes(k)),'opções: '+r.btn.join());
+ ok(r.sem>0&&r.sem%7===0,'tabela da semana: '+r.sem)});
+
 await b.close();
 const w=Math.max(...R.map(r=>r[1].length));for(const r of R)console.log((r[0]==="PASS"?"✅":"❌")+" "+r[1].padEnd(w)+"  "+r[2]);
 console.log(`\n${R.filter(r=>r[0]==="PASS").length}/${R.length} passaram`)})();
