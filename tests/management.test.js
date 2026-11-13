@@ -25,14 +25,14 @@ assert.equal(ctx.mgReference(ana,data),1200);
 ctx.S.waves.push(wave('CL002',11));data=ctx.mgData();assert.equal(ctx.mgReference(ana,data),600);assert.equal(ctx.mgReference(bruno,data),600);
 const future=new Date();future.setDate(future.getDate()+2);const futureKey=ctx.dk(future);assert.equal(ctx.mgStatus(bruno,futureKey,[],data),'Aguardando turno');
 const later={...bruno,criado:future.toISOString()};assert.equal(ctx.mgStatus(later,day,[],data),'Fora do cadastro');
-// turno por pessoa: mudança feita hoje não altera os dias anteriores
+// turno por pessoa: a mudança vale retroativamente, em todos os dias
 const realTurno=html.slice(html.indexOf('function turnoOf('),html.indexOf('function isOT('));
 vm.runInContext(realTurno,ctx);
 const cida={id:'op-cida',m:'CL004',n:'Cida',t:1,ini:7,fim:15,g:'A'};
 ctx.hist={'op-cida':[{c:'inicio',a:6,n:7,e:'x@y.z',t:new Date('2026-11-10T10:00:00').getTime()},{c:'fim',a:14,n:15,e:'x@y.z',t:new Date('2026-11-12T10:00:00').getTime()}]};
 vm.runInContext('TH=hist',ctx);
-assert.deepEqual({...ctx.turnoOf(cida,'2026-11-09')},{ini:6,fim:14});
-assert.deepEqual({...ctx.turnoOf(cida,'2026-11-11')},{ini:7,fim:14});
+assert.deepEqual({...ctx.turnoOf(cida,'2026-11-09')},{ini:7,fim:15});
+assert.deepEqual({...ctx.turnoOf(cida,'2026-11-11')},{ini:7,fim:15});
 assert.deepEqual({...ctx.turnoOf(cida,'2026-11-13')},{ini:7,fim:15});
 assert.deepEqual({...ctx.turnoOf({id:'sem',t:1})},{...ctx.S.cfg.turnos[1]});
 // registros de presença: nada é calculado sozinho; baixa para a contagem individual

@@ -764,10 +764,8 @@ let PRS={},PBX={},PHX={},ATR={};
 const turnoPadrao=t=>{const x=S.cfg.turnos[t===2?2:1];return{inicio:x.ini,fim:x.fim}};
 function turnoOf(o,d){
  if(!o||o.ini==null||o.fim==null)return S.cfg.turnos[o&&o.t===2?2:1];
- let ini=o.ini,fim=o.fim;const h=d&&o.id&&TH[o.id];
- if(h){const fd=new Date(d+'T00:00:00');fd.setDate(fd.getDate()+1);const seen={};
-  h.filter(x=>x.t>=fd.getTime()).sort((x,y)=>x.t-y.t).forEach(x=>{if(seen[x.c])return;seen[x.c]=1;if(x.c==='inicio')ini=x.a;else fim=x.a})}
- return{ini,fim};
+ /* o turno vale retroativamente: sempre o horário atual da pessoa, em todos os dias (horas extras, atrasos e históricos). As alterações ficam registradas em TH apenas para auditoria. */
+ return{ini:o.ini,fim:o.fim};
 }
 function isOT(w){const o=opOf(w.op);if(!o)return false;const t=turnoOf(o,dk(w.fin||w.ts)),d=new Date(w.fin||w.ts),h=d.getHours()+d.getMinutes()/60,tol=(S.cfg.tol||0)/60;
  if(t.fim>t.ini)return h<t.ini-tol||h>t.fim+tol;
