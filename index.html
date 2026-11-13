@@ -612,11 +612,12 @@ async function pull(){
  else{S.ges=[];me=null;SOL=[]}
  TH={};
  if(me){try{const hs=await api("/rest/v1/presenca_alteracoes?select=operador_id,campo,valor_anterior,valor_novo,email,alterado_em&order=alterado_em.asc");hs.forEach(h=>{(TH[h.operador_id]=TH[h.operador_id]||[]).push({c:h.campo,a:h.valor_anterior,n:h.valor_novo,e:h.email,t:Date.parse(h.alterado_em)})})}catch(e){}}
- PRS={};PBX={};PHX={};
+ PRS={};PBX={};PHX={};ATR={};
  if(me){const cd=dk(Date.now()-40*864e5);
   try{const hs2=await api("/rest/v1/presenca_historico?select=operador_id,tabela,campo,valor_anterior,valor_novo,email,alterado_em&order=alterado_em.desc&limit=300");hs2.forEach(x=>{(PHX[x.operador_id]=PHX[x.operador_id]||[]).push({tab:x.tabela,c:x.campo,a:x.valor_anterior,n:x.valor_novo,e:x.email,t:Date.parse(x.alterado_em)})})}catch(e){}
   try{const rs=await api("/rest/v1/presenca_registros?select=id,operador_id,tipo,data_ini,data_fim,horario_ini,horario_fim,observacao,criado_por&cancelado_em=is.null&data_fim=gte."+cd);rs.forEach(r=>{(PRS[r.operador_id]=PRS[r.operador_id]||[]).push({id:r.id,t:r.tipo,i:r.data_ini,f:r.data_fim,hi:r.horario_ini,hf:r.horario_fim,o:r.observacao,e:r.criado_por})})}catch(e){}
-  try{const bs=await api("/rest/v1/presenca_baixas?select=id,operador_id,data,saida&data=gte."+cd);bs.forEach(b=>{PBX[b.operador_id+'|'+b.data]={id:b.id,saida:Date.parse(b.saida)}})}catch(e){}}
+  try{const bs=await api("/rest/v1/presenca_baixas?select=id,operador_id,data,saida&data=gte."+cd);bs.forEach(b=>{PBX[b.operador_id+'|'+b.data]={id:b.id,saida:Date.parse(b.saida)}})}catch(e){}
+  try{const at=await api("/rest/v1/presenca_atrasos?select=id,operador_id,data,observacao,criado_por&data=gte."+cd);at.forEach(a=>{ATR[a.operador_id+'|'+a.data]={id:a.id,obs:a.observacao,e:a.criado_por}})}catch(e){}}
  const mine=S.waves.filter(w=>!w.srv);
  if(me){const de=new Date(Date.now()-35*864e5).toISOString(),srv=[];
   for(let off=0;;off+=1000){const p=await api("/rest/v1/ondas?select=id,wn,operador_id,galpao_id,tipo,quantidade,status,registrada_em,concluida_em,encerrada_auto,procura_sku,procura_local,procura_nome,procura_em,procura_hist,tempo_zerado&registrada_em=gte."+encodeURIComponent(de)+"&order=registrada_em.asc&limit=1000&offset="+off);
@@ -747,7 +748,7 @@ const h32=s=>{let h=5381;for(let i=0;i<s.length;i++)h=(h*33^s.charCodeAt(i))>>>0
 /* alterações de turno por pessoa (carregadas para gestores): {c:'inicio'|'fim', a:valor anterior, n:novo, t:momento, e:quem} */
 let TH={};
 /* registros de presença (falta, declaração, atestado, folga) e baixas, só para gestores; PBX por "operador|dia" */
-let PRS={},PBX={},PHX={};
+let PRS={},PBX={},PHX={},ATR={};
 /* horário da pessoa; com dia informado, usa o horário que valia naquele dia (desfaz alterações posteriores) */
 function turnoOf(o,d){
  if(!o||o.ini==null||o.fim==null)return S.cfg.turnos[o&&o.t===2?2:1];
@@ -1030,8 +1031,9 @@ function mgPresencaCard(o,data){
  const hora=bx?presHm(bx.saida):day===hoje?new Date().toTimeString().slice(0,5):'';
  return`<div class="card" style="margin-top:14px"><h2>Presença em ${presData(day)}</h2>
  <div class="legend" style="margin-bottom:10px">Situação: <b>${esc(st)}</b>. Falta, declaração, atestado e folga são lançados pelo gestor. Quem não bipou aparece como pendente de conferência, nunca como falta automática.${can?'':' Só gestores com permissão de registros podem lançar.'}</div>
- <div class="ctl"><label>Tipo <select id="presTipo"${dis}>${tipos}</select></label><label>Data inicial <input type="date" id="presIni" value="${day}"${dis}></label><label>Data final <input type="date" id="presFim" value="${day}"${dis}></label><label>Horário (declaração) <input type="time" id="presHi"${dis}></label><label>até <input type="time" id="presHf"${dis}></label><label>Observação <input type="text" id="presObs" maxlength="500"${dis}></label><button class="btn" id="presSalvar" type="button"${dis}>Registrar</button></div>
+ <div class="ctl"><label>Tipo <select id="presTipo"${dis}>${tipos}</select></label><label>Data inicial <input type="date" id="presIni" value="${day}"${dis}></label><label>Data final <input type="date" id="presFim" value="${day}"${dis}></label><label>Dias (atestado) <input type="number" id="presDias" min="1" max="90" placeholder="opcional"${dis}></label><label>Horário (declaração) <input type="time" id="presHi"${dis}></label><label>até <input type="time" id="presHf"${dis}></label><label>Observação <input type="text" id="presObs" maxlength="500"${dis}></label><button class="btn" id="presSalvar" type="button"${dis}>Registrar</button></div>
  <div class="tw" style="margin-top:12px">${lista}</div>
+ ${(()=>{const m=atrasoDia(o,day,L);if(!m)return'';const at=ATR[o.id+'|'+day];return `<h2 style="margin-top:14px">Possível atraso: ${hh(m*6e4)}</h2><div class="ctl"><label>Observação do gestor <input type="text" id="presAtrObs" maxlength="500" value="${esc(at&&at.obs||'')}" placeholder="ex.: Aguardando onda, Declaração apresentada"${dis}></label><button class="btn" id="presAtrSalvar" type="button"${dis}>Salvar observação</button></div><div class="legend">O primeiro bipe (${presHm(Math.min(...L.map(w=>w.ts)))}) não muda. A observação é opcional e fica no histórico.</div>`})()}
  <h2 style="margin-top:14px">Baixa</h2>
  <div class="ctl"><span>${bx?'Saiu às '+presHm(bx.saida):'Sem baixa neste dia.'}</span><label>Horário <input type="time" id="presBaixaHora" value="${hora}"${dis}></label><button class="btn" id="presBaixa" type="button"${dis}>${bx?'Corrigir baixa':'Dar baixa'}</button></div>
  <div class="legend">Depois da baixa, a contagem individual para no horário registrado e o tempo já contado fica preservado. Cada alteração fica no histórico.</div></div>`;
@@ -1040,11 +1042,20 @@ function presOp(){return (INDX&&INDX.ops||[]).find(x=>x.m===$("#iOp").value)}
 async function presSalvar(){
  const o=presOp();
  if(!o||!o.id||!ON||!me||!me.pR){toast("Sem permissão para registrar presença.");return}
- const tipo=$("#presTipo").value,ini=$("#presIni").value,fim=tipo==='falta'?ini:($("#presFim").value||ini),hi=$("#presHi").value||null,hf=$("#presHf").value||null,obs=$("#presObs").value.trim();
+ const tipo=$("#presTipo").value,ini=$("#presIni").value,fim=tipo==='falta'?ini:(tipo==='atestado'&&+$("#presDias").value>0?addDias(ini,+$("#presDias").value-1):($("#presFim").value||ini)),hi=$("#presHi").value||null,hf=$("#presHf").value||null,obs=$("#presObs").value.trim();
  if(!ini){toast("Informe a data.");return}
  if(fim<ini){toast("A data final é anterior à inicial.");return}
  if(hi&&hf&&hf<=hi){toast("O horário final precisa ser depois do inicial.");return}
  const ok=await rem(()=>mut("/rest/v1/presenca_registros","POST",{operador_id:o.id,tipo,data_ini:ini,data_fim:fim,horario_ini:hi,horario_fim:hf,observacao:obs||null}),PRES_LAB[tipo]+" registrado para "+o.n);
+ if(ok)await loadManagement();
+}
+/* observação do gestor sobre o alerta de atraso do dia; o primeiro bipe não é alterado */
+async function presAtrSalvar(){
+ const o=presOp();
+ if(!o||!o.id||!ON||!me||!me.pR){toast("Sem permissão para registrar observação.");return}
+ const day=$("#day").value,obs=$("#presAtrObs").value.trim()||null,at=ATR[o.id+'|'+day];
+ const ok=at?await rem(()=>mut("/rest/v1/presenca_atrasos?id=eq."+at.id,"PATCH",{observacao:obs}),"Observação do atraso salva")
+            :await rem(()=>mut("/rest/v1/presenca_atrasos","POST",{operador_id:o.id,data:day,observacao:obs}),"Observação do atraso salva");
  if(ok)await loadManagement();
 }
 async function presCancelar(id){
@@ -1109,7 +1120,7 @@ const PHX_CAMPO={saida:'horário da saída',cancelado_em:'cancelamento',observac
 /* histórico de presença da pessoa (registros, baixas e alterações de turno) */
 function mgHistPresenca(o){
  const h=(PHX[o.id]||[]).slice(0,12);if(!h.length)return'';
- return `<div class="card" style="margin-top:14px"><h2>Histórico de presença</h2><div class="tw">${h.map(x=>`<div>${new Date(x.t).toLocaleString('pt-BR')} · ${x.tab==='presenca_baixas'?'Baixa':'Registro'} · ${esc(PHX_CAMPO[x.c]||x.c)}: ${esc(x.a==null?'—':x.a)} → ${esc(x.n==null?'—':x.n)} · ${esc(x.e||'')}</div>`).join('')}</div><div class="legend">Registros cancelados e baixas corrigidas continuam no banco, com o valor anterior.</div></div>`;
+ return `<div class="card" style="margin-top:14px"><h2>Histórico de presença</h2><div class="tw">${h.map(x=>`<div>${new Date(x.t).toLocaleString('pt-BR')} · ${x.tab==='presenca_baixas'?'Baixa':x.tab==='presenca_atrasos'?'Observação do atraso':'Registro'} · ${esc(PHX_CAMPO[x.c]||x.c)}: ${esc(x.a==null?'—':x.a)} → ${esc(x.n==null?'—':x.n)} · ${esc(x.e||'')}</div>`).join('')}</div><div class="legend">Registros cancelados e baixas corrigidas continuam no banco, com o valor anterior.</div></div>`;
 }
 function destaques(rows,data){
  const R=rows.map(x=>{const L=data.days.flatMap(d=>data.byOpDay.get(d+'|'+x.o.m)||[]),P=prod(L),C=durs(L),tm=C.reduce((s,c)=>s+c.d,0),cu=C.reduce((s,c)=>s+c.qty,0);
@@ -1586,7 +1597,7 @@ $("#psub").onclick=e=>{const k=e.target.dataset.p;if(k)psub(k)};
 $("#sub").onclick=e=>{const s=e.target.dataset.s;if(!s)return;$$("#sub button").forEach(b=>b.classList.toggle("on",b===e.target));["reg","ctl","ace"].forEach(x=>$("#"+x).classList.toggle("hide",x!==s));tick()};
 $("#csub").onclick=e=>{const c=e.target.dataset.c;if(!c)return;csub=c;$$("#csub button").forEach(b=>b.classList.toggle("on",b===e.target));["cop","cus","cga","cge","cma"].forEach(x=>$("#"+x).classList.toggle("hide",x!==c));if(c==="cge"&&ON&&me&&me.adm)pull().then(()=>cfgGes()).catch(()=>{});if(c==="cma")cfgMan()};
 $("#iPrint").onclick=imprimirFolhas;$("#iOp").onchange=()=>{mgShown=100;individual()};$("#iPer").onchange=()=>{mgShown=100;individual();coletiva();loadManagement()};
-$("#iBody").addEventListener("click",e=>{if(e.target.id==="mgMore"){mgShown+=100;individual()}if(e.target.id==="mgTurnoSave")mgSalvarTurno();if(e.target.id==="presSalvar")presSalvar();if(e.target.id==="presBaixa")presBaixa();if(e.target.dataset&&e.target.dataset.cancel)presCancelar(e.target.dataset.cancel)});
+$("#iBody").addEventListener("click",e=>{if(e.target.id==="mgMore"){mgShown+=100;individual()}if(e.target.id==="mgTurnoSave")mgSalvarTurno();if(e.target.id==="presSalvar")presSalvar();if(e.target.id==="presBaixa")presBaixa();if(e.target.id==="presAtrSalvar")presAtrSalvar();if(e.target.dataset&&e.target.dataset.cancel)presCancelar(e.target.dataset.cancel)});
 $("#wkBody").addEventListener("click",e=>{const b=e.target.closest("[data-wk]");if(b){const off=+b.dataset.wk;wkIr(off===0?hojeSemana():addDias(WKW||mondayOf($("#day").value),off));return}const c=e.target.closest(".wkc");if(c)wkAbrir(c.dataset.m,c.dataset.d)});
 $("#wkBody").addEventListener("input",e=>{if(e.target.id!=="wkQ")return;WKQ=e.target.value;semana();const i=$("#wkQ");if(i){i.focus();i.setSelectionRange(i.value.length,i.value.length)}});
 const hojeSemana=()=>mondayOf(dk(Date.now()));

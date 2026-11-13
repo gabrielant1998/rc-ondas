@@ -513,6 +513,16 @@ await T("76 Semana: segunda a domingo, colunas separadas; toque no dia abre a pe
  ok(q.op==='CL002'&&q.per==='1',JSON.stringify(q));
  });
 
+await T("77 Presença: alerta de atraso com observação e atestado com quantidade de dias",async()=>{
+ const now=new Date(),d=new Date(now);d.setDate(d.getDate()-1);d.setHours(0,0,0,0);const baseT=d.getTime();
+ const w={id:'at1',wn:'at1',op:'CL001',opn:'Ana Souza',gal:'Galpão 1',ty:'Vários artigos',qty:10,st:0,ts:baseT+7.75*36e5,fin:baseT+7.75*36e5,sync:1};
+ const p=await page(b,base({waves:[w]}));
+ await p.evaluate(t=>{$('#day').value=dk(t);go('ind');$('#iOp').value='CL001';individual()},baseT);
+ await p.waitForTimeout(300);
+ const r=await p.evaluate(()=>({atraso:(document.querySelector('#iBody')||{}).textContent.includes('Possível atraso: 45 min')||(document.querySelector('#iBody')||{}).textContent.includes('Possível atraso'),obs:!!document.querySelector('#presAtrObs'),dias:!!document.querySelector('#presDias'),primeiro:document.querySelector('#iBody').textContent.includes('O primeiro bipe')}));
+ ok(r.atraso&&r.obs&&r.dias&&r.primeiro,JSON.stringify(r));
+});
+
 await b.close();
 const w=Math.max(...R.map(r=>r[1].length));for(const r of R)console.log((r[0]==="PASS"?"✅":"❌")+" "+r[1].padEnd(w)+"  "+r[2]);
 console.log(`\n${R.filter(r=>r[0]==="PASS").length}/${R.length} passaram`)})();
