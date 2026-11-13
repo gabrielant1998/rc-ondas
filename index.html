@@ -1237,9 +1237,6 @@ function individual(){
  mgK('Meta individual: unidades',MI()[o.g]&&MI()[o.g].q?vsMeta(qty,metaInd(o,L).q):'—',MI()[o.g]&&MI()[o.g].q?'por dia com bipagem':'defina em Configurações')+mgK('Meta individual: ondas',MI()[o.g]&&MI()[o.g].o?vsMeta(P.length,metaInd(o,L).o):'—',MI()[o.g]&&MI()[o.g].o?'por dia com bipagem':'defina em Configurações')+mgK('Referência individual',ref===null?'—':fmt(ref),ref===null?'defina a meta do galpão':fmt(qty/ref*100)+'% da referência')+
  mgK('Faltas injustificadas',fmt(miss),'registradas pelo gestor')+mgK('Pendentes de conferência',fmt(pend),'dias sem bipagem')+mgK('Hora extra estimada',extra?hh(extra):ot?'—':'0h00',ot?ot+' bipagem(ns) fora do turno':'sem bipagens fora do turno')+`</dl>
  <div class="grid two" style="margin-top:14px"><div class="card"><h2>Produção por tipo</h2>${bars(types)}</div><div class="card"><h2>Como calcular</h2><div class="legend">A referência é a meta diária atual do galpão dividida entre as pessoas que biparam no dia. Os tipos de onda têm dificuldades diferentes; o valor serve apenas para acompanhamento. A hora extra soma intervalos entre bipagens fora do turno, até o intervalo máximo configurado. Uma bipagem isolada não permite calcular horas. Não substitui o controle de ponto.</div></div></div>
- ${mgPresencaCard(o,data)}
- ${mgTurnoCard(o,data)}
- ${mgHistPresenca(o)}
  ${mgTempo(o,L)}
  <div class="card" style="margin-top:14px"><h2>Resumo por dia</h2><div class="tw"><table><tr><th>Data</th><th>Situação</th><th>Unidades</th><th>Ondas</th><th>Tempo trabalhado</th><th>Extra estimada</th></tr>`+
  daily.map(x=>{const ts=x.w.map(w=>w.ts);return `<tr><td>${new Date(x.d+'T12:00').toLocaleDateString('pt-BR')}</td><td>${x.status}</td><td>${fmt(x.p.reduce((s,w)=>s+w.qty,0))}</td><td>${x.p.length}</td><td>${ts.length>1&&Math.max(...ts)>Math.min(...ts)?hh(Math.max(...ts)-Math.min(...ts)):'—'}</td><td>${x.x.ms?hh(x.x.ms):x.x.count?'Sem medição':'—'}</td></tr>`}).join('')+
