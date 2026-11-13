@@ -362,7 +362,7 @@ a[data-pick]{display:inline-block;padding:8px 0 2px;color:var(--gx);font-weight:
 
 <!-- ======================= OPERAÇÃO ======================= -->
 <section id="op" class="hide">
- <div class="sub" id="sub"><button data-s="reg" class="on">Registro</button><button data-s="ctl" id="subCtl">Controle de Ondas</button><button data-s="ace">Acompanhamento</button></div>
+ <div class="sub" id="sub"><button data-s="reg" class="on">Registro</button><button data-s="ctl" id="subCtl">Controle de Ondas</button><button data-s="ace">Ondas concluídas do dia</button></div>
 
  <div id="reg" class="grid two">
   <div class="card"><h2>Nova onda</h2>
@@ -394,10 +394,6 @@ a[data-pick]{display:inline-block;padding:8px 0 2px;color:var(--gx);font-weight:
   <div class="tw" id="ctlList"></div></div>
 
   <div id="ace" class="grid two hide">
-  <div class="card"><h2>Temporizador automático</h2><div id="tauto"></div><div class="legend">Janela de agrupamento de 2 min, depois contagem efetiva. Trocar de operador reinicia.</div></div>
-  <div class="card"><h2>Temporizador manual</h2><div id="tman"></div>
-   <div class="grid" style="grid-template-columns:repeat(3,1fr);margin-top:8px"><button class="btn" id="mS">Iniciar</button><button class="btn am" id="mP">Pausar</button><button class="btn d" id="mE">Encerrar</button></div>
-   <div id="mLog" class="legend"></div></div>
   <div class="card" style="grid-column:1/-1"><h2>Ondas concluídas do dia <span class="pill" id="aceN"></span></h2>
    <div class="ctl" style="margin-bottom:10px"><input id="aceQ" type="search" placeholder="Buscar onda, operador ou tipo" aria-label="Buscar nas ondas concluídas" autocomplete="off" style="max-width:320px"></div>
    <div class="tw" id="aceL"></div><div class="pg" id="acePg"></div></div>
@@ -972,11 +968,7 @@ document.addEventListener("input",e=>{if(e.target.id==="aceQ"){ACEP=0;aceLista()
 document.addEventListener("change",e=>{if(e.target.id==="day")ACEP=0});
 function filters(){const f=(id,h,o)=>{const e=$(id),v=e.value;e.innerHTML=`<option value="">${h}</option>`+o.map(([a,b])=>`<option value="${a}">${esc(b)}</option>`).join("");e.value=v};
  f("#fOp","Operador",S.ops.map(o=>[o.m,o.n]));f("#fTy","Tipo",TY.map(t=>[t[0],t[0]]));f("#fSt","Status",[[1,"Procurando"],[2,"Difícil acesso"]])}
-function tick(){const a=$("#tauto");
- if(view==="op"){if(!tim.op)a.innerHTML='<div class="empty">Identifique um operador na aba Registro para iniciar.</div>';
-  else{const d=Date.now()-tim.t0,w=2*6e4,inW=d<w;a.innerHTML=`<div style="font-weight:600">${esc(tim.n)}, ${tim.op}</div><div class="big" style="color:${inW?"var(--a)":"var(--g)"}">${inW?mm(w-d):mm(d-w)}</div><span class="pill ${inW?"warn":""}">${inW?"Janela de agrupamento":"Tempo efetivo da onda"}</span>`}
-  const m=S.man;$("#tman").innerHTML=`<div style="font-weight:600">${esc(m.n||"Sem operador")}</div><div class="big">${mm((m.acc||0)+(m.run?Date.now()-m.run:0))}</div><span class="pill ${m.run?"":"off"}">${m.run?"Em andamento":"Parado"}</span>`;
-  $("#mLog").innerHTML=m.log.slice(-3).map(l=>"• "+esc(l)).join("<br>")}
+function tick(){
  if(view==="op"&&!$("#ctl").classList.contains("hide"))ctlLive();
  $$("[data-el]").forEach(e=>e.textContent=mm(Date.now()-e.dataset.el))}
 
@@ -1897,10 +1889,6 @@ $("#save").onclick=()=>{const o=findOp($("#opIn").value);
  track(o);if(commit(list.map(x=>mk(o,x.q,0,x.wn)))===false)return;
  rows=[{wn:"",q:""}];$("#opIn").value="";$("#opName").textContent="";$("#opSug").innerHTML="";sugL=[];goStep(1)};
 ["#fOp","#fTy","#fSt"].forEach(i=>$(i).onchange=operacao);
-$("#mS").onclick=()=>{const o=findOp($("#opIn").value),m=S.man;if(!m.run){if(o)m.n=o.n;m.run=Date.now();m.log.push((m.n||"—")+" iniciou "+new Date().toLocaleTimeString("pt-BR"));save();tick()}};
-$("#mP").onclick=()=>{const m=S.man;if(m.run){m.acc=(m.acc||0)+Date.now()-m.run;m.run=0;m.log.push("pausa "+new Date().toLocaleTimeString("pt-BR"));save();tick()}};
-$("#mE").onclick=()=>{const m=S.man;m.acc=(m.acc||0)+(m.run?Date.now()-m.run:0);m.log.push((m.n||"—")+" encerrou: "+mm(m.acc));S.man={log:m.log};save();tick()};
-
 /* cadastros */
 $("#uB").onclick=()=>{const n=$("#uN").value.trim().replace(/\s+/g," ");
  if(n.length<2){toast("Informe o nome");return}

@@ -370,13 +370,14 @@ await T("54 Histórico: só gestores e administradores veem a aba",async()=>{
  await p.evaluate(()=>go('his'));ok(await p.isVisible('#login'),'deveria pedir login');
  await p.fill('#lU','adm@x.com');await p.fill('#lP','123');await p.click('#lB');await p.waitForTimeout(300);
  ok(await p.isVisible('.tab[data-t="his"]'),'aba some após login');ok((await p.textContent('#ttl')).includes('Histórico'),'não abriu: '+await p.textContent('#ttl'))});
-await T("55 Painel: gráfico alterna Hora e 30 min, mantém necessário por hora; temporizador de 2 min",async()=>{
+await T("55 Painel: gráfico alterna Hora e 30 min, mantém necessário por hora; temporizador removido",async()=>{
  const p=await page(b,base({waves:[WV('q1','Q1','Vários artigos',50,HR(9,10)),WV('q2','Q2','Vários artigos',30,HR(9,40)),WV('q3','Q3','Itens Únicos',20,HR(10,5))]}));
  await p.evaluate(()=>go('painel'));let t=await p.textContent('#chH');ok(/9h/.test(t)&&!/9:30/.test(t),'hora: '+t.slice(0,120));
  await p.click('#hSeg [data-m="m"]');await p.waitForTimeout(100);t=await p.textContent('#chH');ok(/9:30/.test(t)&&(await p.textContent('#hTit')).includes('meia hora'),'30 min: '+t.slice(0,160));
  ok((await p.textContent('#peak')).includes('pico 9h')||(await p.textContent('#peak')).includes('pico 9:30'),'pico');
  await p.click('#hSeg [data-m="h"]');ok(!/9:30/.test(await p.textContent('#chH')),'voltou à hora');
- ok((await p.textContent('#tauto')+await p.textContent('body')).includes('Janela de agrupamento de 2 min'),'texto 2 min')});
+ ok(!(await p.$('#tauto'))&&!(await p.$('#tman')),'temporizador ainda existe');
+ await p.evaluate(()=>go('op'));ok((await p.textContent('#sub')).includes('Ondas concluídas do dia')&&!(await p.textContent('#sub')).includes('Acompanhamento'),'nome da aba')});
 await T("56 Controle de Ondas: ver ondas do mesmo lançamento e pesquisar por onda ou nome",async()=>{
  const n=Date.now()-60000;const p=await page(b,base({waves:[WV('l1','LA1','Pacote do mesmo',10,n),WV('l2','LA2','Pacote do mesmo',20,n+500),WV('l3','LA3','Pacote do mesmo',30,n+900),WV('m1','MB1','Itens Únicos',5,n-20000,'CL002','Bruno Lima')]}));
  await p.evaluate(()=>{S.cfg.and=true;go('op')});await p.click('.ssub [data-v="ctl"]');await p.waitForTimeout(200);
