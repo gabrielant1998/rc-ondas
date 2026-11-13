@@ -103,10 +103,10 @@ td .pill{min-height:36px;padding:6px 12px;margin:2px 0}
 .tks span{position:absolute;transform:translateX(-50%)}.tks span:first-child{transform:none}.tks span:last-child{transform:translateX(-100%)}
 .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));margin:0;background:var(--card);border:1px solid var(--line);border-top:0;border-radius:0 0 6px 6px;overflow:hidden}
 .stats.solo{border-top:1px solid var(--line);border-radius:6px}
-.kpi{padding:14px 18px;box-shadow:-1px 0 0 var(--line),0 -1px 0 var(--line)}
-.kpi dt{font-size:13.5px;color:var(--mut)}.kpi dd{margin:0}
-.kpi .num{font-size:32px;line-height:1.15}
-.kpi .sm{font-size:13px;color:var(--mut)}
+.kpi{display:flex;flex-direction:column;padding:14px 18px;box-shadow:-1px 0 0 var(--line),0 -1px 0 var(--line)}
+.kpi dt{flex:1;font-size:13.5px;line-height:1.3;color:var(--mut);margin-bottom:6px}.kpi dd{margin:0}
+.kpi .num{font-size:32px;line-height:1.15;font-variant-numeric:tabular-nums}
+.kpi .sm{font-size:13px;line-height:1.3;color:var(--mut);min-height:17px}
 
 /* listas com barra */
 .gal{margin-bottom:14px}.gal:last-child{margin-bottom:0}
@@ -872,7 +872,7 @@ function painel(){
  const msg=!metaT?"Meta de hoje não definida. Cadastre em Configurações, Galpões.":faltam<=0?"Meta batida":!isNow?"Faltaram "+fmt(faltam)+" para a meta":nf>F?"Turno encerrado, faltaram "+fmt(faltam):nf<TW.ini?"O turno ainda não começou":dif>=0?fmt(dif)+" à frente do ritmo":fmt(-dif)+" atrás do ritmo",
   ruim=metaT&&faltam>0&&(!isNow||nf>F||(nf>=TW.ini&&dif<0));
  const PR=S.waves.filter(w=>w.st===1&&inView(w)&&(!g||w.gal===g));
- const K=(t,v,s)=>`<div class="kpi"><dt>${t}</dt><dd class="num">${v}</dd>${s?`<dd class="sm">${s}</dd>`:""}</div>`;
+ const K=(t,v,s)=>`<div class="kpi"><dt>${t}</dt><dd class="num">${v}</dd><dd class="sm">${s||""}</dd></div>`;
  $("#kpis").innerHTML=`<div class="placar"><div><div class="num">${fmt(tot)}</div><div class="un">unidades produzidas</div></div>
   <div class="regua"><div class="hd"><span>${metaT?Math.round(tot/metaT*100)+"% da meta de "+fmt(metaT):"Produção do turno"}</span><b class="${ruim?"bad":""}">${msg}</b></div>
   <div class="trk" style="--n:${vao}" role="img" aria-label="Régua do turno: ${Math.round(pct)}% da meta. ${msg}"><b style="width:${pct}%"></b>${nowP!=null?`<i class="now" style="left:${nowP}%"></i>`:""}</div><div class="tks" aria-hidden="true">${tk}</div></div></div>
