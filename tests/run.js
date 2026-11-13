@@ -616,6 +616,17 @@ await T("84 Com 'reduzir movimento' ligado: o botão sempre toca a animação; a
  await p.keyboard.press('Escape');await p.waitForTimeout(800);
  await p.click('.mbBadge');await p.waitForTimeout(1500);fr=p.frames().find(f=>f!==p.mainFrame());const a3=await fr.evaluate(()=>({t:agora,ui:document.querySelector('#ui').classList.contains('off')}));ok(a3.ui&&a3.t>0.5&&a3.t<10,'botão não tocou: '+JSON.stringify(a3))});
 
+await T("85 Acompanhamento: excluir onda pede confirmação; cancelar mantém, confirmar remove",async()=>{
+ const W=[WV('x1','22A48487','Itens Únicos',54,HR(14,5)),WV('x2','5555','Vários artigos',9,HR(9,0))];
+ const p=await page(b,base({waves:W}));await p.evaluate(()=>{S.waves.forEach(w=>w.sync=0);save();go('op');document.querySelector('#sub [data-s="ace"]').click();renderAll()});await p.waitForTimeout(300);
+ const n0=await p.$$eval('[data-adel]',a=>a.length);ok(n0===2,'botões: '+n0);
+ let msg='';p.once('dialog',d=>{msg=d.message();d.dismiss()});await p.click('[data-adel="x1"]');await p.waitForTimeout(200);
+ ok(msg.includes('22A48487')&&msg.includes('MICHELLE')===false&&msg.includes('não pode ser desfeita'),'texto: '+msg);
+ ok(await p.evaluate(()=>S.waves.length)===2,'cancelar removeu mesmo assim');
+ p.once('dialog',d=>d.accept());await p.click('[data-adel="x1"]');await p.waitForTimeout(400);
+ const r=await p.evaluate(()=>({n:S.waves.length,ids:S.waves.map(w=>w.id),linhas:document.querySelectorAll('#aceL [data-adel]').length}));
+ ok(r.n===1&&r.ids[0]==='x2'&&r.linhas===1,'confirmar não removeu: '+JSON.stringify(r))});
+
 await b.close();
 const w=Math.max(...R.map(r=>r[1].length));for(const r of R)console.log((r[0]==="PASS"?"✅":"❌")+" "+r[1].padEnd(w)+"  "+r[2]);
 console.log(`\n${R.filter(r=>r[0]==="PASS").length}/${R.length} passaram`)})();

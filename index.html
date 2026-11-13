@@ -960,14 +960,16 @@ function painelVivo(){const pub=ON&&!me,bx=$("#vivo");if(!bx)return;bx.classList
 /* Acompanhamento: ondas concluídas do dia em páginas de 50 linhas */
 let ACEP=0;const ACE_N=50;
 function aceLista(){const el=$("#aceL");if(!el)return;
- const q=nrm($("#aceQ").value).trim(),hm=t=>new Date(t).toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit",second:"2-digit"});
+ const q=nrm($("#aceQ").value).trim(),hm=t=>new Date(t).toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit",second:"2-digit"}),canR=!S.ges.length||(me&&me.pR);
  let P=prod(dayWaves()).sort((a,b)=>(b.fin||b.ts)-(a.fin||a.ts));const tot=P.length;
  if(q)P=P.filter(w=>nrm(String(wnS(w)||"")).includes(q)||nrm(w.opn||"").includes(q)||nrm(w.op||"").includes(q)||nrm(w.ty||"").includes(q));
  const pgs=Math.max(1,Math.ceil(P.length/ACE_N));ACEP=Math.min(Math.max(ACEP,0),pgs-1);const a=ACEP*ACE_N,R=P.slice(a,a+ACE_N);
  $("#aceN").textContent=q?fmt(P.length)+" de "+fmt(tot):fmt(tot);
- el.innerHTML=R.length?`<table><tr><th>Hora</th><th>Onda</th><th>Operador</th><th>Galpão</th><th>Tipo</th><th>Quantidade</th></tr>`+R.map(w=>`<tr><td>${hm(w.fin||w.ts)}</td><td><b>${esc(wnS(w)||"—")}</b></td><td>${esc(w.opn||w.op)}</td><td>${esc(w.gal||"")}</td><td>${esc(w.ty)}</td><td>${fmt(w.qty)}</td></tr>`).join("")+"</table>":`<div class="empty">${q?"Nenhuma onda concluída com essa busca.":"Ainda não há ondas concluídas neste dia."}</div>`;
+ el.innerHTML=R.length?`<table><tr><th>Hora</th><th>Onda</th><th>Operador</th><th>Galpão</th><th>Tipo</th><th>Quantidade</th>${canR?"<th>Ação</th>":""}</tr>`+R.map(w=>`<tr><td>${hm(w.fin||w.ts)}</td><td><b>${esc(wnS(w)||"—")}</b></td><td>${esc(w.opn||w.op)}</td><td>${esc(w.gal||"")}</td><td>${esc(w.ty)}</td><td>${fmt(w.qty)}</td>${canR?`<td><button type="button" class="pill off" data-adel="${esc(w.id)}" aria-label="Excluir a onda ${esc(wnS(w)||"")} de ${esc(w.opn||w.op)}" style="min-height:30px">Excluir</button></td>`:""}</tr>`).join("")+"</table>":`<div class="empty">${q?"Nenhuma onda concluída com essa busca.":"Ainda não há ondas concluídas neste dia."}</div>`;
  $("#acePg").innerHTML=P.length>ACE_N?`<button class="btn alt sm" type="button" data-pg="-1"${ACEP?"":" disabled"}>Anterior</button><span>Página ${ACEP+1} de ${pgs}, linhas ${a+1} a ${a+R.length} de ${fmt(P.length)}</span><button class="btn alt sm" type="button" data-pg="1"${ACEP<pgs-1?"":" disabled"}>Próxima</button>`:(P.length?`<span>${fmt(P.length)} ${P.length===1?"onda":"ondas"}</span>`:"")}
-document.addEventListener("click",e=>{const b=e.target.closest("#acePg [data-pg]");if(b&&!b.disabled){ACEP+=+b.dataset.pg;aceLista()}});
+document.addEventListener("click",e=>{const b=e.target.closest("#acePg [data-pg]");if(b&&!b.disabled){ACEP+=+b.dataset.pg;aceLista();return}
+ const ad=e.target.closest("[data-adel]");if(ad){const w=S.waves.find(x=>x.id===ad.dataset.adel);if(!w)return;
+  if(!confirm("Excluir a onda "+(wnS(w)||"sem número")+" de "+(w.opn||w.op)+" ("+fmt(w.qty)+" un., "+w.ty+")?\n\nEsta ação não pode ser desfeita."))return;remWave({del:w.id})}});
 document.addEventListener("input",e=>{if(e.target.id==="aceQ"){ACEP=0;aceLista()}});
 document.addEventListener("change",e=>{if(e.target.id==="day")ACEP=0});
 function filters(){const f=(id,h,o)=>{const e=$(id),v=e.value;e.innerHTML=`<option value="">${h}</option>`+o.map(([a,b])=>`<option value="${a}">${esc(b)}</option>`).join("");e.value=v};
