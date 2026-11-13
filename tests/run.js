@@ -231,15 +231,16 @@ await T("43 Procurando em 3 etapas: pendente com SKU, encontrada vai ao históri
  const prod=()=>p.evaluate(()=>prod(S.waves).reduce((a,w)=>a+w.qty,0));
  await p.evaluate(()=>go('prs'));
  await p.fill('#prBip','123');await p.press('#prBip','Enter');ok(await p.isVisible('#prSku'),'formulário não abriu');
- await p.press('#prSku','Enter');ok((await p.textContent('#toast')).includes('SKU'),'deixou salvar sem SKU');
- await p.fill('#prSku','SKU-9');await p.fill('#prLoc','A-01');await p.press('#prLoc','Enter');
+ await p.click('#prOk');ok((await p.textContent('#toast')).includes('SKU'),'deixou salvar sem SKU');
+ await p.fill('#prSku','SKU-9');await p.click('#prOk');ok((await p.textContent('#toast')).includes('quantidade'),'deixou salvar sem quantidade');
+ await p.fill('#prSku','SKU-9');await p.fill('#prQtd','4');await p.fill('#prLoc','A-01');await p.press('#prLoc','Enter');await p.click('#prOk').catch(()=>{});
  await p.waitForTimeout(300);const lista=await p.textContent('#prList');ok(lista.includes('123')&&lista.includes('SKU-9')&&lista.includes('A-01')&&lista.includes('Ana Souza'),'pendentes: '+lista);
  await p.evaluate(()=>go('painel'));const k=(await p.textContent('#kpis')).replace(/\s+/g,' ');ok(/Procurando1/.test(k),'painel não mostra 1 procurando: '+k.slice(0,300));
  ok(await prod()===20,'produção deveria ser 20, é '+await prod());
  await p.reload();const w=await p.evaluate(()=>S.waves.find(x=>x.id==='a'));ok(w.st===1&&w.sku==='SKU-9'&&w.loc==='A-01'&&w.hist.length===1,'não persistiu: '+JSON.stringify(w));
  await p.evaluate(()=>go('prs'));
  await p.fill('#prBip','00123');await p.press('#prBip','Enter');ok(await p.isVisible('#prAOk')&&!(await p.isVisible('#prSku')),'segunda bipagem deveria pedir "encontrada"');
- await p.click('#prAOk');ok((await p.textContent('#prList')).includes('Nenhuma'),'ainda pendente');
+ await p.fill('#prNome','Marcos Lima');await p.click('#prAOk');ok((await p.textContent('#prList')).includes('Nenhuma'),'ainda pendente');
  ok(await prod()===30,'produção deveria voltar a 30, é '+await prod());
  let h=(await p.textContent('#prHist')).replace(/\s+/g,' ');ok(h.includes('123')&&h.includes('SKU-9')&&h.includes('A-01')&&h.includes('Dar baixa')&&/\d\d\/\d\d\/\d\d/.test(h),'histórico: '+h);
  await p.fill('#prBip','123');await p.press('#prBip','Enter');ok(await p.isVisible('#prNome'),'terceira bipagem deveria pedir o nome');
@@ -510,6 +511,9 @@ await T("77 Lista de presença: três atalhos (Check-in, Semanal, Conferidos), c
  ok(r.sem===0&&!/Conferidos \(\d+\)<\/h2>/.test(r.txt),'Check-in não mostra a tabela da semana');
  await p.evaluate(()=>document.querySelector('#ckBody [data-ckv="sem"]').click());await p.waitForTimeout(500);
  r=await v();
+ ok(r.cards===7&&r.sem>0&&r.sem<=20&&await p.evaluate(()=>mgDates().length)===1&&r.txt.includes('Primeiro bipe'),'Hoje é a tela padrão do Semanal: '+r.sem+' / '+r.cards);
+ await p.evaluate(()=>document.querySelector('#ckBody [data-sper="7"]').click());await p.waitForTimeout(500);
+ r=await v();
  ok(r.sem>0&&r.sem%7===0&&r.cards===7&&r.btn.length===0,'Semanal: tabela e cartões: '+r.sem+' / '+r.cards);
  await p.evaluate(()=>document.querySelector('#ckBody [data-sper="30"]').click());await p.waitForTimeout(500);
  r=await v();
@@ -539,6 +543,37 @@ await T("78 Lista de presença: quem bipa uma onda vira presente sozinho e sai d
  ok(!r.pend.includes('CL001'),'CL001 bipou e não devia estar em A conferir: '+r.pend.join());
  ok(r.pend.includes('CL002'),'quem não bipou continua na lista: '+r.pend.join());
  ok(/Conferidos \(1\)/.test(r.txt),r.txt.slice(0,260))});
+
+await T("79 Procurando: quem encontrou aparece; baixa no mesmo instante (Finalizar onda) conta como a mesma pessoa",async()=>{
+ const p=await page(b,base());
+ const q=await p.evaluate(()=>{const T=Date.now()-6e5,w=(id,h)=>({id,wn:id,op:'CL001',opn:'Ana Souza',gal:'Galpão 1',ty:'Pacote do mesmo',qty:5,st:0,ts:T,fin:T+3e4,sync:1,sku:'X1',hist:h});
+  const A=w('a1',[{e:'m',q:'Ana',t:T},{e:'a',q:'',t:T+3e4},{e:'b',q:'ISA ISMARIA',t:T+3e4+800}]),B=w('b1',[{e:'m',q:'Ana',t:T},{e:'a',q:'Marcos',t:T+6e4},{e:'b',q:'ISA ISMARIA',t:T+12e4}]),C=w('c1',[{e:'m',q:'Ana',t:T},{e:'a',q:'',t:T+3e4},{e:'b',q:'ISA ISMARIA',t:T+9e4}]);
+  return hProcRows([A,B,C]).map(r=>r.w.id+':'+r.qa).sort().join()});
+ ok(q==='a1:ISA ISMARIA,b1:Marcos,c1:',q)});
+
+await T("80 Procurando: tempo conta só 6h às 20h dos dias com operação",async()=>{
+ const p=await page(b,base());
+ const q=await p.evaluate(()=>{const D=new Date();D.setHours(0,0,0,0);D.setDate(D.getDate()-5);const at=(dd,h)=>{const x=new Date(D);x.setDate(x.getDate()+dd);x.setHours(h,0,0,0);return x.getTime()};
+  const mk=(id,ts)=>({id,wn:id,op:'CL001',opn:'Ana',gal:'Galpão 1',ty:'Vários artigos',qty:1,st:0,ts,fin:ts+1,sync:1});
+  const dias=new Set([dk(at(0,8)),dk(at(1,8)),dk(at(3,8))]);const H=36e5;
+  return [tUtil(at(0,5),at(0,21),dias)/H,tUtil(at(0,19),at(1,7),dias)/H,tUtil(at(1,19),at(3,7),dias)/H,tUtil(at(0,10),at(0,11),dias)/H,tUtil(at(0,21),at(1,5),dias)/H].join()});
+ ok(q==='14,2,2,1,0',q)});
+
+await T("81 Procurando: vários SKUs, cada um com a sua quantidade",async()=>{
+ const p=await page(b,base({waves:[{id:'m1',wn:'4455',op:'CL001',opn:'Ana Souza',gal:'Galpão 1',ty:'Pacote do mesmo',qty:50,st:0,ts:Date.now()-6e4,fin:Date.now()-6e4,sync:1}]}));
+ await p.evaluate(()=>go('prs'));await p.waitForTimeout(200);
+ await p.fill('#prBip','4455');await p.press('#prBip','Enter');await p.waitForTimeout(150);
+ await p.fill('#prSku','AAA-1');await p.fill('#prQtd','5');await p.click('#prAdd');
+ await p.fill('#prItens .prir:nth-child(2) .pis','BBB-2');await p.click('#prOk');
+ ok((await p.textContent('#toast')).includes('quantidade do SKU BBB-2'),'aceitou SKU sem quantidade: '+await p.textContent('#toast'));
+ await p.fill('#prItens .prir:nth-child(2) .piq','3');await p.click('#prAdd');await p.fill('#prItens .prir:nth-child(3) .pis','aaa-1');await p.fill('#prItens .prir:nth-child(3) .piq','2');await p.click('#prOk');
+ ok((await p.textContent('#toast')).includes('duas vezes'),'aceitou SKU repetido');
+ await p.click('#prItens .prir:nth-child(3) .pidel');ok(((await p.textContent('#prRes')).match(/BARUERI|SEM ESTOQUE|BAIXO ESTOQUE|PERDIDO/g)||[]).length===4&&(await p.textContent('#prRes')).includes('Observação'),'caixinhas ou Observação ausentes');await p.check('.pim[value="BARUERI"]');await p.check('.pim[value="PERDIDO"]');await p.click('#prOk');await p.waitForTimeout(300);
+ const w=await p.evaluate(()=>{const x=S.waves.find(z=>z.id==='m1');return{st:x.st,sku:x.sku,itens:x.itens,marcas:x.marcas}});
+ ok(JSON.stringify(w.marcas)==='["BARUERI","PERDIDO"]','marcações: '+JSON.stringify(w.marcas));
+ ok(w.st===1&&w.itens.length===2&&w.itens[0].s==='AAA-1'&&w.itens[0].q===5&&w.itens[1].q===3&&w.sku==='AAA-1 ×5, BBB-2 ×3',JSON.stringify(w));
+ const lista=(await p.textContent('#prList')).replace(/\s+/g,' ');ok(lista.includes('AAA-1')&&lista.includes('×5')&&lista.includes('BBB-2')&&lista.includes('×3')&&lista.includes('BARUERI')&&lista.includes('PERDIDO'),'lista: '+lista);
+ await p.reload();const w2=await p.evaluate(()=>S.waves.find(z=>z.id==='m1').itens);ok(w2.length===2&&w2[1].q===3,'não persistiu: '+JSON.stringify(w2))});
 
 await b.close();
 const w=Math.max(...R.map(r=>r[1].length));for(const r of R)console.log((r[0]==="PASS"?"✅":"❌")+" "+r[1].padEnd(w)+"  "+r[2]);

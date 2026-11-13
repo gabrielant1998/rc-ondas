@@ -60,6 +60,9 @@ input[type=checkbox]{width:20px;height:20px;min-height:0;accent-color:var(--g)}
 .wkc[data-s="Bipou"],.wkc[data-s="Presente"],.wkc[data-s="Saiu"]{--c:var(--k)}
 .wkc[data-s="Aguardando"],.wkc[data-s="—"]{--c:var(--field);color:var(--mut);font-weight:500}
 .ckd{width:72px}
+.prmc{border:0;margin:6px 0 10px;padding:0;display:flex;flex-wrap:wrap;gap:8px 18px}.prmc legend{padding:0;margin-bottom:6px;font-weight:600}.prmc .chk{display:flex;align-items:center;gap:8px;font-weight:600;cursor:pointer}.prmc .chk input{width:20px;height:20px;margin:0}.prm{margin-top:4px}
+.prir{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1fr) auto;gap:10px;align-items:end;margin-bottom:8px}.prir .btn{margin-bottom:2px}
+@media(max-width:560px){.prir{grid-template-columns:1fr 1fr}.pidel{grid-column:1/-1}}
 .mgbar{position:fixed;top:0;left:0;right:0;height:3px;z-index:80;background:linear-gradient(90deg,transparent,var(--g),transparent) no-repeat;background-size:35% 100%;animation:mgb 1.1s ease-in-out infinite}
 @keyframes mgb{from{background-position:-40% 0}to{background-position:140% 0}}
 .esq{display:grid;gap:14px;padding:22px}.esq i{display:block;height:18px;border-radius:6px;background:linear-gradient(90deg,var(--line) 25%,transparent 50%,var(--line) 75%);background-size:300% 100%;animation:esq 1.3s linear infinite}
@@ -546,7 +549,7 @@ const DEF={cfg:{lim:{"Vários artigos":1000,"Múltiplas quantidades":1000,"Itens
  turnos:{1:{ini:7,fim:16},2:{ini:16,fim:23}}},gals:["Galpão 1","Galpão 2","Galpão 3"],ops:[],ges:[],waves:[],gal:"Galpão 1",off:false,man:{log:[]}};
 let S;try{S=JSON.parse(localStorage.getItem(LS))}catch(e){}
 /* formato compacto: ondas como listas, cabe ~2x mais no aparelho */
-if(S&&S.wv){S.waves=S.wv.map(a=>{const w={id:a[0],wn:a[1],op:a[2],opn:a[3],gal:a[4],ty:(TY[a[5]]||TY[0])[0],qty:a[6],st:a[7],ts:a[8],fin:a[9]<0?null:a[8]+a[9],sync:a[10]};if(a[11])w.auto=1;if(a[12])w.oid=a[12];if(a[13])w.err=a[13];if(a[15])w.zt=1;if(a[14]){w.sku=a[14][0];w.loc=a[14][1];w.pn=a[14][2];w.pt=a[14][3];w.hist=a[14][4]||[]}return w});delete S.wv}
+if(S&&S.wv){S.waves=S.wv.map(a=>{const w={id:a[0],wn:a[1],op:a[2],opn:a[3],gal:a[4],ty:(TY[a[5]]||TY[0])[0],qty:a[6],st:a[7],ts:a[8],fin:a[9]<0?null:a[8]+a[9],sync:a[10]};if(a[11])w.auto=1;if(a[12])w.oid=a[12];if(a[13])w.err=a[13];if(a[15])w.zt=1;if(a[14]){w.sku=a[14][0];w.loc=a[14][1];w.pn=a[14][2];w.pt=a[14][3];w.hist=a[14][4]||[];if(a[14][5])w.itens=a[14][5].map(i=>({s:i[0],q:i[1]}));if(a[14][6])w.marcas=a[14][6]}return w});delete S.wv}
 const LIM_STORE=5.2e6;
 if(!S){ /* migra base antiga, se existir */
  let old=null;try{old=ON?null:JSON.parse(localStorage.getItem("rcondas.v1"))}catch(e){}
@@ -570,7 +573,7 @@ TY.forEach(([n])=>{if(S.cfg.lim[n]==null)S.cfg.lim[n]=DEF.cfg.lim[n]||1000});
 if(!ON&&!S.gals.length)S.gals=["Galpão 1"];
 if(!S.gals.includes(S.gal))S.gal=S.gals[0];
 let ty=TY[0][0],st=0,draft=[],tim={op:null,t0:0},view="painel",me=null,uT=1,csub="cop",gsub="mi";
-const ser=()=>{const o=Object.assign({},S);delete o.waves;o.wv=(ON?S.waves.filter(w=>!w.srv):S.waves).map(w=>{const a=[w.id,w.wn,w.op,w.opn,w.gal,Math.max(0,TY.findIndex(t=>t[0]===w.ty)),w.qty,w.st,w.ts,w.fin==null?-1:w.fin-w.ts,w.sync?1:0,w.auto?1:0];if(w.oid||w.err)a.push(w.oid||0);if(w.err)a.push(w.err);if(w.sku||w.pn||w.loc||w.pt||(w.hist&&w.hist.length)){while(a.length<14)a.push(0);a.push([w.sku||"",w.loc||"",w.pn||"",w.pt||0,w.hist||[]])}if(w.zt){while(a.length<15)a.push(0);a.push(1)}return a});return JSON.stringify(o)};
+const ser=()=>{const o=Object.assign({},S);delete o.waves;o.wv=(ON?S.waves.filter(w=>!w.srv):S.waves).map(w=>{const a=[w.id,w.wn,w.op,w.opn,w.gal,Math.max(0,TY.findIndex(t=>t[0]===w.ty)),w.qty,w.st,w.ts,w.fin==null?-1:w.fin-w.ts,w.sync?1:0,w.auto?1:0];if(w.oid||w.err)a.push(w.oid||0);if(w.err)a.push(w.err);if(w.sku||w.pn||w.loc||w.pt||(w.hist&&w.hist.length)){while(a.length<14)a.push(0);a.push([w.sku||"",w.loc||"",w.pn||"",w.pt||0,w.hist||[],(w.itens||[]).map(i=>[i.s,i.q]),w.marcas||[]])}if(w.zt){while(a.length<15)a.push(0);a.push(1)}return a});return JSON.stringify(o)};
 let storeLen=0,storeWarned=false;
 const save=()=>{try{const s=ser();localStorage.setItem(LS,s);storeLen=s.length;
   if(storeLen>LIM_STORE*.8&&!storeWarned){storeWarned=true;setTimeout(()=>toast("Atenção: memória do aparelho em "+Math.round(storeLen/LIM_STORE*100)+"%. Ligue um banco de dados antes que encha.",9000),2600)}
@@ -639,6 +642,7 @@ async function pull(){
  TH={};
  if(me){try{const hs=await api("/rest/v1/presenca_alteracoes?select=operador_id,campo,valor_anterior,valor_novo,email,alterado_em&order=alterado_em.asc");hs.forEach(h=>{(TH[h.operador_id]=TH[h.operador_id]||[]).push({c:h.campo,a:h.valor_anterior,n:h.valor_novo,e:h.email,t:Date.parse(h.alterado_em)})})}catch(e){}}
  PRS={};PBX={};PHX={};ATR={};
+ if(me)await prProbe();
  if(me){const cd=dk(Date.now()-400*864e5);
   try{const hs2=await api("/rest/v1/presenca_historico?select=operador_id,tabela,campo,valor_anterior,valor_novo,email,alterado_em&order=alterado_em.desc&limit=300");hs2.forEach(x=>{(PHX[x.operador_id]=PHX[x.operador_id]||[]).push({tab:x.tabela,c:x.campo,a:x.valor_anterior,n:x.valor_novo,e:x.email,t:Date.parse(x.alterado_em)})})}catch(e){}
   try{const rs=await api("/rest/v1/presenca_registros?select=id,operador_id,tipo,data_ini,data_fim,horario_ini,horario_fim,observacao,criado_por&cancelado_em=is.null&data_fim=gte."+cd);rs.forEach(r=>{(PRS[r.operador_id]=PRS[r.operador_id]||[]).push({id:r.id,t:r.tipo,i:r.data_ini,f:r.data_fim,hi:r.horario_ini,hf:r.horario_fim,o:r.observacao,e:r.criado_por})})}catch(e){}
@@ -646,8 +650,8 @@ async function pull(){
   try{const at=await api("/rest/v1/presenca_atrasos?select=id,operador_id,data,observacao,criado_por&data=gte."+cd);at.forEach(a=>{ATR[a.operador_id+'|'+a.data]={id:a.id,obs:a.observacao,e:a.criado_por}})}catch(e){}}
  const mine=S.waves.filter(w=>!w.srv);
  if(me){const de=new Date(Date.now()-35*864e5).toISOString(),srv=[];
-  for(let off=0;;off+=1000){const p=await api("/rest/v1/ondas?select=id,wn,operador_id,galpao_id,tipo,quantidade,status,registrada_em,concluida_em,encerrada_auto,procura_sku,procura_local,procura_nome,procura_em,procura_hist,tempo_zerado&registrada_em=gte."+encodeURIComponent(de)+"&order=registrada_em.asc&limit=1000&offset="+off);
-   p.forEach(x=>{const o=OPSALL[x.operador_id];srv.push({id:x.id,wn:x.wn,oid:x.operador_id,op:o?(o.excluido_em?o.codigo+"~"+o.id.slice(0,6):o.codigo):"—",opn:o?o.nome:"Operador removido",gal:GN[x.galpao_id]||"—",ty:x.tipo,qty:x.quantidade,st:x.status,ts:Date.parse(x.registrada_em),fin:x.concluida_em?Date.parse(x.concluida_em):null,sync:1,srv:1,auto:x.encerrada_auto?1:0,sku:x.procura_sku||"",loc:x.procura_local||"",pn:x.procura_nome||"",pt:x.procura_em?Date.parse(x.procura_em):0,hist:prHistSrv(x.procura_hist),zt:x.tempo_zerado?1:0})});
+  for(let off=0;;off+=1000){const p=await api("/rest/v1/ondas?select=id,wn,operador_id,galpao_id,tipo,quantidade,status,registrada_em,concluida_em,encerrada_auto,procura_sku,procura_local,procura_nome,procura_em,procura_hist,tempo_zerado"+PIC+"&registrada_em=gte."+encodeURIComponent(de)+"&order=registrada_em.asc&limit=1000&offset="+off);
+   p.forEach(x=>{const o=OPSALL[x.operador_id];srv.push({id:x.id,wn:x.wn,oid:x.operador_id,op:o?(o.excluido_em?o.codigo+"~"+o.id.slice(0,6):o.codigo):"—",opn:o?o.nome:"Operador removido",gal:GN[x.galpao_id]||"—",ty:x.tipo,qty:x.quantidade,st:x.status,ts:Date.parse(x.registrada_em),fin:x.concluida_em?Date.parse(x.concluida_em):null,sync:1,srv:1,auto:x.encerrada_auto?1:0,sku:x.procura_sku||"",itens:prItensSrv(x.procura_itens),marcas:prMarcasSrv(x.procura_marcas),loc:x.procura_local||"",pn:x.procura_nome||"",pt:x.procura_em?Date.parse(x.procura_em):0,hist:prHistSrv(x.procura_hist),zt:x.tempo_zerado?1:0})});
    if(p.length<1000||off>=59000)break}
   const ids=new Set(srv.map(w=>w.id));S.waves=srv.concat(mine.filter(w=>!ids.has(w.id)))}
  else{const corte=Date.now()-3*864e5;S.waves=mine.filter(w=>!w.sync||w.err||w.ts>corte)}
@@ -967,6 +971,7 @@ function tick(){const a=$("#tauto");
 
 /* ===================== GESTÃO OPERACIONAL ===================== */
 let MGW=null,mgSeq=0,mgState='',mgShown=100,MGKEY='',MGOV=null;const MGC=new Map();
+const swSig=()=>S.waves.length+'|'+S.waves.reduce((t,w)=>t+(w.sync?1:0)+(w.st||0)*7+((w.fin||0)%1009)+(w.zt?3:0)+(w.err?5:0),0);
 /* período carregado: só vale para a tela se for exatamente o período que ela pede; telas já vistas voltam na hora */
 const mgChave=()=>{const d=mgDates();return d[0]+'|'+d[d.length-1]};
 const mgPronto=()=>!(ON&&me)||(MGW!==null&&MGKEY===mgChave());
@@ -986,16 +991,16 @@ async function loadManagement(opt){
  const seq=++mgSeq,days=mgDates(),key=days[0]+'|'+days[days.length-1],c=MGC.get(key),jaPronto=MGW!==null&&MGKEY===key,start=new Date(days[0]+'T00:00:00'),end=new Date(days[days.length-1]+'T00:00:00');end.setDate(end.getDate()+1);
  /* tela já vista há pouco: aparece na hora; senão mostra o que já tem e atualiza por baixo, sem apagar */
  if(c&&!jaPronto){MGW=c.rows;MGKEY=key;mgState='';$("#mgStatus").classList.add('hide');mgRender()}
- if((jaPronto||c)&&opt&&opt.cache&&Date.now()-(c?c.at:0)<30000){mgBar(false);if(jaPronto)mgRender();return}
+ if((jaPronto||c)&&opt&&opt.cache&&c&&c.sw===swSig()&&Date.now()-c.at<30000){mgBar(false);if(jaPronto)mgRender();return}
  if(jaPronto||c){mgBar(true)}else{MGW=null;MGKEY='';mgState='Carregando histórico do período…';mgBar(true)}
  try{
-  const arr=[];for(let off=0;;off+=1000){const q='/rest/v1/ondas?select=id,wn,operador_id,galpao_id,tipo,quantidade,status,registrada_em,concluida_em,encerrada_auto,procura_sku,procura_local,procura_nome,procura_em,procura_hist,tempo_zerado&registrada_em=gte.'+encodeURIComponent(start.toISOString())+'&registrada_em=lt.'+encodeURIComponent(end.toISOString())+'&order=registrada_em.asc,id.asc&limit=1000&offset='+off;
+  const arr=[];for(let off=0;;off+=1000){const q='/rest/v1/ondas?select=id,wn,operador_id,galpao_id,tipo,quantidade,status,registrada_em,concluida_em,encerrada_auto,procura_sku,procura_local,procura_nome,procura_em,procura_hist,tempo_zerado'+PIC+'&registrada_em=gte.'+encodeURIComponent(start.toISOString())+'&registrada_em=lt.'+encodeURIComponent(end.toISOString())+'&order=registrada_em.asc,id.asc&limit=1000&offset='+off;
    const part=await api(q);if(seq!==mgSeq)return;arr.push(...part);if(part.length<1000)break}
-  const rows=arr.map(x=>{const o=OPSALL[x.operador_id];return{id:x.id,wn:x.wn,oid:x.operador_id,op:o?(o.excluido_em?o.codigo+'~'+o.id.slice(0,6):o.codigo):'—',opn:o?o.nome:'Operador removido',gal:GN[x.galpao_id]||'—',ty:x.tipo,qty:x.quantidade,st:x.status,ts:Date.parse(x.registrada_em),fin:x.concluida_em?Date.parse(x.concluida_em):null,sync:1,srv:1,auto:x.encerrada_auto?1:0,sku:x.procura_sku||"",loc:x.procura_local||"",pn:x.procura_nome||"",pt:x.procura_em?Date.parse(x.procura_em):0,hist:prHistSrv(x.procura_hist),zt:x.tempo_zerado?1:0}});
+  const rows=arr.map(x=>{const o=OPSALL[x.operador_id];return{id:x.id,wn:x.wn,oid:x.operador_id,op:o?(o.excluido_em?o.codigo+'~'+o.id.slice(0,6):o.codigo):'—',opn:o?o.nome:'Operador removido',gal:GN[x.galpao_id]||'—',ty:x.tipo,qty:x.quantidade,st:x.status,ts:Date.parse(x.registrada_em),fin:x.concluida_em?Date.parse(x.concluida_em):null,sync:1,srv:1,auto:x.encerrada_auto?1:0,sku:x.procura_sku||"",itens:prItensSrv(x.procura_itens),marcas:prMarcasSrv(x.procura_marcas),loc:x.procura_local||"",pn:x.procura_nome||"",pt:x.procura_em?Date.parse(x.procura_em):0,hist:prHistSrv(x.procura_hist),zt:x.tempo_zerado?1:0}});
   const ids=new Set(rows.map(w=>w.id)),novo=rows.concat(S.waves.filter(w=>!w.srv&&!ids.has(w.id)&&w.ts>=start.getTime()&&w.ts<end.getTime()));
-  const sig=a=>a.length+'|'+a.reduce((t,w)=>t+(+w.qty||0)+(w.st||0)*7+((w.fin||0)%1009)+(w.zt?3:0),0)+'|'+(a.length?a[a.length-1].id:'');
+  const sig=a=>a.length+'|'+a.reduce((t,w)=>t+(+w.qty||0)+(w.st||0)*7+((w.fin||0)%1009)+((w.pt||0)%997)+((w.pn||'').length)*11+((w.sku||'').length)*13+(w.zt?3:0)+(w.ty||'').length+(w.auto?17:0),0)+'|'+(a.length?a[a.length-1].id:'');
   const igual=MGW!==null&&MGKEY===key&&sig(MGW)===sig(novo);
-  MGW=novo;MGKEY=key;MGC.set(key,{rows:novo,at:Date.now()});
+  MGW=novo;MGKEY=key;MGC.set(key,{rows:novo,at:Date.now(),sw:swSig()});
   mgState='';$("#mgStatus").classList.add('hide');mgBar(false);if(!igual)mgRender();
  }catch(e){if(seq!==mgSeq)return;mgBar(false);if(MGW!==null&&MGKEY===key){mgState='';$("#mgStatus").classList.add('hide');return}MGW=null;MGKEY='';mgState='Não foi possível carregar o período. Confira a conexão e tente novamente.';$("#mgStatus").textContent=mgState;$("#mgStatus").classList.remove('hide');$("#iBody").innerHTML='';$("#coBody").innerHTML=''}
 }
@@ -1148,7 +1153,7 @@ function wkTabela(data,ops){
  return ops.length?`<table class="wkt">${head}${rows}</table>`:'<div class="empty">Nenhuma pessoa para os filtros selecionados.</div>';
 }
 /* ===================== lista de presença: todos os nomes; cada opção tira a pessoa da lista e preenche a semana ===================== */
-let CKD=null,CKBUSY=false,CKULT=null,CKV='chk',SEMP=7,SEMF=null,CKANIM=false;
+let CKD=null,CKBUSY=false,CKULT=null,CKV='chk',SEMP=1,SEMF=null,CKANIM=false;
 const ckPode=()=>!!(ON&&me&&me.pR);
 async function ckIr(day,force){
  CKD=day;if(CKULT&&CKULT.d!==day)CKULT=null;
@@ -1182,14 +1187,15 @@ function semanalPag(box){
  const ops=data.ops.filter(o=>(g==='__all'||o.g===g)&&(!t||String(o.t)===t)).filter(o=>!o.excluido||data.waves.some(w=>w.op===o.m)).filter(o=>!q||(o.n+' '+o.m).toLowerCase().includes(q));
  const per=SEMP,atual=semFimPadrao(per),fim=SEMF||atual,st=semStats(data,ops);
  const pb=(p,rot)=>`<button class="btn sm${per===p?'':' alt'}" type="button" data-sper="${p}">${rot}</button>`;
- const nav=`<div class="ctl">${pb(7,'Semanal')}${pb(30,'Mensal (30 dias)')}${pb(90,'Trimestral (90 dias)')}</div>
+ const nav=`<div class="ctl">${pb(1,'Hoje')}${pb(7,'Semanal')}${pb(30,'Mensal (30 dias)')}${pb(90,'Trimestral (90 dias)')}</div>
  <div class="ctl" style="margin-top:8px"><button class="btn alt sm" type="button" data-snav="-1">← Anterior</button><button class="btn alt sm" type="button" data-snav="0"${fim===atual?' disabled':''}>${per===7?'Esta semana':'Hoje'}</button><button class="btn alt sm" type="button" data-snav="1">Próximo →</button><b>${presData(days[0])} a ${presData(days[days.length-1])}</b><label style="margin-left:auto">Pesquisar pessoa <input type="search" id="wkQ" value="${esc(WKQ)}"></label></div>`;
  const card=(n,l)=>`<div class="ckcard"><b>${n}</b><span>${l}</span></div>`,T=st.T;
  const cards=`<div class="ckcards">${card(T.pres,'Presenças')}${card(T.f,'Faltas')}${card(T.a,'Atestados')}${card(T.dc,'Declarações')}${card(T.fo,'Folgas')}${card(T.at,'Atrasos')}${card(T.p,'Pendentes')}</div>`;
  let tabela;
  if(per===7)tabela=wkTabela(data,ops);
+ else if(per===1){const d=days[0];tabela=ops.length?`<table class="wkt"><tr><th>Pessoa</th><th>Situação</th><th>Turno</th><th>Primeiro bipe</th><th>Atraso</th></tr>${ops.map(o=>{const L=data.byOpDay.get(d+'|'+o.m)||[],stt=mgStatus(o,d,L,data),r=wkRotulo(stt),m=atrasoDia(o,d,L),tn=turnoOf(o,d);return `<tr><td><b>${esc(o.n)}</b><br><small>${esc(o.m.split('~')[0])}</small></td><td><button class="wkc" type="button" data-s="${esc(r)}" data-m="${esc(o.m)}" data-d="${d}">${esc(r)}</button></td><td>${tn.ini}h às ${tn.fim}h</td><td>${L.length?presHm(Math.min(...L.map(w=>w.ts))):'—'}</td><td>${m>0?hh(m*6e4):'—'}</td></tr>`}).join('')}</table>`:'<div class="empty">Nenhuma pessoa para os filtros selecionados.</div>'}
  else tabela=ops.length?`<table class="wkt"><tr><th>Pessoa</th><th>Presenças</th><th>Faltas</th><th>Atestados</th><th>Declarações</th><th>Folgas</th><th>Atrasos</th><th>Pendentes</th></tr>${st.rows.map(r=>`<tr><td><b>${esc(r.o.n)}</b><br><small>${esc(r.o.m.split('~')[0])}</small></td><td>${r.c.pres}</td><td><b>${r.c.f}</b></td><td>${r.c.a}</td><td>${r.c.dc}</td><td>${r.c.fo}</td><td>${r.c.at}</td><td>${r.c.p}</td></tr>`).join('')}</table>`:'<div class="empty">Nenhuma pessoa para os filtros selecionados.</div>';
- box.innerHTML=ckAbas()+`<div class="card">${nav}${cards}<div class="tw">${tabela}</div><div class="legend">${per===7?'Toque em um dia para abrir a pessoa naquele dia. ':''}Os números contam pessoa por dia no período.</div></div>`;ckFade(box);
+ box.innerHTML=ckAbas()+`<div class="card">${nav}${cards}<div class="tw">${tabela}</div><div class="legend">${per===7||per===1?'Toque na situação para abrir a pessoa naquele dia. ':''}Os números contam pessoa por dia no período.</div></div>`;ckFade(box);
 }
 function checking(){
  const box=$("#ckBody");if(!box)return;
@@ -1477,21 +1483,41 @@ function hisGalSel(){const g=$("#hGal"),r=restricted();g.style.display=r?"none":
 function hisOpen(){if(!podeVer('his'))return;hisGalSel();if(!$("#hPer").options.length)hisFill();loadHis()}
 function hRange(){const v=$("#hVis").value,p=+$("#hPer").value,e=new Date();e.setHours(23,59,59,999);const s=new Date();s.setHours(0,0,0,0);
  if(v==='mes'){s.setDate(1);s.setMonth(s.getMonth()-(p-1))}else s.setDate(s.getDate()-(2*p-1));return[s,e]}
-const hRow=x=>{const o=OPSALL[x.operador_id];return{id:x.id,wn:x.wn,op:x.operador_id,opn:o?o.nome:'Operador removido',opc:o?String(o.codigo):'—',gal:GN[x.galpao_id]||'—',ty:x.tipo,qty:x.quantidade,st:x.status,ts:Date.parse(x.registrada_em),fin:x.concluida_em?Date.parse(x.concluida_em):null,srv:1,sku:x.procura_sku||'',loc:x.procura_local||'',pn:x.procura_nome||'',pt:x.procura_em?Date.parse(x.procura_em):0,hist:prHistSrv(x.procura_hist),zt:x.tempo_zerado?1:0}};
+const hRow=x=>{const o=OPSALL[x.operador_id];return{id:x.id,wn:x.wn,op:x.operador_id,opn:o?o.nome:'Operador removido',opc:o?String(o.codigo):'—',gal:GN[x.galpao_id]||'—',ty:x.tipo,qty:x.quantidade,st:x.status,ts:Date.parse(x.registrada_em),fin:x.concluida_em?Date.parse(x.concluida_em):null,srv:1,sku:x.procura_sku||'',itens:prItensSrv(x.procura_itens),marcas:prMarcasSrv(x.procura_marcas),loc:x.procura_local||'',pn:x.procura_nome||'',pt:x.procura_em?Date.parse(x.procura_em):0,hist:prHistSrv(x.procura_hist),zt:x.tempo_zerado?1:0}};
 const HOPEN=new Set(),HPQ={};let HPBY={},HUQ="",HUR="";
 const hDT=t=>new Date(t).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
 const hST=['Concluída','Procurando','Difícil acesso'];
 let HS="evo";
 function hsShow(){$$("#hsub button").forEach(b=>b.classList.toggle("on",b.dataset.hs===HS));$$("#hBody [data-hs]").forEach(d=>d.classList.toggle("hide",d.dataset.hs!==HS))}
+/* tempo de procurando conta só o horário comercial (6h às 20h) dos dias em que houve operação */
+const HC_INI=6,HC_FIM=20;let OPD={k:'',s:new Set()};
+function opDias(){const k=S.waves.length+'|'+(MGW?MGW.length:0)+'|'+(HW?HW.length:0);if(OPD.k===k)return OPD.s;
+ const set=new Set(),add=a=>{for(const w of a)set.add(dk(w.ts))};add(S.waves);if(MGW)add(MGW);if(HW)add(HW);OPD={k,s:set};return set}
+function tUtil(t0,t1,dias){if(!(t1>t0))return 0;dias=dias||opDias();let tot=0;const d=new Date(t0);d.setHours(0,0,0,0);
+ for(;d.getTime()<t1;d.setDate(d.getDate()+1)){if(!dias.has(dk(d.getTime())))continue;
+  const a=new Date(d);a.setHours(HC_INI,0,0,0);const b=new Date(d);b.setHours(HC_FIM,0,0,0);
+  const lo=Math.max(a.getTime(),t0),hi=Math.min(b.getTime(),t1);if(hi>lo)tot+=hi-lo}
+ return tot}
+let PIC='',PIPROBE=false;
+/* o banco pode ainda não ter a coluna procura_itens: testa uma vez e só pede a coluna quando existe */
+async function prProbe(){if(PIPROBE)return;PIPROBE=true;try{await api('/rest/v1/ondas?select=procura_itens,procura_marcas&limit=1');PIC=',procura_itens,procura_marcas'}catch(e){PIC=''}}
+const PR_MARCAS=['BARUERI','SEM ESTOQUE','BAIXO ESTOQUE','PERDIDO'];
+const prMarcasSrv=a=>Array.isArray(a)?a.filter(m=>PR_MARCAS.includes(m)):[];
+const prMarcasHtml=w=>(w.marcas&&w.marcas.length)?'<div class="prm">'+w.marcas.map(m=>`<span class="tag">${esc(m)}</span>`).join(' ')+'</div>':'';
+const prItensSrv=a=>Array.isArray(a)?a.filter(i=>i&&i.sku).map(i=>({s:String(i.sku),q:+i.qtd||0})):[];
+/* SKUs da onda: lista com quantidade, ou só o SKU de antes */
+const prSkuLista=w=>w.itens&&w.itens.length?w.itens:(w.sku?[{s:w.sku,q:0}]:[]);
+const prSkuTxt=w=>{const L=prSkuLista(w);return L.length?L.map(i=>i.s+(i.q?' ×'+fmt(i.q):'')).join(', '):'—'};
+const prSkuHtml=w=>{const L=prSkuLista(w);return L.length?L.map(i=>esc(i.s)+(i.q?' <b>×'+fmt(i.q)+'</b>':'')).join('<br>'):'—'};
 let HPR="",HPRR=[];
-function hProcRows(PW){return PW.filter(w=>w.st===1||prEv(w).some(e=>e.e==='m')).map(w=>{const ev=prEv(w),f=e=>ev.find(z=>z.e===e),m=f('m'),a=f('a'),b=f('b'),t0=m?m.t:(w.pt||w.ts);
- return{w,t0,ta:a?a.t:0,tb:b?b.t:0,qa:a?a.q:'',qb:b?b.q:'',et:prEtapa(w),tp:a?a.t-t0:(w.st===1?Date.now()-t0:0),tbx:a&&b?b.t-a.t:0,tot:b?b.t-t0:0}}).sort((x,y)=>y.t0-x.t0)}
-function hProcTable(){const q=nrm(HPR).trim(),L=q?HPRR.filter(r=>nrm([r.w.wn,r.w.sku,r.w.loc,r.w.opn,r.qa,r.qb,r.w.ty].join(' ')).includes(q)):HPRR;
+function hProcRows(PW){const DI=opDias();return PW.filter(w=>w.st===1||prEv(w).some(e=>e.e==='m')).map(w=>{const ev=prEv(w),f=e=>ev.find(z=>z.e===e),m=f('m'),a=f('a'),b=f('b'),t0=m?m.t:(w.pt||w.ts);
+ return{w,t0,ta:a?a.t:0,tb:b?b.t:0,qa:prQuemAchou(ev),qb:b?b.q:'',et:prEtapa(w),tp:a?tUtil(t0,a.t,DI):(w.st===1?tUtil(t0,Date.now(),DI):0),tbx:a&&b?tUtil(a.t,b.t,DI):0,tot:b?tUtil(t0,b.t,DI):0}}).sort((x,y)=>y.t0-x.t0)}
+function hProcTable(){const q=nrm(HPR).trim(),L=q?HPRR.filter(r=>nrm([r.w.wn,r.w.sku,prSkuTxt(r.w),(r.w.marcas||[]).join(' '),r.w.loc,r.w.opn,r.qa,r.qb,r.w.ty].join(' ')).includes(q)):HPRR;
  const sit=r=>r.w.st===1?'Pendente':r.et==='a'?'Encontrada, aguardando baixa':r.et==='b'?'Baixada':'—';
- return L.length?`<div class="tw"><table><tr><th>Onda</th><th>Quem fez</th><th>SKU</th><th>Local</th><th>Marcada</th><th>Achada por</th><th>Baixa por</th><th>Tempo procurando</th><th>Até a baixa</th><th>Situação</th></tr>${L.slice(0,200).map(r=>`<tr><td><b>${esc(r.w.wn||'—')}</b><br><small>${esc(r.w.ty)} · ${fmt(r.w.qty)}</small></td><td>${esc(r.w.opn||'—')}</td><td>${esc(r.w.sku||'—')}</td><td>${esc(r.w.loc||'—')}</td><td>${prDH(r.t0)}</td><td>${r.ta?esc(r.qa||'—')+'<br><small>'+prDH(r.ta)+'</small>':'—'}</td><td>${r.tb?esc(r.qb||'—')+'<br><small>'+prDH(r.tb)+'</small>':'—'}</td><td>${r.tp?mm(r.tp):'—'}${r.w.st===1?' <small>em aberto</small>':''}</td><td>${r.tbx?mm(r.tbx):'—'}</td><td>${sit(r)}</td></tr>`).join('')}</table></div><div class="legend">${L.length>200?'Mostrando 200 de '+L.length+'. Pesquise para achar as demais.':L.length+' '+(L.length===1?'registro':'registros')+'.'}</div>`:'<div class="empty">Nenhum registro de procurando com esses filtros.</div>'}
+ return L.length?`<div class="tw"><table><tr><th>Onda</th><th>Quem fez</th><th>SKU</th><th>Observação</th><th>Marcada</th><th>Achada por</th><th>Baixa por</th><th>Tempo procurando</th><th>Até a baixa</th><th>Situação</th></tr>${L.slice(0,200).map(r=>`<tr><td><b>${esc(r.w.wn||'—')}</b><br><small>${esc(r.w.ty)} · ${fmt(r.w.qty)}</small></td><td>${esc(r.w.opn||'—')}</td><td>${prSkuHtml(r.w)}${prMarcasHtml(r.w)}</td><td>${esc(r.w.loc||'—')}</td><td>${prDH(r.t0)}</td><td>${r.ta?esc(r.qa||'—')+'<br><small>'+prDH(r.ta)+'</small>':'—'}</td><td>${r.tb?esc(r.qb||'—')+'<br><small>'+prDH(r.tb)+'</small>':'—'}</td><td>${r.tp?mm(r.tp):'—'}${r.w.st===1?' <small>em aberto</small>':''}</td><td>${r.tbx?mm(r.tbx):'—'}</td><td>${sit(r)}</td></tr>`).join('')}</table></div><div class="legend">${L.length>200?'Mostrando 200 de '+L.length+'. Pesquise para achar as demais.':L.length+' '+(L.length===1?'registro':'registros')+'.'}</div>`:'<div class="empty">Nenhum registro de procurando com esses filtros.</div>'}
 function hisProc(PW){if(PW===undefined)return'<div class="card" style="margin-top:14px"><h2>Procurando</h2><div class="empty">Não foi possível carregar o procurando agora.</div></div>';
  const R=hProcRows(PW||[]);HPRR=R;const n=x=>R.filter(x).length,md=a=>a.length?mm(med(a)):'—';
- const kp=hK('Marcadas',fmt(R.length),'no período')+hK('Pendentes',fmt(n(r=>r.w.st===1)),'ainda procurando')+hK('Aguardando baixa',fmt(n(r=>r.w.st!==1&&r.et==='a')),'encontradas')+hK('Baixadas',fmt(n(r=>r.et==='b')),'concluídas')+hK('Tempo mediano procurando',md(R.filter(r=>r.ta).map(r=>r.tp)),'da marcação até achar')+hK('Tempo mediano até a baixa',md(R.filter(r=>r.tbx).map(r=>r.tbx)),'do achado até a baixa')+hK('Tempo mediano total',md(R.filter(r=>r.tb).map(r=>r.tot)),'da marcação até a baixa');
+ const kp=hK('Marcadas',fmt(R.length),'no período')+hK('Pendentes',fmt(n(r=>r.w.st===1)),'ainda procurando')+hK('Aguardando baixa',fmt(n(r=>r.w.st!==1&&r.et==='a')),'encontradas')+hK('Baixadas',fmt(n(r=>r.et==='b')),'concluídas')+hK('Tempo mediano procurando',md(R.filter(r=>r.ta).map(r=>r.tp)),'da marcação até achar, 6h às 20h')+hK('Tempo mediano até a baixa',md(R.filter(r=>r.tbx).map(r=>r.tbx)),'do achado até a baixa, 6h às 20h')+hK('Tempo mediano total',md(R.filter(r=>r.tb).map(r=>r.tot)),'da marcação até a baixa, 6h às 20h');
  return`<div class="card" style="margin-top:14px"><h2>Procurando: registro, tempo e conclusão</h2><dl class="stats solo">${kp}</dl><label class="hint" style="display:block;margin:12px 0 8px">Pesquisar<input id="hPq" type="search" value="${esc(HPR)}" placeholder="Onda, SKU, local ou nome" autocomplete="off"></label><div id="hPt">${hProcTable()}</div></div>`}
 function hisPessoas(P){HPBY={};P.forEach(w=>{(HPBY[w.op]=HPBY[w.op]||[]).push(w)});
  const L=Object.entries(HPBY).map(([op,a])=>({op,a,n:a[0].opn||'—',c:a[0].opc||String(op).split('~')[0],q:a.reduce((s,w)=>s+w.qty,0)})).sort((x,y)=>y.q-x.q);
@@ -1519,7 +1545,7 @@ async function loadHis(force){
  if(!ON){HW=S.waves.filter(w=>w.ts>=s.getTime()&&w.ts<=e.getTime());HPW=HW.filter(w=>w.st!==0||(w.hist||[]).length);hAt=Date.now();hisRender();return}
  HW=null;HPW=null;hBusy=true;hisRender();
  try{const cols='id,wn,operador_id,galpao_id,tipo,quantidade,status,registrada_em,concluida_em,tempo_zerado',win='&registrada_em=gte.'+de+'&registrada_em=lt.'+ate+'&order=registrada_em.asc,id.asc';
-  const [arr,parr]=await Promise.all([hFetchAll('/rest/v1/ondas?select='+cols+'&status=eq.0'+win),hFetchAll('/rest/v1/ondas?select='+cols+',procura_sku,procura_local,procura_nome,procura_em,procura_hist&or=(status.neq.0,procura_hist.not.is.null)'+win).catch(()=>undefined)]);
+  const [arr,parr]=await Promise.all([hFetchAll('/rest/v1/ondas?select='+cols+'&status=eq.0'+win),hFetchAll('/rest/v1/ondas?select='+cols+',procura_sku,procura_local,procura_nome,procura_em,procura_hist'+PIC+'&or=(status.neq.0,procura_hist.not.is.null)'+win).catch(()=>undefined)]);
   if(seq!==hSeq)return;
   const rows=arr.map(hRow),ids=new Set(rows.map(w=>w.id)),mine=S.waves.filter(w=>!w.srv&&!ids.has(w.id)&&w.ts>=s.getTime()&&w.ts<=e.getTime());
   HW=rows.concat(mine);HPW=parr?parr.map(hRow).concat(mine.filter(w=>w.st!==0||(w.hist||[]).length)):undefined;hAt=Date.now();hBusy=false;hisRender();
@@ -1646,7 +1672,7 @@ $("#gal").onchange=e=>{if(e.target.value!=="__all"){S.gal=e.target.value;save()}
 $("#ctlQ").oninput=ctlLive;async function zerarTempo(ids){const L=S.waves.filter(w=>ids.includes(w.id));if(!L.length)return;
  if(ON){const wns=L.filter(w=>w.srv||w.sync).map(w=>w.wn);if(wns.length){try{await api("/rest/v1/rpc/zerar_tempo_ondas",{method:"POST",body:{p_wns:wns}})}catch(e){toast(errMsg(e));return}}}
  L.forEach(w=>{w.zt=1});save();renderAll();ctlLive();toast("Tempo zerado: as unidades continuam contando")}
-$("#ctlLive").onclick=e=>{const z=e.target.closest("[data-zt]");if(z){zerarTempo(z.dataset.zt.split(","));return}const b=e.target.closest("[data-x]");if(!b)return;const k=b.dataset.x;CTLX.has(k)?CTLX.delete(k):CTLX.add(k);ctlLive()};$("#day").onchange=()=>{renderAll();if(view==="ind")loadManagement()};$("#turnoF").onchange=renderAll;$("#hBody").addEventListener("toggle",e=>{const d=e.target;if(!d.matches||!d.matches("details.hp"))return;const k=d.dataset.hp;d.open?HOPEN.add(k):HOPEN.delete(k);if(d.open)d.querySelector(".hpb").innerHTML=hpBody(k)},true);
+$("#ctlLive").onclick=e=>{const z=e.target.closest("[data-zt]");if(z){zerarTempo(z.dataset.zt.split(","));return}const b=e.target.closest("[data-x]");if(!b)return;const k=b.dataset.x;CTLX.has(k)?CTLX.delete(k):CTLX.add(k);ctlLive()};$("#day").onchange=()=>{renderAll();if(view==="ind"&&gsub==="chk"){const v=$("#day").value;if(CKV==="sem")semGo(SEMP,SEMP===7?addDias(mondayOf(v),6):v);else ckIr(v,true);return}if(view==="ind")loadManagement()};$("#turnoF").onchange=renderAll;$("#hBody").addEventListener("toggle",e=>{const d=e.target;if(!d.matches||!d.matches("details.hp"))return;const k=d.dataset.hp;d.open?HOPEN.add(k):HOPEN.delete(k);if(d.open)d.querySelector(".hpb").innerHTML=hpBody(k)},true);
 $("#hsub").onclick=e=>{const k=e.target.dataset.hs;if(!k)return;HS=k;hsShow()};
 $("#hBody").addEventListener("click",e=>{if(e.target.closest("[data-hretry]"))loadHis(true)});
 $("#hBody").addEventListener("input",e=>{if(e.target.id==="hPq"){HPR=e.target.value;$("#hPt").innerHTML=hProcTable();return}const k=e.target.dataset&&e.target.dataset.hpq;if(k==null)return;HPQ[k]=e.target.value;const b=e.target.closest(".hpb"),pos=e.target.selectionStart;b.innerHTML=hpBody(k);const n=b.querySelector("input");n.focus();n.setSelectionRange(pos,pos)});
@@ -1658,6 +1684,11 @@ $("#theme").onclick=()=>{const r=document.documentElement,d=getComputedStyle(r).
 $$(".tab[data-t]").forEach(b=>b.onclick=()=>go(b.dataset.t));
 /* procurando em etapas: 1 pendente (status 1, SKU e local), 2 encontrada (volta à produção, vai ao histórico), 3 baixa com o nome de quem fez */
 let prW=null;
+async function prEncontrarSrv(wn,quem){
+ try{return await api("/rest/v1/rpc/encontrar_procurando",{method:"POST",body:{p_wn:wn,p_quem:quem||null}})}
+ catch(e){if(e&&(e.status===404||/find the function|PGRST202/i.test(String(e.message||e.code||''))))return await api("/rest/v1/rpc/encontrar_procurando",{method:"POST",body:{p_wn:wn}});throw e}}
+/* quem encontrou: se o servidor só guardou o horário e a baixa saiu no mesmo instante (Finalizar onda), é a mesma pessoa */
+function prQuemAchou(ev){const a=ev.find(z=>z.e==='a'),b=ev.find(z=>z.e==='b');if(!a)return'';return a.q||(b&&Math.abs(b.t-a.t)<5000?b.q:'')}
 function prHistSrv(h){return(Array.isArray(h)?h:[]).map(e=>({e:e.e,q:e.q||"",t:Date.parse(e.t)||0}))}
 function prEv(w){const h=w.hist||[],i=h.map(e=>e.e).lastIndexOf("m");return i<0?h:h.slice(i)}
 function prEtapa(w){if(w.st===1)return"p";const h=prEv(w),u=h[h.length-1];return u&&(u.e==="a"||u.e==="b")?u.e:""}
@@ -1668,39 +1699,57 @@ function prBuscar(){const v=$("#prBip").value.trim();if(!v)return;const n=normWN
  if(w&&w.st===2){toast("Onda em difícil acesso não pode entrar em procurando");return}
  const e=w?prEtapa(w):"";prW={wn:v,w,modo:e==="p"?"achar":e==="a"?"baixa":e==="b"?"fim":"marcar"};prForm()}
 function prAbrir(id,modo){const w=S.waves.find(x=>x.id===id);if(!w)return;prW={wn:w.wn,w,modo};prForm()}
+const prLinha=(i,k)=>`<div class="prir"><label>SKU${k===0?' <span class="hint">Obrigatório</span>':''}<input class="pis"${k===0?' id="prSku"':''} autocomplete="off" maxlength="40" value="${esc(i.s||"")}"></label><label>Quantidade${k===0?' <span class="hint">Obrigatório</span>':''}<input class="piq"${k===0?' id="prQtd"':''} type="number" min="1" max="100000" step="1" inputmode="numeric" value="${i.q||""}"></label><button class="btn alt sm pidel" type="button" aria-label="Remover este SKU"${k===0?' hidden':''}>Remover</button></div>`;
+function prLerItens(){const rows=[...document.querySelectorAll("#prItens .prir")],out=[];
+ for(const r of rows){const s=r.querySelector(".pis").value.trim(),qs=r.querySelector(".piq").value.trim();if(!s&&!qs)continue;
+  if(!s){toast("Informe o SKU de cada quantidade");r.querySelector(".pis").focus();return null}
+  if(s.length>40){toast("SKU até 40 caracteres");r.querySelector(".pis").focus();return null}
+  const q=Number(qs);if(!qs||!Number.isInteger(q)||q<1||q>100000){toast("Informe a quantidade do SKU "+s+" (número inteiro, de 1 a 100000)");r.querySelector(".piq").focus();return null}
+  if(out.some(x=>x.s.toLowerCase()===s.toLowerCase())){toast("O SKU "+s+" aparece duas vezes");r.querySelector(".pis").focus();return null}
+  out.push({s,q})}
+ if(!out.length){toast("Informe o SKU e a quantidade");const i=$("#prSku");if(i)i.focus();return null}
+ if(out.length>30){toast("Até 30 SKUs por onda");return null}
+ return out}
+/* resumo curto do que cabe na coluna antiga (40 caracteres): um SKU fica como antes */
+const prResumo=L=>{if(L.length===1)return L[0].s;const t=L.map(i=>i.s+" ×"+i.q).join(", ");return t.length>40?t.slice(0,39)+"…":t};
 function prForm(){const w=prW.w,m=prW.modo,R=$(m==="finalizar"?"#prFin":"#prRes");
  const info=`<div class="sumline"><b>${esc(prW.wn)}</b>${w?" · "+esc(w.ty)+" · "+fmt(w.qty)+" · "+esc(w.opn):" · não está neste aparelho, o servidor confere ao salvar"}</div>`;
  const cancel='<button class="btn alt sm" id="prCan">Cancelar</button>';
  if(m==="fim"){R.innerHTML=info+`<div class="legend">Esta onda já tem baixa de ${esc(((prEv(w).slice(-1)[0])||{}).q||"—")}.</div><div class="ctl2">${cancel}<span></span></div>`;return}
  if(m==="finalizar"){R.innerHTML=`<div class="card" style="margin-bottom:14px"><h2>Finalizar onda</h2>${info}<label>Nome de quem finalizou <span class="hint">Obrigatório</span><input id="prNome" list="prNomes" autocomplete="off"></label><div class="ctl2">${cancel}<button class="btn" id="prFOk">Finalizar onda</button></div></div>`;$("#prNome").focus();return}
- if(m==="marcar")R.innerHTML=info+`<label>SKU <span class="hint">Obrigatório</span><input id="prSku" autocomplete="off" value="${esc((w&&w.sku)||"")}"></label>
-  <label>Local <span class="hint">Opcional</span><input id="prLoc" autocomplete="off" value="${esc((w&&w.loc)||"")}"></label>
-  <div class="ctl2">${cancel}<button class="btn" id="prOk">Marcar como procurando</button></div>`;
- else if(m==="achar")R.innerHTML=info+`<div class="legend">Procurando${w&&w.sku?" o SKU "+esc(w.sku):""}${w&&w.loc?" em "+esc(w.loc):""} há ${mm(Date.now()-(w.pt||w.ts))}.</div><div class="ctl2">${cancel}<button class="btn" id="prAOk">Onda encontrada</button></div>`;
+ if(m==="marcar"){const L0=w&&w.itens&&w.itens.length?w.itens:[{s:(w&&w.sku)||"",q:""}];
+  R.innerHTML=info+`<div class="legend" style="margin:6px 0">SKU e quantidade que estão sendo procurados. Use Adicionar SKU para mais de um.</div><div id="prItens">${L0.map((i,k)=>prLinha(i,k)).join("")}</div><div class="ctl2" style="justify-content:flex-start;margin:6px 0 10px"><button class="btn alt sm" type="button" id="prAdd">+ Adicionar SKU</button></div>
+  <fieldset class="prmc"><legend>Marcações <span class="hint">Opcional</span></legend>${PR_MARCAS.map(m=>`<label class="chk"><input type="checkbox" class="pim" value="${m}"${w&&w.marcas&&w.marcas.includes(m)?' checked':''}> ${m}</label>`).join('')}</fieldset>
+  <label>Observação <span class="hint">Opcional</span><input id="prLoc" autocomplete="off" maxlength="200" value="${esc((w&&w.loc)||"")}"></label>
+  <div class="ctl2">${cancel}<button class="btn" id="prOk">Marcar como procurando</button></div>`}
+ else if(m==="achar")R.innerHTML=info+`<div class="legend">Procurando${w&&(w.sku||(w.itens&&w.itens.length))?" "+esc(prSkuTxt(w)):""}${w&&w.loc?" em "+esc(w.loc):""} há ${mm(tUtil(w.pt||w.ts,Date.now()))} (horário comercial, 6h às 20h).</div><label>Nome de quem encontrou <span class="hint">Obrigatório</span><input id="prNome" list="prNomes" autocomplete="off"></label><div class="ctl2">${cancel}<button class="btn" id="prAOk">Onda encontrada</button></div>`;
  else R.innerHTML=info+`<label>Nome de quem fez<input id="prNome" list="prNomes" autocomplete="off"></label>
   <div class="ctl2">${cancel}<button class="btn" id="prBOk">Dar baixa</button></div>`;
- const f=$("#prSku")||$("#prNome")||$("#prAOk");if(f)f.focus()}
+ const f=$("#prSku")||$("#prNome");if(f)f.focus()}
 function prFim(msg){prW=null;$("#prRes").innerHTML="";$("#prFin").innerHTML="";$("#prBip").value="";save();renderAll();toast(msg);$("#prBip").focus()}
-async function prSalvar(){const sku=$("#prSku").value.trim(),loc=$("#prLoc").value.trim();
- if(!sku){toast("Informe o SKU");$("#prSku").focus();return}
- if(sku.length>40||loc.length>60){toast("SKU até 40 e local até 60 caracteres");return}
+async function prSalvar(){const itens=prLerItens();if(!itens)return;const loc=$("#prLoc").value.trim(),sku=prResumo(itens),marcas=[...document.querySelectorAll("#prRes .pim:checked")].map(i=>i.value);
+ if(loc.length>200){toast("Observação até 200 caracteres");return}
  let w=prW.w,pt=Date.now(),h=null;
- if(ON){try{const r=await api("/rest/v1/rpc/marcar_procurando",{method:"POST",body:{p_wn:prW.wn,p_sku:sku,p_local:loc||null}});
+ if(ON){try{let r;const base={p_wn:prW.wn,p_sku:sku,p_local:loc||null};
+   try{r=await api("/rest/v1/rpc/marcar_procurando",{method:"POST",body:Object.assign({},base,{p_itens:itens.map(i=>({sku:i.s,qtd:i.q})),p_marcas:marcas})})}
+   catch(e){if(e&&(e.status===404||/find the function|PGRST202/i.test(String(e.message||e.code||""))))r=await api("/rest/v1/rpc/marcar_procurando",{method:"POST",body:base});else throw e}
    w=w||S.waves.find(a=>a.id===r.id);pt=Date.parse(r.procura_em)||pt;h=prHistSrv(r.procura_hist);
    if(!w){w={id:r.id,wn:r.wn,op:"—",opn:r.procura_nome||"—",gal:GN[r.galpao_id]||"—",ty:r.tipo,qty:r.quantidade,st:0,ts:Date.parse(r.registrada_em),fin:null,sync:1};S.waves.push(w)}
   }catch(e){toast(errMsg(e));return}}
  if(w.st!==1){w.pt=pt;w.hist=h||(w.hist||[]).concat({e:"m",q:w.opn||"",t:pt})}else if(h)w.hist=h;
- w.st=1;w.fin=null;w.sku=sku;w.loc=loc;w.sync=ON?1:(online()?1:0);
+ w.st=1;w.fin=null;w.sku=sku;w.itens=itens;w.marcas=marcas;w.loc=loc;w.sync=ON?1:(online()?1:0);
  prFim("Onda em procurando")}
-async function prAchar(){const w=prW.w;if(!w)return;
- if(ON){try{await api("/rest/v1/rpc/encontrar_procurando",{method:"POST",body:{p_wn:w.wn}})}catch(e){toast(errMsg(e));return}}
- w.st=0;w.fin=Date.now();w.sync=ON?1:(online()?1:0);w.hist=(w.hist||[]).concat({e:"a",q:"",t:Date.now()});
+async function prAchar(){const w=prW.w,nome=($("#prNome")||{value:""}).value.trim();if(!w)return;
+ if(nome.length<2){toast("Informe o nome de quem encontrou");const i=$("#prNome");if(i)i.focus();return}
+ if(nome.length>80){toast("Nome grande demais");return}
+ if(ON){try{await prEncontrarSrv(w.wn,nome)}catch(e){toast(errMsg(e));return}}
+ w.st=0;w.fin=Date.now();w.sync=ON?1:(online()?1:0);w.hist=(w.hist||[]).concat({e:"a",q:nome,t:Date.now()});
  prFim("Onda encontrada: foi para o histórico")}
 async function prFinalizar(){const w=prW.w,nome=$("#prNome").value.trim();
  if(!w){toast("Onda não encontrada");return}
  if(nome.length<2){toast("Informe o nome de quem finalizou");$("#prNome").focus();return}
  if(nome.length>80){toast("Nome grande demais");return}
- if(ON){try{if(w.st===1)await api("/rest/v1/rpc/encontrar_procurando",{method:"POST",body:{p_wn:w.wn}});await api("/rest/v1/rpc/baixar_procurando",{method:"POST",body:{p_wn:w.wn,p_nome:nome}})}catch(e){toast(errMsg(e));return}}
+ if(ON){try{if(w.st===1)await prEncontrarSrv(w.wn,nome);await api("/rest/v1/rpc/baixar_procurando",{method:"POST",body:{p_wn:w.wn,p_nome:nome}})}catch(e){toast(errMsg(e));return}}
  const t=Date.now();if(w.st===1){w.st=0;w.fin=t;w.sync=ON?1:(online()?1:0);w.hist=(w.hist||[]).concat({e:"a",q:nome,t})}
  w.hist=(w.hist||[]).concat({e:"b",q:nome,t});prFim("Onda finalizada")}
 async function prBaixar(){const w=prW.w,nome=$("#prNome").value.trim();
@@ -1709,19 +1758,22 @@ async function prBaixar(){const w=prW.w,nome=$("#prNome").value.trim();
  if(ON){try{await api("/rest/v1/rpc/baixar_procurando",{method:"POST",body:{p_wn:prW.wn,p_nome:nome}})}catch(e){toast(errMsg(e));return}}
  if(w)w.hist=(w.hist||[]).concat({e:"b",q:nome,t:Date.now()});
  prFim("Baixa registrada")}
-function procurando(){const q=($("#prQ")&&$("#prQ").value||"").trim().toLowerCase(),ok=w=>!q||[w.wn,w.sku,w.loc,w.ty,w.opn,w.op,(prEv(w).filter(e=>e.q).map(e=>e.q).join(" "))].join(" ").toLowerCase().includes(q);
+function procurando(){const q=($("#prQ")&&$("#prQ").value||"").trim().toLowerCase(),ok=w=>!q||[w.wn,w.sku,prSkuTxt(w),(w.marcas||[]).join(' '),w.loc,w.ty,w.opn,w.op,(prEv(w).filter(e=>e.q).map(e=>e.q).join(" "))].join(" ").toLowerCase().includes(q);
  $("#prNomes").innerHTML=S.ops.map(o=>`<option value="${esc(o.n)}">`).join("");
  const P=S.waves.filter(w=>w.st===1&&inView(w)),L=P.filter(ok).sort((a,b)=>(a.pt||a.ts)-(b.pt||b.ts));
  $("#prCnt").textContent=P.length?P.length+" pendentes":"";$$("#psub [data-p=sku]").forEach(x=>x.textContent="SKU procurando"+(P.length?" ("+P.length+")":""));
- $("#prList").innerHTML=L.length?`<table><tr><th>SKU</th><th>Onda</th><th>Quantidade</th><th>Há</th><th></th></tr>`+L.map(w=>`<tr><td><b>${esc(w.sku||"—")}</b>${w.loc?`<br><small>${esc(w.loc)}</small>`:""}</td><td><b>${esc(wnS(w)||"—")}</b><br><small>${esc(w.ty)} · ${esc(w.opn||"—")}</small></td><td><b>${fmt(w.qty)}</b></td><td>${mm(Date.now()-(w.pt||w.ts))}</td><td><button class="btn sm" data-prf="${esc(w.id)}">Finalizar onda</button></td></tr>`).join("")+"</table>":`<div class="empty">${P.length?"Nada encontrado nesta pesquisa.":"Nenhuma onda pendente."}</div>`;
+ $("#prList").innerHTML=L.length?`<table><tr><th>SKU</th><th>Onda</th><th>Quantidade</th><th>Há</th><th></th></tr>`+L.map(w=>`<tr><td><b>${prSkuHtml(w)}</b>${prMarcasHtml(w)}${w.loc?`<br><small>${esc(w.loc)}</small>`:""}</td><td><b>${esc(wnS(w)||"—")}</b><br><small>${esc(w.ty)} · ${esc(w.opn||"—")}</small></td><td><b>${fmt(w.qty)}</b></td><td>${mm(tUtil(w.pt||w.ts,Date.now()))}</td><td><button class="btn sm" data-prf="${esc(w.id)}">Finalizar onda</button></td></tr>`).join("")+"</table>":`<div class="empty">${P.length?"Nada encontrado nesta pesquisa.":"Nenhuma onda pendente."}</div>`;
  const Hh=S.waves.filter(w=>inView(w)&&(prEtapa(w)==="a"||prEtapa(w)==="b")),H2=Hh.filter(ok).sort((a,b)=>Math.max(...prEv(b).map(e=>e.t),0)-Math.max(...prEv(a).map(e=>e.t),0)).slice(0,200);
  const aguardando=Hh.filter(w=>prEtapa(w)==="a").length;$("#prHCnt").textContent=Hh.length?Hh.length+" no histórico"+(aguardando?", "+aguardando+" aguardando baixa":""):"";
- $("#prHist").innerHTML=H2.length?`<table><tr><th>Data e hora</th><th>Tipo</th><th>Onda</th><th>SKU</th><th>Local</th><th>Quem fez a onda</th><th>Encontrada em</th><th>Baixa por</th></tr>`+H2.map(w=>{const b=prEv(w).find(e=>e.e==="b");
-  return`<tr><td>${prDH(prT(w,"m")||w.pt||w.ts)}</td><td>${esc(w.ty)}<br><small>${fmt(w.qty)} un.</small></td><td><b>${esc(wnS(w)||"—")}</b></td><td>${esc(w.sku||"—")}</td><td>${esc(w.loc||"—")}</td><td>${esc(w.opn||"—")}</td><td>${prDH(prT(w,"a"))}</td><td>${b?`<b>${esc(b.q)}</b><br><small>${prDH(b.t)}</small>`:`<button class="btn alt sm" data-prb="${esc(w.id)}">Dar baixa</button>`}</td></tr>`}).join("")+"</table>":`<div class="empty">${Hh.length?"Nada encontrado nesta pesquisa.":"Nenhuma onda no histórico ainda."}</div>`}
-$("#prs").addEventListener("keydown",e=>{if(e.key!=="Enter")return;const i=e.target.id;if(!["prBip","prSku","prLoc","prNome"].includes(i))return;e.preventDefault();
- if(i==="prBip")prBuscar();else if(i==="prNome")(prW&&prW.modo==="finalizar"?prFinalizar():prBaixar());else prSalvar()});
+ $("#prHist").innerHTML=H2.length?`<table><tr><th>Data e hora</th><th>Tipo</th><th>Onda</th><th>SKU</th><th>Observação</th><th>Quem fez a onda</th><th>Encontrada por</th><th>Baixa por</th></tr>`+H2.map(w=>{const b=prEv(w).find(e=>e.e==="b");
+  return`<tr><td>${prDH(prT(w,"m")||w.pt||w.ts)}</td><td>${esc(w.ty)}<br><small>${fmt(w.qty)} un.</small></td><td><b>${esc(wnS(w)||"—")}</b></td><td>${prSkuHtml(w)}${prMarcasHtml(w)}</td><td>${esc(w.loc||"—")}</td><td>${esc(w.opn||"—")}</td><td>${prT(w,"a")?(prQuemAchou(prEv(w))?`<b>${esc(prQuemAchou(prEv(w)))}</b><br><small>${prDH(prT(w,"a"))}</small>`:prDH(prT(w,"a"))):"—"}</td><td>${b?`<b>${esc(b.q)}</b><br><small>${prDH(b.t)}</small>`:`<button class="btn alt sm" data-prb="${esc(w.id)}">Dar baixa</button>`}</td></tr>`}).join("")+"</table>":`<div class="empty">${Hh.length?"Nada encontrado nesta pesquisa.":"Nenhuma onda no histórico ainda."}</div>`}
+$("#prs").addEventListener("keydown",e=>{if(e.key!=="Enter")return;const c=e.target.classList;
+ if(c&&c.contains("pis")){e.preventDefault();e.target.closest(".prir").querySelector(".piq").focus();return}
+ if(c&&c.contains("piq")){e.preventDefault();const r=e.target.closest(".prir"),nx=r.nextElementSibling;if(nx)nx.querySelector(".pis").focus();else if(e.target.value.trim()&&r.querySelector(".pis").value.trim())$("#prAdd").click();return}
+ const i=e.target.id;if(!["prBip","prLoc","prNome"].includes(i))return;e.preventDefault();
+ if(i==="prBip")prBuscar();else if(i==="prNome")(prW&&prW.modo==="finalizar"?prFinalizar():prW&&prW.modo==="achar"?prAchar():prBaixar());else prSalvar()});
 $("#prQ").oninput=procurando;
-document.addEventListener("click",e=>{const t=e.target;if(t.id==="prOk")prSalvar();else if(t.id==="prAOk")prAchar();else if(t.id==="prBOk")prBaixar();else if(t.id==="prFOk")prFinalizar();
+document.addEventListener("click",e=>{const t=e.target;if(t.id==="prAdd"){const box=$("#prItens");if(box){const d=document.createElement("div");d.innerHTML=prLinha({s:"",q:""},box.children.length);const n=d.firstChild;n.querySelector(".pidel").hidden=false;box.appendChild(n);n.querySelector(".pis").focus()}return}if(t.classList&&t.classList.contains("pidel")){const r=t.closest(".prir");if(r)r.remove();return}if(t.id==="prOk")prSalvar();else if(t.id==="prAOk")prAchar();else if(t.id==="prBOk")prBaixar();else if(t.id==="prFOk")prFinalizar();
  else if(t.id==="prCan"){prW=null;$("#prRes").innerHTML="";$("#prFin").innerHTML="";const f=$("#prBip");if(f&&view==="prs"&&!$("#pBip").classList.contains("hide"))f.focus()}
  const a=t.closest&&t.closest("[data-prf]");if(a)prAbrir(a.dataset.prf,"finalizar");const b=t.closest&&t.closest("[data-prb]");if(b)prAbrir(b.dataset.prb,"baixa")});
 function psub(k){window.__ps=k;$$("#psub button").forEach(b=>b.classList.toggle("on",b.dataset.p===k));[["bip","pBip"],["sku","pSku"],["his","pHis"]].forEach(([a,id])=>$("#"+id).classList.toggle("hide",a!==k));setTimeout(()=>{if(view!=="prs")return;const f=k==="bip"?$("#prBip"):k==="sku"?$("#prQ"):null;if(f)f.focus({preventScroll:true})},60)}
@@ -1731,7 +1783,7 @@ $("#csub").onclick=e=>{const c=e.target.dataset.c;if(!c)return;csub=c;$$("#csub 
 $("#iPrint").onclick=imprimirFolhas;$("#iOp").onchange=()=>{mgShown=100;individual()};$("#iPer").onchange=()=>{mgShown=100;individual();coletiva();loadManagement()};
 $("#iBody").addEventListener("click",e=>{if(e.target.id==="mgMore"){mgShown+=100;individual()}if(e.target.id==="mgTurnoSave")mgSalvarTurno();if(e.target.id==="presSalvar")presSalvar();if(e.target.id==="presBaixa")presBaixa();if(e.target.id==="presAtrSalvar")presAtrSalvar();if(e.target.dataset&&e.target.dataset.cancel)presCancelar(e.target.dataset.cancel)});
 const hojeSemana=()=>mondayOf(dk(Date.now()));
-$("#gsub").onclick=e=>{const x=e.target.dataset.gs;if(!x)return;gsub=x;$$("#gsub button").forEach(b=>b.classList.toggle("on",b===e.target));$("#iBody").classList.toggle("hide",x!=="mi");$("#coBody").classList.toggle("hide",x!=="mc");$("#ckBody").classList.toggle("hide",x!=="chk");$("#iOp").classList.toggle("hide",x!=="mi");$("#iPrint").classList.toggle("hide",x!=="mi");if(x==="chk")ckEntrar();else if(x==="mc")coletiva();else individual()};
+$("#gsub").onclick=e=>{const x=e.target.dataset.gs;if(!x)return;gsub=x;$$("#gsub button").forEach(b=>b.classList.toggle("on",b===e.target));$("#iBody").classList.toggle("hide",x!=="mi");$("#coBody").classList.toggle("hide",x!=="mc");$("#ckBody").classList.toggle("hide",x!=="chk");$("#iOp").classList.toggle("hide",x!=="mi");$("#iPrint").classList.toggle("hide",x!=="mi");$("#iPer").classList.toggle("hide",x==="chk");if(x==="chk")ckEntrar();else if(x==="mc"){coletiva();loadManagement({cache:true})}else{individual();loadManagement({cache:true})}};
 
 document.addEventListener("click",e=>{const d=e.target.dataset,t=e.target;
  const tyB=t.closest&&t.closest("[data-ty]");if(tyB){ty=tyB.dataset.ty;if(!multiOnda()&&rows.length>1)rows.splice(1);segs();setTimeout(()=>goStep(3),260)}

@@ -95,9 +95,9 @@ function fake(db){const cors={'access-control-allow-origin':'*','access-control-
    if(!body.p_sku||!String(body.p_sku).trim())return J(route,400,{code:'22023',message:'Informe o SKU (até 40 caracteres)'});
    if(!o)return J(route,404,{code:'P0002',message:'Onda '+body.p_wn+' não está registrada'});
    const op=db.operadores.find(x=>x.id===o.operador_id);o.procura_hist=(o.procura_hist||[]).concat({e:'m',q:op?op.nome:'',t:new Date().toISOString()});
-   Object.assign(o,{status:1,concluida_em:null,procura_sku:body.p_sku,procura_local:body.p_local,procura_nome:op?op.nome:'',procura_em:new Date().toISOString()});
-   return J(route,200,{id:o.id,wn:o.wn,tipo:o.tipo,quantidade:o.quantidade,galpao_id:o.galpao_id,operador_id:o.operador_id,registrada_em:o.registrada_em,procura_em:o.procura_em,procura_nome:o.procura_nome,procura_hist:o.procura_hist})}
-  if(t==='rpc/encontrar_procurando'&&m==='POST'){const o=db.ondas.find(x=>x.wn===body.p_wn&&x.status===1);if(o){o.status=0;o.concluida_em=new Date().toISOString();o.procura_hist.push({e:'a',t:new Date().toISOString()})}return J(route,200,!!o)}
+   Object.assign(o,{status:1,concluida_em:null,procura_sku:body.p_sku,procura_itens:body.p_itens||[],procura_marcas:body.p_marcas||[],procura_local:body.p_local,procura_nome:op?op.nome:'',procura_em:new Date().toISOString()});
+   return J(route,200,{id:o.id,wn:o.wn,tipo:o.tipo,quantidade:o.quantidade,galpao_id:o.galpao_id,operador_id:o.operador_id,registrada_em:o.registrada_em,procura_em:o.procura_em,procura_nome:o.procura_nome,procura_hist:o.procura_hist,procura_itens:o.procura_itens,procura_marcas:o.procura_marcas})}
+  if(t==='rpc/encontrar_procurando'&&m==='POST'){const o=db.ondas.find(x=>x.wn===body.p_wn&&x.status===1);if(o){o.status=0;o.concluida_em=new Date().toISOString();o.procura_hist.push(body.p_quem?{e:'a',q:body.p_quem,t:new Date().toISOString()}:{e:'a',t:new Date().toISOString()})}return J(route,200,!!o)}
   if(t==='rpc/zerar_tempo_ondas'&&m==='POST'){const ws=(body.p_wns||[]).map(x=>String(x).replace(/^0+/,''));const hit=db.ondas.filter(o=>o.status===0&&ws.includes(String(o.wn).replace(/^0+/,'')));if(!hit.length)return J(route,404,{code:'P0002',message:'onda_nao_encontrada'});hit.forEach(o=>o.tempo_zerado=true);return J(route,200,hit.length)}
   if(t==='rpc/baixar_procurando'&&m==='POST'){if(!body.p_nome||body.p_nome.trim().length<2)return J(route,400,{code:'22023',message:'Informe o nome de quem fez (2 a 80 caracteres)'});
    const o=db.ondas.find(x=>x.wn===body.p_wn&&x.status===0&&!x.procura_achou_por&&(x.procura_hist||[]).slice(-1)[0]&&x.procura_hist.slice(-1)[0].e==='a');
@@ -270,12 +270,12 @@ await T('S22 Gestor comum vê só "Meta do dia" e não cria nem lista galpões; 
 await T('S23 Procurando no servidor: pendente com SKU, encontrada e baixa com nome; WN desconhecido avisa',async()=>{const db=banco();
  db.ondas.push({id:'x1',wn:'555',operador_id:db.operadores[0].id,galpao_id:G1,tipo:'Vários artigos',quantidade:40,status:0,registrada_em:new Date().toISOString(),concluida_em:new Date().toISOString(),procura_hist:[]});
  const p=await page(b,db);await p.click('.tab[data-t="prs"]');
- await p.fill('#prBip','999');await p.press('#prBip','Enter');await p.fill('#prSku','S1');await p.press('#prSku','Enter');await p.waitForTimeout(400);
+ await p.fill('#prBip','999');await p.press('#prBip','Enter');await p.fill('#prSku','S1');await p.fill('#prQtd','2');await p.click('#prOk');await p.waitForTimeout(400);
  ok((await p.textContent('#toast')).includes('não está registrada'),'toast: '+await p.textContent('#toast'));
- await p.fill('#prBip','0555');await p.press('#prBip','Enter');await p.fill('#prSku','SKU-7');await p.fill('#prLoc','B-02');await p.press('#prLoc','Enter');await p.waitForTimeout(500);
- ok(db.ondas[0].status===1&&db.ondas[0].procura_sku==='SKU-7'&&db.ondas[0].procura_local==='B-02','banco: '+JSON.stringify(db.ondas[0]));
+ await p.fill('#prBip','0555');await p.press('#prBip','Enter');await p.fill('#prSku','SKU-7');await p.fill('#prQtd','9');await p.fill('#prLoc','B-02');await p.press('#prLoc','Enter');await p.waitForTimeout(500);
+ ok(db.ondas[0].status===1&&db.ondas[0].procura_sku==='SKU-7'&&db.ondas[0].procura_local==='B-02'&&JSON.stringify(db.ondas[0].procura_itens)==='[{"sku":"SKU-7","qtd":9}]','banco: '+JSON.stringify(db.ondas[0]));
  ok((await p.textContent('#prList')).includes('SKU-7'),'pendentes sem a onda');
- await p.fill('#prBip','555');await p.press('#prBip','Enter');await p.click('#prAOk');await p.waitForTimeout(500);ok(db.ondas[0].status===0,'banco não voltou a 0');
+ await p.fill('#prBip','555');await p.press('#prBip','Enter');await p.click('#prAOk');await p.waitForTimeout(300);ok(db.ondas[0].status===1,'achou sem informar o nome');await p.fill('#prNome','Marcos Lima');await p.click('#prAOk');await p.waitForTimeout(500);ok(db.ondas[0].status===0,'banco não voltou a 0');ok(db.ondas[0].procura_hist.some(h=>h.e==='a'&&h.q==='Marcos Lima'),'servidor não guardou quem encontrou: '+JSON.stringify(db.ondas[0].procura_hist));
  ok((await p.textContent('#prList')).includes('Nenhuma')&&(await p.textContent('#prHist')).includes('Dar baixa'),'etapas na tela');
  await p.fill('#prBip','555');await p.press('#prBip','Enter');await p.fill('#prNome','J');await p.press('#prNome','Enter');await p.waitForTimeout(400);
  ok(!db.ondas[0].procura_achou_por&&(await p.textContent('#toast')).length>0,'aceitou nome curto');
@@ -314,6 +314,12 @@ await T('S30 Lista de presença: marcar tira o nome da lista e preenche a semana
  ok(!(await p.$('#ckBody .esq')),'ficou preso no carregamento');
  ok(await p.$eval('#ckBody .wkc[data-m="CL002"][data-d="'+HJ+'"]',e=>e.textContent.includes('Presente')),'semana não mostra Presente');
  await p.click('#ckBody [data-ckv="chk"]');await p.waitForTimeout(700);
+ await p.evaluate(()=>document.querySelector('#gsub [data-gs="mi"]').click());await p.waitForTimeout(800);
+ ok(!(await p.$('#iBody .esq')),'Meta individual ficou presa no carregamento depois da Lista de presença');
+ ok((await p.textContent('#iBody')).replace(/\s+/g,' ').length>40,'Meta individual vazia');
+ await p.evaluate(()=>document.querySelector('#gsub [data-gs="mc"]').click());await p.waitForTimeout(800);
+ ok(!(await p.$('#coBody .esq')),'Meta coletiva ficou presa no carregamento');
+ await p.evaluate(()=>document.querySelector('#gsub [data-gs="chk"]').click());await p.waitForTimeout(700);
  await p.click('#ckBody [data-ckun]');await p.waitForTimeout(500);
  ok(db.presenca[0].cancelado_em,'não cancelou');x=(await p.textContent('#ckBody')).replace(/\s+/g,' ');ok(x.includes('A conferir (1)'),'nome não voltou: '+x.slice(0,160));
  await p.fill('#ckBody .ckd[data-m="CL002"]','3');await p.click('#ckBody [data-ck="atestado"][data-m="CL002"]');await p.waitForTimeout(500);
