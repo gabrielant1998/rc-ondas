@@ -498,29 +498,19 @@ await T("67 Retrabalho pede SKU, aceita várias linhas e não entra na contagem 
 await T("68 Maiores/Pesados aceita várias ondas de uma vez",async()=>{
  const p=await page(b,base());await openReg(p,"CL001","Maiores/Pesados");await typeRows(p,[[8001,3],[8002,4]]);await p.click('#save');await p.waitForTimeout(200);
  const w=await p.evaluate(()=>S.waves.map(x=>x.wn+':'+x.qty).join());ok(w.includes('8001:3')&&w.includes('8002:4'),'registros: '+w)});
-await T("76 Semana: segunda a domingo, colunas separadas; toque no dia abre a pessoa naquele dia",async()=>{
- const now=new Date(),d=new Date(now);d.setDate(d.getDate()-1);d.setHours(0,0,0,0);const baseT=d.getTime();
- const make=(id,op,h,qty)=>({id,wn:id,op,opn:op==='CL001'?'Ana Souza':'Bruno Lima',gal:'Galpão 1',ty:'Vários artigos',qty,st:0,ts:baseT+h*36e5,fin:baseT+h*36e5,sync:1});
- const p=await page(b,base({waves:[make('sa','CL001',7.5,10)]}));
- await p.evaluate(t=>{$('#day').value=dk(t);go('ind');$('#gsub [data-gs="sem"]').click()},baseT);
- await p.waitForTimeout(300);
- const r=await p.evaluate(()=>({txt:$('#wkBody').textContent.replace(/\s+/g,' '),rows:document.querySelectorAll('#wkBody tr').length,celulas:document.querySelectorAll('#wkBody .wkc').length,ini:$('#wkBody').offsetParent!==null,dom:$('#day').value}));
- ok(r.ini&&r.txt.includes('Seg')&&r.txt.includes('Dom')&&r.txt.includes('Atrasos')&&r.txt.includes('Pendentes'),'cabeçalho: '+r.txt.slice(0,160));
- ok(r.celulas>0&&r.celulas%7===0,'7 dias por pessoa: '+r.celulas);
- await p.evaluate(()=>document.querySelector('#wkBody .wkc[data-m="CL002"][data-d]').click());
- await p.waitForTimeout(400);
- const q=await p.evaluate(()=>({op:$('#iOp').value,dia:$('#day').value,per:$('#iPer').value}));
- ok(q.op==='CL002'&&q.per==='1',JSON.stringify(q));
- });
-
-await T("77 Checking diário: todos os nomes numa lista, opções por pessoa e a semana embaixo",async()=>{
+await T("77 Lista de presença: todos os nomes numa lista, opções por pessoa, a semana embaixo e toque no dia abre a pessoa",async()=>{
  const p=await page(b,base());
  await p.evaluate(()=>{go('ind');document.querySelector('#gsub [data-gs="chk"]').click()});
  await p.waitForTimeout(400);
  const r=await p.evaluate(()=>({txt:$('#ckBody').textContent.replace(/\s+/g,' '),btn:[...document.querySelectorAll('#ckBody [data-ck]')].map(b=>b.dataset.ck),vis:$('#ckBody').offsetParent!==null,sem:document.querySelectorAll('#ckBody .wkc').length}));
  ok(r.vis&&/A conferir \(\d+\)/.test(r.txt)&&r.txt.includes('Conferidos'),'cabeçalhos: '+r.txt.slice(0,200));
  ok(['presente','falta','declaracao','atestado','folga'].every(k=>r.btn.includes(k)),'opções: '+r.btn.join());
- ok(r.sem>0&&r.sem%7===0,'tabela da semana: '+r.sem)});
+ ok(r.sem>0&&r.sem%7===0,'tabela da semana: '+r.sem);
+ ok(!(await p.evaluate(()=>!!document.querySelector('#gsub [data-gs="sem"]'))),'sem aba Semana');
+ await p.evaluate(()=>document.querySelector('#ckBody .wkc[data-m="CL002"][data-d]').click());
+ await p.waitForTimeout(400);
+ const q=await p.evaluate(()=>({op:$('#iOp').value,per:$('#iPer').value}));
+ ok(q.op==='CL002'&&q.per==='1',JSON.stringify(q))});
 
 await b.close();
 const w=Math.max(...R.map(r=>r[1].length));for(const r of R)console.log((r[0]==="PASS"?"✅":"❌")+" "+r[1].padEnd(w)+"  "+r[2]);

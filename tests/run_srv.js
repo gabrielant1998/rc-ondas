@@ -301,7 +301,7 @@ await T('S29 Site público: turno, galpão e data escondidos sem login; gestor v
  for(const i of ['#turnoF','#gal','#day'])ok(!(await p.isVisible(i)),i+' visível no público');
  await login(p,'g2@x.com','senha1234');await p.waitForTimeout(300);
  for(const i of ['#turnoF','#gal','#day'])ok(await p.isVisible(i),i+' deveria aparecer para gestor')});
-await T('S30 Checking diário: marcar tira o nome da lista e preenche a semana; desfazer devolve; sem permissão não marca',async()=>{const db=banco();const p=await page(b,db);
+await T('S30 Lista de presença: marcar tira o nome da lista e preenche a semana; desfazer devolve; sem permissão não marca',async()=>{const db=banco();const p=await page(b,db);
  await login(p,'g2@x.com','senha1234');await p.evaluate(()=>go('ind'));await p.waitForTimeout(400);
  await p.evaluate(()=>document.querySelector('#gsub [data-gs="chk"]').click());await p.waitForTimeout(700);
  let x=(await p.textContent('#ckBody')).replace(/\s+/g,' ');ok(x.includes('A conferir (1)')&&x.includes('Carla Dias')&&x.includes('Conferidos (0)'),'lista inicial: '+x.slice(0,200));
