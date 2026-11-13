@@ -606,6 +606,16 @@ await T("83 Painel mostra gráfico bipado x concluído; Acompanhamento pagina de
  await p.fill('#aceQ','7005');await p.waitForTimeout(150);const rq=await p.evaluate(()=>document.querySelectorAll('#aceL tr').length-1);ok(rq===1,'busca: '+rq);
  await p.screenshot({path:'/tmp/claude-0/-home-claude/1b46621a-564c-549a-8cc9-448283bd574c/scratchpad/ace.png'})});
 
+await T("84 Com 'reduzir movimento' ligado: o botão sempre toca a animação; abrir sozinha mostra o quadro final com botão",async()=>{
+ const W=[WV('a','1','Vários artigos',60,HR(9,0))];
+ const p=await page(b,base({waves:W}),{festa:true});await p.emulateMedia({reducedMotion:'reduce'});
+ await p.evaluate(()=>{MT()['Galpão 1']=50;S.cfg.metaMin=0;save();go('painel');renderAll()});await p.waitForTimeout(1500);
+ let fr=p.frames().find(f=>f!==p.mainFrame());ok(fr,'não abriu sozinha');
+ const a1=await fr.evaluate(()=>({t:agora,ui:!document.querySelector('#ui').classList.contains('off'),b:document.querySelector('#go').textContent}));ok(a1.ui&&a1.b==='Ver a animação'&&a1.t>=27,'quadro final: '+JSON.stringify(a1));
+ await fr.click('#go');await p.waitForTimeout(1500);const a2=await fr.evaluate(()=>agora);ok(a2>0.5&&a2<10,'não tocou: '+a2);
+ await p.keyboard.press('Escape');await p.waitForTimeout(800);
+ await p.click('.mbBadge');await p.waitForTimeout(1500);fr=p.frames().find(f=>f!==p.mainFrame());const a3=await fr.evaluate(()=>({t:agora,ui:document.querySelector('#ui').classList.contains('off')}));ok(a3.ui&&a3.t>0.5&&a3.t<10,'botão não tocou: '+JSON.stringify(a3))});
+
 await b.close();
 const w=Math.max(...R.map(r=>r[1].length));for(const r of R)console.log((r[0]==="PASS"?"✅":"❌")+" "+r[1].padEnd(w)+"  "+r[2]);
 console.log(`\n${R.filter(r=>r[0]==="PASS").length}/${R.length} passaram`)})();
