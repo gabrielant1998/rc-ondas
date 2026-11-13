@@ -1110,28 +1110,6 @@ async function presSalvar(){
  if(ok)await loadManagement();
 }
 /* observação do gestor sobre o alerta de atraso do dia; o primeiro bipe não é alterado */
-/* Lista de presença (dia): turno, horário justificado e motivo do atraso, salvos ao sair do campo */
-async function atrSalvar(opId,day,campos,msg){const at=ATR[opId+"|"+day];if(!at&&!Object.values(campos).some(v=>v))return;
- const ok=at?await rem(()=>mut("/rest/v1/presenca_atrasos?id=eq."+at.id,"PATCH",campos),msg)
-            :await rem(()=>mut("/rest/v1/presenca_atrasos","POST",{operador_id:opId,data:day,...campos}),msg);
- if(ok)await loadManagement()}
-document.addEventListener("change",async e=>{const t=e.target;if(!t.classList)return;
- if(t.classList.contains("turnoI")||t.classList.contains("turnoF")){
-  if(!ON||!me||!me.pC){toast("Sem permissão para alterar o turno.");return}
-  const o=(INDX&&INDX.ops||[]).find(x=>x.id===t.dataset.ao);if(!o)return;
-  const ini=+(t.classList.contains("turnoI")?t.value:o.ini),fim=+(t.classList.contains("turnoF")?t.value:o.fim);
-  if(!(ini>=0&&ini<=23&&fim>=1&&fim<=24)){toast("Horário inválido.");return}
-  if(ini===o.ini&&fim===o.fim)return;
-  const ok=await rem(()=>mut("/rest/v1/operadores?id=eq."+o.id,"PATCH",{inicio:ini,fim}),"Turno de "+o.n+" atualizado");
-  if(ok)await loadManagement();return}
- if(t.classList.contains("hjT")){
-  if(!ON||!me||!me.pR){toast("Sem permissão para registrar o horário.");return}
-  const day=t.dataset.ad,v=t.value;
-  if(!v){await atrSalvar(t.dataset.ao,day,{horario_justificado:null},"Horário justificado removido");return}
-  await atrSalvar(t.dataset.ao,day,{horario_justificado:new Date(day+"T"+v+":00").toISOString()},"Horário justificado salvo");return}
- if(t.classList.contains("atrM")){
-  if(!ON||!me||!me.pR){toast("Sem permissão para registrar o motivo.");return}
-  await atrSalvar(t.dataset.ao,t.dataset.ad,{observacao:t.value.trim()||null},"Motivo do atraso salvo")}});
 async function presAtrSalvar(){
  const o=presOp();
  if(!o||!o.id||!ON||!me||!me.pR){toast("Sem permissão para registrar observação.");return}
@@ -1959,6 +1937,28 @@ document.addEventListener("change",e=>{const d=e.target.dataset,id=e.target.id;l
  if(d.gmeta!==undefined){const v=Math.floor(+e.target.value);if(v>0)MT()[d.gmeta]=v;else delete MT()[d.gmeta];r=true;toast(v>0?"Meta de "+d.gmeta+": "+fmt(v):"Meta removida")}
  if(r){save();if(view==="cfg")cfgRender();renderAll()}});
 
+/* Lista de presença (dia): turno, horário justificado e motivo do atraso, salvos ao sair do campo */
+async function atrSalvar(opId,day,campos,msg){const at=ATR[opId+"|"+day];if(!at&&!Object.values(campos).some(v=>v))return;
+ const ok=at?await rem(()=>mut("/rest/v1/presenca_atrasos?id=eq."+at.id,"PATCH",campos),msg)
+            :await rem(()=>mut("/rest/v1/presenca_atrasos","POST",{operador_id:opId,data:day,...campos}),msg);
+ if(ok)await loadManagement()}
+document.addEventListener("change",async e=>{const t=e.target;if(!t.classList)return;
+ if(t.classList.contains("turnoI")||t.classList.contains("turnoF")){
+  if(!ON||!me||!me.pC){toast("Sem permissão para alterar o turno.");return}
+  const o=(INDX&&INDX.ops||[]).find(x=>x.id===t.dataset.ao);if(!o)return;
+  const ini=+(t.classList.contains("turnoI")?t.value:o.ini),fim=+(t.classList.contains("turnoF")?t.value:o.fim);
+  if(!(ini>=0&&ini<=23&&fim>=1&&fim<=24)){toast("Horário inválido.");return}
+  if(ini===o.ini&&fim===o.fim)return;
+  const ok=await rem(()=>mut("/rest/v1/operadores?id=eq."+o.id,"PATCH",{inicio:ini,fim}),"Turno de "+o.n+" atualizado");
+  if(ok)await loadManagement();return}
+ if(t.classList.contains("hjT")){
+  if(!ON||!me||!me.pR){toast("Sem permissão para registrar o horário.");return}
+  const day=t.dataset.ad,v=t.value;
+  if(!v){await atrSalvar(t.dataset.ao,day,{horario_justificado:null},"Horário justificado removido");return}
+  await atrSalvar(t.dataset.ao,day,{horario_justificado:new Date(day+"T"+v+":00").toISOString()},"Horário justificado salvo");return}
+ if(t.classList.contains("atrM")){
+  if(!ON||!me||!me.pR){toast("Sem permissão para registrar o motivo.");return}
+  await atrSalvar(t.dataset.ao,t.dataset.ad,{observacao:t.value.trim()||null},"Motivo do atraso salvo")}});
 try{storeLen=(localStorage.getItem(LS)||"").length}catch(e){}
 authUI();segs();goStep(1);if(ON)bootSrv();else go("painel");setInterval(tick,1000);
 (function(){if(location.protocol==="file:")return;let base=null,shown=false;
