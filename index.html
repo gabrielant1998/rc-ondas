@@ -612,6 +612,10 @@ async function pull(){
  else{S.ges=[];me=null;SOL=[]}
  TH={};
  if(me){try{const hs=await api("/rest/v1/presenca_alteracoes?select=operador_id,campo,valor_anterior,valor_novo,email,alterado_em&order=alterado_em.asc");hs.forEach(h=>{(TH[h.operador_id]=TH[h.operador_id]||[]).push({c:h.campo,a:h.valor_anterior,n:h.valor_novo,e:h.email,t:Date.parse(h.alterado_em)})})}catch(e){}}
+ PRS={};PBX={};
+ if(me){const cd=dk(Date.now()-40*864e5);
+  try{const rs=await api("/rest/v1/presenca_registros?select=id,operador_id,tipo,data_ini,data_fim,horario_ini,horario_fim,observacao,criado_por&cancelado_em=is.null&data_fim=gte."+cd);rs.forEach(r=>{(PRS[r.operador_id]=PRS[r.operador_id]||[]).push({id:r.id,t:r.tipo,i:r.data_ini,f:r.data_fim,hi:r.horario_ini,hf:r.horario_fim,o:r.observacao,e:r.criado_por})})}catch(e){}
+  try{const bs=await api("/rest/v1/presenca_baixas?select=id,operador_id,data,saida&data=gte."+cd);bs.forEach(b=>{PBX[b.operador_id+'|'+b.data]={id:b.id,saida:Date.parse(b.saida)}})}catch(e){}}
  const mine=S.waves.filter(w=>!w.srv);
  if(me){const de=new Date(Date.now()-35*864e5).toISOString(),srv=[];
   for(let off=0;;off+=1000){const p=await api("/rest/v1/ondas?select=id,wn,operador_id,galpao_id,tipo,quantidade,status,registrada_em,concluida_em,encerrada_auto,procura_sku,procura_local,procura_nome,procura_em,procura_hist,tempo_zerado&registrada_em=gte."+encodeURIComponent(de)+"&order=registrada_em.asc&limit=1000&offset="+off);
@@ -741,6 +745,8 @@ const h32=s=>{let h=5381;for(let i=0;i<s.length;i++)h=(h*33^s.charCodeAt(i))>>>0
 /* ===================== turno / hora extra ===================== */
 /* alterações de turno por pessoa (carregadas para gestores): {c:'inicio'|'fim', a:valor anterior, n:novo, t:momento, e:quem} */
 let TH={};
+/* registros de presença (falta, declaração, atestado, folga) e baixas, só para gestores; PBX por "operador|dia" */
+let PRS={},PBX={};
 /* horário da pessoa; com dia informado, usa o horário que valia naquele dia (desfaz alterações posteriores) */
 function turnoOf(o,d){
  if(!o||o.ini==null||o.fim==null)return S.cfg.turnos[o&&o.t===2?2:1];
@@ -956,18 +962,29 @@ function mgData(){
  const source=ON&&me?(MGW||[]):S.waves;
  const waves=source.filter(w=>dates.has(dk(w.ts))&&!w.err&&inView(w));
  const byOpDay=new Map(),byGalDay=new Map(),teamDay=new Set();
- for(const w of waves){const d=dk(w.ts),k=d+'|'+w.op,g=d+'|'+w.gal;
-  if(!byOpDay.has(k))byOpDay.set(k,[]);byOpDay.get(k).push(w);
+ for(const w of waves){const d=dk(w.ts),k=d+'|'+w.op,g=d+'|'+w.gal,op=opmap.get(w.op),bx=op&&PBX[op.id+'|'+d];
+  /* depois da baixa a contagem individual para; a onda continua no histórico e no total da equipe */
+  if(!bx||w.ts<=bx.saida){if(!byOpDay.has(k))byOpDay.set(k,[]);byOpDay.get(k).push(w)}
   if(!byGalDay.has(g))byGalDay.set(g,new Set());byGalDay.get(g).add(w.op);
   const o=opmap.get(w.op);if(o)teamDay.add(g+'|'+o.t)}
  return{days,ops,waves,byOpDay,byGalDay,teamDay};
 }
 function mgEligible(o,d){return(!o.criado||dk(o.criado)<=d)&&(!o.excluido||dk(o.excluido)>=d)}
+const PRES_LAB={falta:'Falta injustificada',atestado:'Atestado',folga:'Folga',declaracao:'Declaração'};
+const presHm=ts=>new Date(ts).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+const presData=s=>{const[y,m,d]=String(s).split('-');return d+'/'+m+'/'+y};
+/* registro de presença que vale no dia (se houver mais de um, o de maior prioridade) */
+function mgRegDia(o,d){const pr=(PRS[o.id]||[]).filter(r=>r.i<=d&&d<=r.f);if(!pr.length)return null;const ordem=['falta','atestado','folga','declaracao'];return pr.sort((a,b)=>ordem.indexOf(a.t)-ordem.indexOf(b.t))[0]}
+/* ausência nunca é calculada: sem bipe em dia com operação vira "Pendente de conferência" */
 function mgStatus(o,d,L,data){
- if(!mgEligible(o,d))return 'Fora do cadastro';if(L.length)return 'Bipou';
+ if(!mgEligible(o,d))return 'Fora do cadastro';
+ const r=mgRegDia(o,d),bx=PBX[o.id+'|'+d];
+ if(r)return PRES_LAB[r.t]+(L.length&&r.t!=='declaracao'?' · bipou (conferir)':'');
+ if(bx)return 'Saiu · baixa às '+presHm(bx.saida);
+ if(L.length)return 'Bipou';
  const t=turnoOf(o,d),fim=new Date(d+'T00:00:00');fim.setHours(t.fim,0,0,0);if(t.fim<=t.ini)fim.setDate(fim.getDate()+1);
  if(Date.now()<fim.getTime())return 'Aguardando turno';
- return data.teamDay.has(d+'|'+o.g+'|'+o.t)?'Falta: sem bipagem (conferir)':'Sem operação identificada';
+ return data.teamDay.has(d+'|'+o.g+'|'+o.t)?'Pendente de conferência':'Sem operação identificada';
 }
 function mgExtra(o,d,L){
  const times=L.map(w=>w.fin||w.ts).filter(Number.isFinite).sort((a,b)=>a-b),t=turnoOf(o,d),day=new Date(d+'T00:00:00'),start=day.getTime()+t.ini*36e5-(S.cfg.tol||0)*6e4;
@@ -1000,6 +1017,47 @@ async function mgSalvarTurno(){
  if(!(ini>=0&&ini<=23&&fim>=1&&fim<=24)){toast("Horário inválido.");return}
  if(ini===o.ini&&fim===o.fim){toast("O turno já está com esse horário.");return}
  const ok=await rem(()=>mut("/rest/v1/operadores?id=eq."+o.id,"PATCH",{inicio:ini,fim}),"Turno de "+o.n+" atualizado");
+ if(ok)await loadManagement();
+}
+/* presença do dia selecionado: situação, registros lançados e baixa */
+function mgPresencaCard(o,data){
+ const day=$("#day").value,L=data.byOpDay.get(day+'|'+o.m)||[],st=mgStatus(o,day,L,data),can=!!(ON&&me&&me.pR&&o.id),dis=can?'':' disabled';
+ const bx=PBX[o.id+'|'+day],hoje=dk(Date.now());
+ const regs=(PRS[o.id]||[]).slice().sort((a,b)=>b.i.localeCompare(a.i));
+ const tipos=Object.entries(PRES_LAB).map(([k,v])=>`<option value="${k}">${v}</option>`).join('');
+ const lista=regs.length?`<table><tr><th>Tipo</th><th>Período</th><th>Horário</th><th>Observação</th><th>Lançado por</th><th></th></tr>`+regs.map(r=>`<tr><td>${PRES_LAB[r.t]}</td><td>${presData(r.i)}${r.f!==r.i?' a '+presData(r.f):''}</td><td>${r.hi?String(r.hi).slice(0,5)+(r.hf?' às '+String(r.hf).slice(0,5):''):'—'}</td><td>${esc(r.o||'')}</td><td>${esc(r.e||'')}</td><td>${can?`<button class="btn alt sm" data-cancel="${r.id}" type="button">Cancelar</button>`:''}</td></tr>`).join('')+'</table>':'<div class="empty">Nenhum registro de presença ativo.</div>';
+ const hora=bx?presHm(bx.saida):day===hoje?new Date().toTimeString().slice(0,5):'';
+ return`<div class="card" style="margin-top:14px"><h2>Presença em ${presData(day)}</h2>
+ <div class="legend" style="margin-bottom:10px">Situação: <b>${esc(st)}</b>. Falta, declaração, atestado e folga são lançados pelo gestor. Quem não bipou aparece como pendente de conferência, nunca como falta automática.${can?'':' Só gestores com permissão de registros podem lançar.'}</div>
+ <div class="ctl"><label>Tipo <select id="presTipo"${dis}>${tipos}</select></label><label>Data inicial <input type="date" id="presIni" value="${day}"${dis}></label><label>Data final <input type="date" id="presFim" value="${day}"${dis}></label><label>Horário (declaração) <input type="time" id="presHi"${dis}></label><label>até <input type="time" id="presHf"${dis}></label><label>Observação <input type="text" id="presObs" maxlength="500"${dis}></label><button class="btn" id="presSalvar" type="button"${dis}>Registrar</button></div>
+ <div class="tw" style="margin-top:12px">${lista}</div>
+ <h2 style="margin-top:14px">Baixa</h2>
+ <div class="ctl"><span>${bx?'Saiu às '+presHm(bx.saida):'Sem baixa neste dia.'}</span><label>Horário <input type="time" id="presBaixaHora" value="${hora}"${dis}></label><button class="btn" id="presBaixa" type="button"${dis}>${bx?'Corrigir baixa':'Dar baixa'}</button></div>
+ <div class="legend">Depois da baixa, a contagem individual para no horário registrado e o tempo já contado fica preservado. Cada alteração fica no histórico.</div></div>`;
+}
+function presOp(){return (INDX&&INDX.ops||[]).find(x=>x.m===$("#iOp").value)}
+async function presSalvar(){
+ const o=presOp();
+ if(!o||!o.id||!ON||!me||!me.pR){toast("Sem permissão para registrar presença.");return}
+ const tipo=$("#presTipo").value,ini=$("#presIni").value,fim=tipo==='falta'?ini:($("#presFim").value||ini),hi=$("#presHi").value||null,hf=$("#presHf").value||null,obs=$("#presObs").value.trim();
+ if(!ini){toast("Informe a data.");return}
+ if(fim<ini){toast("A data final é anterior à inicial.");return}
+ if(hi&&hf&&hf<=hi){toast("O horário final precisa ser depois do inicial.");return}
+ const ok=await rem(()=>mut("/rest/v1/presenca_registros","POST",{operador_id:o.id,tipo,data_ini:ini,data_fim:fim,horario_ini:hi,horario_fim:hf,observacao:obs||null}),PRES_LAB[tipo]+" registrado para "+o.n);
+ if(ok)await loadManagement();
+}
+async function presCancelar(id){
+ const ok=await rem(()=>mut("/rest/v1/presenca_registros?id=eq."+id,"PATCH",{cancelado_em:new Date().toISOString()}),"Registro cancelado");
+ if(ok)await loadManagement();
+}
+async function presBaixa(){
+ const o=presOp();
+ if(!o||!o.id||!ON||!me||!me.pR){toast("Sem permissão para dar baixa.");return}
+ const day=$("#day").value,hora=$("#presBaixaHora").value;
+ if(!hora){toast("Informe o horário da baixa.");return}
+ const saida=new Date(day+'T'+hora+':00').toISOString(),bx=PBX[o.id+'|'+day];
+ const ok=bx?await rem(()=>mut("/rest/v1/presenca_baixas?id=eq."+bx.id,"PATCH",{saida}),"Baixa corrigida para "+hora)
+            :await rem(()=>mut("/rest/v1/presenca_baixas","POST",{operador_id:o.id,data:day,saida}),"Baixa de "+o.n+" registrada às "+hora);
  if(ok)await loadManagement();
 }
 function mgReference(o,data){let sum=0,has=false;for(const d of data.days){const own=data.byOpDay.get(d+'|'+o.m)||[],people=data.byGalDay.get(d+'|'+o.g),meta=+MT()[o.g]||0;if(own.length&&people&&people.size&&meta){sum+=meta/people.size;has=true}}return has?sum:null}
@@ -1115,25 +1173,26 @@ function individual(){
  if(!ops.length){$("#iBody").innerHTML='<div class="card"><div class="empty">Nenhum operador para os filtros selecionados.</div></div>';return}
  const selected=ops.find(o=>o.m===sel.value);
  if(!selected){
-  const rows=ops.map(o=>{const L=data.days.flatMap(d=>data.byOpDay.get(d+'|'+o.m)||[]),P=prod(L),days=data.days.map(d=>mgStatus(o,d,data.byOpDay.get(d+'|'+o.m)||[],data)),extra=data.days.map(d=>mgExtra(o,d,data.byOpDay.get(d+'|'+o.m)||[]));return{o,qty:P.reduce((s,w)=>s+w.qty,0),n:P.length,ref:mgReference(o,data),mi:metaInd(o,L),miss:days.filter(x=>x.startsWith('Falta')).length,ms:extra.reduce((s,x)=>s+x.ms,0),ot:extra.reduce((s,x)=>s+x.count,0),dia:mgDia(o,data)}});
-  $("#iBody").innerHTML=destaques(rows,data)+`<div class="card" style="margin-top:14px"><h2>Equipe no período</h2><div class="tw"><table><tr><th>Operador</th><th>Turno</th><th>Primeiro bipe do dia</th><th>Possível atraso</th><th>Unidades / meta</th><th>Ondas / meta</th><th>Referência individual</th><th>Faltas a conferir</th><th>Hora extra estimada</th></tr>`+
-   rows.map(x=>`<tr><td><a href="#" data-pick="${esc(x.o.m)}">${esc(x.o.n)}</a><br><small>${esc(x.o.m.split('~')[0])}</small></td><td>${x.dia.t.ini}h às ${x.dia.t.fim}h</td><td>${x.dia.p?new Date(x.dia.p.ts).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}):'—'}</td><td>${x.dia.p&&x.dia.p.diff>0?'<span class="tag">Possível atraso: '+hh(x.dia.p.diff*6e4)+'</span>':'—'}</td><td><b>${x.mi.q?vsMeta(x.qty,x.mi.q):fmt(x.qty)}</b></td><td>${x.mi.o?vsMeta(x.n,x.mi.o):x.n}</td><td>${x.ref===null?'Sem meta':fmt(x.ref)+' un.'}</td><td>${x.miss}</td><td>${x.ms?hh(x.ms):x.ot?'Sem medição':'—'}</td></tr>`).join('')+
-   `</table></div><div class="legend">As metas individuais (ondas e unidades por dia) vêm de Configurações, Galpões e valem para cada dia com bipagem. A referência divide a meta diária atual do galpão entre as pessoas com bipagem no dia. É uma referência ajustável pelo movimento, não um ranking. Falta indica ausência de bipagem em dia com operação no turno; confirme folgas, afastamentos e outras atividades. Hora extra é estimada pelos intervalos entre bipagens, respeitando o intervalo máximo configurado.</div></div>`;return;
+  const rows=ops.map(o=>{const L=data.days.flatMap(d=>data.byOpDay.get(d+'|'+o.m)||[]),P=prod(L),days=data.days.map(d=>mgStatus(o,d,data.byOpDay.get(d+'|'+o.m)||[],data)),extra=data.days.map(d=>mgExtra(o,d,data.byOpDay.get(d+'|'+o.m)||[]));return{o,qty:P.reduce((s,w)=>s+w.qty,0),n:P.length,ref:mgReference(o,data),mi:metaInd(o,L),miss:days.filter(x=>x.startsWith('Falta')).length,pend:days.filter(x=>x.startsWith('Pendente')).length,ms:extra.reduce((s,x)=>s+x.ms,0),ot:extra.reduce((s,x)=>s+x.count,0),dia:mgDia(o,data)}});
+  $("#iBody").innerHTML=destaques(rows,data)+`<div class="card" style="margin-top:14px"><h2>Equipe no período</h2><div class="tw"><table><tr><th>Operador</th><th>Turno</th><th>Primeiro bipe do dia</th><th>Possível atraso</th><th>Unidades / meta</th><th>Ondas / meta</th><th>Referência individual</th><th>Faltas injustificadas</th><th>Pendentes de conferência</th><th>Hora extra estimada</th></tr>`+
+   rows.map(x=>`<tr><td><a href="#" data-pick="${esc(x.o.m)}">${esc(x.o.n)}</a><br><small>${esc(x.o.m.split('~')[0])}</small></td><td>${x.dia.t.ini}h às ${x.dia.t.fim}h</td><td>${x.dia.p?new Date(x.dia.p.ts).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}):'—'}</td><td>${x.dia.p&&x.dia.p.diff>0?'<span class="tag">Possível atraso: '+hh(x.dia.p.diff*6e4)+'</span>':'—'}</td><td><b>${x.mi.q?vsMeta(x.qty,x.mi.q):fmt(x.qty)}</b></td><td>${x.mi.o?vsMeta(x.n,x.mi.o):x.n}</td><td>${x.ref===null?'Sem meta':fmt(x.ref)+' un.'}</td><td>${x.miss}</td><td>${x.pend}</td><td>${x.ms?hh(x.ms):x.ot?'Sem medição':'—'}</td></tr>`).join('')+
+   `</table></div><div class="legend">As metas individuais (ondas e unidades por dia) vêm de Configurações, Galpões e valem para cada dia com bipagem. A referência divide a meta diária atual do galpão entre as pessoas com bipagem no dia. É uma referência ajustável pelo movimento, não um ranking. Pendente indica ausência de bipagem em dia com operação no turno; confirme folgas, atestados, declarações e outras atividades antes de registrar falta. Hora extra é estimada pelos intervalos entre bipagens, respeitando o intervalo máximo configurado.</div></div>`;return;
  }
  const o=selected,L=data.days.flatMap(d=>data.byOpDay.get(d+'|'+o.m)||[]),P=prod(L),qty=P.reduce((s,w)=>s+w.qty,0),ref=mgReference(o,data);
- const daily=data.days.slice().reverse().filter(d=>mgEligible(o,d)).map(d=>{const w=data.byOpDay.get(d+'|'+o.m)||[],p=prod(w),x=mgExtra(o,d,w);return{d,w,p,x,status:mgStatus(o,d,w,data)}}),miss=daily.filter(x=>x.status.startsWith('Falta')).length,extra=daily.reduce((s,x)=>s+x.x.ms,0),ot=daily.reduce((s,x)=>s+x.x.count,0);
+ const daily=data.days.slice().reverse().filter(d=>mgEligible(o,d)).map(d=>{const w=data.byOpDay.get(d+'|'+o.m)||[],p=prod(w),x=mgExtra(o,d,w);return{d,w,p,x,status:mgStatus(o,d,w,data)}}),miss=daily.filter(x=>x.status.startsWith('Falta')).length,pend=daily.filter(x=>x.status.startsWith('Pendente')).length,extra=daily.reduce((s,x)=>s+x.x.ms,0),ot=daily.reduce((s,x)=>s+x.x.count,0);
  const types=TY.map(([n,c])=>({k:n,v:P.filter(w=>w.ty===n).reduce((s,w)=>s+w.qty,0),s:P.filter(w=>w.ty===n).length+' ondas',c}));
  const history=L.slice().sort((a,b)=>b.ts-a.ts);
  $("#iBody").innerHTML=`<dl class="stats solo">`+
  mgK('Produção de '+esc(o.n),fmt(qty),'unidades concluídas')+mgK('Ondas concluídas',fmt(P.length),fmt(L.length)+' registros no total')+
  mgK('Meta individual: unidades',MI()[o.g]&&MI()[o.g].q?vsMeta(qty,metaInd(o,L).q):'—',MI()[o.g]&&MI()[o.g].q?'por dia com bipagem':'defina em Configurações')+mgK('Meta individual: ondas',MI()[o.g]&&MI()[o.g].o?vsMeta(P.length,metaInd(o,L).o):'—',MI()[o.g]&&MI()[o.g].o?'por dia com bipagem':'defina em Configurações')+mgK('Referência individual',ref===null?'—':fmt(ref),ref===null?'defina a meta do galpão':fmt(qty/ref*100)+'% da referência')+
- mgK('Faltas a conferir',fmt(miss),'dias sem bipagem')+mgK('Hora extra estimada',extra?hh(extra):ot?'—':'0h00',ot?ot+' bipagem(ns) fora do turno':'sem bipagens fora do turno')+`</dl>
+ mgK('Faltas injustificadas',fmt(miss),'registradas pelo gestor')+mgK('Pendentes de conferência',fmt(pend),'dias sem bipagem')+mgK('Hora extra estimada',extra?hh(extra):ot?'—':'0h00',ot?ot+' bipagem(ns) fora do turno':'sem bipagens fora do turno')+`</dl>
  <div class="grid two" style="margin-top:14px"><div class="card"><h2>Produção por tipo</h2>${bars(types)}</div><div class="card"><h2>Como calcular</h2><div class="legend">A referência é a meta diária atual do galpão dividida entre as pessoas que biparam no dia. Os tipos de onda têm dificuldades diferentes; o valor serve apenas para acompanhamento. A hora extra soma intervalos entre bipagens fora do turno, até o intervalo máximo configurado. Uma bipagem isolada não permite calcular horas. Não substitui o controle de ponto.</div></div></div>
+ ${mgPresencaCard(o,data)}
  ${mgTurnoCard(o,data)}
  ${mgTempo(o,L)}
  <div class="card" style="margin-top:14px"><h2>Resumo por dia</h2><div class="tw"><table><tr><th>Data</th><th>Situação</th><th>Unidades</th><th>Ondas</th><th>Tempo trabalhado</th><th>Extra estimada</th></tr>`+
  daily.map(x=>{const ts=x.w.map(w=>w.ts);return `<tr><td>${new Date(x.d+'T12:00').toLocaleDateString('pt-BR')}</td><td>${x.status}</td><td>${fmt(x.p.reduce((s,w)=>s+w.qty,0))}</td><td>${x.p.length}</td><td>${ts.length>1&&Math.max(...ts)>Math.min(...ts)?hh(Math.max(...ts)-Math.min(...ts)):'—'}</td><td>${x.x.ms?hh(x.x.ms):x.x.count?'Sem medição':'—'}</td></tr>`}).join('')+
- `</table></div><div class="legend">Falta: sem bipagem no dia após o fim do turno, quando houve operação registrada no mesmo galpão e turno. Verifique folga, afastamento, falha de sincronização ou atividade sem bipagem.</div></div>
+ `</table></div><div class="legend">Pendente de conferência: sem bipagem no dia após o fim do turno, quando houve operação no mesmo galpão e turno. Não é falta automática: o gestor confere e registra falta, atestado, declaração ou folga.</div></div>
  <div class="card" style="margin-top:14px"><h2>Histórico das ondas · ${fmt(history.length)} registros</h2><div class="tw">${mgHistory(history.slice(0,mgShown))}</div>${history.length>mgShown?'<button class="btn alt sm" id="mgMore">Mostrar mais registros</button>':''}</div>`;
 }
 function coTipos(W,P,people){const D=durs(W),pp=Math.max(people,1);
@@ -1487,7 +1546,7 @@ $("#psub").onclick=e=>{const k=e.target.dataset.p;if(k)psub(k)};
 $("#sub").onclick=e=>{const s=e.target.dataset.s;if(!s)return;$$("#sub button").forEach(b=>b.classList.toggle("on",b===e.target));["reg","ctl","ace"].forEach(x=>$("#"+x).classList.toggle("hide",x!==s));tick()};
 $("#csub").onclick=e=>{const c=e.target.dataset.c;if(!c)return;csub=c;$$("#csub button").forEach(b=>b.classList.toggle("on",b===e.target));["cop","cus","cga","cge","cma"].forEach(x=>$("#"+x).classList.toggle("hide",x!==c));if(c==="cge"&&ON&&me&&me.adm)pull().then(()=>cfgGes()).catch(()=>{});if(c==="cma")cfgMan()};
 $("#iPrint").onclick=imprimirFolhas;$("#iOp").onchange=()=>{mgShown=100;individual()};$("#iPer").onchange=()=>{mgShown=100;individual();coletiva();loadManagement()};
-$("#iBody").addEventListener("click",e=>{if(e.target.id==="mgMore"){mgShown+=100;individual()}if(e.target.id==="mgTurnoSave")mgSalvarTurno()});
+$("#iBody").addEventListener("click",e=>{if(e.target.id==="mgMore"){mgShown+=100;individual()}if(e.target.id==="mgTurnoSave")mgSalvarTurno();if(e.target.id==="presSalvar")presSalvar();if(e.target.id==="presBaixa")presBaixa();if(e.target.dataset&&e.target.dataset.cancel)presCancelar(e.target.dataset.cancel)});
 $("#gsub").onclick=e=>{const x=e.target.dataset.gs;if(!x)return;gsub=x;$$("#gsub button").forEach(b=>b.classList.toggle("on",b===e.target));$("#iBody").classList.toggle("hide",x!=="mi");$("#coBody").classList.toggle("hide",x!=="mc");$("#iOp").classList.toggle("hide",x!=="mi");$("#iPrint").classList.toggle("hide",x!=="mi");if(x==="mc")coletiva();else individual()};
 
 document.addEventListener("click",e=>{const d=e.target.dataset,t=e.target;

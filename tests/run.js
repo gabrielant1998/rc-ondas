@@ -197,8 +197,8 @@ await T("33 Gestão: falta sem bipagem e hora extra estimada",async()=>{const no
  const make=(id,op,h,qty)=>({id,wn:id,op,opn:op==='CL001'?'Ana Souza':'Bruno Lima',gal:'Galpão 1',ty:'Vários artigos',qty,st:0,ts:baseT+h*36e5,fin:baseT+h*36e5,sync:1});
  const p=await page(b,base({waves:[make('a','CL001',16.5,10),make('b','CL001',16.75,15)]}));
  const r=await p.evaluate(t=>{$('#day').value=dk(t);go('ind');return{txt:$('#iBody').textContent,extra:mgExtra(S.ops[0],dk(t),S.waves),ref:mgReference(S.ops[0],mgData())}},baseT);
- ok(r.txt.includes('Bruno Lima')&&r.txt.includes('Faltas a conferir'),'sem tabela de faltas');ok(r.extra.ms===15*60000,'extra '+r.extra.ms);ok(r.ref===10000,'meta '+r.ref);
- await p.evaluate(()=>{$('#iOp').value='CL002';individual()});ok((await p.textContent('#iBody')).includes('Falta: sem bipagem (conferir)'),'falta não sinalizada');
+ ok(r.txt.includes('Bruno Lima')&&r.txt.includes('Pendentes de conferência'),'sem tabela de pendentes');ok(r.extra.ms===15*60000,'extra '+r.extra.ms);ok(r.ref===10000,'meta '+r.ref);
+ await p.evaluate(()=>{$('#iOp').value='CL002';individual()});ok((await p.textContent('#iBody')).includes('Pendente de conferência'),'pendente não sinalizado');
 });
 
 await T("40 Configurações: cartões da Operação recolhem e expandem",async()=>{const p=await page(b,base());await p.click('.tab[data-t="cfg"]');
