@@ -258,10 +258,10 @@ a[data-pick]{display:inline-block;padding:8px 0 2px;color:var(--gx);font-weight:
 @keyframes mbIn{from{opacity:0}to{opacity:1}}@keyframes mbOut{to{opacity:0}}
 @media(prefers-reduced-motion:reduce){.placar.win:after,.mbBadge{animation:none}}
 /* mini abas na lateral (computador): cada uma abre sozinha */
-.ssub{display:flex;flex-direction:column;gap:1px;margin:1px 0 8px 17px;padding-left:9px;border-left:1px solid rgba(255,255,255,.16)}
-.ssub button{all:unset;cursor:pointer;padding:6px 10px;font-size:13px;line-height:1.25;border-radius:4px;color:#9fb0cf}
+.ssub{display:flex;flex-direction:column;gap:2px;margin:4px 0 10px 22px;padding-left:10px;border-left:2px solid rgba(255,255,255,.14)}
+.ssub button{all:unset;box-sizing:border-box;cursor:pointer;display:flex;align-items:center;min-height:36px;padding:6px 12px;font-size:14px;font-weight:500;line-height:1.25;border-radius:6px;color:#c2cde3}
 .ssub button:hover{color:#fff;background:rgba(255,255,255,.07)}
-.ssub button.on{color:#fff;background:rgba(255,255,255,.14);font-weight:600}
+.ssub button.on{color:#fff;background:rgba(255,255,255,.16);font-weight:700;box-shadow:inset 3px 0 0 #8fb4ff}
 .ssub button:focus-visible{outline:2px solid #8fb4ff;outline-offset:1px}
 @media(min-width:761px){#sub,#gsub,#psub,#hsub,#csub{display:none}}
 @media(max-width:760px){.ssub{display:none}}
@@ -290,7 +290,7 @@ a[data-pick]{display:inline-block;padding:8px 0 2px;color:var(--gx);font-weight:
 .fl-m h2{font-family:var(--fd);font-size:15pt;margin:0;font-weight:800}
 .fl-hd{display:flex;justify-content:space-between;align-items:flex-end;gap:6mm}
 .fl-hd span{font-size:10pt;color:#55627a;text-align:right}
-.fl-k{display:grid;grid-template-columns:repeat(4,1fr);gap:4mm}
+.fl-k{display:grid;grid-template-columns:repeat(4,1fr);gap:4mm}.fl-rs{margin:3mm 0 0;font-size:9.5pt;color:#14243d;border-top:1px solid #d3d9e3;padding-top:2.5mm}
 .fl-k div{border:1px solid #d3d9e3;border-top:3mm solid #0f4bd0;border-radius:2mm;padding:3.5mm 4mm}
 .fl-k div:nth-child(2){border-top-color:#3d7be8}.fl-k div:nth-child(3){border-top-color:#0b7f70}.fl-k div:nth-child(4){border-top-color:#b85c00}
 .fl-k b{display:block;font-family:var(--fd);font-size:22pt;line-height:1;font-weight:800}
@@ -633,7 +633,7 @@ async function pull(){
   for(let off=0;;off+=1000){const p=await api("/rest/v1/ondas?select=id,wn,operador_id,galpao_id,tipo,quantidade,status,registrada_em,concluida_em,encerrada_auto,procura_sku,procura_local,procura_nome,procura_em,procura_hist,tempo_zerado"+PIC+"&registrada_em=gte."+encodeURIComponent(de)+"&order=registrada_em.asc&limit=1000&offset="+off);
    p.forEach(x=>{const o=OPSALL[x.operador_id];srv.push({id:x.id,wn:x.wn,oid:x.operador_id,op:o?(o.excluido_em?o.codigo+"~"+o.id.slice(0,6):o.codigo):"—",opn:o?o.nome:"Operador removido",gal:GN[x.galpao_id]||"—",ty:x.tipo,qty:x.quantidade,st:x.status,ts:Date.parse(x.registrada_em),fin:x.concluida_em?Date.parse(x.concluida_em):null,sync:1,srv:1,auto:x.encerrada_auto?1:0,sku:x.procura_sku||"",itens:prItensSrv(x.procura_itens),marcas:prMarcasSrv(x.procura_marcas),loc:x.procura_local||"",pn:x.procura_nome||"",pt:x.procura_em?Date.parse(x.procura_em):0,hist:prHistSrv(x.procura_hist),zt:x.tempo_zerado?1:0})});
    if(p.length<1000||off>=59000)break}
-  const ids=new Set(srv.map(w=>w.id));S.waves=srv.concat(mine.filter(w=>!ids.has(w.id)))}
+  const ids=new Set(srv.map(w=>w.id)),deMs=Date.parse(de);S.waves=srv.concat(mine.filter(w=>!ids.has(w.id)&&!(w.sync&&!w.err&&w.ts>=deMs)))}
  else{const corte=Date.now()-3*864e5;S.waves=mine.filter(w=>!w.sync||w.err||w.ts>corte)}
  save();authUI()}
 /* fila de envio: cada onda tem id próprio, então reenviar nunca duplica */
@@ -1354,12 +1354,12 @@ function folhaHTML(o,data){
  const svg=`<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Produção">`+[0,.5,1].map(f=>`<line x1="${pl}" x2="${W-pl}" y1="${pt+(H-pt-pb)*(1-f)}" y2="${pt+(H-pt-pb)*(1-f)}" stroke="#d3d9e3" stroke-width="1"/>`).join('')+ser.map((x,i)=>{const h=(H-pt-pb)*x[1]/mx,xx=pl+i*bw+bw*.18,w=bw*.64;return `<rect x="${xx.toFixed(1)}" y="${(H-pb-h).toFixed(1)}" width="${w.toFixed(1)}" height="${h.toFixed(1)}" rx="2" fill="${x===best&&x[1]>0?'#0b7f70':'#0f4bd0'}"/>`+(x[1]>0&&ser.length<=24?`<text x="${(xx+w/2).toFixed(1)}" y="${(H-pb-h-4).toFixed(1)}" font-size="16" text-anchor="middle" fill="#14243d" font-weight="700">${fmt(x[1])}</text>`:'')+(i%step===0?`<text x="${(xx+w/2).toFixed(1)}" y="${H-6}" font-size="14" text-anchor="middle" fill="#55627a">${x[0]}</text>`:'')}).join('')+`</svg>`;
  const types=TY.map(([n,c])=>({n,c,v:P.filter(w=>w.ty===n).reduce((a,w)=>a+w.qty,0),o:P.filter(w=>w.ty===n).length})).filter(x=>x.v>0),tmax=Math.max(...types.map(x=>x.v),1);
  const tb=types.length?types.map(x=>`<div><i><span>${esc(x.n)}</span><span><b>${fmt(x.v)}</b> un. · ${x.o} ${x.o===1?'onda':'ondas'}</span></i><u><b style="width:${Math.max(x.v/tmax*100,2)}%;background:${x.c}"></b></u></div>`).join(''):'<div style="color:#55627a;font-size:10pt">Sem produção no período.</div>';
- const pct=mi.q?Math.round(qty/mi.q*100):0,IN=folhaInsights(o,data,L,P,qty,mi,single),msg=!qty?'Até a próxima!':pct>=100?'Meta batida. Parabéns!':'Obrigado pelo seu trabalho!';
+ const topT=types.slice().sort((a,b)=>b.v-a.v)[0]||{n:'',v:0,o:0};const pct=mi.q?Math.round(qty/mi.q*100):0,IN=folhaInsights(o,data,L,P,qty,mi,single),msg=!qty?'Até a próxima!':pct>=100?'Meta batida. Parabéns!':'Obrigado pelo seu trabalho!';
  const d0=data.days[0],d1=data.days[data.days.length-1],fd=d=>new Date(d+'T12:00').toLocaleDateString('pt-BR'),per=single?new Date(d0+'T12:00').toLocaleDateString('pt-BR',{weekday:'long',day:'numeric',month:'long',year:'numeric'}):fd(d0)+' a '+fd(d1);
  return `<section class="fl"><aside class="fl-s"><div class="fl-logo"><img src="${LOGO}" alt="RC Armazém"></div><small>RC Ondas · Minha produção</small><h1>${esc(o.n)}</h1><div class="mt">Matrícula ${esc(String(o.m).split('~')[0])}</div><div class="info"><b>Galpão</b>${esc(o.g||'—')}<b>Turno</b>${o.t===2?'2º turno':'1º turno'}<b>Período</b>${esc(per)}</div></aside>
  <div class="fl-m"><div class="fl-hd"><h2>${esc(msg)}</h2><span>${single?'Produção por hora':'Produção por dia'}</span></div>
  <div class="fl-k"><div><em>Unidades</em><b>${fmt(qty)}</b><span>concluídas</span></div><div><em>Ondas</em><b>${fmt(P.length)}</b><span>concluídas</span></div><div><em>Unidades por hora</em><b>${rate?fmt(rate):'—'}</b><span>${rate?'no ritmo medido':'poucos conjuntos medidos'}</span></div><div><em>${mi.q?'Meta de unidades':'Dias com produção'}</em><b>${mi.q?pct+'%':dias}</b><span>${mi.q?fmt(qty)+' de '+fmt(mi.q):best[1]?'melhor: '+best[0]+' ('+fmt(best[1])+' un.)':''}</span></div></div>
- <div class="fl-g"><div><h3>${single?'Unidades por hora':'Unidades por dia'}${best[1]?` <span style="font-weight:400;color:#55627a;font-size:9pt">· melhor: ${best[0]} (${fmt(best[1])})</span>`:''}</h3>${svg}</div><div><h3>Produção por tipo de onda</h3><div class="fl-t">${tb}</div></div></div>
+ <div class="fl-g"><div><h3>${single?'Unidades por hora':'Unidades por dia'}${best[1]?` <span style="font-weight:400;color:#55627a;font-size:9pt">· melhor: ${best[0]} (${fmt(best[1])})</span>`:''}</h3>${svg}</div><div><h3>Produção por tipo de onda</h3><div class="fl-t">${tb}</div>${types.length?`<p class="fl-rs">Total: <b>${fmt(qty)}</b> unidades em <b>${fmt(P.length)}</b> ${P.length===1?'onda':'ondas'}. Tipo que mais fez: <b>${esc(topT.n)}</b>, ${fmt(topT.v)} un. em ${topT.o} ${topT.o===1?'onda':'ondas'}.</p>`:''}</div></div>
  <div class="fl-i"><div class="r"><h4>1 · Resumo</h4><p>${esc(IN.resumo)}</p></div><div class="m"><h4>2 · Pontos a melhorar</h4><ul>${IN.mel.map(x=>`<li>${esc(x)}</li>`).join('')}</ul></div><div class="p"><h4>3 · Pontos positivos</h4><ul>${IN.pos.map(x=>`<li>${esc(x)}</li>`).join('')}</ul></div></div>
  <div class="fl-f"><span>Gerado em ${new Date().toLocaleString('pt-BR')}</span><strong>RC Ondas</strong></div></div></section>`}
 function imprimirFolhas(){
