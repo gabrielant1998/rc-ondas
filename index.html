@@ -405,9 +405,9 @@ a[data-pick]{display:inline-block;padding:8px 0 2px;color:var(--gx);font-weight:
 
 <!-- ======================= INDIVIDUAL ======================= -->
 <section id="ind" class="hide">
- <div class="sub" id="gsub"><button data-gs="mi" class="on">Meta individual</button><button data-gs="mc">Meta coletiva</button></div>
+ <div class="sub" id="gsub"><button data-gs="mi" class="on">Meta individual</button><button data-gs="mc">Meta coletiva</button><button data-gs="sem">Semana</button></div>
  <div class="ctl" style="margin-bottom:12px"><select id="iOp" aria-label="Operador"></select><select id="iPer" aria-label="Período"><option value="1">Dia selecionado</option><option value="7">Últimos 7 dias</option><option value="30">Últimos 30 dias</option><option value="90">Últimos 90 dias</option></select><button class="btn" id="iPrint" type="button">Imprimir folha</button></div>
- <div id="mgStatus" class="legend hide" role="status"></div><div id="iBody"></div><div id="coBody" class="hide"></div>
+ <div id="mgStatus" class="legend hide" role="status"></div><div id="iBody"></div><div id="coBody" class="hide"></div><div id="wkBody" class="hide"></div>
 </section>
 
 <!-- ======================= PROCURANDO ======================= -->
@@ -612,8 +612,9 @@ async function pull(){
  else{S.ges=[];me=null;SOL=[]}
  TH={};
  if(me){try{const hs=await api("/rest/v1/presenca_alteracoes?select=operador_id,campo,valor_anterior,valor_novo,email,alterado_em&order=alterado_em.asc");hs.forEach(h=>{(TH[h.operador_id]=TH[h.operador_id]||[]).push({c:h.campo,a:h.valor_anterior,n:h.valor_novo,e:h.email,t:Date.parse(h.alterado_em)})})}catch(e){}}
- PRS={};PBX={};
+ PRS={};PBX={};PHX={};
  if(me){const cd=dk(Date.now()-40*864e5);
+  try{const hs2=await api("/rest/v1/presenca_historico?select=operador_id,tabela,campo,valor_anterior,valor_novo,email,alterado_em&order=alterado_em.desc&limit=300");hs2.forEach(x=>{(PHX[x.operador_id]=PHX[x.operador_id]||[]).push({tab:x.tabela,c:x.campo,a:x.valor_anterior,n:x.valor_novo,e:x.email,t:Date.parse(x.alterado_em)})})}catch(e){}
   try{const rs=await api("/rest/v1/presenca_registros?select=id,operador_id,tipo,data_ini,data_fim,horario_ini,horario_fim,observacao,criado_por&cancelado_em=is.null&data_fim=gte."+cd);rs.forEach(r=>{(PRS[r.operador_id]=PRS[r.operador_id]||[]).push({id:r.id,t:r.tipo,i:r.data_ini,f:r.data_fim,hi:r.horario_ini,hf:r.horario_fim,o:r.observacao,e:r.criado_por})})}catch(e){}
   try{const bs=await api("/rest/v1/presenca_baixas?select=id,operador_id,data,saida&data=gte."+cd);bs.forEach(b=>{PBX[b.operador_id+'|'+b.data]={id:b.id,saida:Date.parse(b.saida)}})}catch(e){}}
  const mine=S.waves.filter(w=>!w.srv);
@@ -746,7 +747,7 @@ const h32=s=>{let h=5381;for(let i=0;i<s.length;i++)h=(h*33^s.charCodeAt(i))>>>0
 /* alterações de turno por pessoa (carregadas para gestores): {c:'inicio'|'fim', a:valor anterior, n:novo, t:momento, e:quem} */
 let TH={};
 /* registros de presença (falta, declaração, atestado, folga) e baixas, só para gestores; PBX por "operador|dia" */
-let PRS={},PBX={};
+let PRS={},PBX={},PHX={};
 /* horário da pessoa; com dia informado, usa o horário que valia naquele dia (desfaz alterações posteriores) */
 function turnoOf(o,d){
  if(!o||o.ini==null||o.fim==null)return S.cfg.turnos[o&&o.t===2?2:1];
@@ -954,7 +955,7 @@ async function loadManagement(){
    const part=await api(q);if(seq!==mgSeq)return;arr.push(...part);if(part.length<1000)break}
   const rows=arr.map(x=>{const o=OPSALL[x.operador_id];return{id:x.id,wn:x.wn,oid:x.operador_id,op:o?(o.excluido_em?o.codigo+'~'+o.id.slice(0,6):o.codigo):'—',opn:o?o.nome:'Operador removido',gal:GN[x.galpao_id]||'—',ty:x.tipo,qty:x.quantidade,st:x.status,ts:Date.parse(x.registrada_em),fin:x.concluida_em?Date.parse(x.concluida_em):null,sync:1,srv:1,auto:x.encerrada_auto?1:0,sku:x.procura_sku||"",loc:x.procura_local||"",pn:x.procura_nome||"",pt:x.procura_em?Date.parse(x.procura_em):0,hist:prHistSrv(x.procura_hist),zt:x.tempo_zerado?1:0}});
   const ids=new Set(rows.map(w=>w.id));MGW=rows.concat(S.waves.filter(w=>!w.srv&&!ids.has(w.id)&&w.ts>=start.getTime()&&w.ts<end.getTime()));
-  mgState='';$("#mgStatus").classList.add('hide');individual();coletiva();
+  mgState='';$("#mgStatus").classList.add('hide');individual();coletiva();if(gsub==='sem')semana();
  }catch(e){if(seq!==mgSeq)return;MGW=null;mgState='Não foi possível carregar o período. Confira a conexão e tente novamente.';$("#mgStatus").textContent=mgState;$("#mgStatus").classList.remove('hide');$("#iBody").innerHTML='';$("#coBody").innerHTML=''}
 }
 function mgData(){
@@ -1072,6 +1073,44 @@ function mgTempo(o,L){const gap=GAP()*6e4,now=Date.now(),C=conjuntos(L).sort((a,
  const lt=C.length?`<table><tr><th>Início</th><th>Ondas</th><th>Tipo</th><th>Unidades</th><th>Tempo</th></tr>`+C.slice(0,40).map(c=>`<tr><td>${new Date(c.t).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit'})}</td><td>${c.ondas}</td><td>${c.tipos.map(esc).join(', ')}</td><td>${fmt(c.qty)}</td><td>${c.d==null?(now-c.t<=gap?'em andamento':'—'):c.d>gap?'pausa':mn(c.d)}</td></tr>`).join('')+'</table>':'<div class="empty">Nenhuma onda no período.</div>';
  return`<div class="grid two" style="margin-top:14px"><div class="card"><h2>Tempo por tipo de onda</h2><div class="tw">${rk}</div><div class="legend">Média ponderada pelas unidades de cada conjunto. Ondas bipadas no mesmo instante contam como um conjunto, com um tempo só. Pausas acima de ${GAP()} min ficam de fora.</div></div><div class="card"><h2>Conjuntos de ondas</h2><div class="tw">${lt}</div><div class="legend">Tempo da bipagem do conjunto até a bipagem do próximo. Mostra os 40 mais recentes.</div></div></div>`}
 function mgHistory(list){return list.length?`<table><tr><th>Data e hora</th><th>Onda</th><th>Tipo</th><th>Quantidade</th><th>Situação</th></tr>`+list.map(w=>`<tr><td>${new Date(w.ts).toLocaleString('pt-BR')}</td><td>${esc(wnS(w)||'—')}</td><td>${esc(w.ty)}</td><td>${fmt(w.qty)}</td><td>${esc(ST[w.st]||'—')}${!w.sync?' · pendente':''}</td></tr>`).join('')+'</table>':'<div class="empty">Nenhuma onda registrada.</div>'}
+/* ===================== visão semanal (segunda a domingo) ===================== */
+let WKW=null,WKQ='';
+const WKDIAS=['Seg','Ter','Qua','Qui','Sex','Sáb','Dom'];
+const WKA={'Bipou':'Bipou','Pendente de conferência':'Pendente','Falta injustificada':'Falta','Atestado':'Atestado','Declaração':'Declaração','Folga':'Folga','Aguardando turno':'Aguardando','Fora do cadastro':'—','Sem operação identificada':'—'};
+const addDias=(s,n)=>{const d=new Date(s+'T12:00:00');d.setDate(d.getDate()+n);return dk(d.getTime())};
+const mondayOf=s=>addDias(s,-((new Date(s+'T12:00:00').getDay()+6)%7));
+function wkRotulo(st){if(st.startsWith('Saiu'))return 'Saiu';const base=st.split(' · ')[0];return WKA[base]||base}
+/* minutos entre o início do turno do dia e o primeiro bipe (0 se não houve atraso) */
+function atrasoDia(o,d,L){if(!L.length)return 0;const ts=Math.min(...L.map(w=>w.ts)),t=turnoOf(o,d),ini=new Date(d+'T00:00:00');ini.setHours(t.ini,0,0,0);return Math.max(0,Math.round((ts-ini.getTime())/6e4))}
+/* semana: o período de 7 dias termina no domingo, então a visão usa o mesmo carregamento da aba Individual */
+function semanaSet(mon){WKW=mon;$("#day").value=addDias(mon,6);$("#iPer").value="7"}
+async function wkIr(mon){semanaSet(mon);if(ON&&me)await loadManagement();else semana()}
+function semana(){
+ const box=$("#wkBody");if(!box)return;
+ if(ON&&me&&MGW===null){box.innerHTML='<div class="card"><div class="empty">'+esc(mgState||'Carregando semana…')+'</div></div>';return}
+ const mon=WKW||mondayOf($("#day").value);WKW=mon;
+ const data=mgData(),days=data.days,g=$("#gal").value,t=$("#turnoF").value,q=WKQ.trim().toLowerCase();
+ const ops=data.ops.filter(o=>(g==='__all'||o.g===g)&&(!t||String(o.t)===t)).filter(o=>!o.excluido||data.waves.some(w=>w.op===o.m)).filter(o=>!q||(o.n+' '+o.m).toLowerCase().includes(q));
+ const hoje=mondayOf(dk(Date.now()));
+ const nav=`<div class="ctl"><button class="btn alt sm" type="button" data-wk="-7">← Semana anterior</button><button class="btn alt sm" type="button" data-wk="0"${mon===hoje?' disabled':''}>Esta semana</button><button class="btn alt sm" type="button" data-wk="7">Próxima semana →</button><b>${presData(days[0])} a ${presData(days[days.length-1])}</b><label style="margin-left:auto">Pesquisar pessoa <input type="search" id="wkQ" value="${esc(WKQ)}"></label></div>`;
+ const head=`<tr><th>Pessoa</th>${days.map((d,i)=>`<th>${WKDIAS[i]}<br><small>${presData(d).slice(0,5)}</small></th>`).join('')}<th>Faltas</th><th>Atestados</th><th>Declarações</th><th>Folgas</th><th>Atrasos</th><th>Pendentes</th></tr>`;
+ const rows=ops.map(o=>{let f=0,a=0,dc=0,fo=0,at=0,p=0;
+  const cells=days.map(d=>{const L=data.byOpDay.get(d+'|'+o.m)||[],st=mgStatus(o,d,L,data),r=wkRotulo(st),m=atrasoDia(o,d,L);
+   if(st.startsWith('Falta'))f++;if(st.startsWith('Atestado'))a++;if(st.startsWith('Declaração'))dc++;if(st.startsWith('Folga'))fo++;if(st.startsWith('Pendente'))p++;if(m>0)at++;
+   const ext=m>0?'atraso '+hh(m*6e4):'';
+   return `<td><button class="wkc" type="button" data-m="${esc(o.m)}" data-d="${d}" aria-label="${esc(o.n)}, ${presData(d)}: ${esc(r)}${ext?', '+esc(ext):''}">${esc(r)}${ext?'<small>'+esc(ext)+'</small>':''}</button></td>`}).join('');
+  return `<tr><td><b>${esc(o.n)}</b><br><small>${esc(o.m.split('~')[0])}</small></td>${cells}<td><b>${f}</b></td><td>${a}</td><td>${dc}</td><td>${fo}</td><td>${at}</td><td>${p}</td></tr>`}).join('');
+ box.innerHTML=`<div class="card">${nav}<div class="tw">${ops.length?`<table>${head}${rows}</table>`:'<div class="empty">Nenhuma pessoa para os filtros selecionados.</div>'}</div>
+ <div class="legend">Falta, atestado, declaração e folga são registros lançados pelo gestor; folga e atestado não contam como falta. Pendente é dia sem bipe a conferir. Declaração pode cobrir só parte do dia. Atraso é a diferença entre o início do turno e o primeiro bipe. Toque em um dia para abrir a pessoa naquele dia.</div></div>`;
+}
+/* abre a pessoa no dia escolhido na aba Meta individual */
+async function wkAbrir(m,d){$("#day").value=d;$("#iPer").value="1";$('#gsub [data-gs="mi"]').click();await loadManagement();$("#iOp").value=m;individual()}
+const PHX_CAMPO={saida:'horário da saída',cancelado_em:'cancelamento',observacao:'observação',data_ini:'data inicial',data_fim:'data final',horario_ini:'horário inicial',horario_fim:'horário final',tipo:'tipo',inicio:'início do turno',fim:'término do turno'};
+/* histórico de presença da pessoa (registros, baixas e alterações de turno) */
+function mgHistPresenca(o){
+ const h=(PHX[o.id]||[]).slice(0,12);if(!h.length)return'';
+ return `<div class="card" style="margin-top:14px"><h2>Histórico de presença</h2><div class="tw">${h.map(x=>`<div>${new Date(x.t).toLocaleString('pt-BR')} · ${x.tab==='presenca_baixas'?'Baixa':'Registro'} · ${esc(PHX_CAMPO[x.c]||x.c)}: ${esc(x.a==null?'—':x.a)} → ${esc(x.n==null?'—':x.n)} · ${esc(x.e||'')}</div>`).join('')}</div><div class="legend">Registros cancelados e baixas corrigidas continuam no banco, com o valor anterior.</div></div>`;
+}
 function destaques(rows,data){
  const R=rows.map(x=>{const L=data.days.flatMap(d=>data.byOpDay.get(d+'|'+x.o.m)||[]),P=prod(L),C=durs(L),tm=C.reduce((s,c)=>s+c.d,0),cu=C.reduce((s,c)=>s+c.qty,0);
   return{o:x.o,L,P,C,qty:x.qty,n:x.n,rate:C.length>=3&&tm>0?cu/(tm/36e5):0,pr:L.filter(w=>w.st===1||(w.hist||[]).some(e=>e.e==='m')).length}});
@@ -1189,6 +1228,7 @@ function individual(){
  <div class="grid two" style="margin-top:14px"><div class="card"><h2>Produção por tipo</h2>${bars(types)}</div><div class="card"><h2>Como calcular</h2><div class="legend">A referência é a meta diária atual do galpão dividida entre as pessoas que biparam no dia. Os tipos de onda têm dificuldades diferentes; o valor serve apenas para acompanhamento. A hora extra soma intervalos entre bipagens fora do turno, até o intervalo máximo configurado. Uma bipagem isolada não permite calcular horas. Não substitui o controle de ponto.</div></div></div>
  ${mgPresencaCard(o,data)}
  ${mgTurnoCard(o,data)}
+ ${mgHistPresenca(o)}
  ${mgTempo(o,L)}
  <div class="card" style="margin-top:14px"><h2>Resumo por dia</h2><div class="tw"><table><tr><th>Data</th><th>Situação</th><th>Unidades</th><th>Ondas</th><th>Tempo trabalhado</th><th>Extra estimada</th></tr>`+
  daily.map(x=>{const ts=x.w.map(w=>w.ts);return `<tr><td>${new Date(x.d+'T12:00').toLocaleDateString('pt-BR')}</td><td>${x.status}</td><td>${fmt(x.p.reduce((s,w)=>s+w.qty,0))}</td><td>${x.p.length}</td><td>${ts.length>1&&Math.max(...ts)>Math.min(...ts)?hh(Math.max(...ts)-Math.min(...ts)):'—'}</td><td>${x.x.ms?hh(x.x.ms):x.x.count?'Sem medição':'—'}</td></tr>`}).join('')+
@@ -1547,7 +1587,10 @@ $("#sub").onclick=e=>{const s=e.target.dataset.s;if(!s)return;$$("#sub button").
 $("#csub").onclick=e=>{const c=e.target.dataset.c;if(!c)return;csub=c;$$("#csub button").forEach(b=>b.classList.toggle("on",b===e.target));["cop","cus","cga","cge","cma"].forEach(x=>$("#"+x).classList.toggle("hide",x!==c));if(c==="cge"&&ON&&me&&me.adm)pull().then(()=>cfgGes()).catch(()=>{});if(c==="cma")cfgMan()};
 $("#iPrint").onclick=imprimirFolhas;$("#iOp").onchange=()=>{mgShown=100;individual()};$("#iPer").onchange=()=>{mgShown=100;individual();coletiva();loadManagement()};
 $("#iBody").addEventListener("click",e=>{if(e.target.id==="mgMore"){mgShown+=100;individual()}if(e.target.id==="mgTurnoSave")mgSalvarTurno();if(e.target.id==="presSalvar")presSalvar();if(e.target.id==="presBaixa")presBaixa();if(e.target.dataset&&e.target.dataset.cancel)presCancelar(e.target.dataset.cancel)});
-$("#gsub").onclick=e=>{const x=e.target.dataset.gs;if(!x)return;gsub=x;$$("#gsub button").forEach(b=>b.classList.toggle("on",b===e.target));$("#iBody").classList.toggle("hide",x!=="mi");$("#coBody").classList.toggle("hide",x!=="mc");$("#iOp").classList.toggle("hide",x!=="mi");$("#iPrint").classList.toggle("hide",x!=="mi");if(x==="mc")coletiva();else individual()};
+$("#wkBody").addEventListener("click",e=>{const b=e.target.closest("[data-wk]");if(b){const off=+b.dataset.wk;wkIr(off===0?hojeSemana():addDias(WKW||mondayOf($("#day").value),off));return}const c=e.target.closest(".wkc");if(c)wkAbrir(c.dataset.m,c.dataset.d)});
+$("#wkBody").addEventListener("input",e=>{if(e.target.id!=="wkQ")return;WKQ=e.target.value;semana();const i=$("#wkQ");if(i){i.focus();i.setSelectionRange(i.value.length,i.value.length)}});
+const hojeSemana=()=>mondayOf(dk(Date.now()));
+$("#gsub").onclick=e=>{const x=e.target.dataset.gs;if(!x)return;gsub=x;$$("#gsub button").forEach(b=>b.classList.toggle("on",b===e.target));$("#iBody").classList.toggle("hide",x!=="mi");$("#coBody").classList.toggle("hide",x!=="mc");$("#wkBody").classList.toggle("hide",x!=="sem");$("#iOp").classList.toggle("hide",x!=="mi");$("#iPrint").classList.toggle("hide",x!=="mi");if(x==="sem")wkIr(WKW||mondayOf($("#day").value));else if(x==="mc")coletiva();else individual()};
 
 document.addEventListener("click",e=>{const d=e.target.dataset,t=e.target;
  const tyB=t.closest&&t.closest("[data-ty]");if(tyB){ty=tyB.dataset.ty;if(!multiOnda()&&rows.length>1)rows.splice(1);segs();setTimeout(()=>goStep(3),260)}
