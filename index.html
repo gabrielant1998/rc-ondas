@@ -599,7 +599,7 @@ async function pull(){
  ts.forEach(t=>{S.cfg.lim[t.nome]=t.limite});
  const c=cf[0];if(c){S.cfg.turnos={1:{ini:c.turno1_ini,fim:c.turno1_fim},2:{ini:c.turno2_ini,fim:c.turno2_fim}};S.cfg.gap=Math.min(+c.intervalo_max_min||30,60);S.cfg.tol=c.tolerancia_min;S.cfg.and=c.ondas_em_andamento}
  OPSALL={};os.forEach(o=>{OPSALL[o.id]=o});
- S.ops=os.filter(o=>!o.excluido_em).map(o=>({id:o.id,m:o.codigo,n:o.nome,t:o.turno,g:GN[o.galpao_id],criado:o.criado_em}));
+ S.ops=os.filter(o=>!o.excluido_em).map(o=>({id:o.id,m:o.codigo,n:o.nome,t:o.turno,ini:o.inicio,fim:o.fim,g:GN[o.galpao_id],criado:o.criado_em}));
  if(!S.gals.includes(S.gal))S.gal=S.gals[0];
  S.metasDia={};
  if(sess){
@@ -610,6 +610,8 @@ async function pull(){
   if(!me){S.ges=[];SOL=[];const pd=pedidoPendente();try{await api("/rest/v1/rpc/solicitar_acesso",{method:"POST",body:{p_nome:pd?pd.nome:null,p_galpao:(pd&&GID[pd.galpao])||null}});localStorage.removeItem("rcondas.pedido");pedidoDados=null}catch(e){}setSess(null);toast("Ainda sem acesso. Pedido enviado ao administrador: quando ele liberar, entre de novo.",8000)}
   else{if(me.g)S.gal=me.g;SOL=[];if(me.adm)try{SOL=await api("/rest/v1/solicitacoes_gestor?select=email,criado_em,nome,galpao_id&order=criado_em")}catch(e){}}}
  else{S.ges=[];me=null;SOL=[]}
+ TH={};
+ if(me){try{const hs=await api("/rest/v1/presenca_alteracoes?select=operador_id,campo,valor_anterior,valor_novo,email,alterado_em&order=alterado_em.asc");hs.forEach(h=>{(TH[h.operador_id]=TH[h.operador_id]||[]).push({c:h.campo,a:h.valor_anterior,n:h.valor_novo,e:h.email,t:Date.parse(h.alterado_em)})})}catch(e){}}
  const mine=S.waves.filter(w=>!w.srv);
  if(me){const de=new Date(Date.now()-35*864e5).toISOString(),srv=[];
   for(let off=0;;off+=1000){const p=await api("/rest/v1/ondas?select=id,wn,operador_id,galpao_id,tipo,quantidade,status,registrada_em,concluida_em,encerrada_auto,procura_sku,procura_local,procura_nome,procura_em,procura_hist,tempo_zerado&registrada_em=gte."+encodeURIComponent(de)+"&order=registrada_em.asc&limit=1000&offset="+off);
@@ -737,8 +739,17 @@ function opOf(code){return S.ops.find(o=>o.m===code)}
 const h32=s=>{let h=5381;for(let i=0;i<s.length;i++)h=(h*33^s.charCodeAt(i))>>>0;return h.toString(36)};
 
 /* ===================== turno / hora extra ===================== */
-function turnoOf(o){return S.cfg.turnos[o&&o.t===2?2:1]}
-function isOT(w){const o=opOf(w.op);if(!o)return false;const t=turnoOf(o),d=new Date(w.fin||w.ts),h=d.getHours()+d.getMinutes()/60,tol=(S.cfg.tol||0)/60;
+/* alterações de turno por pessoa (carregadas para gestores): {c:'inicio'|'fim', a:valor anterior, n:novo, t:momento, e:quem} */
+let TH={};
+/* horário da pessoa; com dia informado, usa o horário que valia naquele dia (desfaz alterações posteriores) */
+function turnoOf(o,d){
+ if(!o||o.ini==null||o.fim==null)return S.cfg.turnos[o&&o.t===2?2:1];
+ let ini=o.ini,fim=o.fim;const h=d&&o.id&&TH[o.id];
+ if(h){const fd=new Date(d+'T00:00:00');fd.setDate(fd.getDate()+1);const seen={};
+  h.filter(x=>x.t>=fd.getTime()).sort((x,y)=>x.t-y.t).forEach(x=>{if(seen[x.c])return;seen[x.c]=1;if(x.c==='inicio')ini=x.a;else fim=x.a})}
+ return{ini,fim};
+}
+function isOT(w){const o=opOf(w.op);if(!o)return false;const t=turnoOf(o,dk(w.fin||w.ts)),d=new Date(w.fin||w.ts),h=d.getHours()+d.getMinutes()/60,tol=(S.cfg.tol||0)/60;
  if(t.fim>t.ini)return h<t.ini-tol||h>t.fim+tol;
  return h<t.ini-tol&&h>t.fim+tol}
 
@@ -925,7 +936,7 @@ function limparGestao(){MGW=null;mgSeq++;mgState='';$("#iBody").innerHTML='';$("
 function mgDates(){const n=+$("#iPer").value||1,end=new Date($("#day").value+'T12:00:00'),a=[];for(let i=n-1;i>=0;i--){const d=new Date(end);d.setDate(d.getDate()-i);a.push(dk(d))}return a}
 function mgOps(){
  if(!ON)return S.ops;
- return Object.values(OPSALL).map(o=>({id:o.id,m:o.excluido_em?o.codigo+'~'+o.id.slice(0,6):o.codigo,n:o.nome,t:o.turno,g:GN[o.galpao_id],criado:o.criado_em,excluido:o.excluido_em}))
+ return Object.values(OPSALL).map(o=>({id:o.id,m:o.excluido_em?o.codigo+'~'+o.id.slice(0,6):o.codigo,n:o.nome,t:o.turno,ini:o.inicio,fim:o.fim,g:GN[o.galpao_id],criado:o.criado_em,excluido:o.excluido_em}))
   .filter(o=>!restricted()||o.g===myG());
 }
 async function loadManagement(){
@@ -954,15 +965,42 @@ function mgData(){
 function mgEligible(o,d){return(!o.criado||dk(o.criado)<=d)&&(!o.excluido||dk(o.excluido)>=d)}
 function mgStatus(o,d,L,data){
  if(!mgEligible(o,d))return 'Fora do cadastro';if(L.length)return 'Bipou';
- const t=turnoOf(o),fim=new Date(d+'T00:00:00');fim.setHours(t.fim,0,0,0);if(t.fim<=t.ini)fim.setDate(fim.getDate()+1);
+ const t=turnoOf(o,d),fim=new Date(d+'T00:00:00');fim.setHours(t.fim,0,0,0);if(t.fim<=t.ini)fim.setDate(fim.getDate()+1);
  if(Date.now()<fim.getTime())return 'Aguardando turno';
  return data.teamDay.has(d+'|'+o.g+'|'+o.t)?'Falta: sem bipagem (conferir)':'Sem operação identificada';
 }
 function mgExtra(o,d,L){
- const times=L.map(w=>w.fin||w.ts).filter(Number.isFinite).sort((a,b)=>a-b),t=turnoOf(o),day=new Date(d+'T00:00:00'),start=day.getTime()+t.ini*36e5-(S.cfg.tol||0)*6e4;
+ const times=L.map(w=>w.fin||w.ts).filter(Number.isFinite).sort((a,b)=>a-b),t=turnoOf(o,d),day=new Date(d+'T00:00:00'),start=day.getTime()+t.ini*36e5-(S.cfg.tol||0)*6e4;
  let end=day.getTime()+t.fim*36e5+(S.cfg.tol||0)*6e4;if(t.fim<=t.ini)end+=864e5;
  let ms=0;for(let i=1;i<times.length;i++){const a=times[i-1],b=times[i];if(b<=a||b-a>GAP()*6e4)continue;ms+=Math.max(0,Math.min(b,start)-a)+Math.max(0,b-Math.max(a,end))}
  return {ms,count:times.filter(x=>x<start||x>end).length};
+}
+/* turno da pessoa e primeiro bipe do dia (só para um dia; em período maior, o turno é o do último dia) */
+function mgDia(o,data){
+ const last=data.days[data.days.length-1],t=turnoOf(o,last);
+ if(data.days.length!==1)return{t,p:null};
+ const L=data.byOpDay.get(last+'|'+o.m)||[];
+ if(!L.length)return{t,p:null};
+ const ts=Math.min(...L.map(w=>w.ts)),ini=new Date(last+'T00:00:00');ini.setHours(t.ini,0,0,0);
+ return{t,p:{ts,diff:Math.round((ts-ini.getTime())/6e4)}};
+}
+function mgTurnoCard(o,data){
+ const T=turnoOf(o,data.days[data.days.length-1]),can=!!(ON&&me&&me.pC&&o.id);
+ const opts=(a,b,sel)=>{let s='';for(let i=a;i<=b;i++)s+=`<option value="${i}"${i===sel?' selected':''}>${String(i).padStart(2,'0')}h</option>`;return s};
+ const hist=(TH[o.id]||[]).slice().reverse().slice(0,5).map(h=>`${new Date(h.t).toLocaleString('pt-BR')} · ${h.c==='inicio'?'Início':'Término'} de ${h.a==null?'—':h.a+'h'} para ${h.n}h · ${esc(h.e||'')}`).join('<br>');
+ return`<div class="card" style="margin-top:14px"><h2>Turno de ${esc(o.n)}</h2>
+ <div class="ctl"><label>Início <select id="mgIni" aria-label="Início do turno">${opts(0,23,T.ini)}</select></label><label>Término <select id="mgFim" aria-label="Término do turno">${opts(1,24,T.fim)}</select></label><button class="btn" id="mgTurnoSave" type="button"${can?'':' disabled'}>Salvar turno</button></div>
+ <div class="legend">Vale a partir de agora. Dias anteriores mantêm o horário que valia naquele dia. Alterar o início não muda o término.${can?'':' Só gestores com permissão de configuração podem alterar.'}</div>
+ ${hist?`<div class="legend" style="margin-top:8px"><b>Últimas alterações</b><br>${hist}</div>`:'<div class="legend" style="margin-top:8px">Sem alterações de turno registradas.</div>'}</div>`;
+}
+async function mgSalvarTurno(){
+ const o=(INDX&&INDX.ops||[]).find(x=>x.m===$("#iOp").value);
+ if(!o||!o.id||!ON||!me||!me.pC){toast("Sem permissão para alterar o turno.");return}
+ const ini=+$("#mgIni").value,fim=+$("#mgFim").value;
+ if(!(ini>=0&&ini<=23&&fim>=1&&fim<=24)){toast("Horário inválido.");return}
+ if(ini===o.ini&&fim===o.fim){toast("O turno já está com esse horário.");return}
+ const ok=await rem(()=>mut("/rest/v1/operadores?id=eq."+o.id,"PATCH",{inicio:ini,fim}),"Turno de "+o.n+" atualizado");
+ if(ok)await loadManagement();
 }
 function mgReference(o,data){let sum=0,has=false;for(const d of data.days){const own=data.byOpDay.get(d+'|'+o.m)||[],people=data.byGalDay.get(d+'|'+o.g),meta=+MT()[o.g]||0;if(own.length&&people&&people.size&&meta){sum+=meta/people.size;has=true}}return has?sum:null}
 function metaInd(o,L){const m=MI()[o.g]||{},dias=Math.max(new Set(prod(L).map(w=>dk(w.ts))).size,1);return{o:m.o?m.o*dias:0,q:m.q?m.q*dias:0}}
@@ -1077,9 +1115,9 @@ function individual(){
  if(!ops.length){$("#iBody").innerHTML='<div class="card"><div class="empty">Nenhum operador para os filtros selecionados.</div></div>';return}
  const selected=ops.find(o=>o.m===sel.value);
  if(!selected){
-  const rows=ops.map(o=>{const L=data.days.flatMap(d=>data.byOpDay.get(d+'|'+o.m)||[]),P=prod(L),days=data.days.map(d=>mgStatus(o,d,data.byOpDay.get(d+'|'+o.m)||[],data)),extra=data.days.map(d=>mgExtra(o,d,data.byOpDay.get(d+'|'+o.m)||[]));return{o,qty:P.reduce((s,w)=>s+w.qty,0),n:P.length,ref:mgReference(o,data),mi:metaInd(o,L),miss:days.filter(x=>x.startsWith('Falta')).length,ms:extra.reduce((s,x)=>s+x.ms,0),ot:extra.reduce((s,x)=>s+x.count,0)}});
-  $("#iBody").innerHTML=destaques(rows,data)+`<div class="card" style="margin-top:14px"><h2>Equipe no período</h2><div class="tw"><table><tr><th>Operador</th><th>Turno</th><th>Unidades / meta</th><th>Ondas / meta</th><th>Referência individual</th><th>Faltas a conferir</th><th>Hora extra estimada</th></tr>`+
-   rows.map(x=>`<tr><td><a href="#" data-pick="${esc(x.o.m)}">${esc(x.o.n)}</a><br><small>${esc(x.o.m.split('~')[0])}</small></td><td>${x.o.t}º</td><td><b>${x.mi.q?vsMeta(x.qty,x.mi.q):fmt(x.qty)}</b></td><td>${x.mi.o?vsMeta(x.n,x.mi.o):x.n}</td><td>${x.ref===null?'Sem meta':fmt(x.ref)+' un.'}</td><td>${x.miss}</td><td>${x.ms?hh(x.ms):x.ot?'Sem medição':'—'}</td></tr>`).join('')+
+  const rows=ops.map(o=>{const L=data.days.flatMap(d=>data.byOpDay.get(d+'|'+o.m)||[]),P=prod(L),days=data.days.map(d=>mgStatus(o,d,data.byOpDay.get(d+'|'+o.m)||[],data)),extra=data.days.map(d=>mgExtra(o,d,data.byOpDay.get(d+'|'+o.m)||[]));return{o,qty:P.reduce((s,w)=>s+w.qty,0),n:P.length,ref:mgReference(o,data),mi:metaInd(o,L),miss:days.filter(x=>x.startsWith('Falta')).length,ms:extra.reduce((s,x)=>s+x.ms,0),ot:extra.reduce((s,x)=>s+x.count,0),dia:mgDia(o,data)}});
+  $("#iBody").innerHTML=destaques(rows,data)+`<div class="card" style="margin-top:14px"><h2>Equipe no período</h2><div class="tw"><table><tr><th>Operador</th><th>Turno</th><th>Primeiro bipe do dia</th><th>Possível atraso</th><th>Unidades / meta</th><th>Ondas / meta</th><th>Referência individual</th><th>Faltas a conferir</th><th>Hora extra estimada</th></tr>`+
+   rows.map(x=>`<tr><td><a href="#" data-pick="${esc(x.o.m)}">${esc(x.o.n)}</a><br><small>${esc(x.o.m.split('~')[0])}</small></td><td>${x.dia.t.ini}h às ${x.dia.t.fim}h</td><td>${x.dia.p?new Date(x.dia.p.ts).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}):'—'}</td><td>${x.dia.p&&x.dia.p.diff>0?'<span class="tag">Possível atraso: '+hh(x.dia.p.diff*6e4)+'</span>':'—'}</td><td><b>${x.mi.q?vsMeta(x.qty,x.mi.q):fmt(x.qty)}</b></td><td>${x.mi.o?vsMeta(x.n,x.mi.o):x.n}</td><td>${x.ref===null?'Sem meta':fmt(x.ref)+' un.'}</td><td>${x.miss}</td><td>${x.ms?hh(x.ms):x.ot?'Sem medição':'—'}</td></tr>`).join('')+
    `</table></div><div class="legend">As metas individuais (ondas e unidades por dia) vêm de Configurações, Galpões e valem para cada dia com bipagem. A referência divide a meta diária atual do galpão entre as pessoas com bipagem no dia. É uma referência ajustável pelo movimento, não um ranking. Falta indica ausência de bipagem em dia com operação no turno; confirme folgas, afastamentos e outras atividades. Hora extra é estimada pelos intervalos entre bipagens, respeitando o intervalo máximo configurado.</div></div>`;return;
  }
  const o=selected,L=data.days.flatMap(d=>data.byOpDay.get(d+'|'+o.m)||[]),P=prod(L),qty=P.reduce((s,w)=>s+w.qty,0),ref=mgReference(o,data);
@@ -1091,6 +1129,7 @@ function individual(){
  mgK('Meta individual: unidades',MI()[o.g]&&MI()[o.g].q?vsMeta(qty,metaInd(o,L).q):'—',MI()[o.g]&&MI()[o.g].q?'por dia com bipagem':'defina em Configurações')+mgK('Meta individual: ondas',MI()[o.g]&&MI()[o.g].o?vsMeta(P.length,metaInd(o,L).o):'—',MI()[o.g]&&MI()[o.g].o?'por dia com bipagem':'defina em Configurações')+mgK('Referência individual',ref===null?'—':fmt(ref),ref===null?'defina a meta do galpão':fmt(qty/ref*100)+'% da referência')+
  mgK('Faltas a conferir',fmt(miss),'dias sem bipagem')+mgK('Hora extra estimada',extra?hh(extra):ot?'—':'0h00',ot?ot+' bipagem(ns) fora do turno':'sem bipagens fora do turno')+`</dl>
  <div class="grid two" style="margin-top:14px"><div class="card"><h2>Produção por tipo</h2>${bars(types)}</div><div class="card"><h2>Como calcular</h2><div class="legend">A referência é a meta diária atual do galpão dividida entre as pessoas que biparam no dia. Os tipos de onda têm dificuldades diferentes; o valor serve apenas para acompanhamento. A hora extra soma intervalos entre bipagens fora do turno, até o intervalo máximo configurado. Uma bipagem isolada não permite calcular horas. Não substitui o controle de ponto.</div></div></div>
+ ${mgTurnoCard(o,data)}
  ${mgTempo(o,L)}
  <div class="card" style="margin-top:14px"><h2>Resumo por dia</h2><div class="tw"><table><tr><th>Data</th><th>Situação</th><th>Unidades</th><th>Ondas</th><th>Tempo trabalhado</th><th>Extra estimada</th></tr>`+
  daily.map(x=>{const ts=x.w.map(w=>w.ts);return `<tr><td>${new Date(x.d+'T12:00').toLocaleDateString('pt-BR')}</td><td>${x.status}</td><td>${fmt(x.p.reduce((s,w)=>s+w.qty,0))}</td><td>${x.p.length}</td><td>${ts.length>1&&Math.max(...ts)>Math.min(...ts)?hh(Math.max(...ts)-Math.min(...ts)):'—'}</td><td>${x.x.ms?hh(x.x.ms):x.x.count?'Sem medição':'—'}</td></tr>`}).join('')+
@@ -1448,7 +1487,7 @@ $("#psub").onclick=e=>{const k=e.target.dataset.p;if(k)psub(k)};
 $("#sub").onclick=e=>{const s=e.target.dataset.s;if(!s)return;$$("#sub button").forEach(b=>b.classList.toggle("on",b===e.target));["reg","ctl","ace"].forEach(x=>$("#"+x).classList.toggle("hide",x!==s));tick()};
 $("#csub").onclick=e=>{const c=e.target.dataset.c;if(!c)return;csub=c;$$("#csub button").forEach(b=>b.classList.toggle("on",b===e.target));["cop","cus","cga","cge","cma"].forEach(x=>$("#"+x).classList.toggle("hide",x!==c));if(c==="cge"&&ON&&me&&me.adm)pull().then(()=>cfgGes()).catch(()=>{});if(c==="cma")cfgMan()};
 $("#iPrint").onclick=imprimirFolhas;$("#iOp").onchange=()=>{mgShown=100;individual()};$("#iPer").onchange=()=>{mgShown=100;individual();coletiva();loadManagement()};
-$("#iBody").addEventListener("click",e=>{if(e.target.id==="mgMore"){mgShown+=100;individual()}});
+$("#iBody").addEventListener("click",e=>{if(e.target.id==="mgMore"){mgShown+=100;individual()}if(e.target.id==="mgTurnoSave")mgSalvarTurno()});
 $("#gsub").onclick=e=>{const x=e.target.dataset.gs;if(!x)return;gsub=x;$$("#gsub button").forEach(b=>b.classList.toggle("on",b===e.target));$("#iBody").classList.toggle("hide",x!=="mi");$("#coBody").classList.toggle("hide",x!=="mc");$("#iOp").classList.toggle("hide",x!=="mi");$("#iPrint").classList.toggle("hide",x!=="mi");if(x==="mc")coletiva();else individual()};
 
 document.addEventListener("click",e=>{const d=e.target.dataset,t=e.target;
