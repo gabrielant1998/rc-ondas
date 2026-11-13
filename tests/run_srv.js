@@ -220,10 +220,11 @@ await T('S12 Admin: galpão, meta, limite, turno e gestor gravam no banco',async
  await p.fill('[data-lim="Itens Únicos"]','250');await p.press('[data-lim="Itens Únicos"]','Tab');await p.waitForTimeout(400);
  await p.fill('[data-tn="1"][data-k="fim"]','17');await p.press('[data-tn="1"][data-k="fim"]','Tab');await p.waitForTimeout(400);
  await p.click('[data-c="cga"]');await p.fill('#gN','Galpão Norte');await p.click('#gB');await p.waitForTimeout(450);
- await p.fill('[data-gmeta="Galpão 2"]','3000');await p.press('[data-gmeta="Galpão 2"]','Tab');await p.waitForTimeout(450);
- await p.click('[data-gdel="0"]');await p.waitForTimeout(450);const tg=await p.textContent('#toast');
+ await p.click('[data-c="cme"]');await p.fill('[data-gmeta="Galpão 2"]','3000');await p.press('[data-gmeta="Galpão 2"]','Tab');await p.waitForTimeout(450);
+ await p.fill('#fmin','500');await p.press('#fmin','Tab');await p.waitForTimeout(450);const mmin=db.config[0].meta_minima;
+ await p.click('[data-c="cga"]');await p.click('[data-gdel="0"]');await p.waitForTimeout(450);const tg=await p.textContent('#toast');
  await p.click('[data-c="cge"]');await p.fill('#mN','Nova Gestora');await p.fill('#mU','Nova@X.com');await p.click('#mB');await p.waitForTimeout(450);
- ok(db.tipos.find(t=>t.nome==='Itens Únicos').limite===250,'limite');ok(db.config[0].turno1_fim===17,'turno');
+ ok(mmin===500,'meta mínima '+mmin);ok(db.tipos.find(t=>t.nome==='Itens Únicos').limite===250,'limite');ok(db.config[0].turno1_fim===17,'turno');
  ok(db.galpoes.some(g=>g.nome==='Galpão Norte'),'galpão novo');ok(db.metas.some(m=>m.galpao_id===G2&&m.data===HJ&&m.meta===3000),'meta do dia salva');
  ok(db.galpoes.some(g=>g.id===G1)&&/Não dá para excluir/.test(tg),'excluiu galpão com operadores: '+tg);
  ok(db.gestores.some(g=>g.email==='nova@x.com'&&!g.admin&&g.galpao_id),'gestor: '+JSON.stringify(db.gestores.slice(-1)));
@@ -260,10 +261,10 @@ await T('S17 Celular: registro público funciona e não há erro de JavaScript',
  ok((await p.evaluate(()=>document.documentElement.scrollWidth))<=392,'rolagem lateral')});
 
 
-await T('S22 Gestor comum vê só "Meta do dia" e não cria nem lista galpões; admin vê tudo',async()=>{const db=banco();const p=await page(b,db);
+await T('S22 Gestor comum vê só "Metas" do seu galpão, sem Galpões; admin vê tudo',async()=>{const db=banco();const p=await page(b,db);
  await login(p,'g2@x.com','senha1234');await p.click('.tab[data-t="cfg"]');
- const g=await p.evaluate(()=>({tab:document.querySelector('#csub [data-c="cga"]').textContent,novo:document.querySelector('#gNovo').classList.contains('hide'),nomes:document.querySelectorAll('#gL [data-gre]').length,linhas:document.querySelectorAll('#gL tr').length,txt:document.querySelector('#gL').textContent}));
- ok(g.tab==='Meta do dia'&&g.novo&&g.nomes===0&&g.linhas===2&&g.txt.includes('Galpão 2')&&!g.txt.includes('Galpão 1'),JSON.stringify(g));
+ await p.click('[data-c="cme"]');const g=await p.evaluate(()=>({cga:getComputedStyle(document.querySelector('#csub [data-c="cga"]')).display,tab:document.querySelector('#csub [data-c="cme"]').textContent,fcard:document.querySelector('#fCard').classList.contains('hide'),linhas:document.querySelectorAll('#mtL tr').length,txt:document.querySelector('#mtL').textContent}));
+ ok(g.cga==='none'&&g.tab==='Metas'&&g.fcard&&g.linhas===2&&g.txt.includes('Galpão 2')&&!g.txt.includes('Galpão 1'),JSON.stringify(g));
  await p.click('#logbtn');await login(p,'adm@x.com','senha1234');await p.click('.tab[data-t="cfg"]');
  const a=await p.evaluate(()=>({tab:document.querySelector('#csub [data-c="cga"]').textContent,novo:document.querySelector('#gNovo').classList.contains('hide'),nomes:document.querySelectorAll('#gL [data-gre]').length}));
  ok(a.tab==='Galpões'&&!a.novo&&a.nomes===2,JSON.stringify(a))});
@@ -283,7 +284,7 @@ await T('S23 Procurando no servidor: pendente com SKU, encontrada e baixa com no
  ok(db.ondas[0].procura_achou_por==='João Pedro'&&db.ondas[0].procura_hist.map(e=>e.e).join('')==='mab','banco baixa: '+JSON.stringify(db.ondas[0].procura_hist));
  ok((await p.textContent('#prHist')).includes('João Pedro'),'histórico sem o nome')});
 await T('S24 Meta individual grava no galpão (admin) e é recusada para outro galpão (gestor)',async()=>{const db=banco();const p=await page(b,db);
- await login(p,'adm@x.com','senha1234');await p.click('.tab[data-t="cfg"]');await p.click('[data-c="cga"]');
+ await login(p,'adm@x.com','senha1234');await p.click('.tab[data-t="cfg"]');await p.click('[data-c="cme"]');
  await p.fill('[data-gmo="Galpão 1"]','30');await p.press('[data-gmo="Galpão 1"]','Tab');await p.waitForTimeout(450);
  await p.fill('[data-gmq="Galpão 1"]','900');await p.press('[data-gmq="Galpão 1"]','Tab');await p.waitForTimeout(450);
  const g1=db.galpoes.find(x=>x.id===G1);ok(g1.meta_ind_ondas===30&&g1.meta_ind_qtd===900,JSON.stringify(g1));

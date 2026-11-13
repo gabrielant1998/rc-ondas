@@ -257,7 +257,7 @@ await T("44 Procurando: WN inexistente e onda em difícil acesso não abrem form
  await p.fill('#prBip','900');await p.press('#prBip','Enter');ok(!(await p.isVisible('#prSku')),'abriu para difícil acesso')});
 await T("45 Meta individual: configurar ondas e unidades aparece no Individual com percentual",async()=>{
  const p=await page(b,base({waves:[WV('a','1','Vários artigos',10,HR(9,0)),WV('b','2','Vários artigos',20,HR(9,10))]}));
- await p.evaluate(()=>go('cfg'));await p.click('[data-c="cga"]');
+ await p.evaluate(()=>go('cfg'));await p.click('[data-c="cme"]');
  await p.fill('[data-gmo="Galpão 1"]','4');await p.press('[data-gmo="Galpão 1"]','Tab');await p.fill('[data-gmq="Galpão 1"]','60');await p.press('[data-gmq="Galpão 1"]','Tab');
  await p.evaluate(()=>go('ind'));const t=(await p.textContent('#iBody')).replace(/\s+/g,' ');
  ok(t.includes('30 / 60')&&t.includes('2 / 4')&&t.includes('50%'),'tabela: '+t.slice(0,400));
@@ -318,18 +318,19 @@ await T("74 Cards de destaque chamativos: ícone, troféu, iniciais, pódio com 
  const r=await p.evaluate(()=>({n:document.querySelectorAll('.hlg .hl').length,t:document.querySelectorAll('.hl .hlc').length,av:document.querySelector('.hl .hlav').textContent,rk:document.querySelectorAll('.hl2 i').length,ic:document.querySelectorAll('.hl .hli svg').length}));
  ok(r.n===11&&r.t>=3&&r.av==='AS'&&r.rk>=1&&r.ic===11,'cards: '+JSON.stringify(r));
  await p.screenshot({path:'/tmp/claude-0/-home-claude/1b46621a-564c-549a-8cc9-448283bd574c/scratchpad/cards.png',clip:{x:200,y:150,width:1166,height:560}})});
-await T("75 Meta batida: placar dourado e a festa só aparece ao apertar o botão",async()=>{
+await T("75 Meta batida: placar dourado e a festa abre sozinha uma vez; botão repete",async()=>{
  const W=[WV('a','1','Vários artigos',30,HR(9,0)),WV('b','2','Vários artigos',30,HR(9,10)),WV('c','3','Itens Únicos',25,HR(9,20),'CL002','Bruno Lima'),WV('d','4','Itens Únicos',12,HR(9,30),'CL003','Carla Dias')];
  const p=await page(b,base({waves:W}),{festa:true});
  await p.evaluate(()=>{MT()['Galpão 1']=50;save();go('painel');renderAll()});await p.waitForTimeout(900);
- ok(!(await p.$('#mb')),'festa abriu sozinha');ok(await p.$eval('#kpis .placar',e=>e.classList.contains('win')),'placar dourado');
- await p.click('.mbBadge');await p.waitForTimeout(4200);ok(await p.isVisible('#mb'),'botão não comemora');
+ ok(await p.$('#mb'),'festa não abriu sozinha');ok(await p.$eval('#kpis .placar',e=>e.classList.contains('win')),'placar dourado');
+ await p.waitForTimeout(4200);ok(await p.isVisible('#mb'),'festa sumiu cedo');
  const t=await p.textContent('#mb');ok(t.includes('BATIDA!')&&t.includes('Ana Souza')&&t.includes('Bruno Lima')&&t.includes('hora da virada'),'conteúdo: '+t);
  const px=await p.$eval('#mb .fx',c=>{const d=c.getContext('2d').getImageData(0,0,c.width,c.height).data;let n=0;for(let i=3;i<d.length;i+=4)if(d[i]>20)n++;return n});ok(px>200,'fogos não desenharam: '+px);
  await p.screenshot({path:'/tmp/claude-0/-home-claude/1b46621a-564c-549a-8cc9-448283bd574c/scratchpad/festa.png'});
  await p.waitForTimeout(1800);await p.screenshot({path:'/tmp/claude-0/-home-claude/1b46621a-564c-549a-8cc9-448283bd574c/scratchpad/festa2.png'});
  await p.keyboard.press('Escape');await p.waitForTimeout(800);ok(!(await p.$('#mb')),'Esc não fecha');
- await p.evaluate(()=>renderAll());await p.waitForTimeout(300);ok(!(await p.$('#mb')),'abriu sozinha depois');
+ await p.evaluate(()=>renderAll());await p.waitForTimeout(1200);ok(!(await p.$('#mb')),'abriu de novo no mesmo dia');
+ await p.click('.mbBadge');await p.waitForTimeout(500);ok(await p.isVisible('#mb'),'botão não repete a festa');await p.keyboard.press('Escape');await p.waitForTimeout(800);
  await p.evaluate(()=>{MT()['Galpão 1']=500;renderAll()});ok(!(await p.$eval('#kpis .placar',e=>e.classList.contains('win')))&&!(await p.$('.mbBadge')),'dourado sem bater meta')});
 await T("51 Operador: nomes aparecem em cartões a partir da primeira letra, sem lista nativa",async()=>{
  const p=await page(b,base());await p.evaluate(()=>go('op'));
@@ -574,6 +575,34 @@ await T("81 Procurando: vários SKUs, cada um com a sua quantidade",async()=>{
  ok(w.st===1&&w.itens.length===2&&w.itens[0].s==='AAA-1'&&w.itens[0].q===5&&w.itens[1].q===3&&w.sku==='AAA-1 ×5, BBB-2 ×3',JSON.stringify(w));
  const lista=(await p.textContent('#prList')).replace(/\s+/g,' ');ok(lista.includes('AAA-1')&&lista.includes('×5')&&lista.includes('BBB-2')&&lista.includes('×3')&&lista.includes('BARUERI')&&lista.includes('PERDIDO'),'lista: '+lista);
  await p.reload();const w2=await p.evaluate(()=>S.waves.find(z=>z.id==='m1').itens);ok(w2.length===2&&w2[1].q===3,'não persistiu: '+JSON.stringify(w2))});
+
+await T("82 Meta mínima: abaixo dela não há festa nem botão; na aba Metas ela é salva e a festa de teste abre",async()=>{
+ const W=[WV('a','1','Vários artigos',30,HR(9,0)),WV('b','2','Vários artigos',30,HR(9,10)),WV('c','3','Itens Únicos',25,HR(9,20),'CL002','Bruno Lima')];
+ const p=await page(b,base({waves:W}),{festa:true});
+ await p.evaluate(()=>{MT()['Galpão 1']=50;S.cfg.metaMin=200;save();go('painel');renderAll()});await p.waitForTimeout(1400);
+ ok(!(await p.$('#mb'))&&!(await p.$('.mbBadge')),'festa abaixo da meta mínima');ok(await p.$eval('#kpis .placar',e=>e.classList.contains('win')),'placar dourado some');
+ await p.evaluate(()=>go('cfg'));await p.click('[data-c="cme"]');ok(await p.inputValue('#fmin')==='200','mínimo não aparece na aba Metas');
+ await p.fill('#fmin','60');await p.press('#fmin','Tab');await p.waitForTimeout(200);
+ ok(await p.evaluate(()=>S.cfg.metaMin)===60,'mínimo não salvo');ok((await p.textContent('#fLeg')).includes('60'),'legenda');
+ await p.click('#fTeste');await p.waitForTimeout(600);ok(await p.isVisible('#mb'),'festa de teste não abriu');await p.keyboard.press('Escape');await p.waitForTimeout(800);
+ await p.evaluate(()=>go('painel'));await p.waitForTimeout(1400);ok(await p.$('#mb'),'festa não abriu com 85 >= mínimo 60')});
+
+await T("83 Painel mostra gráfico bipado x concluído; Acompanhamento pagina de 50 em 50",async()=>{
+ const W=[];for(let i=0;i<120;i++)W.push(WV('c'+i,String(7000+i),'Vários artigos',10+i%5,D0+2*H+i*6e4));
+ W.push(WV('vivo','8800','Itens Únicos',40,Date.now()-90e3,'CL002','Bruno Lima'));
+ const p=await page(b,base({waves:W}));await p.evaluate(()=>{go('painel');renderAll()});await p.waitForTimeout(300);
+ const v=await p.evaluate(()=>({n:document.querySelector('#vivoN').textContent,c:document.querySelector('#concN').textContent,area:!!document.querySelector('#vivoC polygon'),line:document.querySelectorAll('#vivoC polyline').length,dots:document.querySelectorAll('#vivoC circle').length,lista:document.querySelectorAll('#vivo table').length}));
+ ok(v.n.startsWith('1 onda em andamento')&&v.c.includes('121')&&v.area&&v.line===2&&v.dots===2&&v.lista===0,'gráfico: '+JSON.stringify(v));
+ await p.screenshot({path:'/tmp/claude-0/-home-claude/1b46621a-564c-549a-8cc9-448283bd574c/scratchpad/painel_vivo.png'});
+ await p.evaluate(()=>{go('op');document.querySelector('#sub [data-s="ace"]').click()});await p.waitForTimeout(300);
+
+ const r1=await p.evaluate(()=>({l:document.querySelectorAll('#aceL tr').length-1,pg:document.querySelector('#acePg').textContent.replace(/\s+/g,' ')}));
+ ok(r1.l===50&&r1.pg.includes('Página 1 de 3')&&r1.pg.includes('1 a 50 de 121'),JSON.stringify(r1));
+ await p.click('#acePg [data-pg="1"]');await p.click('#acePg [data-pg="1"]');
+ const r3=await p.evaluate(()=>({l:document.querySelectorAll('#aceL tr').length-1,pg:document.querySelector('#acePg').textContent.replace(/\s+/g,' '),prox:document.querySelector('#acePg [data-pg="1"]').disabled}));
+ ok(r3.l===21&&r3.pg.includes('Página 3 de 3')&&r3.prox,JSON.stringify(r3));
+ await p.fill('#aceQ','7005');await p.waitForTimeout(150);const rq=await p.evaluate(()=>document.querySelectorAll('#aceL tr').length-1);ok(rq===1,'busca: '+rq);
+ await p.screenshot({path:'/tmp/claude-0/-home-claude/1b46621a-564c-549a-8cc9-448283bd574c/scratchpad/ace.png'})});
 
 await b.close();
 const w=Math.max(...R.map(r=>r[1].length));for(const r of R)console.log((r[0]==="PASS"?"✅":"❌")+" "+r[1].padEnd(w)+"  "+r[2]);

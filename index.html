@@ -38,6 +38,8 @@ header.top h1{font:700 34px/1 var(--fd)}
 .ctl{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
 .grid{display:grid;gap:14px}#painel .two{align-items:start}.two{grid-template-columns:repeat(auto-fit,minmax(300px,1fr))}.g21{grid-template-columns:repeat(auto-fit,minmax(300px,1fr))}
 @media(min-width:1100px){.g21{grid-template-columns:2fr 1fr}}
+#painel #chH svg{max-height:240px;width:100%}#vivoLeg{display:flex;gap:18px;flex-wrap:wrap}#vivoLeg i{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:6px;vertical-align:-1px}#vivoLeg i.ln{height:3px;border:0;border-radius:2px;vertical-align:3px;width:18px}#painel .card h2 .pill{margin-left:6px;vertical-align:middle}#vivoL table th,#concL table th{padding:4px 8px}#vivoL table td,#concL table td{padding:3px 8px}#vivoL .big{font-size:inherit}
+.pg{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:10px}.pg span{color:var(--mut);font-size:13px}
 #reg{align-items:start}
 @media(min-width:1100px){#reg{grid-template-columns:5fr 7fr}}
 
@@ -381,6 +383,10 @@ a[data-pick]{display:inline-block;padding:8px 0 2px;color:var(--gx);font-weight:
 <!-- ======================= PAINEL ======================= -->
 <section id="painel">
  <div id="kpis"></div>
+ <div id="vivo" style="margin-top:14px">
+  <div class="card"><h2>Acumulado do dia: bipado x concluído <span class="pill" id="vivoN"></span><span class="pill" id="concN"></span></h2><div id="vivoC"></div>
+  <div class="legend" id="vivoLeg"><span><i style="background:var(--t);opacity:.6"></i>Quantidade bipada (área)</span><span><i class="ln" style="background:var(--g)"></i>Quantidade concluída (linha)</span></div></div>
+ </div>
  <div class="grid g21" style="margin-top:14px">
   <div class="card"><h2><span id="hTit">Produção por hora</span> <span id="peak"></span><span class="hm" id="hSeg" role="group" aria-label="Intervalo do gráfico"><button data-m="h" class="on">Hora</button><button data-m="m">30 min</button></span></h2><div id="chH"></div><div id="pace"></div></div>
   <div class="card"><h2>Quantidades por tipo de onda</h2><div id="chT"></div></div>
@@ -429,6 +435,9 @@ a[data-pick]{display:inline-block;padding:8px 0 2px;color:var(--gx);font-weight:
   <div class="card"><h2>Temporizador manual</h2><div id="tman"></div>
    <div class="grid" style="grid-template-columns:repeat(3,1fr);margin-top:8px"><button class="btn" id="mS">Iniciar</button><button class="btn am" id="mP">Pausar</button><button class="btn d" id="mE">Encerrar</button></div>
    <div id="mLog" class="legend"></div></div>
+  <div class="card" style="grid-column:1/-1"><h2>Ondas concluídas do dia <span class="pill" id="aceN"></span></h2>
+   <div class="ctl" style="margin-bottom:10px"><input id="aceQ" type="search" placeholder="Buscar onda, operador ou tipo" aria-label="Buscar nas ondas concluídas" autocomplete="off" style="max-width:320px"></div>
+   <div class="tw" id="aceL"></div><div class="pg" id="acePg"></div></div>
  </div>
 </section>
 
@@ -462,7 +471,7 @@ a[data-pick]{display:inline-block;padding:8px 0 2px;color:var(--gx);font-weight:
 
 <!-- ======================= CONFIG ======================= -->
 <section id="cfg" class="hide">
- <div class="sub" id="csub"><button data-c="cop" class="on">Operação</button><button data-c="cus">Usuários</button><button data-c="cga">Galpões</button><button data-c="cge">Gestores</button><button data-c="cma">Manutenção</button></div>
+ <div class="sub" id="csub"><button data-c="cop" class="on">Operação</button><button data-c="cus">Usuários</button><button data-c="cme">Metas</button><button data-c="cga">Galpões</button><button data-c="cge">Gestores</button><button data-c="cma">Manutenção</button></div>
 
  <div id="cop" class="grid two">
   <div class="card"><h2>Limite por onda</h2><div class="f" id="lims"></div></div>
@@ -484,11 +493,19 @@ a[data-pick]{display:inline-block;padding:8px 0 2px;color:var(--gx);font-weight:
   <div class="card"><h2>Usuários <span id="uCnt"></span></h2><div class="tw" id="uL"></div></div>
  </div>
 
+ <div id="cme" class="grid two hide">
+  <div class="card"><h2 id="mTit">Meta de hoje</h2><div class="tw" id="mtL"></div><div class="legend" id="mLeg"></div></div>
+  <div class="card" id="fCard"><h2>Animação de meta batida</h2>
+   <div class="f"><label>Meta mínima para mostrar a animação (unidades)<input type="number" id="fmin" min="0" max="10000000" step="1" placeholder="0 = sempre que bater a meta"></label></div>
+   <div class="legend" id="fLeg"></div>
+   <div style="margin-top:12px"><button class="btn alt sm" id="fTeste" type="button">Ver a animação agora</button></div></div>
+ </div>
+
  <div id="cga" class="grid two hide">
   <div class="card" id="gNovo"><h2>Novo galpão</h2><div class="f">
    <label>Nome<input id="gN" placeholder="Galpão 4" autocomplete="off"></label>
     <button class="btn" id="gB">Criar galpão</button></div></div>
-  <div class="card"><h2>Galpões</h2><div class="tw" id="gL"></div><div class="legend" id="gLeg">A meta vale só para o dia de hoje: cada dia começa sem meta e você preenche de novo. Os dias anteriores ficam salvos. Renomear um galpão atualiza os registros já lançados.</div></div>
+  <div class="card"><h2>Galpões</h2><div class="tw" id="gL"></div><div class="legend" id="gLeg">As metas ficam na aba Metas. Renomear um galpão atualiza os registros já lançados.</div></div>
  </div>
 
  <div id="cma" class="grid two hide"><div class="card"><h2>Apagar registros do banco</h2>
@@ -545,7 +562,7 @@ const SRV=(()=>{let f=null;try{f=localStorage.getItem("rcondas.srv")}catch(e){}
  return liga?{url:(window.__RC_SRV_URL||"https://fiqintmclivzckmfjeml.supabase.co"),key:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZpcWludG1jbGl2emNrbWZqZW1sIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTQ0MzM3MDcsImV4cCI6MjExMDAwOTcwN30.Aj8AGWwytOLEKm3P4I9nB-9u1FxZDI4fYJoWOUOs0AE"}:null})();
 const ON=!!SRV;
 const LS=ON?"rcondas.srv1":"rcondas.v2",$=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
-const DEF={cfg:{lim:{"Vários artigos":1000,"Múltiplas quantidades":1000,"Itens Únicos":100,"Maiores/Pesados":10,"Retrabalho":1000,"Pacote do mesmo":1000},and:true,gap:30,tol:15,
+const DEF={cfg:{lim:{"Vários artigos":1000,"Múltiplas quantidades":1000,"Itens Únicos":100,"Maiores/Pesados":10,"Retrabalho":1000,"Pacote do mesmo":1000},and:true,gap:30,tol:15,metaMin:0,
  turnos:{1:{ini:7,fim:16},2:{ini:16,fim:23}}},gals:["Galpão 1","Galpão 2","Galpão 3"],ops:[],ges:[],waves:[],gal:"Galpão 1",off:false,man:{log:[]}};
 let S;try{S=JSON.parse(localStorage.getItem(LS))}catch(e){}
 /* formato compacto: ondas como listas, cabe ~2x mais no aparelho */
@@ -626,7 +643,7 @@ async function pull(){
  GID={};GN={};gs.forEach(g=>{GID[g.nome]=g.id;GN[g.id]=g.nome});
  S.gals=gs.map(g=>g.nome);S.metasInd={};gs.forEach(g=>{if(g.meta_ind_ondas||g.meta_ind_qtd)S.metasInd[g.nome]={o:g.meta_ind_ondas||0,q:g.meta_ind_qtd||0}});
  ts.forEach(t=>{S.cfg.lim[t.nome]=t.limite});
- const c=cf[0];if(c){S.cfg.turnos={1:{ini:c.turno1_ini,fim:c.turno1_fim},2:{ini:c.turno2_ini,fim:c.turno2_fim}};S.cfg.gap=Math.min(+c.intervalo_max_min||30,60);S.cfg.tol=c.tolerancia_min;S.cfg.and=c.ondas_em_andamento}
+ const c=cf[0];if(c){S.cfg.turnos={1:{ini:c.turno1_ini,fim:c.turno1_fim},2:{ini:c.turno2_ini,fim:c.turno2_fim}};S.cfg.gap=Math.min(+c.intervalo_max_min||30,60);S.cfg.tol=c.tolerancia_min;S.cfg.metaMin=+c.meta_minima||0;S.cfg.and=c.ondas_em_andamento}
  OPSALL={};os.forEach(o=>{OPSALL[o.id]=o});
  S.ops=os.filter(o=>!o.excluido_em).map(o=>({id:o.id,m:o.codigo,n:o.nome,t:o.turno,ini:o.inicio,fim:o.fim,g:GN[o.galpao_id],criado:o.criado_em}));
  if(!S.gals.includes(S.gal))S.gal=S.gals[0];
@@ -678,6 +695,7 @@ function remChange(e){const d=e.target.dataset,id=e.target.id,v=e.target.value;
  if(d.tn)return rem(()=>mut(CFGP,"PATCH",{["turno"+d.tn+"_"+d.k]:Math.max(0,Math.min(24,Math.floor(+v)||0))}),"Turno atualizado");
  if(id==="gap")return rem(()=>mut(CFGP,"PATCH",{intervalo_max_min:Math.min(60,Math.max(1,Math.floor(+v)||30))}),"Configuração atualizada");
  if(id==="tol")return rem(()=>mut(CFGP,"PATCH",{tolerancia_min:Math.max(0,Math.floor(+v)||0)}),"Configuração atualizada");
+ if(id==="fmin")return rem(()=>mut(CFGP,"PATCH",{meta_minima:Math.min(1e7,Math.max(0,Math.floor(+v)||0))}),"Meta mínima salva");
  if(id==="and"){const on=e.target.checked;return rem(async()=>{await mut(CFGP,"PATCH",{ondas_em_andamento:on});
    if(!on)await api("/rest/v1/ondas?status=neq.0",{method:"PATCH",body:{status:0,concluida_em:new Date().toISOString(),encerrada_auto:true},prefer:"return=minimal"})},on?"Ondas em andamento ligadas":"Ondas em aberto foram concluídas")}
  if(d.ut2){const o=opOf(d.ut2);if(o)return rem(()=>mut("/rest/v1/operadores?id=eq."+o.id,"PATCH",{turno:+v,...turnoPadrao(+v)}),o.n+" agora no "+v+"º turno")}
@@ -882,7 +900,7 @@ function painel(){
   pct=metaT?Math.min(tot/metaT*100,100):0,nowP=isNow&&nf>=TW.ini&&nf<=F?(nf-TW.ini)/vao*100:null,
   esp=metaT?metaT*Math.min(Math.max(nf-TW.ini,0),vao)/vao:0,dif=tot-esp,passo=vao>12?2:1;
  let tk="";for(let x=TW.ini;x<=F;x+=passo)tk+=`<span style="left:${(x-TW.ini)/vao*100}%">${x%24}h</span>`;
- const msg=!metaT?"Meta de hoje não definida. Cadastre em Configurações, Galpões.":faltam<=0?"Meta batida":!isNow?"Faltaram "+fmt(faltam)+" para a meta":nf>F?"Turno encerrado, faltaram "+fmt(faltam):nf<TW.ini?"O turno ainda não começou":dif>=0?fmt(dif)+" à frente do ritmo":fmt(-dif)+" atrás do ritmo",
+ const msg=!metaT?"Meta de hoje não definida. Cadastre em Configurações, Metas.":faltam<=0?"Meta batida":!isNow?"Faltaram "+fmt(faltam)+" para a meta":nf>F?"Turno encerrado, faltaram "+fmt(faltam):nf<TW.ini?"O turno ainda não começou":dif>=0?fmt(dif)+" à frente do ritmo":fmt(-dif)+" atrás do ritmo",
   ruim=metaT&&faltam>0&&(!isNow||nf>F||(nf>=TW.ini&&dif<0));
  const PR=S.waves.filter(w=>w.st===1&&inView(w)&&(!g||w.gal===g));
  const K=(t,v,s)=>`<div class="kpi"><dt>${t}</dt><dd class="num">${v}</dd><dd class="sm">${s||""}</dd></div>`;
@@ -959,6 +977,36 @@ function ctlLive(){const el=$("#ctlLive");if(!el)return;let L=S.cfg.and?liveWave
   const open=CTLX.has(u.op)||(q&&g.length>1&&g.some(x=>nrm(String(x.wn||"")).includes(q))),hit=x=>q&&nrm(String(x.wn||"")).includes(q);
   return`<tr><td><div class="who2">${av(u.opn)}<div>${esc(u.opn)}<br><small>${esc(u.op.split("~")[0])}, ${esc(u.gal)}</small></div></div></td><td><b>${esc(wnS(u)||"—")}</b>${g.length>1?`<br><button type="button" class="pill" data-x="${esc(u.op)}" aria-expanded="${open}" style="min-height:28px;padding:2px 8px;margin-top:4px">${open?"Ocultar":"Ver"} +${g.length-1} ${g.length-1===1?"onda":"ondas"} do mesmo lançamento</button>`:""}</td><td>${esc(u.ty)}</td><td><b>${fmt(g.reduce((a,x)=>a+x.qty,0))}</b></td><td>${new Date(u.ts).toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"})}</td><td><b data-el="${u.ts}">${mm(Date.now()-u.ts)}</b><br><button type="button" class="pill" data-zt="${esc(g.map(x=>x.id).join(","))}" style="min-height:28px;padding:2px 8px;margin-top:4px" title="Tira esta espera da contagem de tempo. As unidades continuam contando.">Zerar tempo</button></td></tr>`
   +(open&&g.length>1?`<tr><td></td><td colspan="5"><table class="lanc"><tr><th>Onda</th><th>Tipo</th><th>Qtd</th><th>Hora</th></tr>${g.slice().sort((a,b)=>b.ts-a.ts).map(x=>`<tr${hit(x)?' style="background:var(--field)"':""}><td><b>${esc(wnS(x)||"—")}</b></td><td>${esc(x.ty)}</td><td>${fmt(x.qty)}</td><td>${hh(x.ts)}</td></tr>`).join("")}</table></td></tr>`:"")}).join("")+"</table>":`<div class="empty">${q&&all?"Nenhuma onda em andamento com essa onda ou nome.":"Nenhuma onda contando tempo agora."}</div>`)}
+/* Painel: ondas contando tempo agora e ondas concluídas do dia, logo abaixo dos indicadores */
+function painelVivo(){const pub=ON&&!me,bx=$("#vivo");if(!bx)return;bx.classList.toggle("hide",pub);if(pub)return;
+ const gs=$("#gal").value==="__all"?null:$("#gal").value;
+ let LV=S.cfg.and?liveWaves():[];if(gs)LV=LV.filter(x=>x.u.gal===gs);
+ const A=dayWaves().filter(inTurno).filter(w=>!gs||w.gal===gs),C=prod(A),bip=Array(48).fill(0),con=Array(48).fill(0),sl=t=>{const d=new Date(t);return d.getHours()*2+(d.getMinutes()>=30?1:0)};
+ A.forEach(w=>{bip[sl(w.ts)]+=w.qty});C.forEach(w=>{con[sl(w.fin||w.ts)]+=w.qty});
+ const tb=bip.reduce((a,b)=>a+b,0),tc=con.reduce((a,b)=>a+b,0);
+ $("#vivoN").textContent=LV.length+(LV.length===1?" onda em andamento":" ondas em andamento");$("#concN").textContent=fmt(C.length)+" concluídas";
+ if(!tb){$("#vivoC").innerHTML='<div class="empty">Ainda não há ondas bipadas neste dia.</div>';return}
+ const [i0,i1]=win48(bip.map((v,i)=>v+con[i])),n=i1-i0+1,W=860,Ht=190,L=50,R=14,T=22,B=26,pw=W-L-R,ph=Ht-T-B;
+ let a1=0,a2=0;const ab=[],ac=[];for(let k=0;k<48;k++){a1+=bip[k];a2+=con[k];ab.push(a1);ac.push(a2)}
+ const mx=Math.max(1,ab[i1]),step=Math.pow(10,Math.floor(Math.log10(mx))),top=Math.ceil(mx/step)*step,y=v=>T+ph-v/top*ph,x=k=>L+(n>1?pw*(k-i0)/(n-1):pw/2);
+ let g='';for(let k=0;k<=2;k++){const v=top*k/2;g+=`<line x1="${L}" x2="${W-R}" y1="${y(v)}" y2="${y(v)}" stroke="var(--line)"/><text x="${L-6}" y="${y(v)+4}" text-anchor="end" font-size="11" fill="var(--mut)">${fmt(v)}</text>`}
+ const pb=[],pc=[];for(let k=i0;k<=i1;k++){pb.push(x(k)+","+y(ab[k]));pc.push(x(k)+","+y(ac[k]))}
+ let lab='';for(let k=i0;k<=i1;k++)if(k%2===0||n<=10)lab+=`<text x="${x(k)}" y="${Ht-8}" text-anchor="middle" font-size="11" fill="var(--mut)">${k%2?(k>>1)+":30":(k>>1)+"h"}</text>`;
+ const ex=x(i1),gap=ab[i1]-ac[i1];
+ $("#vivoC").innerHTML=`<svg viewBox="0 0 ${W} ${Ht}" role="img" aria-label="Acumulado do dia: área com a quantidade bipada e linha com a quantidade concluída. Bipado ${fmt(tb)}, concluído ${fmt(tc)}." style="width:100%;height:auto;max-height:230px"><defs><linearGradient id="vvA" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="var(--t)" stop-opacity=".55"/><stop offset="1" stop-color="var(--t)" stop-opacity=".06"/></linearGradient></defs>${g}<polygon points="${x(i0)},${y(0)} ${pb.join(" ")} ${ex},${y(0)}" fill="url(#vvA)"/><polyline points="${pb.join(" ")}" fill="none" stroke="var(--t)" stroke-width="1.6" stroke-dasharray="5 4"/><polyline points="${pc.join(" ")}" fill="none" stroke="var(--g)" stroke-width="2.8" stroke-linejoin="round" stroke-linecap="round"/><circle cx="${ex}" cy="${y(ab[i1])}" r="4" fill="var(--t)"/><circle cx="${ex}" cy="${y(ac[i1])}" r="4.5" fill="var(--g)" stroke="var(--card,#fff)" stroke-width="1.5"/><text x="${ex-8}" y="${y(ab[i1])-8}" text-anchor="end" font-size="12" font-weight="700" fill="var(--mut)">bipado ${fmt(ab[i1])}</text>${gap>0?`<text x="${ex-8}" y="${y(ac[i1])+16}" text-anchor="end" font-size="12" font-weight="700" fill="var(--g)">concluído ${fmt(ac[i1])}</text>`:`<text x="${ex-8}" y="${y(ac[i1])+16}" text-anchor="end" font-size="12" font-weight="700" fill="var(--g)">concluído ${fmt(ac[i1])}</text>`}${lab}</svg>`}
+/* Acompanhamento: ondas concluídas do dia em páginas de 50 linhas */
+let ACEP=0;const ACE_N=50;
+function aceLista(){const el=$("#aceL");if(!el)return;
+ const q=nrm($("#aceQ").value).trim(),hm=t=>new Date(t).toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit",second:"2-digit"});
+ let P=prod(dayWaves()).sort((a,b)=>(b.fin||b.ts)-(a.fin||a.ts));const tot=P.length;
+ if(q)P=P.filter(w=>nrm(String(wnS(w)||"")).includes(q)||nrm(w.opn||"").includes(q)||nrm(w.op||"").includes(q)||nrm(w.ty||"").includes(q));
+ const pgs=Math.max(1,Math.ceil(P.length/ACE_N));ACEP=Math.min(Math.max(ACEP,0),pgs-1);const a=ACEP*ACE_N,R=P.slice(a,a+ACE_N);
+ $("#aceN").textContent=q?fmt(P.length)+" de "+fmt(tot):fmt(tot);
+ el.innerHTML=R.length?`<table><tr><th>Hora</th><th>Onda</th><th>Operador</th><th>Galpão</th><th>Tipo</th><th>Quantidade</th></tr>`+R.map(w=>`<tr><td>${hm(w.fin||w.ts)}</td><td><b>${esc(wnS(w)||"—")}</b></td><td>${esc(w.opn||w.op)}</td><td>${esc(w.gal||"")}</td><td>${esc(w.ty)}</td><td>${fmt(w.qty)}</td></tr>`).join("")+"</table>":`<div class="empty">${q?"Nenhuma onda concluída com essa busca.":"Ainda não há ondas concluídas neste dia."}</div>`;
+ $("#acePg").innerHTML=P.length>ACE_N?`<button class="btn alt sm" type="button" data-pg="-1"${ACEP?"":" disabled"}>Anterior</button><span>Página ${ACEP+1} de ${pgs}, linhas ${a+1} a ${a+R.length} de ${fmt(P.length)}</span><button class="btn alt sm" type="button" data-pg="1"${ACEP<pgs-1?"":" disabled"}>Próxima</button>`:(P.length?`<span>${fmt(P.length)} ${P.length===1?"onda":"ondas"}</span>`:"")}
+document.addEventListener("click",e=>{const b=e.target.closest("#acePg [data-pg]");if(b&&!b.disabled){ACEP+=+b.dataset.pg;aceLista()}});
+document.addEventListener("input",e=>{if(e.target.id==="aceQ"){ACEP=0;aceLista()}});
+document.addEventListener("change",e=>{if(e.target.id==="day")ACEP=0});
 function filters(){const f=(id,h,o)=>{const e=$(id),v=e.value;e.innerHTML=`<option value="">${h}</option>`+o.map(([a,b])=>`<option value="${a}">${esc(b)}</option>`).join("");e.value=v};
  f("#fOp","Operador",S.ops.map(o=>[o.m,o.n]));f("#fTy","Tipo",TY.map(t=>[t[0],t[0]]));f("#fSt","Status",[[1,"Procurando"],[2,"Difícil acesso"]])}
 function tick(){const a=$("#tauto");
@@ -1367,7 +1415,7 @@ function individual(){
   const rows=ops.map(o=>{const L=data.days.flatMap(d=>data.byOpDay.get(d+'|'+o.m)||[]),P=prod(L),days=data.days.map(d=>mgStatus(o,d,data.byOpDay.get(d+'|'+o.m)||[],data)),extra=data.days.map(d=>mgExtra(o,d,data.byOpDay.get(d+'|'+o.m)||[]));return{o,qty:P.reduce((s,w)=>s+w.qty,0),n:P.length,ref:mgReference(o,data),mi:metaInd(o,L),miss:days.filter(x=>x.startsWith('Falta')).length,pend:days.filter(x=>x.startsWith('Pendente')).length,ms:extra.reduce((s,x)=>s+x.ms,0),ot:extra.reduce((s,x)=>s+x.count,0),dia:mgDia(o,data)}});
   $("#iBody").innerHTML=destaques(rows,data)+`<div class="card" style="margin-top:14px"><h2>Equipe no período</h2><div class="tw"><table><tr><th>Operador</th><th>Turno</th><th>Primeiro bipe do dia</th><th>Possível atraso</th><th>Unidades / meta</th><th>Ondas / meta</th><th>Referência individual</th><th>Faltas injustificadas</th><th>Pendentes de conferência</th><th>Hora extra estimada</th></tr>`+
    rows.map(x=>`<tr><td><a href="#" data-pick="${esc(x.o.m)}">${esc(x.o.n)}</a><br><small>${esc(x.o.m.split('~')[0])}</small></td><td>${x.dia.t.ini}h às ${x.dia.t.fim}h</td><td>${x.dia.p?new Date(x.dia.p.ts).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}):'—'}</td><td>${x.dia.p&&x.dia.p.diff>0?'<span class="tag">Possível atraso: '+hh(x.dia.p.diff*6e4)+'</span>':'—'}</td><td><b>${x.mi.q?vsMeta(x.qty,x.mi.q):fmt(x.qty)}</b></td><td>${x.mi.o?vsMeta(x.n,x.mi.o):x.n}</td><td>${x.ref===null?'Sem meta':fmt(x.ref)+' un.'}</td><td>${x.miss}</td><td>${x.pend}</td><td>${x.ms?hh(x.ms):x.ot?'Sem medição':'—'}</td></tr>`).join('')+
-   `</table></div><div class="legend">As metas individuais (ondas e unidades por dia) vêm de Configurações, Galpões e valem para cada dia com bipagem. A referência divide a meta diária atual do galpão entre as pessoas com bipagem no dia. É uma referência ajustável pelo movimento, não um ranking. Pendente indica ausência de bipagem em dia com operação no turno; confirme folgas, atestados, declarações e outras atividades antes de registrar falta. Hora extra é estimada pelos intervalos entre bipagens, respeitando o intervalo máximo configurado.</div></div>`;return;
+   `</table></div><div class="legend">As metas individuais (ondas e unidades por dia) vêm de Configurações, Metas e valem para cada dia com bipagem. A referência divide a meta diária atual do galpão entre as pessoas com bipagem no dia. É uma referência ajustável pelo movimento, não um ranking. Pendente indica ausência de bipagem em dia com operação no turno; confirme folgas, atestados, declarações e outras atividades antes de registrar falta. Hora extra é estimada pelos intervalos entre bipagens, respeitando o intervalo máximo configurado.</div></div>`;return;
  }
  const o=selected,L=data.days.flatMap(d=>data.byOpDay.get(d+'|'+o.m)||[]),P=prod(L),qty=P.reduce((s,w)=>s+w.qty,0),ref=mgReference(o,data);
  const daily=data.days.slice().reverse().filter(d=>mgEligible(o,d)).map(d=>{const w=data.byOpDay.get(d+'|'+o.m)||[],p=prod(w),x=mgExtra(o,d,w);return{d,w,p,x,status:mgStatus(o,d,w,data)}}),miss=daily.filter(x=>x.status.startsWith('Falta')).length,pend=daily.filter(x=>x.status.startsWith('Pendente')).length,extra=daily.reduce((s,x)=>s+x.x.ms,0),ot=daily.reduce((s,x)=>s+x.x.count,0);
@@ -1397,7 +1445,7 @@ function coletiva(){
  target.innerHTML=`<dl class="stats solo">`+mgK('Produção coletiva',fmt(total),'unidades concluídas')+mgK('Pessoas com bipagem',fmt(people),'no período')+mgK('Ondas concluídas',fmt(P.length),'compartilhadas pela equipe')+mgK('Procurando',fmt(W.filter(w=>w.st===1).length),fmt(W.filter(w=>w.st===1).reduce((a,w)=>a+w.qty,0))+' unidades')+mgK('Meta coletiva',canCompare?fmt(configured):'—',t?'disponível em todos os turnos':missing.length?'configure a meta dos galpões':'dias com operação')+mgK('Atingimento',canCompare?fmt(total/configured*100)+'%':'—',canCompare?'da meta coletiva':'sem comparação disponível')+`</dl>
  <div class="grid two" style="margin-top:14px"><div class="card"><h2>Produção por tipo de onda</h2>${bars(types)}</div><div class="card"><h2>Critério da meta coletiva</h2><div class="ins"><div>Somamos as unidades concluídas da equipe, sem ranking de pessoas.</div><div>A meta é a soma da meta diária atual dos galpões nos dias com bipagem registrada e no dia de hoje.</div><div>A meta cadastrada cobre o dia inteiro. Por isso, a comparação aparece somente com todos os turnos selecionados.</div><div>Faltas e horas extras não geram descontos automáticos. Os tipos são mostrados separadamente porque têm dificuldades diferentes. No histórico usamos a meta e os turnos atualmente cadastrados.</div></div></div></div>
  <div class="card" style="margin-top:14px"><h2>Total por tipo e tempo entre ondas</h2><div class="tw">${coTipos(W,P,people)}</div><div class="legend">Tempo por conjunto: da bipagem de um conjunto de ondas (bipadas no mesmo instante) até a bipagem seguinte do mesmo operador, ignorando pausas acima de ${GAP()} min. A média por pessoa divide o total pelas ${fmt(people)} pessoas com bipagem no período.</div></div>
- ${missing.length?`<div class="legend">Galpões sem meta diária: ${missing.map(esc).join(', ')}. Cadastre em Config → Galpões.</div>`:''}`;
+ ${missing.length?`<div class="legend">Galpões sem meta diária: ${missing.map(esc).join(', ')}. Cadastre em Config → Metas.</div>`:''}`;
 }
 
 
@@ -1421,9 +1469,15 @@ function cfgUsers(){
   :'<div class="empty">Nenhum usuário cadastrado.</div>'}
 function soMeta(){return ON&&!!me&&!me.adm}
 function cfgGals(){const gest=soMeta();$("#gNovo").classList.toggle("hide",gest);
- $("#gL").previousElementSibling.textContent=gest?"Meta de hoje":"Galpões";$("#gLeg").textContent=gest?"A meta vale só para hoje: cada dia começa sem meta e você preenche de novo.":"A meta vale só para o dia de hoje: cada dia começa sem meta e você preenche de novo. Os dias anteriores ficam salvos. Renomear um galpão atualiza os registros já lançados.";
- $("#gL").innerHTML=`<table><tr><th>Galpão</th><th>Meta de hoje</th><th>Meta individual: ondas/dia</th><th>Meta individual: unidades/dia</th>${gest?"":"<th>Registros</th><th></th>"}</tr>`+S.gals.map((g,i)=>[g,i]).filter(x=>!gest||x[0]===me.g).map(([g,i])=>{const n=S.waves.filter(w=>w.gal===g).length;
-  return`<tr><td>${gest?`<b>${esc(g)}</b>`:`<input data-gre="${i}" value="${esc(g)}" aria-label="Nome do galpão">`}</td><td><input type="number" min="0" data-gmeta="${esc(g)}" aria-label="Meta de hoje de ${esc(g)}" value="${MT()[g]||""}" placeholder="sem meta" style="width:130px"></td><td><input type="number" min="0" data-gmo="${esc(g)}" aria-label="Meta individual de ondas por dia em ${esc(g)}" value="${(MI()[g]||{}).o||""}" placeholder="sem meta" style="width:110px"></td><td><input type="number" min="0" data-gmq="${esc(g)}" aria-label="Meta individual de unidades por dia em ${esc(g)}" value="${(MI()[g]||{}).q||""}" placeholder="sem meta" style="width:110px"></td>${gest?"":`<td>${n}</td><td><button class="btn d sm" data-gdel="${i}"${S.gals.length<2?" disabled style='opacity:.4'":""}>Excluir</button></td>`}</tr>`}).join("")+"</table>"}
+ $("#gL").innerHTML=`<table><tr><th>Galpão</th><th>Registros</th><th></th></tr>`+S.gals.map((g,i)=>[g,i]).filter(x=>!gest||x[0]===me.g).map(([g,i])=>{const n=S.waves.filter(w=>w.gal===g).length;
+  return`<tr><td>${gest?`<b>${esc(g)}</b>`:`<input data-gre="${i}" value="${esc(g)}" aria-label="Nome do galpão">`}</td><td>${n}</td><td>${gest?"":`<button class="btn d sm" data-gdel="${i}"${S.gals.length<2?" disabled style='opacity:.4'":""}>Excluir</button>`}</td></tr>`}).join("")+"</table>"}
+/* aba Metas: meta do dia, metas individuais e meta mínima da animação */
+function cfgMetas(){const gest=soMeta();
+ $("#mTit").textContent=gest?"Meta de hoje":"Metas por galpão";
+ $("#mtL").innerHTML=`<table><tr><th>Galpão</th><th>Meta de hoje<br><small>unidades no dia</small></th><th>Meta individual<br><small>ondas por dia</small></th><th>Meta individual<br><small>unidades por dia</small></th></tr>`+S.gals.filter(g=>!gest||g===me.g).map(g=>`<tr><td><b>${esc(g)}</b></td><td><input type="number" min="0" data-gmeta="${esc(g)}" aria-label="Meta de hoje de ${esc(g)}" value="${MT()[g]||""}" placeholder="sem meta" style="width:130px"></td><td><input type="number" min="0" data-gmo="${esc(g)}" aria-label="Meta individual de ondas por dia em ${esc(g)}" value="${(MI()[g]||{}).o||""}" placeholder="sem meta" style="width:110px"></td><td><input type="number" min="0" data-gmq="${esc(g)}" aria-label="Meta individual de unidades por dia em ${esc(g)}" value="${(MI()[g]||{}).q||""}" placeholder="sem meta" style="width:110px"></td></tr>`).join("")+"</table>";
+ $("#mLeg").textContent="A meta de hoje vale só para o dia de hoje: cada dia começa sem meta e você preenche de novo, e os dias anteriores ficam salvos. As metas individuais valem para cada dia com bipagem.";
+ const fm=$("#fmin");if(fm&&document.activeElement!==fm)fm.value=S.cfg.metaMin||"";
+ const mn=+S.cfg.metaMin||0;$("#fLeg").textContent=mn?"A festa abre sozinha, uma vez por dia, quando a produção do dia chegar à meta e a pelo menos "+fmt(mn)+" unidades. Abaixo disso o placar só fica dourado.":"Sem mínimo: a festa abre sozinha, uma vez por dia, assim que a produção do dia chegar à meta. Informe um valor para só comemorar metas a partir dele."}
 function cfgGes(){
  $("#mG").innerHTML=S.gals.map(g=>`<option>${esc(g)}</option>`).join("");
  $("#pedL").innerHTML=SOL.length?`<table><tr><th>E-mail</th><th></th></tr>`+SOL.map(s=>`<tr><td><b>${esc(s.nome||"Sem nome")}</b><br>${esc(s.email)}<br><small style="color:var(--mut)">${esc((s.galpao_id&&GN[s.galpao_id])||"sem galpão")}, pediu em ${new Date(s.criado_em).toLocaleDateString("pt-BR")}</small></td><td style="white-space:nowrap"><button class="btn sm" data-sacc="${esc(s.email)}">Aceitar</button> <button class="btn d sm" data-srec="${esc(s.email)}">Recusar</button></td></tr>`).join("")+"</table>"
@@ -1431,7 +1485,7 @@ function cfgGes(){
  $("#mL").innerHTML=S.ges.length?`<table><tr><th>Gestor</th><th>Login</th><th>Permissões</th><th></th></tr>`+S.ges.map((m,i)=>
   `<tr><td>${esc(m.n)}<br><small style="color:var(--mut)">${esc(m.g||"sem galpão")}</small>${m.adm?' <span class="tag">admin</span>':""}</td><td>${esc(m.u)}${ON?"":m.p?' <span class="tag">senha</span>':' <span class="tag t2">sem senha</span>'}</td><td style="font-size:12px">${[m.pC&&"config",m.pI&&"individual",m.pR&&"registros"].filter(Boolean).join(", ")||"—"}</td><td><button class="btn d sm" data-mdel="${i}">Excluir</button></td></tr>`).join("")+"</table>"
   :'<div class="empty">Nenhum gestor cadastrado. Configurações e Individual estão abertos.</div>'}
-function cfgRender(){cfgOp();cfgUsers();cfgGals();cfgGes();cfgMan()}
+function cfgRender(){cfgOp();cfgUsers();cfgMetas();cfgGals();cfgGes();cfgMan()}
 /* manutenção: só o administrador apaga registros por período; o servidor confere a permissão */
 function xMan(){const de=$("#xDe").value,ate=$("#xAte").value,gn=$("#xGal").value;
  if(!de||!ate){toast("Informe o período (de e até)");return null}
@@ -1629,7 +1683,7 @@ const needAuth=k=>ON?!me:S.ges.length>0&&!(me&&(k==="cfg"?me.pC:me.pI));
 const isI=t=>t==="ind"||t==="his";
 /* aba só aparece se o perfil atual pode abri-la; o que não é acessível fica oculto */
 function podeVer(t){if(t==="op"||t==="painel"||t==="prs")return true;if(ON)return !!me&&(isI(t)?!!me.pI:!!me.pC);if(t==="painel")return true;return !needAuth(t)}
-function updTabs(){$$(".tab[data-t]").forEach(b=>{b.style.display=podeVer(b.dataset.t)?"":"none"});$$('#csub [data-c="cga"]').forEach(b=>{b.textContent=soMeta()?"Meta do dia":"Galpões"});$$('#csub [data-c="cge"]').forEach(b=>{b.style.display=soMeta()?"none":""});$$('#csub [data-c="cma"]').forEach(b=>{b.style.display=(!ON||(me&&me.adm))?"":"none"});if(!podeVer(view)){view="op";["painel","op","prs","ind","his","cfg"].forEach(s=>$("#"+s).classList.toggle("hide",s!=="op"));$$(".tab[data-t]").forEach(b=>b.classList.toggle("on",b.dataset.t==="op"))}}
+function updTabs(){$$(".tab[data-t]").forEach(b=>{b.style.display=podeVer(b.dataset.t)?"":"none"});$$('#csub [data-c="cga"]').forEach(b=>{b.style.display=soMeta()?"none":""});$$('#fCard').forEach(c=>c.classList.toggle("hide",soMeta()));$$('#csub [data-c="cge"]').forEach(b=>{b.style.display=soMeta()?"none":""});$$('#csub [data-c="cma"]').forEach(b=>{b.style.display=(!ON||(me&&me.adm))?"":"none"});if(!podeVer(view)){view="op";["painel","op","prs","ind","his","cfg"].forEach(s=>$("#"+s).classList.toggle("hide",s!=="op"));$$(".tab[data-t]").forEach(b=>b.classList.toggle("on",b.dataset.t==="op"))}}
 let hWho="";
 function authUI(){const w=me?me.n+"|"+(me.g||"")+"|"+(me.adm?1:0):"";if(w!==hWho){hWho=w;hKey="";HW=null;HPW=null}$("#who").textContent=me?"Gestor: "+me.n:"";const pub=ON&&!me;["#turnoF","#gal","#day"].forEach(i=>$(i).classList.toggle("hide",pub));if(pub){$("#turnoF").value="";$("#day").value=dk(Date.now())}$("#logtx").textContent=me?"Sair":"Entrar";updTabs()}
 function go(t){setTimeout(()=>{try{sideSubs()}catch(e){}},0);
@@ -1662,7 +1716,7 @@ const visG=()=>restricted()?[myG()]:S.gals;
 const inTurno=w=>{const f=$("#turnoF").value;if(!f)return true;const o=opOf(w.op);return!!o&&String(o.t)===f};
 function galSel(){const e=$("#gal"),v=e.value;e.innerHTML=(restricted()?"":'<option value="__all">Visão geral</option>')+visG().map(g=>`<option>${esc(g)}</option>`).join("");
  if(restricted()){S.gal=myG();e.value=myG();e.disabled=true}else{e.value=S.gals.includes(v)||v==="__all"?v:S.gal;e.disabled=false}}
-function renderAll(){netUI();galSel();if(ON&&!me){if(view==="painel")painelPublico()}else painel();operacao();procurando();filters();
+function renderAll(){netUI();galSel();if(ON&&!me){if(view==="painel")painelPublico()}else painel();painelVivo();aceLista();operacao();procurando();filters();
  $("#sub2").textContent=new Date($("#day").value+"T12:00").toLocaleDateString("pt-BR",{weekday:"long",day:"numeric",month:"long",year:"numeric"});
  if(view==="ind"){individual();coletiva();if(gsub==="chk")checking()}if(view==="his")hisRender()}
 
@@ -1778,8 +1832,8 @@ document.addEventListener("click",e=>{const t=e.target;if(t.id==="prAdd"){const 
  const a=t.closest&&t.closest("[data-prf]");if(a)prAbrir(a.dataset.prf,"finalizar");const b=t.closest&&t.closest("[data-prb]");if(b)prAbrir(b.dataset.prb,"baixa")});
 function psub(k){window.__ps=k;$$("#psub button").forEach(b=>b.classList.toggle("on",b.dataset.p===k));[["bip","pBip"],["sku","pSku"],["his","pHis"]].forEach(([a,id])=>$("#"+id).classList.toggle("hide",a!==k));setTimeout(()=>{if(view!=="prs")return;const f=k==="bip"?$("#prBip"):k==="sku"?$("#prQ"):null;if(f)f.focus({preventScroll:true})},60)}
 $("#psub").onclick=e=>{const k=e.target.dataset.p;if(k)psub(k)};
-$("#sub").onclick=e=>{const s=e.target.dataset.s;if(!s)return;$$("#sub button").forEach(b=>b.classList.toggle("on",b===e.target));["reg","ctl","ace"].forEach(x=>$("#"+x).classList.toggle("hide",x!==s));tick()};
-$("#csub").onclick=e=>{const c=e.target.dataset.c;if(!c)return;csub=c;$$("#csub button").forEach(b=>b.classList.toggle("on",b===e.target));["cop","cus","cga","cge","cma"].forEach(x=>$("#"+x).classList.toggle("hide",x!==c));if(c==="cge"&&ON&&me&&me.adm)pull().then(()=>cfgGes()).catch(()=>{});if(c==="cma")cfgMan()};
+$("#sub").onclick=e=>{const s=e.target.dataset.s;if(!s)return;$$("#sub button").forEach(b=>b.classList.toggle("on",b===e.target));["reg","ctl","ace"].forEach(x=>$("#"+x).classList.toggle("hide",x!==s));tick();if(s==="ace")aceLista()};
+$("#csub").onclick=e=>{const c=e.target.dataset.c;if(!c)return;csub=c;$$("#csub button").forEach(b=>b.classList.toggle("on",b===e.target));["cop","cus","cme","cga","cge","cma"].forEach(x=>$("#"+x).classList.toggle("hide",x!==c));if(c==="cge"&&ON&&me&&me.adm)pull().then(()=>cfgGes()).catch(()=>{});if(c==="cma")cfgMan()};
 $("#iPrint").onclick=imprimirFolhas;$("#iOp").onchange=()=>{mgShown=100;individual()};$("#iPer").onchange=()=>{mgShown=100;individual();coletiva();loadManagement()};
 $("#iBody").addEventListener("click",e=>{if(e.target.id==="mgMore"){mgShown+=100;individual()}if(e.target.id==="mgTurnoSave")mgSalvarTurno();if(e.target.id==="presSalvar")presSalvar();if(e.target.id==="presBaixa")presBaixa();if(e.target.id==="presAtrSalvar")presAtrSalvar();if(e.target.dataset&&e.target.dataset.cancel)presCancelar(e.target.dataset.cancel)});
 const hojeSemana=()=>mondayOf(dk(Date.now()));
@@ -1906,6 +1960,7 @@ document.addEventListener("change",e=>{const d=e.target.dataset,id=e.target.id;l
   if(!S.cfg.and){let n=0;S.waves.forEach(w=>{if(w.st!==0){w.st=0;w.fin=Date.now();w.auto=1;w.sync=online()?1:0;n++}});toast(n+" onda(s) finalizada(s) automaticamente")}r=true}
  if(id==="gap"){S.cfg.gap=Math.min(60,Math.max(1,+e.target.value||30));e.target.value=S.cfg.gap;r=true}
  if(id==="tol"){S.cfg.tol=Math.max(0,+e.target.value||0);r=true}
+ if(id==="fmin"){S.cfg.metaMin=Math.min(1e7,Math.max(0,Math.floor(+e.target.value)||0));r=true;toast("Meta mínima salva")}
  if(d.ut2){const o=opOf(d.ut2);if(o){o.t=+e.target.value;r=true;toast(o.n+" → "+o.t+"º turno")}}
  if(d.ug2){const o=opOf(d.ug2);if(o){o.g=e.target.value;r=true}}
  if(d.gre!==undefined){const i=+d.gre,old=S.gals[i],nv=e.target.value.trim();
@@ -2014,10 +2069,17 @@ function celebrar(tot,meta,onde,ex){
   for(let i=CF.length-1;i>=0;i--){const p=CF[i];p.t+=dt;const d=Math.pow(.982,dt);p.vx=p.vx*d+Math.sin(p.t*.05+p.r)*.06*dpr*dt;p.vy=p.vy*d+.3*dpr*dt;if(p.vy>4.2*dpr)p.vy=4.2*dpr;p.x+=p.vx*dt;p.y+=p.vy*dt;p.r+=p.vr*dt;if(p.t>p.l||p.y>H+40){CF.splice(i,1);continue}const sq=Math.cos(p.t*.13+p.r);C.save();C.translate(p.x,p.y);C.rotate(p.r);C.fillStyle=p.c;C.globalAlpha=p.t>p.l-30?(p.l-p.t)/30:1;if(p.o===2){C.beginPath();C.ellipse(0,0,p.w*.55,Math.abs(p.w*.55*sq)+.5,0,0,7);C.fill()}else C.fillRect(-p.w/2,-p.h*Math.abs(sq)/2,p.w,p.h*Math.abs(sq)+1);C.restore()}
   if(shake>.4){box.style.transform='translate('+R(-shake,shake).toFixed(1)+'px,'+R(-shake,shake).toFixed(1)+'px)';shake*=Math.pow(.86,dt)}else if(shake){shake=0;box.style.transform=''}
   if(el2<14500||RK.length||SP.length||CF.length||ST.length)requestAnimationFrame(loop)})(t0)}
-/* placar dourado quando a meta está batida; a festa em tela cheia só acontece ao apertar o botão */
+/* placar dourado quando a meta está batida; a festa abre sozinha uma vez por dia (se passar da meta mínima) e pode ser revista pelo botão */
+function festaJa(k){try{return localStorage.getItem('rcFesta|'+k)==='1'}catch(e){return false}}
+function festaMarca(k){try{localStorage.setItem('rcFesta|'+k,'1');for(let i=localStorage.length-1;i>=0;i--){const n=localStorage.key(i);if(n&&n.indexOf('rcFesta|')===0&&n.indexOf('rcFesta|'+hoje())!==0)localStorage.removeItem(n)}}catch(e){}}
 function metaCheck(tot,meta,g,ex){
  const pl=document.querySelector('#kpis .placar');if(!pl)return;const ok=meta>0&&tot>=meta;pl.classList.toggle('win',ok);if(!ok)return;
- const onde=g&&g!=='__all'?g:'',b=document.createElement('button');b.type='button';b.className='mbBadge';b.innerHTML='<span aria-hidden="true">🏆</span>Meta batida! Comemorar';b.onclick=()=>celebrar(tot,meta,onde,ex);const alvo=pl.querySelector('.un');if(alvo)alvo.after(b)}
+ const mn=+S.cfg.metaMin||0;if(tot<mn)return;
+ const onde=g&&g!=='__all'?g:'',b=document.createElement('button');b.type='button';b.className='mbBadge';b.innerHTML='<span aria-hidden="true">🏆</span>Meta batida! Comemorar';b.onclick=()=>celebrar(tot,meta,onde,ex);const alvo=pl.querySelector('.un');if(alvo)alvo.after(b);
+ const dia=$("#day"),k=hoje()+'|'+(onde||'__all');
+ if(window.__semFesta||document.hidden||view!=='painel'||$("#mb")||(dia&&dia.value!==dk(Date.now()))||festaJa(k))return;
+ festaMarca(k);setTimeout(()=>{if(!$("#mb")&&!document.hidden&&view==='painel')celebrar(tot,meta,onde,ex)},700)}
+document.addEventListener('click',e=>{if(!e.target.closest('#fTeste'))return;const mn=+S.cfg.metaMin||0,t=Math.max(mn,1200),was=window.__semFesta;window.__semFesta=false;celebrar(t,Math.max(1,Math.min(t,mn||t)),'',{ondas:48,pessoas:12,top:[{n:'Maria Silva',v:Math.round(t*.22)},{n:'João Souza',v:Math.round(t*.18)},{n:'Ana Lima',v:Math.round(t*.15)}],hit:'15:40'});window.__semFesta=was});
 </script>
 </body>
 </html>
