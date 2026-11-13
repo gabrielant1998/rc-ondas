@@ -79,6 +79,7 @@ function fake(db){const cors={'access-control-allow-origin':'*','access-control-
   if(t==='tipos_onda'&&m==='PATCH'){const o=db.tipos.find(x=>x.nome===eq('nome'));if(!o||!(g&&g.admin))return J(route,200,[]);Object.assign(o,body);return J(route,200,[o])}
   if(t==='config'&&m==='PATCH'){if(!(g&&g.admin))return J(route,200,[]);Object.assign(db.config[0],body);return J(route,200,db.config)}
   if(t==='gestores'&&m==='POST'){if(!(g&&g.admin))return J(route,403,{code:'42501',message:'rls'});if(db.gestores.some(x=>x.email===body.email))return J(route,409,{code:'23505',message:'dup'});db.gestores.push(body);return J(route,201,[body])}
+  if(t==='gestores'&&m==='PATCH'){const o=db.gestores.find(x=>x.email===eq('email'));if(!o||!(g&&g.admin))return J(route,403,{code:'42501',message:'rls'});Object.assign(o,body);return J(route,200,[o])}
   if(t==='gestores'&&m==='DELETE'){const o=db.gestores.find(x=>x.email===eq('email'));if(!o||!(g&&g.admin))return J(route,200,[]);db.gestores=db.gestores.filter(x=>x!==o);return J(route,200,[o])}
   if(t==='ondas'&&(m==='PATCH'||m==='DELETE')){const alvo=db.ondas.filter(o=>(eq('id')?o.id===eq('id'):o.status!==0)&&g&&g.pode_registros&&escopo(o.galpao_id));
    if(m==='DELETE')db.ondas=db.ondas.filter(o=>!alvo.includes(o));else alvo.forEach(o=>Object.assign(o,body));return J(route,200,alvo)}
@@ -352,6 +353,21 @@ await T('S28 Zerar tempo grava no servidor e some da contagem',async()=>{const d
  await p.evaluate(()=>zerarTempo(S.waves.filter(w=>w.wn==='ZT1').map(w=>w.id)));await p.waitForTimeout(500);
  ok(db.ondas.find(o=>o.id==='zz1').tempo_zerado===true,'servidor não marcou');
  ok(await p.evaluate(()=>S.waves.find(w=>w.wn==='ZT1').zt===1),'cliente não marcou')});
+
+await T('S31 Admin restringe abas de um gestor; gestor vê só as liberadas e não entra nas outras',async()=>{const db=banco();const p=await page(b,db);await login(p,'adm@x.com','senha1234');await p.click('.tab[data-t="cfg"]');await p.click('[data-c="cge"]');
+ await p.click('#mL tr:has-text("g2@x.com") [data-mabas]');await p.waitForTimeout(300);
+ for(const k of ['prs','his','cfg'])await p.uncheck('#mAbas [data-abk="'+k+'"]');
+ await p.click('#mAbas [data-abs="salvar"]');await p.waitForTimeout(600);
+ const g2=db.gestores.find(g=>g.email==='g2@x.com');ok(JSON.stringify(g2.abas)==='["painel","op","ind"]','abas gravadas: '+JSON.stringify(g2.abas));
+ const p2=await page(b,db);await login(p2,'g2@x.com','senha1234');await p2.waitForTimeout(300);
+ ok(await p2.isVisible('.tab[data-t="ind"]'),'Gestão deveria aparecer');
+ ok(!(await p2.isVisible('.tab[data-t="his"]')),'Histórico não deveria aparecer');
+ ok(!(await p2.isVisible('.tab[data-t="cfg"]')),'Config não deveria aparecer');
+ await p2.evaluate(()=>go('cfg'));await p2.waitForTimeout(300);
+ ok(await p2.evaluate(()=>view)!=='cfg','entrou em Config sem permissão');
+ await p.click('#mL tr:has-text("g2@x.com") [data-mabas]');await p.waitForTimeout(300);
+ await p.click('#mAbas [data-abs="todas"]');await p.waitForTimeout(600);
+ ok(db.gestores.find(g=>g.email==='g2@x.com').abas===null,'liberar todas não gravou null')});
 await b.close();
 const w=Math.max(...R.map(r=>r[1].length));for(const r of R)console.log((r[0]==='PASS'?'✅':'❌')+' '+r[1].padEnd(w)+'  '+r[2]);
 console.log(`\n${R.filter(r=>r[0]==='PASS').length}/${R.length} passaram`)})();

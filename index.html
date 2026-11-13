@@ -491,7 +491,7 @@ a[data-pick]{display:inline-block;padding:8px 0 2px;color:var(--gx);font-weight:
    <label class="row"><input type="checkbox" id="mA" style="min-height:auto"> Administrador (vê todos os galpões)</label>
    <button class="btn" id="mB">Criar gestor</button></div></div>
   <div class="card"><h2>Pedidos de acesso</h2><div class="tw" id="pedL"></div><div class="legend">Para liberar, preencha nome, galpão e permissões no formulário ao lado e clique em Aceitar.</div></div>
-  <div class="card"><h2>Gestores</h2><div class="tw" id="mL"></div><div class="legend">Enquanto não existir nenhum gestor, Configurações e Individual ficam abertos. Depois do primeiro gestor, passam a exigir login.</div></div>
+  <div class="card"><h2>Gestores</h2><div class="tw" id="mL"></div><div id="mAbas"></div><div class="legend">Enquanto não existir nenhum gestor, Configurações e Individual ficam abertos. Depois do primeiro gestor, passam a exigir login.</div></div>
  </div>
 </section>
 </main>
@@ -614,7 +614,7 @@ async function pull(){
  if(sess){
   const mt=await api("/rest/v1/metas_diarias?select=galpao_id,meta&data=eq."+hoje());const dh=hoje();S.metasDia[dh]={};mt.forEach(x=>{const n=GN[x.galpao_id];if(n)S.metasDia[dh][n]=x.meta});
   const g=await api("/rest/v1/gestores?select=*&order=nome");
-  S.ges=g.map(x=>({n:x.nome,u:x.email,g:x.galpao_id?GN[x.galpao_id]:null,adm:x.admin,pC:x.pode_config,pI:x.pode_individual,pR:x.pode_registros}));
+  S.ges=g.map(x=>({n:x.nome,u:x.email,g:x.galpao_id?GN[x.galpao_id]:null,adm:x.admin,pC:x.pode_config,pI:x.pode_individual,pR:x.pode_registros,ab:x.abas||null}));
   me=S.ges.find(x=>x.u===sess.email)||null;
   if(!me){S.ges=[];SOL=[];const pd=pedidoPendente();try{await api("/rest/v1/rpc/solicitar_acesso",{method:"POST",body:{p_nome:pd?pd.nome:null,p_galpao:(pd&&GID[pd.galpao])||null}});localStorage.removeItem("rcondas.pedido");pedidoDados=null}catch(e){}setSess(null);toast("Ainda sem acesso. Pedido enviado ao administrador: quando ele liberar, entre de novo.",8000)}
   else{if(me.g)S.gal=me.g;SOL=[];if(me.adm)try{SOL=await api("/rest/v1/solicitacoes_gestor?select=email,criado_em,nome,galpao_id&order=criado_em")}catch(e){}}}
@@ -1443,11 +1443,12 @@ function cfgMetas(){const gest=soMeta();
  const fm=$("#fmin");if(fm&&document.activeElement!==fm)fm.value=S.cfg.metaMin||"";
  const mn=+S.cfg.metaMin||0;$("#fLeg").textContent=mn?"A festa abre sozinha, uma vez por dia, quando a produção do dia chegar à meta e a pelo menos "+fmt(mn)+" unidades. Abaixo disso o placar só fica dourado.":"Sem mínimo: a festa abre sozinha, uma vez por dia, assim que a produção do dia chegar à meta. Informe um valor para só comemorar metas a partir dele."}
 function cfgGes(){
+ const mb=$("#mAbas");if(mb){const m=mAbasU?S.ges.find(x=>x.u===mAbasU):null;if(!m)mb.innerHTML="";else{const cur=m.ab||ABAS_T.map(a=>a[0]);mb.innerHTML=`<div class="f" style="margin-top:14px;padding-top:12px;border-top:1px solid var(--line)"><b>Abas que ${esc(m.n)} pode ver</b><div class="legend">Administradores veem todas as abas. Desmarque para esconder abas deste gestor.</div>${ABAS_T.map(([k,l])=>`<label class="row"><input type="checkbox" data-abk="${k}" style="min-height:auto"${cur.includes(k)?" checked":""}> ${l}</label>`).join("")}<div class="ctl"><button class="btn sm" data-abs="salvar" type="button">Salvar abas</button> <button class="btn alt sm" data-abs="todas" type="button">Liberar todas</button> <button class="btn alt sm" data-abs="fechar" type="button">Fechar</button></div></div>`}}
  $("#mG").innerHTML=S.gals.map(g=>`<option>${esc(g)}</option>`).join("");
  $("#pedL").innerHTML=SOL.length?`<table><tr><th>E-mail</th><th></th></tr>`+SOL.map(s=>`<tr><td><b>${esc(s.nome||"Sem nome")}</b><br>${esc(s.email)}<br><small style="color:var(--mut)">${esc((s.galpao_id&&GN[s.galpao_id])||"sem galpão")}, pediu em ${new Date(s.criado_em).toLocaleDateString("pt-BR")}</small></td><td style="white-space:nowrap"><button class="btn sm" data-sacc="${esc(s.email)}">Aceitar</button> <button class="btn d sm" data-srec="${esc(s.email)}">Recusar</button></td></tr>`).join("")+"</table>"
   :'<div class="empty">Nenhum pedido de acesso pendente.</div>';
  $("#mL").innerHTML=S.ges.length?`<table><tr><th>Gestor</th><th>Login</th><th>Permissões</th><th></th></tr>`+S.ges.map((m,i)=>
-  `<tr><td>${esc(m.n)}<br><small style="color:var(--mut)">${esc(m.g||"sem galpão")}</small>${m.adm?' <span class="tag">admin</span>':""}</td><td>${esc(m.u)}${ON?"":m.p?' <span class="tag">senha</span>':' <span class="tag t2">sem senha</span>'}</td><td style="font-size:12px">${[m.pC&&"config",m.pI&&"individual",m.pR&&"registros"].filter(Boolean).join(", ")||"—"}</td><td><button class="btn d sm" data-mdel="${i}">Excluir</button></td></tr>`).join("")+"</table>"
+  `<tr><td>${esc(m.n)}<br><small style="color:var(--mut)">${esc(m.g||"sem galpão")}</small>${m.adm?' <span class="tag">admin</span>':""}</td><td>${esc(m.u)}${ON?"":m.p?' <span class="tag">senha</span>':' <span class="tag t2">sem senha</span>'}</td><td style="font-size:12px">${[m.pC&&"config",m.pI&&"individual",m.pR&&"registros"].filter(Boolean).join(", ")||"—"}<br><small style="color:var(--mut)">Abas: ${m.ab?ABAS_T.filter(a=>m.ab.includes(a[0])).map(a=>a[1]).join(", "):"todas"}</small></td><td style="white-space:nowrap">${(!ON||(me&&me.adm))?`<button class="btn alt sm" data-mabas="${esc(m.u)}">Abas</button> `:""}<button class="btn d sm" data-mdel="${i}">Excluir</button></td></tr>`).join("")+"</table>"
   :'<div class="empty">Nenhum gestor cadastrado. Configurações e Individual estão abertos.</div>'}
 function cfgRender(){cfgOp();cfgUsers();cfgMetas();cfgGals();cfgGes();cfgMan()}
 /* manutenção: só o administrador apaga registros por período; o servidor confere a permissão */
@@ -1653,13 +1654,14 @@ function hisRender(){
 
 /* ===================== acesso ===================== */
 const needAuth=k=>ON?!me:S.ges.length>0&&!(me&&(k==="cfg"?me.pC:me.pI));
+const ABAS_T=[["painel","Painel"],["op","Operação"],["prs","Procurando"],["ind","Gestão operacional"],["his","Histórico"],["cfg","Config"]];let mAbasU=null;
 const isI=t=>t==="ind"||t==="his";
 /* aba só aparece se o perfil atual pode abri-la; o que não é acessível fica oculto */
-function podeVer(t){if(t==="op"||t==="painel"||t==="prs")return true;if(ON)return !!me&&(isI(t)?!!me.pI:!!me.pC);if(t==="painel")return true;return !needAuth(t)}
+function podeVer(t){if(ON&&me&&!me.adm&&me.ab&&!me.ab.includes(t))return false;if(t==="op"||t==="painel"||t==="prs")return true;if(ON)return !!me&&(isI(t)?!!me.pI:!!me.pC);if(t==="painel")return true;return !needAuth(t)}
 function updTabs(){$$(".tab[data-t]").forEach(b=>{b.style.display=podeVer(b.dataset.t)?"":"none"});$$('#csub [data-c="cga"]').forEach(b=>{b.style.display=soMeta()?"none":""});$$('#fCard').forEach(c=>c.classList.toggle("hide",soMeta()));$$('#csub [data-c="cge"]').forEach(b=>{b.style.display=soMeta()?"none":""});$$('#csub [data-c="cma"]').forEach(b=>{b.style.display=(!ON||(me&&me.adm))?"":"none"});if(!podeVer(view)){view="op";["painel","op","prs","ind","his","cfg"].forEach(s=>$("#"+s).classList.toggle("hide",s!=="op"));$$(".tab[data-t]").forEach(b=>b.classList.toggle("on",b.dataset.t==="op"))}}
 let hWho="";
 function authUI(){const w=me?me.n+"|"+(me.g||"")+"|"+(me.adm?1:0):"";if(w!==hWho){hWho=w;hKey="";HW=null;HPW=null}$("#who").textContent=me?"Gestor: "+me.n:"";const pub=ON&&!me;["#turnoF","#gal","#day"].forEach(i=>$(i).classList.toggle("hide",pub));if(pub){$("#turnoF").value="";$("#day").value=dk(Date.now())}$("#logtx").textContent=me?"Sair":"Entrar";updTabs()}
-function go(t){setTimeout(()=>{try{sideSubs()}catch(e){}},0);
+function go(t){if(ON&&me&&!me.adm&&me.ab&&!podeVer(t)){const f=ABAS_T.find(([k])=>podeVer(k));if(f)t=f[0]}setTimeout(()=>{try{sideSubs()}catch(e){}},0);
  updTabs();
  if((t==="cfg"||isI(t))&&needAuth(t)){$("#login").classList.remove("hide");$("#lU").focus();pend=t;return}
  if(ON&&me&&((t==="cfg"&&!me.pC)||(isI(t)&&!me.pI))){toast("Seu acesso não inclui esta área.");return}
@@ -1839,6 +1841,7 @@ document.addEventListener("click",e=>{const d=e.target.dataset,t=e.target;
   rem(()=>mut("/rest/v1/rpc/aceitar_solicitacao","POST",{p_email:em,p_nome:n,p_galpao:adm?null:(GID[gg]||null),p_admin:adm,p_pc:$("#mC").checked,p_pi:$("#mI").checked,p_pr:$("#mR").checked}),"Acesso liberado para "+em).then(ok=>{if(ok)$("#mN").value=""});return}
  if(d.srec){const em=d.srec;if(!confirm("Recusar o pedido de "+em+"?"))return;
   rem(()=>mut("/rest/v1/solicitacoes_gestor?email=eq."+encodeURIComponent(em),"DELETE"),"Pedido recusado");return}
+ if(d.mabas){mAbasU=d.mabas;cfgGes();$("#mAbas").scrollIntoView({block:"nearest"});return}
  if(d.mdel){const g=S.ges[+d.mdel];if(!confirm("Excluir o gestor "+g.n+"?"))return;
   if(ON){rem(()=>mut("/rest/v1/gestores?email=eq."+encodeURIComponent(g.u),"DELETE"),"Gestor excluído");return}
   S.ges.splice(+d.mdel,1);if(me===g)me=null;authUI();save();cfgGes();toast("Gestor excluído")}
@@ -1912,6 +1915,11 @@ $("#gB").onclick=()=>{const n=$("#gN").value.trim();if(!n){toast("Informe o nome
  if(ON){rem(()=>mut("/rest/v1/galpoes","POST",{nome:n}),"Galpão criado").then(ok=>{if(ok){$("#gN").value=""}});return}
  S.gals.push(n);$("#gN").value="";save();cfgGals();cfgUsers();renderAll();toast("Galpão criado")};
 $("#gN").onkeydown=e=>{if(e.key==="Enter")$("#gB").click()};
+$("#mAbas").onclick=async e=>{const b=e.target.closest("[data-abs]");if(!b)return;const m=S.ges.find(x=>x.u===mAbasU);if(!m)return;
+ if(b.dataset.abs==="fechar"){mAbasU=null;cfgGes();return}
+ let abas=null;if(b.dataset.abs==="salvar"){abas=[...document.querySelectorAll("#mAbas [data-abk]")].filter(c=>c.checked).map(c=>c.dataset.abk);if(!abas.length){toast("Escolha pelo menos uma aba");return}if(abas.length===ABAS_T.length)abas=null}
+ if(ON){const ok=await rem(()=>mut("/rest/v1/gestores?email=eq."+encodeURIComponent(m.u),"PATCH",{abas}),"Abas de "+m.n+" atualizadas");if(ok){mAbasU=null;cfgGes()}}
+ else{m.ab=abas;save();mAbasU=null;cfgGes();toast("Abas de "+m.n+" atualizadas")}};
 $("#mB").onclick=()=>{const n=$("#mN").value.trim(),u=$("#mU").value.trim(),p=$("#mP2").value;
  if(ON){const em=u.toLowerCase(),adm=$("#mA").checked,gg0=$("#mG").value;
   if(n.length<2||!/^\S+@\S+\.\S+$/.test(em)){toast("Informe o nome e um e-mail válido.");return}
