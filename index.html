@@ -663,7 +663,7 @@ function remChange(e){const d=e.target.dataset,id=e.target.id,v=e.target.value;
  if(id==="tol")return rem(()=>mut(CFGP,"PATCH",{tolerancia_min:Math.max(0,Math.floor(+v)||0)}),"Configuração atualizada");
  if(id==="and"){const on=e.target.checked;return rem(async()=>{await mut(CFGP,"PATCH",{ondas_em_andamento:on});
    if(!on)await api("/rest/v1/ondas?status=neq.0",{method:"PATCH",body:{status:0,concluida_em:new Date().toISOString(),encerrada_auto:true},prefer:"return=minimal"})},on?"Ondas em andamento ligadas":"Ondas em aberto foram concluídas")}
- if(d.ut2){const o=opOf(d.ut2);if(o)return rem(()=>mut("/rest/v1/operadores?id=eq."+o.id,"PATCH",{turno:+v}),o.n+" agora no "+v+"º turno")}
+ if(d.ut2){const o=opOf(d.ut2);if(o)return rem(()=>mut("/rest/v1/operadores?id=eq."+o.id,"PATCH",{turno:+v,...turnoPadrao(+v)}),o.n+" agora no "+v+"º turno")}
  if(d.ug2){const o=opOf(d.ug2);if(o)return rem(()=>mut("/rest/v1/operadores?id=eq."+o.id,"PATCH",{galpao_id:GID[v]}),o.n+" agora no "+v)}
  if(d.gre!==undefined){const old=S.gals[+d.gre],nv=v.trim();if(!nv){cfgGals();return}
   return rem(()=>mut("/rest/v1/galpoes?id=eq."+GID[old],"PATCH",{nome:nv}),"Galpão renomeado")}
@@ -731,7 +731,7 @@ async function importar(){const L=antigos();if(!L||!(me&&me.adm))return;
   await pull();
   for(const o of L.ops){if(S.ops.some(x=>x.n.toLowerCase()===o.n.toLowerCase()))continue;
    const livre=!S.ops.some(x=>x.m===o.m)&&/^CL\d{3}$/.test(o.m);
-   await mut("/rest/v1/operadores","POST",{codigo:livre?o.m:nextCode(),nome:o.n,turno:o.t===2?2:1,galpao_id:GID[o.g]||GID[S.gals[0]]});await pull()}
+   await mut("/rest/v1/operadores","POST",{codigo:livre?o.m:nextCode(),nome:o.n,turno:o.t===2?2:1,...turnoPadrao(o.t),galpao_id:GID[o.g]||GID[S.gals[0]]});await pull()}
   const porCod={};L.ops.forEach(o=>{const s=S.ops.find(x=>x.n.toLowerCase()===o.n.toLowerCase());if(s)porCod[o.m]=s.id});
   const fila=[];for(const w of L.waves){const oid=porCod[w.op];if(!oid){tot.sem_operador++;continue}
    fila.push({id:await uuidDe(w.id),wn:w.wn||String(w.id),operador_id:oid,tipo:TYREN[w.ty]||w.ty,quantidade:w.qty,status:w.st||0,registrada_em:new Date(w.ts).toISOString(),concluida_em:(w.st||0)===0?new Date(w.fin||w.ts).toISOString():null})}
@@ -763,6 +763,7 @@ let TH={};
 /* registros de presença (falta, declaração, atestado, folga) e baixas, só para gestores; PBX por "operador|dia" */
 let PRS={},PBX={},PHX={},ATR={};
 /* horário da pessoa; com dia informado, usa o horário que valia naquele dia (desfaz alterações posteriores) */
+const turnoPadrao=t=>{const x=S.cfg.turnos[t===2?2:1];return{inicio:x.ini,fim:x.fim}};
 function turnoOf(o,d){
  if(!o||o.ini==null||o.fim==null)return S.cfg.turnos[o&&o.t===2?2:1];
  let ini=o.ini,fim=o.fim;const h=d&&o.id&&TH[o.id];
@@ -1149,7 +1150,7 @@ function checking(){
  if(!data.days.includes(day)){ckIr(day,true);return}
  const g=$("#gal").value,t=$("#turnoF").value,can=ckPode();
  const ops=data.ops.filter(o=>(g==='__all'||o.g===g)&&(!t||String(o.t)===t)&&!o.excluido&&mgEligible(o,day));
- const feito=o=>!!mgRegDia(o,day)||!!PBX[o.id+'|'+day];
+ const feito=o=>!!mgRegDia(o,day)||!!PBX[o.id+'|'+day]||(data.byOpDay.get(day+'|'+o.m)||[]).length>0;
  const pend=ops.filter(o=>!feito(o)),conf=ops.filter(feito);
  const dis=can?'':' disabled';
  const btn=(k,rot,m)=>`<button class="btn${k==='presente'?'':' alt'} sm" type="button" data-ck="${k}" data-m="${esc(m)}"${dis}>${rot}</button>`;
@@ -1160,7 +1161,7 @@ function checking(){
  const wd=new Date(day+'T12:00:00').toLocaleDateString('pt-BR',{weekday:'long'});
  const nav=`<div class="ctl"><button class="btn alt sm" type="button" data-ckday="-1">← Dia anterior</button><button class="btn alt sm" type="button" data-ckday="0"${day===dk(Date.now())?' disabled':''}>Hoje</button><button class="btn alt sm" type="button" data-ckday="1">Próximo dia →</button><b>${presData(day)}, ${esc(wd)}</b></div>`;
  box.innerHTML=`<div class="card">${nav}
- <div class="legend" style="margin:8px 0">Marque a situação de cada pessoa. Ao escolher, o nome sai da lista e entra na tabela da semana. Atestado e folga aceitam a quantidade de dias.${can?'':' Só gestores com permissão de registros podem marcar.'}</div>
+ <div class="legend" style="margin:8px 0">Quem bipar uma onda vira presente sozinho e sai da lista. Marque a situação das demais. Ao escolher, o nome sai da lista e entra na tabela da semana. Atestado e folga aceitam a quantidade de dias.${can?'':' Só gestores com permissão de registros podem marcar.'}</div>
  ${CKULT&&can?`<div class="ckul"><span>Marcado agora: <b>${esc(CKULT.n)}</b> · ${esc(CKULT.l)}</span><button class="btn sm" type="button" data-ckun="${CKULT.id}">↩ Voltar</button></div>`:''}
  <h2>A conferir (${pend.length})</h2><div class="tw">${pend.length?`<div class="ckl">${pend.map(linha).join('')}</div>`:'<div class="empty">Todos conferidos neste dia.</div>'}</div>
  <h2 style="margin-top:16px">Conferidos (${conf.length})</h2><div class="tw">${conf.length?`<table><tr><th>Pessoa</th><th>Situação</th><th></th></tr>${conf.map(feita).join('')}</table>`:'<div class="empty">Nenhum conferido ainda.</div>'}</div></div>
@@ -1583,7 +1584,7 @@ function galSel(){const e=$("#gal"),v=e.value;e.innerHTML=(restricted()?"":'<opt
  if(restricted()){S.gal=myG();e.value=myG();e.disabled=true}else{e.value=S.gals.includes(v)||v==="__all"?v:S.gal;e.disabled=false}}
 function renderAll(){netUI();galSel();if(ON&&!me){if(view==="painel")painelPublico()}else painel();operacao();procurando();filters();
  $("#sub2").textContent=new Date($("#day").value+"T12:00").toLocaleDateString("pt-BR",{weekday:"long",day:"numeric",month:"long",year:"numeric"});
- if(view==="ind"){individual();coletiva()}if(view==="his")hisRender()}
+ if(view==="ind"){individual();coletiva();if(gsub==="chk")checking()}if(view==="his")hisRender()}
 
 /* ===================== eventos ===================== */
 $("#day").value=dk(Date.now());galSel();$("#gal").value=S.gal;
@@ -1769,7 +1770,7 @@ $("#uB").onclick=()=>{const n=$("#uN").value.trim().replace(/\s+/g," ");
  if(n.length<2){toast("Informe o nome");return}
  if(S.ops.some(o=>o.n.toLowerCase()===n.toLowerCase())){toast("Já existe um usuário com esse nome");return}
  if(ON){const g=$("#uG").value;if(!g){toast("Crie um galpão antes de cadastrar operadores.");return}
-  const cod=nextCode();rem(()=>mut("/rest/v1/operadores","POST",{codigo:cod,nome:n,turno:uT,galpao_id:GID[g]}),"Usuário "+n+" criado com o código "+cod).then(ok=>{if(ok)$("#uN").value=""});return}
+  const cod=nextCode();rem(()=>mut("/rest/v1/operadores","POST",{codigo:cod,nome:n,turno:uT,...turnoPadrao(uT),galpao_id:GID[g]}),"Usuário "+n+" criado com o código "+cod).then(ok=>{if(ok)$("#uN").value=""});return}
  const m=nextCode();S.ops.push({m,n,t:uT,g:$("#uG").value});$("#uN").value="";save();cfgUsers();renderAll();
  toast("Usuário "+n+" criado, "+m+", "+uT+"º turno")};
 $("#uN").onkeydown=e=>{if(e.key==="Enter")$("#uB").click()};

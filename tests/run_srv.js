@@ -64,6 +64,7 @@ function fake(db){const cors={'access-control-allow-origin':'*','access-control-
     const de=(q.get('registrada_em')||'gte.').slice(4),off=+q.get('offset')||0,lim=+q.get('limit')||1000;
     return J(route,200,db.ondas.filter(o=>escopo(o.galpao_id)&&o.registrada_em>=de).sort((a,b)=>a.registrada_em<b.registrada_em?-1:1).slice(off,off+lim))}}
   const podeC=gal=>g&&g.pode_config&&(g.admin||g.galpao_id===gal);
+  if(t==='operadores'&&m==='POST'&&(body.inicio==null||body.fim==null))return J(route,400,{code:'23502',message:'null value in column "inicio" of relation "operadores" violates not-null constraint'});
   if(t==='operadores'&&m==='POST'){if(!podeC(body.galpao_id))return J(route,403,{code:'42501',message:'new row violates row-level security policy'});
    if(db.operadores.some(o=>!o.excluido_em&&(o.codigo===body.codigo||o.nome.toLowerCase()===body.nome.toLowerCase())))return J(route,409,{code:'23505',message:'duplicate key value'});
    const row=Object.assign({id:'00000000-0000-4000-8000-'+String(db.seq++).padStart(12,'0'),excluido_em:null},body);db.operadores.push(row);return J(route,201,[row])}

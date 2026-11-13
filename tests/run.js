@@ -512,6 +512,17 @@ await T("77 Lista de presença: todos os nomes numa lista, opções por pessoa, 
  const q=await p.evaluate(()=>({op:$('#iOp').value,per:$('#iPer').value}));
  ok(q.op==='CL002'&&q.per==='1',JSON.stringify(q))});
 
+await T("78 Lista de presença: quem bipa uma onda vira presente sozinho e sai da lista",async()=>{
+ const t0=new Date();t0.setHours(0,0,0,0);
+ const w={id:'wa',wn:'wa',op:'CL001',opn:'Ana Souza',gal:'Galpão 1',ty:'Vários artigos',qty:10,st:0,ts:Date.now()-6e4,fin:Date.now()-6e4,sync:1};
+ const p=await page(b,base({waves:[w]}));
+ await p.evaluate(()=>{$('#day').value=dk(Date.now());go('ind');document.querySelector('#gsub [data-gs="chk"]').click()});
+ await p.waitForTimeout(400);
+ const r=await p.evaluate(()=>({pend:[...document.querySelectorAll('#ckBody .ckr .ckn small')].map(x=>x.textContent),txt:$('#ckBody').textContent.replace(/\s+/g,' ')}));
+ ok(!r.pend.includes('CL001'),'CL001 bipou e não devia estar em A conferir: '+r.pend.join());
+ ok(r.pend.includes('CL002'),'quem não bipou continua na lista: '+r.pend.join());
+ ok(/Conferidos \(1\)/.test(r.txt),r.txt.slice(0,260))});
+
 await b.close();
 const w=Math.max(...R.map(r=>r[1].length));for(const r of R)console.log((r[0]==="PASS"?"✅":"❌")+" "+r[1].padEnd(w)+"  "+r[2]);
 console.log(`\n${R.filter(r=>r[0]==="PASS").length}/${R.length} passaram`)})();
