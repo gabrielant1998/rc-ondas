@@ -317,6 +317,9 @@ td .btn.d:hover,td .pill.off[data-adel]:hover{background:var(--r);color:#fff;bor
 .pfh{display:flex;align-items:center;gap:12px;margin-bottom:12px;flex-wrap:wrap}.pfh .pfb{color:var(--mut);font-size:13px}.pfh .pfa{width:42px;height:42px;border-radius:50%;background:color-mix(in srgb,var(--g) 14%,var(--card));color:var(--g);font:700 15px/42px var(--fb);text-align:center;flex:none}
 .pfh .pft{flex:1;min-width:200px}.pfh .pft h2{font:700 22px/1.1 var(--fd);margin:0 0 2px}.pfh .pfn{display:flex;align-items:center;gap:8px}
 .pfg{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);gap:12px;margin-top:12px;align-items:start}@media(max-width:900px){.pfg{grid-template-columns:minmax(0,1fr)}}.pfg>.card{min-width:0}
+.almC{font-size:12px;color:var(--mut);margin-top:4px;white-space:nowrap}.almC input{min-height:28px;padding:2px 4px;font-size:12px;width:auto}
+.cobig{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}.cobig b{font-size:34px;line-height:1}.cobig span{color:var(--mut);font-size:13px}.bar.cob{height:10px;margin-top:8px}
+.tw i.dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:7px;vertical-align:middle}
 details.info{margin-top:8px;font-size:12.5px;color:var(--mut)}details.info summary{cursor:pointer;color:var(--ink);font-weight:600;list-style:none;display:inline-flex;align-items:center;gap:6px}
 details.info summary:before{content:"?";width:16px;height:16px;border-radius:50%;border:1px solid var(--mut);display:inline-grid;place-items:center;font-size:10.5px;color:var(--mut)}
 details.info summary::-webkit-details-marker{display:none}details.info[open] summary{margin-bottom:4px}
@@ -344,26 +347,28 @@ body[data-v=cfg] #turnoF,body[data-v=cfg] #gal,body[data-v=cfg] #day{display:non
 .fl-s .mt{font-size:11pt;opacity:.85}
 .fl-s .info{margin-top:auto;border-top:1px solid rgba(255,255,255,.25);padding-top:5mm;font-size:10pt;line-height:1.7;position:relative}
 .fl-s .info b{display:block;font-size:8pt;font-weight:600;letter-spacing:.12em;text-transform:uppercase;opacity:.65;margin-top:2mm}
-.fl-m{padding:10mm 11mm 7mm 10mm;display:flex;flex-direction:column;gap:4.5mm;min-width:0}
+.fl-m{padding:8mm 10mm 6mm 9mm;display:flex;flex-direction:column;gap:3mm;min-width:0}
 .fl-m h2{font-family:var(--fd);font-size:15pt;margin:0;font-weight:800}
 .fl-hd{display:flex;justify-content:space-between;align-items:flex-end;gap:6mm}
 .fl-hd span{font-size:10pt;color:#55627a;text-align:right}
 .fl-k{display:grid;grid-template-columns:repeat(4,1fr);gap:4mm}.fl-rs{margin:3mm 0 0;font-size:9.5pt;color:#14243d;border-top:1px solid #d3d9e3;padding-top:2.5mm}
-.fl-k div{border:1px solid #d3d9e3;border-top:3mm solid #0f4bd0;border-radius:2mm;padding:3.5mm 4mm}
+.fl-k div{border:1px solid #d3d9e3;border-top:2mm solid #0f4bd0;border-radius:2mm;padding:2.5mm 3.5mm}
 .fl-k div:nth-child(2){border-top-color:#3d7be8}.fl-k div:nth-child(3){border-top-color:#0b7f70}.fl-k div:nth-child(4){border-top-color:#b85c00}
-.fl-k b{display:block;font-family:var(--fd);font-size:22pt;line-height:1;font-weight:800}
+.fl-k b{display:block;font-family:var(--fd);font-size:19pt;line-height:1;font-weight:800}
 .fl-k span{display:block;font-size:9pt;color:#55627a;margin-top:1.5mm}
 .fl-k em{display:block;font-style:normal;font-size:8pt;letter-spacing:.1em;text-transform:uppercase;color:#55627a;margin-bottom:1.5mm}
-.fl-g{display:grid;grid-template-columns:1.55fr 1fr;gap:5mm;flex:1;min-height:0}
-.fl-g>div{border:1px solid #d3d9e3;border-radius:2mm;padding:4mm 5mm;display:flex;flex-direction:column;min-height:0}
+.fl-g{display:grid;grid-template-columns:1.55fr 1fr;gap:5mm;flex:1 1 0;min-height:0;overflow:hidden}
+.fl-g svg.fl-ch{flex:1 1 0;min-height:0}.fl-g svg.fl-ln{flex:none;height:15mm}.fl-t u.eq{height:2mm;margin-top:.8mm}.fl-t u.eq b{background:#b7c0cf}.fl-t small{display:block;font-size:8.3pt;color:#55627a;margin-top:.6mm}
+.fl-k u.mb{display:block;height:2.2mm;background:#eef1f4;border-radius:2mm;margin-top:1.5mm;overflow:hidden;text-decoration:none}.fl-k u.mb b{display:block;height:100%;font-size:0}
+.fl-g>div{border:1px solid #d3d9e3;border-radius:2mm;padding:3mm 4mm;display:flex;flex-direction:column;min-height:0}
 .fl-g h3{margin:0 0 2mm;font-size:11pt;font-weight:700}
 .fl-g svg{width:100%;flex:1;min-height:0}
-.fl-t{display:grid;gap:3mm;margin-top:1mm}
+.fl-t{display:grid;gap:1.6mm;margin-top:.5mm}.fl-t i{font-size:8.8pt!important}.fl-t u{height:2.4mm!important;margin-top:.6mm!important}
 .fl-t i{display:block;font-style:normal;font-size:9.5pt;display:flex;justify-content:space-between}
 .fl-t u{display:block;height:3.2mm;background:#eef1f4;border-radius:2mm;text-decoration:none;overflow:hidden;margin-top:1mm}
 .fl-t u b{display:block;height:100%;border-radius:2mm}
-.fl-i{display:grid;grid-template-columns:1.15fr 1fr 1fr;gap:4mm;flex:1.25;min-height:0}
-.fl-i>div{border-radius:2mm;padding:3mm 4mm;overflow:hidden;font-size:9pt;line-height:1.38;border-top:2.4mm solid;min-height:0}
+.fl-i{display:grid;grid-template-columns:1.15fr 1fr 1fr;gap:4mm;flex:0 0 47mm;min-height:0}
+.fl-i>div{border-radius:2mm;padding:2.5mm 3.5mm;overflow:hidden;font-size:8.6pt;line-height:1.33;border-top:2.4mm solid;min-height:0}
 .fl-i h4{margin:0 0 1.5mm;font-size:9.5pt;font-weight:800;letter-spacing:.02em}
 .fl-i p{margin:0}.fl-i ul{margin:0;padding-left:4mm}.fl-i li{margin-bottom:1.2mm}
 .fl-i .r{background:#eef3fd;border-color:#0f4bd0}.fl-i .m{background:#fff6ea;border-color:#b85c00}.fl-i .p{background:#eaf7f4;border-color:#0b7f70}
@@ -493,7 +498,7 @@ body[data-v=cfg] #turnoF,body[data-v=cfg] #gal,body[data-v=cfg] #day{display:non
 
  <div id="cop" class="grid two">
   <div class="card"><h2>Limite por onda</h2><div class="f" id="lims"></div></div>
-  <div class="card"><h2>Turnos</h2><div class="f" id="turnos"></div><div class="legend">Registros fora da janela do turno do operador são marcados como hora extra.</div></div>
+  <div class="card"><h2>Turnos</h2><div class="f" id="turnos"></div><div class="legend">Registros fora da janela do turno do operador são marcados como hora extra. O almoço não conta como pausa, atraso nem hora extra; deixe em branco se não houver. O gestor pode ajustar o almoço de cada pessoa na Presença.</div></div>
   <div class="card"><h2>Ondas</h2><div class="f">
    <div id="storInfo" style="font-size:13px;color:var(--mut)"></div>
    <label class="row"><input type="checkbox" id="and" style="min-height:auto"> Modo de ondas em andamento</label>
@@ -661,9 +666,9 @@ async function pull(){
  GID={};GN={};gs.forEach(g=>{GID[g.nome]=g.id;GN[g.id]=g.nome});
  S.gals=gs.map(g=>g.nome);S.metasInd={};gs.forEach(g=>{if(g.meta_ind_ondas||g.meta_ind_qtd)S.metasInd[g.nome]={o:g.meta_ind_ondas||0,q:g.meta_ind_qtd||0}});
  ts.forEach(t=>{S.cfg.lim[t.nome]=t.limite});
- const c=cf[0];if(c){S.cfg.turnos={1:{ini:c.turno1_ini,fim:c.turno1_fim},2:{ini:c.turno2_ini,fim:c.turno2_fim}};S.cfg.gap=Math.min(+c.intervalo_max_min||30,60);S.cfg.tol=c.tolerancia_min;S.cfg.metaMin=+c.meta_minima||0;S.cfg.and=c.ondas_em_andamento}
+ const c=cf[0];if(c){S.cfg.turnos={1:{ini:c.turno1_ini,fim:c.turno1_fim},2:{ini:c.turno2_ini,fim:c.turno2_fim}};S.cfg.gap=Math.min(+c.intervalo_max_min||30,60);S.cfg.tol=c.tolerancia_min;S.cfg.metaMin=+c.meta_minima||0;S.cfg.and=c.ondas_em_andamento;S.cfg.alm={1:{ini:c.almoco1_ini,fim:c.almoco1_fim},2:{ini:c.almoco2_ini,fim:c.almoco2_fim}}}
  OPSALL={};os.forEach(o=>{OPSALL[o.id]=o});
- S.ops=os.filter(o=>!o.excluido_em).map(o=>({id:o.id,m:o.codigo,n:o.nome,t:o.turno,ini:o.inicio,fim:o.fim,g:GN[o.galpao_id],criado:o.criado_em}));
+ S.ops=os.filter(o=>!o.excluido_em).map(o=>({id:o.id,m:o.codigo,n:o.nome,t:o.turno,ini:o.inicio,fim:o.fim,al:{ini:o.almoco_ini,fim:o.almoco_fim},g:GN[o.galpao_id],criado:o.criado_em}));
  if(!S.gals.includes(S.gal))S.gal=S.gals[0];
  S.metasDia={};
  if(sess){
@@ -708,7 +713,9 @@ async function rem(fn,msg){
  if(!online()){toast("Sem internet. Cadastros e alterações precisam de conexão.",5000);if(view==="cfg")cfgRender();return false}
  try{await fn();await pull();if(view==="cfg")cfgRender();renderAll();if(msg)toast(msg);return true}
  catch(e){toast(errMsg(e),6000);if(view==="cfg")cfgRender();return false}}
+function almCampos(t){const g=k=>{const i=document.querySelector(`[data-al="${t}"][data-k="${k}"]`);return i?hm2m(i.value):null},a=g('ini'),b=g('fim');if(a==null&&b==null)return{ini:null,fim:null};if(a==null||b==null)return null;return b>a?{ini:a,fim:b}:false}
 function remChange(e){const d=e.target.dataset,id=e.target.id,v=e.target.value;
+ if(d.al){const x=almCampos(d.al);if(x===null)return;if(x===false){toast("O fim do almoço precisa ser depois do início.");return}return rem(()=>mut(CFGP,"PATCH",{["almoco"+d.al+"_ini"]:x.ini,["almoco"+d.al+"_fim"]:x.fim}),"Almoço do "+d.al+"º turno atualizado")}
  if(d.lim)return rem(()=>mut("/rest/v1/tipos_onda?nome=eq."+encodeURIComponent(d.lim),"PATCH",{limite:Math.max(1,Math.floor(+v)||1)}),"Limite atualizado");
  if(d.tn)return rem(()=>mut(CFGP,"PATCH",{["turno"+d.tn+"_"+d.k]:Math.max(0,Math.min(24,Math.floor(+v)||0))}),"Turno atualizado");
  if(id==="gap")return rem(()=>mut(CFGP,"PATCH",{intervalo_max_min:Math.min(60,Math.max(1,Math.floor(+v)||30))}),"Configuração atualizada");
@@ -817,6 +824,11 @@ let TH={};
 let PRS={},PBX={},PHX={},ATR={};
 /* horário da pessoa; com dia informado, usa o horário que valia naquele dia (desfaz alterações posteriores) */
 const turnoPadrao=t=>{const x=S.cfg.turnos[t===2?2:1];return{inicio:x.ini,fim:x.fim}};
+/* almoço: o da pessoa (ajuste do gestor) ou o do turno; minutos desde 0h. Nunca conta como pausa, atraso ou hora extra. */
+const m2hm=m=>m==null?'':String(Math.floor(m/60)).padStart(2,'0')+':'+String(m%60).padStart(2,'0'),hm2m=v=>{const x=/^(\d{1,2}):(\d{2})$/.exec(v||'');return x?(+x[1])*60+(+x[2]):null};
+function almocoOf(o){if(!o)return null;const p=o.al;if(p&&p.ini!=null&&p.fim!=null&&p.fim>p.ini)return p;const a=((S.cfg&&S.cfg.alm)||{})[o.t===2?2:1];return a&&a.ini!=null&&a.fim!=null&&a.fim>a.ini?a:null}
+/* quanto do intervalo [a,b] (ms) cai no almoço da pessoa */
+function almOv(o,a,b){const al=almocoOf(o);if(!al||!(b>a))return 0;const d=new Date(a);d.setHours(0,0,0,0);let s=0;for(let k=0;k<2;k++){const z=d.getTime()+k*864e5,x=z+al.ini*6e4,y=z+al.fim*6e4;s+=Math.max(0,Math.min(b,y)-Math.max(a,x))}return s}
 function turnoOf(o,d){
  if(!o||o.ini==null||o.fim==null)return S.cfg.turnos[o&&o.t===2?2:1];
  /* o turno vale retroativamente: sempre o horário atual da pessoa, em todos os dias (horas extras, atrasos e históricos). As alterações ficam registradas em TH apenas para auditoria. */
@@ -850,7 +862,7 @@ function hourWindow(a){let f=a.findIndex(v=>v>0),l=-1;a.forEach((v,i)=>{if(v>0)l
 function conjuntos(list){const by={},out=[];
  prod(list).filter(w=>!NOTIME.includes(w.ty)&&!procurou(w)).slice().sort((x,y)=>(x.fin||x.ts)-(y.fin||y.ts)).forEach(w=>{(by[w.op]=by[w.op]||[]).push(w)});
  Object.values(by).forEach(a=>{const gs=[];a.forEach(w=>{const t=w.fin||w.ts,g=gs[gs.length-1];if(g&&t-g.t0<=3000)g.w.push(w);else gs.push({t0:t,w:[w]})});
-  gs.forEach((g,i)=>{const dom=g.w.slice().sort((x,y)=>y.qty-x.qty)[0];out.push({op:dom.op,t:g.t0,zt:g.w.some(x=>x.zt),ondas:g.w.length,qty:g.w.reduce((q,w)=>q+w.qty,0),w:dom,tipos:[...new Set(g.w.map(x=>x.ty))],d:gs[i+1]?gs[i+1].t0-g.t0:null})})});return out}
+  gs.forEach((g,i)=>{const dom=g.w.slice().sort((x,y)=>y.qty-x.qty)[0];out.push({op:dom.op,t:g.t0,zt:g.w.some(x=>x.zt),ondas:g.w.length,qty:g.w.reduce((q,w)=>q+w.qty,0),w:dom,tipos:[...new Set(g.w.map(x=>x.ty))],d:gs[i+1]?gs[i+1].t0-g.t0-almOv(opOf(dom.op)||(typeof OPSALL!=='undefined'&&Object.values(OPSALL).map(x=>({t:x.turno,al:{ini:x.almoco_ini,fim:x.almoco_fim},m:x.codigo})).find(x=>x.m===dom.op)),g.t0,gs[i+1].t0):null})})});return out}
 function durs(list){const gap=GAP()*6e4;return conjuntos(list).filter(c=>c.d!=null&&c.d>0&&c.d<=gap&&!c.zt)}
 const NOTIME=["Retrabalho","Maiores/Pesados"];
 const procurou=w=>(w.hist||[]).some(e=>e.e==="m");/* onda que passou por Procurando: o tempo dela é do Procurando, não do conjunto */
@@ -1113,7 +1125,7 @@ function limparGestao(){MGW=null;MGKEY='';MGC.clear();mgSeq++;mgBar(false);mgSta
 function mgDates(){const ov=view==='ind'&&gsub==='chk'?MGOV:null,n=ov?ov.n:+$("#iPer").value||1,end=new Date((ov?ov.end:$("#day").value)+'T12:00:00'),a=[];for(let i=n-1;i>=0;i--){const d=new Date(end);d.setDate(d.getDate()-i);a.push(dk(d))}return a}
 function mgOps(){
  if(!ON)return S.ops;
- return Object.values(OPSALL).map(o=>({id:o.id,m:o.excluido_em?o.codigo+'~'+o.id.slice(0,6):o.codigo,n:o.nome,t:o.turno,ini:o.inicio,fim:o.fim,g:GN[o.galpao_id],criado:o.criado_em,excluido:o.excluido_em}))
+ return Object.values(OPSALL).map(o=>({id:o.id,m:o.excluido_em?o.codigo+'~'+o.id.slice(0,6):o.codigo,n:o.nome,t:o.turno,ini:o.inicio,fim:o.fim,al:{ini:o.almoco_ini,fim:o.almoco_fim},g:GN[o.galpao_id],criado:o.criado_em,excluido:o.excluido_em}))
   .filter(o=>!restricted()||o.g===myG());
 }
 async function loadManagement(opt){
@@ -1168,7 +1180,7 @@ function mgStatus(o,d,L,data){
 function mgExtra(o,d,L){
  const times=L.map(w=>w.fin||w.ts).filter(Number.isFinite).sort((a,b)=>a-b),t=turnoOf(o,d),day=new Date(d+'T00:00:00'),start=day.getTime()+t.ini*36e5-(S.cfg.tol||0)*6e4;
  let end=day.getTime()+t.fim*36e5+(S.cfg.tol||0)*6e4;if(t.fim<=t.ini)end+=864e5;
- let ms=0;for(let i=1;i<times.length;i++){const a=times[i-1],b=times[i];if(b<=a||b-a>GAP()*6e4)continue;ms+=Math.max(0,Math.min(b,start)-a)+Math.max(0,b-Math.max(a,end))}
+ let ms=0;for(let i=1;i<times.length;i++){const a=times[i-1],b=times[i],lo=typeof almOv==='function'?almOv(o,a,b):0;if(b<=a||b-a-lo>GAP()*6e4)continue;ms+=Math.max(0,Math.min(b,start)-a)+Math.max(0,b-Math.max(a,end))}
  return {ms,count:times.filter(x=>x<start||x>end).length};
 }
 /* turno da pessoa e primeiro bipe do dia (só para um dia; em período maior, o turno é o do último dia) */
@@ -1178,7 +1190,7 @@ function mgDia(o,data){
  const L=data.byOpDay.get(last+'|'+o.m)||[];
  if(!L.length)return{t,p:null};
  const ts=Math.min(...L.map(w=>w.ts)),ini=new Date(last+'T00:00:00');ini.setHours(t.ini,0,0,0);
- return{t,p:{ts,diff:Math.round((ts-ini.getTime())/6e4)}};
+ return{t,p:{ts,diff:Math.round((ts-ini.getTime()-(typeof almOv==='function'?almOv(o,ini.getTime(),ts):0))/6e4)}};
 }
 function mgTurnoCard(o,data){
  const T=turnoOf(o,data.days[data.days.length-1]),can=!!(ON&&me&&(me.pC||me.pI)&&o.id);
@@ -1261,6 +1273,16 @@ function mgTempo(o,L){const gap=GAP()*6e4,now=Date.now(),C=conjuntos(L).sort((a,
  const lt=C.length?`<table><tr><th>Início</th><th>Ondas</th><th>Tipo</th><th>Unidades</th><th>Tempo</th></tr>`+C.slice(0,40).map(c=>`<tr><td>${new Date(c.t).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit'})}</td><td>${c.ondas}</td><td>${c.tipos.map(esc).join(', ')}</td><td>${fmt(c.qty)}</td><td>${c.d==null?(now-c.t<=gap?'em andamento':'—'):c.d>gap?'pausa':mn(c.d)}</td></tr>`).join('')+'</table>':'<div class="empty">Nenhuma onda no período.</div>';
  return`<div class="grid two" style="margin-top:14px"><div class="card"><h2>Tempo por tipo de onda</h2><div class="tw">${rk}</div><div class="legend">Média ponderada pelas unidades de cada conjunto. Ondas bipadas no mesmo instante contam como um conjunto, com um tempo só. Pausas acima de ${GAP()} min ficam de fora.</div></div><div class="card"><h2>Conjuntos de ondas</h2><div class="tw">${lt}</div><div class="legend">Tempo da bipagem do conjunto até a bipagem do próximo. Mostra os 40 mais recentes.</div></div></div>`}
 function mgHistory(list){return list.length?`<table><tr><th>Data e hora</th><th>Onda</th><th>Tipo</th><th>Quantidade</th><th>Situação</th></tr>`+list.map(w=>`<tr><td>${new Date(w.ts).toLocaleString('pt-BR')}</td><td>${esc(wnS(w)||'—')}</td><td>${esc(w.ty)}</td><td>${fmt(w.qty)}</td><td>${esc(ST[w.st]||'—')}${!w.sync?' · pendente':''}</td></tr>`).join('')+'</table>':'<div class="empty">Nenhuma onda registrada.</div>'}
+function almCel(o){const al=almocoOf(o),prop=!!(o.al&&o.al.ini!=null),pode=!ON||(me&&(me.pC||me.pI)&&o.id);
+ return`<div class="almC">${pode?`Almoço <input type="time" class="almI" data-am="${esc(o.m)}" value="${m2hm(al&&al.ini)}" aria-label="Início do almoço de ${esc(o.n)}"> às <input type="time" class="almF" data-am="${esc(o.m)}" value="${m2hm(al&&al.fim)}" aria-label="Fim do almoço de ${esc(o.n)}">${prop?` <button type="button" class="lk almR" data-am="${esc(o.m)}" title="Voltar ao almoço do turno">↺ turno</button>`:'<small> do turno</small>'}`:(al?`Almoço ${m2hm(al.ini)} às ${m2hm(al.fim)}${prop?'':' (turno)'}`:'Sem almoço configurado')}</div>`}
+async function almSalvar(m,ini,fim){const o=(INDX&&INDX.ops||[]).find(x=>x.m===m)||opOf(m);if(!o)return;
+ if(ini!=null&&!(fim>ini)){toast("O fim do almoço precisa ser depois do início.");return}
+ if(!ON){const so=opOf(m);if(so){so.al=ini==null?null:{ini,fim};save()}toast(ini==null?"Almoço de "+o.n+" volta ao do turno":"Almoço de "+o.n+": "+m2hm(ini)+" às "+m2hm(fim));if(typeof loadManagement==="function")await loadManagement({cache:true});individual();renderAll();if(gsub==="chk")ckEntrar();return}
+ if(!me||!(me.pC||me.pI)||!o.id){toast("Sem permissão para alterar o almoço.");return}
+ const ok=await rem(()=>api("/rest/v1/rpc/alterar_almoco",{method:"POST",body:{p_operador:o.id,p_inicio:ini,p_fim:fim}}),ini==null?"Almoço de "+o.n+" volta ao do turno":"Almoço de "+o.n+" atualizado");
+ if(ok){await loadManagement();if(gsub==="chk")ckEntrar()}}
+document.addEventListener("change",e=>{const t=e.target;if(!t.classList||!(t.classList.contains("almI")||t.classList.contains("almF")))return;const row=t.closest(".almC"),a=hm2m(row.querySelector(".almI").value),b=hm2m(row.querySelector(".almF").value);if(a==null||b==null)return;almSalvar(t.dataset.am,a,b)});
+document.addEventListener("click",e=>{const b=e.target.closest&&e.target.closest(".almR");if(b)almSalvar(b.dataset.am,null,null)});
 /* ===================== visão semanal (segunda a domingo) ===================== */
 let WKW=null,WKQ='';
 const WKDIAS=['Seg','Ter','Qua','Qui','Sex','Sáb','Dom'];
@@ -1269,7 +1291,7 @@ const addDias=(s,n)=>{const d=new Date(s+'T12:00:00');d.setDate(d.getDate()+n);r
 const mondayOf=s=>addDias(s,-((new Date(s+'T12:00:00').getDay()+6)%7));
 function wkRotulo(st){if(st.startsWith('Saiu'))return 'Saiu';const base=st.split(' · ')[0];return WKA[base]||base}
 /* minutos entre o início do turno do dia e o primeiro bipe (0 se não houve atraso) */
-function atrasoDia(o,d,L){if(!L.length)return 0;const at=o&&o.id?ATR[o.id+'|'+d]:null,ts=at&&at.hj?Date.parse(at.hj):Math.min(...L.map(w=>w.ts)),t=turnoOf(o,d),ini=new Date(d+'T00:00:00');ini.setHours(t.ini,0,0,0);return Math.max(0,Math.round((ts-ini.getTime())/6e4))}
+function atrasoDia(o,d,L){if(!L.length)return 0;const at=o&&o.id?ATR[o.id+'|'+d]:null,ts=at&&at.hj?Date.parse(at.hj):Math.min(...L.map(w=>w.ts)),t=turnoOf(o,d),ini=new Date(d+'T00:00:00');ini.setHours(t.ini,0,0,0);return Math.max(0,Math.round((ts-ini.getTime()-almOv(o,ini.getTime(),ts))/6e4))}
 /* semana: o período de 7 dias termina no domingo, então a visão usa o mesmo carregamento da aba Individual */
 function semanaSet(mon){WKW=mon;MGOV={end:addDias(mon,6),n:7}}
 function wkTabela(data,ops){
@@ -1324,7 +1346,7 @@ function semanalPag(box){
  const cards=`<div class="ckcards">${card(T.pres,'Presenças')}${card(T.f,'Faltas')}${card(T.a,'Atestados')}${card(T.dc,'Declarações')}${card(T.fo,'Folgas')}${card(T.at,'Atrasos')}${card(T.p,'Pendentes')}</div>`;
  let tabela;
  if(per===7)tabela=wkTabela(data,ops);
- else if(per===1){const d=days[0];tabela=ops.length?`<table class="wkt"><tr><th>Pessoa</th><th>Situação</th><th>Turno</th><th>Primeiro bipe</th><th>Atraso</th><th>Horário justificado</th><th>Motivo do atraso</th></tr>${ops.map(o=>{const L=data.byOpDay.get(d+'|'+o.m)||[],stt=mgStatus(o,d,L,data),r=wkRotulo(stt),m=atrasoDia(o,d,L),tn=turnoOf(o,d),at=o.id?ATR[o.id+'|'+d]:null,obs=at&&at.obs||'',podeM=ON&&me&&me.pR;return `<tr><td><b>${esc(o.n)}</b><br><small>${esc(o.m.split('~')[0])}</small></td><td><button class="wkc" type="button" data-s="${esc(r)}" data-m="${esc(o.m)}" data-d="${d}">${esc(r)}</button></td><td>${o.id&&ON&&me&&(me.pC||me.pI)?`<span class="tnE"><select class="turnoI" data-ao="${esc(o.id)}" aria-label="Início do turno de ${esc(o.n)}">${hOpts(0,23,tn.ini)}</select> às <select class="turnoF" data-ao="${esc(o.id)}" aria-label="Fim do turno de ${esc(o.n)}">${hOpts(1,24,tn.fim)}</select></span>`:`${tn.ini}h às ${tn.fim}h`}</td><td>${L.length?presHm(Math.min(...L.map(w=>w.ts))):'—'}</td><td>${m>0?hh(m*6e4):'—'}</td><td>${m>0&&podeM&&o.id?`<input type="time" class="hjT" data-ao="${esc(o.id)}" data-ad="${d}" value="${at&&at.hj?presHm(Date.parse(at.hj)):''}" aria-label="Horário justificado de ${esc(o.n)}">`:(at&&at.hj?presHm(Date.parse(at.hj)):'—')}</td><td>${m>0&&podeM&&o.id?`<input type="text" class="atrM" data-ao="${esc(o.id)}" data-ad="${d}" data-an="${esc(o.n)}" value="${esc(obs)}" maxlength="500" placeholder="Ex.: aguardando onda" aria-label="Motivo do atraso de ${esc(o.n)}" style="min-width:200px">`:(obs?esc(obs):'—')}</td></tr>`}).join('')}</table>`:'<div class="empty">Nenhuma pessoa para os filtros selecionados.</div>'}
+ else if(per===1){const d=days[0];tabela=ops.length?`<table class="wkt"><tr><th>Pessoa</th><th>Situação</th><th>Turno</th><th>Primeiro bipe</th><th>Atraso</th><th>Horário justificado</th><th>Motivo do atraso</th></tr>${ops.map(o=>{const L=data.byOpDay.get(d+'|'+o.m)||[],stt=mgStatus(o,d,L,data),r=wkRotulo(stt),m=atrasoDia(o,d,L),tn=turnoOf(o,d),at=o.id?ATR[o.id+'|'+d]:null,obs=at&&at.obs||'',podeM=ON&&me&&me.pR;return `<tr><td><b>${esc(o.n)}</b><br><small>${esc(o.m.split('~')[0])}</small></td><td><button class="wkc" type="button" data-s="${esc(r)}" data-m="${esc(o.m)}" data-d="${d}">${esc(r)}</button></td><td>${o.id&&ON&&me&&(me.pC||me.pI)?`<span class="tnE"><select class="turnoI" data-ao="${esc(o.id)}" aria-label="Início do turno de ${esc(o.n)}">${hOpts(0,23,tn.ini)}</select> às <select class="turnoF" data-ao="${esc(o.id)}" aria-label="Fim do turno de ${esc(o.n)}">${hOpts(1,24,tn.fim)}</select></span>`:`${tn.ini}h às ${tn.fim}h`}${almCel(o)}</td><td>${L.length?presHm(Math.min(...L.map(w=>w.ts))):'—'}</td><td>${m>0?hh(m*6e4):'—'}</td><td>${m>0&&podeM&&o.id?`<input type="time" class="hjT" data-ao="${esc(o.id)}" data-ad="${d}" value="${at&&at.hj?presHm(Date.parse(at.hj)):''}" aria-label="Horário justificado de ${esc(o.n)}">`:(at&&at.hj?presHm(Date.parse(at.hj)):'—')}</td><td>${m>0&&podeM&&o.id?`<input type="text" class="atrM" data-ao="${esc(o.id)}" data-ad="${d}" data-an="${esc(o.n)}" value="${esc(obs)}" maxlength="500" placeholder="Ex.: aguardando onda" aria-label="Motivo do atraso de ${esc(o.n)}" style="min-width:200px">`:(obs?esc(obs):'—')}</td></tr>`}).join('')}</table>`:'<div class="empty">Nenhuma pessoa para os filtros selecionados.</div>'}
  else tabela=ops.length?`<table class="wkt"><tr><th>Pessoa</th><th>Presenças</th><th>Faltas</th><th>Atestados</th><th>Declarações</th><th>Folgas</th><th>Atrasos</th><th>Pendentes</th></tr>${st.rows.map(r=>`<tr><td><b>${esc(r.o.n)}</b><br><small>${esc(r.o.m.split('~')[0])}</small></td><td>${r.c.pres}</td><td><b>${r.c.f}</b></td><td>${r.c.a}</td><td>${r.c.dc}</td><td>${r.c.fo}</td><td>${r.c.at}</td><td>${r.c.p}</td></tr>`).join('')}</table>`:'<div class="empty">Nenhuma pessoa para os filtros selecionados.</div>';
  box.innerHTML=ckAbas()+`<div class="card">${nav}${cards}<div class="tw">${tabela}</div><div class="legend">${per===7||per===1?'Toque na situação para abrir a pessoa naquele dia. ':''}Os números contam pessoa por dia no período.</div></div>`;ckFade(box);
 }
@@ -1448,6 +1470,11 @@ function folhaInsights(o,data,L,P,qty,mi,single){
  if(mi.o&&pctO<90&&P.length)mel.push('Meta de ondas em '+pctO+'% ('+fmt(P.length)+' de '+fmt(mi.o)+'). Agrupar ondas do mesmo tipo pode ajudar a fechar mais ondas.');
  if(!mi.q&&ref&&pctR<85&&qty)mel.push('Produção em '+pctR+'% da referência do galpão. Converse com o líder para entender o que atrapalhou.');
  if(!mi.q&&!mi.o&&!ref&&qty)mel.push('Sem meta definida para o galpão. Peça ao gestor para configurar a meta individual e o feedback fica mais preciso.');
+ /* concretos: atraso, pausas fora do almoço e hora mais fraca */
+ if(single&&P.length){const d=data.days[0],m=atrasoDia(o,d,L),tn=turnoOf(o,d);if(m>(S.cfg.tol||0))mel.push('Primeiro bipe às '+presHm(Math.min(...L.map(w=>w.ts)))+', '+hh(m*6e4)+' depois do início do turno ('+tn.ini+'h)'+(my?'. No seu ritmo, isso equivale a cerca de '+fmt(Math.round(my*m/60))+' unidades.':'.'))}
+ {let n=0,t=0;data.days.forEach(d=>{const tn=turnoOf(o,d),z=new Date(d+'T00:00:00').getTime(),a0=z+tn.ini*36e5,a1=z+tn.fim*36e5,ts=(data.byOpDay.get(d+'|'+o.m)||[]).map(w=>w.fin||w.ts).filter(x=>x>=a0&&x<=a1).sort((a,b)=>a-b);for(let i=1;i<ts.length;i++){const g=ts[i]-ts[i-1]-almOv(o,ts[i-1],ts[i]);if(g>GAP()*6e4){n++;t+=g}}});
+  if(n&&t>=45*6e4)mel.push((n===1?'1 pausa':n+' pausas')+' acima de '+GAP()+' min fora do almoço, somando '+hh(t)+'. Se estava aguardando onda, avise o líder para o tempo parado ficar explicado.')}
+ if(single&&P.length>=4){const h={};P.forEach(w=>{const k=new Date(w.fin||w.ts).getHours();h[k]=(h[k]||0)+w.qty});const ks=Object.keys(h).map(Number).sort((a,b)=>a-b),al=almocoOf(o),noAl=k=>!al||!(k*60>=al.ini&&(k+1)*60<=al.fim),mid=ks.slice(1,-1).filter(noAl);if(mid.length>=2){const av=ks.reduce((a,k)=>a+h[k],0)/ks.length,lo=mid.reduce((a,k)=>h[k]<h[a]?k:a,mid[0]);if(h[lo]<av*.6)mel.push('Às '+lo+'h foram '+fmt(h[lo])+' unidades, bem abaixo da sua média de '+fmt(Math.round(av))+' por hora. Vale ver o que travou nesse horário.')}}
  if(my&&tr&&my<=tr*.9)mel.push(pk(['Ritmo de '+Math.round(my)+' un/h, '+pc(1-my/tr)+'% abaixo da média da equipe. Reduzir pausas entre bipagens ajuda.','Há espaço para ganhar velocidade: média da equipe é '+Math.round(tr)+' un/h e a sua foi '+Math.round(my)+'.'],5));
  if(lento)mel.push(lento.n+' leva '+mn(lento.a)+' por conjunto, '+pc(lento.r-1)+'% acima da equipe ('+mn(lento.b)+'). Peça dicas de quem é mais rápido nesse tipo.');
  if(ev&&ev.r<=.8)mel.push(pk(['A segunda metade '+ev.txt+' rendeu '+pc(1-ev.r)+'% menos que a primeira. Atenção a pausas longas e ao fim do turno.','O ritmo caiu '+pc(1-ev.r)+'% no fim '+ev.txt+'. Reservar uma pausa curta no meio pode ajudar a segurar o ritmo.'],6));
@@ -1461,22 +1488,32 @@ function folhaInsights(o,data,L,P,qty,mi,single){
  let p3='';if(mi.q||mi.o)p3=(mi.q?(pctM>=100?' Meta de unidades alcançada ('+pctM+'%).':' Meta de unidades em '+pctM+'%, faltaram '+fmt(Math.max(mi.q-qty,0))+'.'):'')+(mi.o?(pctO>=100?' Meta de ondas alcançada.':' Meta de ondas em '+pctO+'%.'):'');
  else if(ref)p3=' Produção em '+pctR+'% da referência do galpão.';
  else if(my&&tr)p3=my>=tr?' Acima da média do turno.':' Abaixo da média do turno.';
- return{resumo:qty?p1+p2+p3:nome+' não teve produção registrada no período.',mel:mel.slice(0,3),pos:pos.slice(0,3)}}
+ return{resumo:qty?p1+p2+p3:nome+' não teve produção registrada no período.',mel:mel.slice(0,4),pos:pos.slice(0,3)}}
 function folhaHTML(o,data){
  const L=data.days.flatMap(d=>data.byOpDay.get(d+'|'+o.m)||[]),P=prod(L),qty=P.reduce((a,w)=>a+w.qty,0),C=durs(L),tm=C.reduce((a,c)=>a+c.d,0),cu=C.reduce((a,c)=>a+c.qty,0),rate=C.length>=3&&tm>0?Math.round(cu/(tm/36e5)):0,mi=metaInd(o,L),dias=new Set(P.map(w=>dk(w.ts))).size,single=data.days.length===1;
  let ser;
  if(single){const h={};P.forEach(w=>{const k=new Date(w.ts).getHours();h[k]=(h[k]||0)+w.qty});const ks=Object.keys(h).map(Number),a=ks.length?Math.min(...ks):7,b=ks.length?Math.max(...ks):16,i0=Math.max(0,Math.min(a,b-5)),i1=Math.min(23,Math.max(b,a+5));ser=[];for(let i=i0;i<=i1;i++)ser.push([i+'h',h[i]||0])}
  else ser=data.days.map(d=>[d.slice(8)+'/'+d.slice(5,7),prod(data.byOpDay.get(d+'|'+o.m)||[]).reduce((a,w)=>a+w.qty,0)]);
  const mx=Math.max(...ser.map(x=>x[1]),1),W=560,H=230,pl=6,pb=22,pt=16,bw=(W-pl*2)/ser.length,step=Math.ceil(ser.length/16),best=ser.reduce((a,x)=>x[1]>a[1]?x:a,['',0]);
- const svg=`<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Produção">`+[0,.5,1].map(f=>`<line x1="${pl}" x2="${W-pl}" y1="${pt+(H-pt-pb)*(1-f)}" y2="${pt+(H-pt-pb)*(1-f)}" stroke="#d3d9e3" stroke-width="1"/>`).join('')+ser.map((x,i)=>{const h=(H-pt-pb)*x[1]/mx,xx=pl+i*bw+bw*.18,w=bw*.64;return `<rect x="${xx.toFixed(1)}" y="${(H-pb-h).toFixed(1)}" width="${w.toFixed(1)}" height="${h.toFixed(1)}" rx="2" fill="${x===best&&x[1]>0?'#0b7f70':'#0f4bd0'}"/>`+(x[1]>0&&ser.length<=24?`<text x="${(xx+w/2).toFixed(1)}" y="${(H-pb-h-4).toFixed(1)}" font-size="16" text-anchor="middle" fill="#14243d" font-weight="700">${fmt(x[1])}</text>`:'')+(i%step===0?`<text x="${(xx+w/2).toFixed(1)}" y="${H-6}" font-size="14" text-anchor="middle" fill="#55627a">${x[0]}</text>`:'')}).join('')+`</svg>`;
+ const svg=`<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Produção" class="fl-ch">`+[0,.5,1].map(f=>`<line x1="${pl}" x2="${W-pl}" y1="${pt+(H-pt-pb)*(1-f)}" y2="${pt+(H-pt-pb)*(1-f)}" stroke="#d3d9e3" stroke-width="1"/>`).join('')+ser.map((x,i)=>{const h=(H-pt-pb)*x[1]/mx,xx=pl+i*bw+bw*.18,w=bw*.64;return `<rect x="${xx.toFixed(1)}" y="${(H-pb-h).toFixed(1)}" width="${w.toFixed(1)}" height="${h.toFixed(1)}" rx="2" fill="${x===best&&x[1]>0?'#0b7f70':'#0f4bd0'}"/>`+(x[1]>0&&ser.length<=24?`<text x="${(xx+w/2).toFixed(1)}" y="${(H-pb-h-4).toFixed(1)}" font-size="16" text-anchor="middle" fill="#14243d" font-weight="700">${fmt(x[1])}</text>`:'')+(i%step===0?`<text x="${(xx+w/2).toFixed(1)}" y="${H-6}" font-size="14" text-anchor="middle" fill="#55627a">${x[0]}</text>`:'')}).join('')+`</svg>`;
  const types=TY.map(([n,c])=>({n,c,v:P.filter(w=>w.ty===n).reduce((a,w)=>a+w.qty,0),o:P.filter(w=>w.ty===n).length})).filter(x=>x.v>0),tmax=Math.max(...types.map(x=>x.v),1);
- const tb=types.length?types.map(x=>`<div><i><span>${esc(x.n)}</span><span><b>${fmt(x.v)}</b> un. · ${x.o} ${x.o===1?'onda':'ondas'}</span></i><u><b style="width:${Math.max(x.v/tmax*100,2)}%;background:${x.c}"></b></u></div>`).join(''):'<div style="color:#55627a;font-size:10pt">Sem produção no período.</div>';
+ const mates=new Set(data.ops.filter(x=>x.g===o.g&&x.t===o.t).map(x=>x.m)),TP=prod(data.waves.filter(w=>mates.has(w.op)));
+ const tb=types.length?types.slice().sort((a,b)=>b.v-a.v).slice(0,5).map(x=>{const e=TP.filter(w=>w.ty===x.n),eu=e.length?e.reduce((a,w)=>a+w.qty,0)/e.length:0,uo=x.v/x.o,mx2=Math.max(uo,eu,1),df=eu?Math.round((uo/eu-1)*100):0;
+  return`<div><i><span><b style="color:${x.c}">●</b> ${esc(x.n)}</span><span><b>${fmt(x.v)}</b> un. · ${x.o} ${x.o===1?'onda':'ondas'}</span></i><u><b style="width:${Math.max(uo/mx2*100,2)}%;background:${x.c}"></b></u>${eu?`<u class="eq"><b style="width:${Math.max(eu/mx2*100,2)}%"></b></u><small>Você ${fmt(uo)} un./onda · equipe ${fmt(eu)} <b style="color:${df>=0?'#0b7f70':'#b3261e'}">${df>0?'+':''}${df}%</b></small>`:''}</div>`}).join(''):'<div style="color:#55627a;font-size:10pt">Sem produção no período.</div>';
+ /* linha do dia: ondas, almoço e pausas fora do almoço */
+ const linha=(()=>{if(!single||!P.length)return'';const d0=new Date(data.days[0]+'T00:00:00').getTime(),T=P.map(w=>w.fin||w.ts).sort((a,b)=>a-b),tn=turnoOf(o,data.days[0]),h0=Math.min(tn.ini,new Date(T[0]).getHours()),h1=Math.max(tn.fim,new Date(T[T.length-1]).getHours()+1),W=560,H=64,X=t=>6+(t-d0-h0*36e5)/((h1-h0)*36e5)*(W-12),al=almocoOf(o),gap=GAP()*6e4;
+  let g=`<svg viewBox="0 0 ${W} ${H}" class="fl-ln" role="img" aria-label="Linha do dia"><rect x="${X(d0+tn.ini*36e5)}" y="6" width="${X(d0+tn.fim*36e5)-X(d0+tn.ini*36e5)}" height="30" rx="3" fill="#eef3fd"/>`;
+  if(al){const a=X(d0+al.ini*6e4),b=X(d0+al.fim*6e4);g+=`<rect x="${a}" y="6" width="${b-a}" height="30" fill="#dff2ee"/><text x="${(a+b)/2}" y="25" font-size="11" text-anchor="middle" fill="#0b7f70">almoço</text>`}
+  T.forEach((t,i)=>{if(i&&t-T[i-1]-almOv(o,T[i-1],t)>gap){const a=X(T[i-1]),b=X(t);g+=`<rect x="${a+3}" y="8" width="${Math.max(b-a-5,2)}" height="26" fill="none" stroke="#b85c00" stroke-dasharray="3 3" rx="2"/>`+(b-a>30?`<text x="${(a+b)/2}" y="25" font-size="10" text-anchor="middle" fill="#b85c00">${hh(t-T[i-1]-almOv(o,T[i-1],t))}</text>`:'')}});
+  T.forEach(t=>{g+=`<rect x="${X(t)-1.5}" y="10" width="3" height="22" fill="#0f4bd0"/>`});
+  for(let h=h0;h<=h1;h++)g+=`<text x="${X(d0+h*36e5)}" y="${H-12}" font-size="11" text-anchor="middle" fill="#55627a">${h}h</text>`;
+  return`<h3 style="margin-top:2mm">Linha do dia <span style="font-weight:400;color:#55627a;font-size:9pt">· traço = onda; tracejado = pausa</span></h3>${g}</svg>`})();
  const topT=types.slice().sort((a,b)=>b.v-a.v)[0]||{n:'',v:0,o:0};const pct=mi.q?Math.round(qty/mi.q*100):0,IN=folhaInsights(o,data,L,P,qty,mi,single),msg=!qty?'Até a próxima!':pct>=100?'Meta batida. Parabéns!':'Obrigado pelo seu trabalho!';
  const d0=data.days[0],d1=data.days[data.days.length-1],fd=d=>new Date(d+'T12:00').toLocaleDateString('pt-BR'),per=single?new Date(d0+'T12:00').toLocaleDateString('pt-BR',{weekday:'long',day:'numeric',month:'long',year:'numeric'}):fd(d0)+' a '+fd(d1);
  return `<section class="fl"><aside class="fl-s"><div class="fl-logo"><img src="${LOGO}" alt="RC Armazém"></div><small>RC Ondas · Minha produção</small><h1>${esc(o.n)}</h1><div class="mt">Matrícula ${esc(String(o.m).split('~')[0])}</div><div class="info"><b>Galpão</b>${esc(o.g||'—')}<b>Turno</b>${o.t===2?'2º turno':'1º turno'}<b>Período</b>${esc(per)}</div></aside>
  <div class="fl-m"><div class="fl-hd"><h2>${esc(msg)}</h2><span>${single?'Produção por hora':'Produção por dia'}</span></div>
- <div class="fl-k"><div><em>Unidades</em><b>${fmt(qty)}</b><span>concluídas</span></div><div><em>Ondas</em><b>${fmt(P.length)}</b><span>concluídas</span></div><div><em>Unidades por hora</em><b>${rate?fmt(rate):'—'}</b><span>${rate?'no ritmo medido':'poucos conjuntos medidos'}</span></div><div><em>${mi.q?'Meta de unidades':'Dias com produção'}</em><b>${mi.q?pct+'%':dias}</b><span>${mi.q?fmt(qty)+' de '+fmt(mi.q):best[1]?'melhor: '+best[0]+' ('+fmt(best[1])+' un.)':''}</span></div></div>
- <div class="fl-g"><div><h3>${single?'Unidades por hora':'Unidades por dia'}${best[1]?` <span style="font-weight:400;color:#55627a;font-size:9pt">· melhor: ${best[0]} (${fmt(best[1])})</span>`:''}</h3>${svg}</div><div><h3>Produção por tipo de onda</h3><div class="fl-t">${tb}</div>${types.length?`<p class="fl-rs">Total: <b>${fmt(qty)}</b> unidades em <b>${fmt(P.length)}</b> ${P.length===1?'onda':'ondas'}. Tipo que mais fez: <b>${esc(topT.n)}</b>, ${fmt(topT.v)} un. em ${topT.o} ${topT.o===1?'onda':'ondas'}.</p>`:''}</div></div>
+ <div class="fl-k"><div><em>Unidades</em><b>${fmt(qty)}</b><span>concluídas</span></div><div><em>Ondas</em><b>${fmt(P.length)}</b><span>concluídas</span></div><div><em>Unidades por hora</em><b>${rate?fmt(rate):'—'}</b><span>${rate?'no ritmo medido':'poucos conjuntos medidos'}</span></div><div><em>${mi.q?'Meta de unidades':'Dias com produção'}</em><b>${mi.q?pct+'%':dias}</b>${mi.q?`<u class="mb"><b style="width:${Math.min(pct,100)}%;background:${pct>=100?'#0b7f70':'#b85c00'}"></b></u><span>${fmt(qty)} de ${fmt(mi.q)} · ${qty>=mi.q?'passou '+fmt(qty-mi.q):'faltaram '+fmt(mi.q-qty)}</span>`:`<span>${best[1]?'melhor: '+best[0]+' ('+fmt(best[1])+' un.)':''}</span>`}</div></div>
+ <div class="fl-g"><div><h3>${single?'Unidades por hora':'Unidades por dia'}${best[1]?` <span style="font-weight:400;color:#55627a;font-size:9pt">· melhor: ${best[0]} (${fmt(best[1])})</span>`:''}</h3>${svg}${linha}</div><div><h3>Você × equipe por tipo <span style="font-weight:400;color:#55627a;font-size:8.5pt">· cinza = média do turno</span></h3><div class="fl-t">${tb}</div></div></div>
  <div class="fl-i"><div class="r"><h4>1 · Resumo</h4><p>${esc(IN.resumo)}</p></div><div class="m"><h4>2 · Pontos a melhorar</h4><ul>${IN.mel.map(x=>`<li>${esc(x)}</li>`).join('')}</ul></div><div class="p"><h4>3 · Pontos positivos</h4><ul>${IN.pos.map(x=>`<li>${esc(x)}</li>`).join('')}</ul></div></div>
  <div class="fl-f"><span>Gerado em ${new Date().toLocaleString('pt-BR')}</span><strong>RC Ondas</strong></div></div></section>`}
 function imprimirFolhas(){
@@ -1489,7 +1526,7 @@ function imprimirFolhas(){
 /* tempo e ondas no horário normal e na hora extra (mesma regra da hora extra estimada) */
 function mgSplit(o,d,L){const P=prod(L),times=L.map(w=>w.fin||w.ts).filter(Number.isFinite).sort((a,b)=>a-b),t=turnoOf(o,d),day=new Date(d+'T00:00:00'),tol=(S.cfg.tol||0)*6e4,start=day.getTime()+t.ini*36e5-tol;
  let end=day.getTime()+t.fim*36e5+tol;if(t.fim<=t.ini)end+=864e5;let nMs=0,xMs=0;
- for(let i=1;i<times.length;i++){const a=times[i-1],b=times[i];if(b<=a||b-a>GAP()*6e4)continue;const x=Math.max(0,Math.min(b,start)-a)+Math.max(0,b-Math.max(a,end));xMs+=x;nMs+=b-a-x}
+ for(let i=1;i<times.length;i++){const a=times[i-1],b=times[i];const lo=almOv(o,a,b);if(b<=a||b-a-lo>GAP()*6e4)continue;const x=Math.max(0,Math.min(b,start)-a)+Math.max(0,b-Math.max(a,end));xMs+=x;nMs+=Math.max(0,b-a-x-lo)}
  const fora=w=>{const k=w.fin||w.ts;return k<start||k>end},X=P.filter(fora),N=P.filter(w=>!fora(w));
  return{nMs,xMs,nO:N.length,xO:X.length,nQ:N.reduce((s,w)=>s+w.qty,0),xQ:X.reduce((s,w)=>s+w.qty,0)}}
 /* dias com bipagem em que a pessoa não bateu a meta individual (unidades e/ou ondas por dia) */
@@ -1522,7 +1559,7 @@ function individual(){
   rk=ativos.slice().sort((x,y)=>y.q-x.q),pos=rk.findIndex(x=>x.o.m===o.m)+1,mOnd=ativos.length?ativos.reduce((s,x)=>s+x.P.length,0)/ativos.length:0,
   rit=l=>{const C=durs(l),tm=C.reduce((s,c)=>s+c.d,0),cu=C.reduce((s,c)=>s+c.qty,0);return tm>=18e5?cu/(tm/36e5):0},rP=rit(L),rE=rit(ativos.flatMap(x=>x.L)),pc=(a,b)=>b?Math.round((a/b-1)*100):0,sg=v=>`<b style="color:${v>=0?'var(--k)':'var(--rx)'}">${v>0?'+':''}${v}%</b>`;
  const idx=ops.findIndex(x=>x.m===o.m),ini=String(o.n).trim().split(/\s+/).slice(0,2).map(x=>x[0]).join('').toUpperCase(),A=mgAbaixo(o,data);
- const hd=`<div class="card pfh"><button type="button" class="lk pfb" data-pnav="0">‹ Equipe</button><span class="pfa">${esc(ini)}</span><div class="pft"><h2>${esc(o.n)}</h2><div class="legend" style="margin:0">${esc(o.m.split('~')[0])} · ${dia.t.ini}h às ${dia.t.fim}h (${o.t===2?'2º':'1º'} turno) · ${esc(o.g||'sem galpão')}${dia.p?' · 1º bipe '+new Date(dia.p.ts).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})+(dia.p.diff>0?' <span class="tag" style="background:var(--o);color:#fff">atraso '+hh(dia.p.diff*6e4)+'</span>':''):''}</div></div>
+ const hd=`<div class="card pfh"><button type="button" class="lk pfb" data-pnav="0">‹ Equipe</button><span class="pfa">${esc(ini)}</span><div class="pft"><h2>${esc(o.n)}</h2><div class="legend" style="margin:0">${esc(o.m.split('~')[0])} · ${dia.t.ini}h às ${dia.t.fim}h (${o.t===2?'2º':'1º'} turno)${(a=>a?' · almoço '+m2hm(a.ini)+'–'+m2hm(a.fim):'')(almocoOf(o))} · ${esc(o.g||'sem galpão')}${dia.p?' · 1º bipe '+new Date(dia.p.ts).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})+(dia.p.diff>0?' <span class="tag" style="background:var(--o);color:#fff">atraso '+hh(dia.p.diff*6e4)+'</span>':''):''}</div></div>
   <span class="pfn"><button type="button" class="btn alt sm" data-pnav="-1" ${idx<=0?'disabled':''} aria-label="Pessoa anterior">‹</button><span class="legend" style="margin:0">${idx+1} de ${ops.length}</span><button type="button" class="btn alt sm" data-pnav="1" ${idx>=ops.length-1?'disabled':''} aria-label="Próxima pessoa">›</button></span></div>`;
  const kp=`<dl class="stats solo">`+mgK('Unidades',fmt(qty),mi.q?vsMeta(qty,mi.q)+' da meta individual':ref===null?'unidades concluídas':Math.round(qty/ref*100)+'% da referência ('+fmt(ref)+')')
   +mgK('Ondas',fmt(P.length),(mi.o?vsMeta(P.length,mi.o)+' da meta · ':'')+'equipe: '+mOnd.toLocaleString('pt-BR',{maximumFractionDigits:1})+' por pessoa')
@@ -1543,10 +1580,11 @@ function individual(){
   let g=`<svg class="ch" viewBox="0 0 ${W} ${H}" role="img" aria-label="Linha do dia de ${esc(o.n)}"><rect x="${X(d0+dia.t.ini*36e5)}" y="16" width="${X(d0+dia.t.fim*36e5)-X(d0+dia.t.ini*36e5)}" height="46" rx="4" fill="color-mix(in srgb,var(--g) 6%,var(--card))"/><text x="${X(d0+dia.t.ini*36e5)+4}" y="12">turno ${dia.t.ini}h–${dia.t.fim}h</text>`;
   if(h1>dia.t.fim)g+=`<rect x="${X(d0+dia.t.fim*36e5)}" y="16" width="${X(d0+h1*36e5)-X(d0+dia.t.fim*36e5)}" height="46" fill="color-mix(in srgb,var(--o) 14%,var(--card))"/><text x="${X(d0+h1*36e5)}" y="12" text-anchor="end" style="fill:var(--o)">hora extra</text>`;
   if(h0<dia.t.ini)g+=`<rect x="${X(d0+h0*36e5)}" y="16" width="${X(d0+dia.t.ini*36e5)-X(d0+h0*36e5)}" height="46" fill="color-mix(in srgb,var(--o) 14%,var(--card))"/>`;
-  T.forEach((x,i)=>{if(i&&x.t-T[i-1].t>gap){const a=X(T[i-1].t),b=X(x.t);g+=`<rect x="${a+4}" y="18" width="${Math.max(b-a-6,2)}" height="42" fill="none" stroke="var(--o)" stroke-dasharray="3 3" rx="3"><title>Pausa de ${hh(x.t-T[i-1].t)}</title></rect>`+(b-a>34?`<text x="${(a+b)/2}" y="43" text-anchor="middle" style="fill:var(--o);font-size:10.5px">${hh(x.t-T[i-1].t)}</text>`:'')}});
+  {const al=almocoOf(o);if(al){const a=X(d0+al.ini*6e4),b=X(d0+al.fim*6e4);g+=`<rect x="${a}" y="16" width="${Math.max(b-a,2)}" height="46" fill="color-mix(in srgb,var(--k) 16%,var(--card))"/><text x="${(a+b)/2}" y="43" text-anchor="middle" style="fill:var(--k);font-size:10.5px">almoço</text>`}}
+  T.forEach((x,i)=>{if(i&&x.t-T[i-1].t-almOv(o,T[i-1].t,x.t)>gap){const a=X(T[i-1].t),b=X(x.t);g+=`<rect x="${a+4}" y="18" width="${Math.max(b-a-6,2)}" height="42" fill="none" stroke="var(--o)" stroke-dasharray="3 3" rx="3"><title>Pausa de ${hh(x.t-T[i-1].t)}</title></rect>`+(b-a>34?`<text x="${(a+b)/2}" y="43" text-anchor="middle" style="fill:var(--o);font-size:10.5px">${hh(x.t-T[i-1].t)}</text>`:'')}});
   T.forEach(x=>{const ty=TY.find(z=>z[0]===x.w.ty)||TY[0],h=Math.max(x.w.qty/mq*42,4);g+=`<rect x="${X(x.t)-3}" y="${62-h}" width="6" height="${h}" rx="1.5" fill="${ty[1]}"><title>${new Date(x.t).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})} · ${esc(wnS(x.w)||'')} ${esc(x.w.ty)}: ${fmt(x.w.qty)} un.</title></rect>`});
   for(let h=h0;h<=h1;h++)g+=`<text x="${X(d0+h*36e5)}" y="${H-14}" text-anchor="middle">${h}h</text>`;
-  return`<div class="card"><h2>Linha do dia</h2>${g}</svg><div class="legend">Cada traço é uma onda (altura = unidades). Caixas tracejadas são pausas acima de ${GAP()} min.</div></div>`})();
+  return`<div class="card"><h2>Linha do dia</h2>${g}</svg><div class="legend">Cada traço é uma onda (altura = unidades). Caixas tracejadas são pausas acima de ${GAP()} min fora do almoço; a faixa verde é o almoço.</div></div>`})();
  /* por tipo, comparando unidades por onda com a equipe */
  const AT=ativos.flatMap(x=>x.P),DP=durs(L),tipos=`<div class="card"><h2>Por tipo de onda</h2><div class="tw"><table><tr><th>Tipo</th><th>Ondas</th><th>Unidades</th><th>Tempo</th><th>Un./onda</th><th>vs. equipe</th></tr>`+TY.map(([n,c])=>{const q=P.filter(w=>w.ty===n),u=q.reduce((s,w)=>s+w.qty,0),e=AT.filter(w=>w.ty===n),eu=e.length?e.reduce((s,w)=>s+w.qty,0)/e.length:0,uo=q.length?u/q.length:0,dd=DP.filter(x=>x.w.ty===n);
   return q.length?`<tr><td><i class="dot" style="background:${c}"></i>${esc(n)}</td><td>${q.length}</td><td>${fmt(u)}</td><td>${dd.length?mm(wA(dd)):'—'}</td><td>${fmt(uo)}</td><td>${eu?sg(pc(uo,eu)):'—'}</td></tr>`:''}).join('')+`</table></div>${P.length?'':'<div class="empty">Sem produção no período.</div>'}</div>`;
@@ -1560,8 +1598,8 @@ function individual(){
  <div class="card" style="margin-top:14px"><h2>Histórico das ondas · ${fmt(history.length)} registros</h2><div class="tw">${mgHistory(history.slice(0,mgShown))}</div>${history.length>mgShown?'<button class="btn alt sm" id="mgMore">Mostrar mais registros</button>':''}</div>`;
 }
 function coTipos(W,P,people){const D=durs(W),pp=Math.max(people,1);
- return`<table><tr><th>Tipo</th><th>Ondas</th><th>Unidades</th><th>Tempo médio ponderado por conjunto</th><th>Ondas por pessoa</th><th>Tempo por pessoa</th></tr>`+TY.map(([n])=>{const q=P.filter(w=>w.ty===n),dcc=D.filter(x=>x.w.ty===n),d=dcc.map(x=>x.d),sum=d.reduce((a,v)=>a+v,0);
-  return`<tr><td><b>${esc(n)}</b></td><td>${fmt(q.length)}</td><td>${fmt(q.reduce((a,w)=>a+w.qty,0))}</td><td>${d.length?mm(wA(dcc)):"—"}</td><td>${(q.length/pp).toLocaleString("pt-BR",{maximumFractionDigits:1})}</td><td>${d.length?mm(sum/pp):"—"}</td></tr>`}).join("")+"</table>"}
+ const tot=P.reduce((a,w)=>a+w.qty,0)||1;return`<table><tr><th>Tipo</th><th>Ondas</th><th>Unidades</th><th>Tempo médio ponderado por conjunto</th><th>Ondas por pessoa</th><th>Tempo por pessoa</th><th style="width:22%">Participação</th></tr>`+TY.map(([n,c])=>{const q=P.filter(w=>w.ty===n),dcc=D.filter(x=>x.w.ty===n),d=dcc.map(x=>x.d),sum=d.reduce((a,v)=>a+v,0);
+  const u=q.reduce((a,w)=>a+w.qty,0);return`<tr${q.length?'':' style="opacity:.45"'}><td><i class="dot" style="background:${c}"></i><b>${esc(n)}</b></td><td>${fmt(q.length)}</td><td>${fmt(q.reduce((a,w)=>a+w.qty,0))}</td><td>${d.length?mm(wA(dcc)):"—"}</td><td>${(q.length/pp).toLocaleString("pt-BR",{maximumFractionDigits:1})}</td><td>${d.length?mm(sum/pp):"—"}</td><td><div class="bar" title="${Math.round(u/tot*100)}% das unidades"><b style="width:${u/tot*100}%;--c:${c}"></b></div></td></tr>`}).join("")+"</table>"}
 function coletiva(){
  const target=$("#coBody");if(!mgPronto()){target.innerHTML=mgState&&/Não foi/.test(mgState)?'<div class="card"><div class="empty">'+esc(mgState)+'</div></div>':esqueleto();return}
  const data=mgData(),g=$("#gal").value,t=$("#turnoF").value,opmap=new Map(data.ops.map(o=>[o.m,o]));
@@ -1569,10 +1607,27 @@ function coletiva(){
  const gals=(g==='__all'?visG():[g]).filter(Boolean),active=data.days.flatMap(d=>gals.filter(k=>d===dk(Date.now())||data.byGalDay.has(d+'|'+k)).map(k=>({d,k}))),missing=gals.filter(k=>!(+MT()[k]>0));
  const configured=active.reduce((sum,x)=>sum+(+MT()[x.k]||0),0),canCompare=!t&&!missing.length&&configured>0;
  const types=TY.map(([n,c])=>({k:n,v:P.filter(w=>w.ty===n).reduce((s,w)=>s+w.qty,0),s:P.filter(w=>w.ty===n).length+' ondas',c}));
- target.innerHTML=`<dl class="stats solo">`+mgK('Produção coletiva',fmt(total),'unidades concluídas')+mgK('Pessoas com bipagem',fmt(people),'no período')+mgK('Ondas concluídas',fmt(P.length),'compartilhadas pela equipe')+mgK('Procurando',fmt(W.filter(w=>w.st===1).length),fmt(W.filter(w=>w.st===1).reduce((a,w)=>a+w.qty,0))+' unidades')+mgK('Meta coletiva',canCompare?fmt(configured):'—',t?'disponível em todos os turnos':missing.length?'configure a meta dos galpões':'dias com operação')+mgK('Atingimento',canCompare?fmt(total/configured*100)+'%':'—',canCompare?'da meta coletiva':'sem comparação disponível')+`</dl>
- <div class="grid two" style="margin-top:14px"><div class="card"><h2>Produção por tipo de onda</h2>${bars(types)}</div><div class="card"><h2>Critério da meta coletiva</h2><div class="ins"><div>Somamos as unidades concluídas da equipe, sem ranking de pessoas.</div><div>A meta é a soma da meta diária atual dos galpões nos dias com bipagem registrada e no dia de hoje.</div><div>A meta cadastrada cobre o dia inteiro. Por isso, a comparação aparece somente com todos os turnos selecionados.</div><div>Faltas e horas extras não geram descontos automáticos. Os tipos são mostrados separadamente porque têm dificuldades diferentes. No histórico usamos a meta e os turnos atualmente cadastrados.</div></div></div></div>
- <div class="card" style="margin-top:14px"><h2>Total por tipo e tempo entre ondas</h2><div class="tw">${coTipos(W,P,people)}</div><div class="legend">Tempo por conjunto: da bipagem de um conjunto de ondas (bipadas no mesmo instante) até a bipagem seguinte do mesmo operador, ignorando pausas acima de ${GAP()} min. A média por pessoa divide o total pelas ${fmt(people)} pessoas com bipagem no período.</div></div>
- ${missing.length?`<div class="legend">Galpões sem meta diária: ${missing.map(esc).join(', ')}. Cadastre em Config → Metas.</div>`:''}`;
+ const single=data.days.length===1,bk=w=>single?new Date(w.fin||w.ts).getHours():dk(w.fin||w.ts),keys=single?(()=>{const hs=P.map(w=>new Date(w.fin||w.ts).getHours());if(!hs.length)return[];const r=[];for(let h=Math.min(...hs);h<=Math.max(...hs);h++)r.push(h);return r})():data.days.slice(),
+  vals=keys.map(k=>P.filter(w=>bk(w)===k).reduce((s2,w)=>s2+w.qty,0)),pes=keys.map(k=>new Set(P.filter(w=>bk(w)===k).map(w=>w.op)).size),pct=canCompare?total/configured*100:0;
+ const ch=keys.length?(()=>{const Wd=640,H=220,l=40,r=8,tp=18,bt=24,n=keys.length,bw=(Wd-l-r)/n,mx=nice(Math.max(...vals,1)*1.12),Y=v=>tp+(H-tp-bt)*(1-v/mx),lb=k=>single?k+'h':k.slice(8,10)+'/'+k.slice(5,7),stp=Math.ceil(n/16),best=vals.indexOf(Math.max(...vals));
+  return`<svg class="ch" viewBox="0 0 ${Wd} ${H}" role="img" aria-label="Produção da equipe ${single?'por hora':'por dia'}">`+[0,.5,1].map(f=>`<line x1="${l}" x2="${Wd-r}" y1="${Y(mx*f)}" y2="${Y(mx*f)}" stroke="var(--line)"/><text x="${l-5}" y="${Y(mx*f)+4}" text-anchor="end">${fmt(mx*f)}</text>`).join('')+keys.map((k,i)=>{const v=vals[i],x=l+i*bw,w=Math.max(Math.min(bw*.6,34),4);return(v?`<rect x="${x+(bw-w)/2}" y="${Y(v)}" width="${w}" height="${Y(0)-Y(v)}" rx="3" fill="${i===best?'var(--k)':'var(--g)'}"><title>${lb(k)}: ${fmt(v)} un. · ${pes[i]} ${pes[i]===1?'pessoa':'pessoas'}</title></rect>`+(bw>=26?`<text x="${x+bw/2}" y="${Y(v)-4}" text-anchor="middle" style="fill:var(--ink)">${fmt(v)}</text>`:''):'')+(i%stp===0?`<text x="${x+bw/2}" y="${H-6}" text-anchor="middle">${lb(k)}</text>`:'')}).join('')+'</svg>'})():'<div class="empty">Sem produção no período.</div>';
+ const porGal=gals.map(k=>{const q=P.filter(w=>w.gal===k).reduce((s2,w)=>s2+w.qty,0),m=active.filter(x=>x.k===k).length*(+MT()[k]||0);return{k,q,m}});
+ /* turnos: pessoas e hora extra da equipe (segue os filtros de galpão e turno) */
+ const tRows=[1,2].filter(x=>!t||String(x)===t).map(x=>{const os=data.ops.filter(o=>o.t===x&&(g==='__all'||o.g===g)&&(!o.excluido||data.waves.some(w=>w.op===o.m)));
+  const per=os.map(o=>{const sp=mgSoma(data.days.map(d=>mgSplit(o,d,data.byOpDay.get(d+'|'+o.m)||[])));return{o,sp,ativo:sp.nO+sp.xO>0}}),z=mgSoma(per.map(q=>q.sp));
+  return{x,cad:os.length,at:per.filter(q=>q.ativo).length,xp:per.filter(q=>q.sp.xO>0).length,z}}),tz=mgSoma(tRows.map(r=>r.z));
+ const trn=`<div class="card" id="coTurnos" style="margin-top:12px"><h2>Turnos e hora extra da equipe <small class="legend" style="margin:0">${t?t+'º turno':'todos os turnos'}${g==='__all'?'':' · '+esc(g)}</small></h2><div class="tw"><table class="tp"><tr><th>Turno</th><th>Pessoas com produção</th><th>Cadastradas</th><th>Horário normal</th><th>Hora extra</th><th>Unidades na hora extra</th><th>Pessoas com hora extra</th></tr>`
+  +tRows.map(r=>`<tr><td><b>${r.x}º turno</b><br><small>${S.cfg.turnos[r.x].ini}h às ${S.cfg.turnos[r.x].fim}h</small></td><td>${fmt(r.at)}</td><td>${fmt(r.cad)}</td><td>${mgOT(r.z.nO,r.z.nMs)}</td><td>${mgOT(r.z.xO,r.z.xMs)}</td><td>${fmt(r.z.xQ)}${r.z.nQ+r.z.xQ?` <small>(${Math.round(r.z.xQ/(r.z.nQ+r.z.xQ)*100)}%)</small>`:''}</td><td>${fmt(r.xp)}</td></tr>`).join('')
+  +(tRows.length>1?`<tr class="tot"><td><b>Total</b></td><td><b>${fmt(tRows.reduce((a,r)=>a+r.at,0))}</b></td><td><b>${fmt(tRows.reduce((a,r)=>a+r.cad,0))}</b></td><td>${mgOT(tz.nO,tz.nMs)}</td><td>${mgOT(tz.xO,tz.xMs)}</td><td><b>${fmt(tz.xQ)}</b></td><td><b>${fmt(tRows.reduce((a,r)=>a+r.xp,0))}</b></td></tr>`:'')
+  +`</table></div><div class="legend">Turno do cadastro de cada pessoa. Tempo somado entre bipagens dentro e fora do turno (com a tolerância), sem o almoço e sem pausas acima de ${GAP()} min.</div></div>`;
+ const meta=`<div class="card" id="coMeta"><h2>Meta coletiva</h2>${canCompare?`<div class="cobig"><b class="num">${fmt(pct)}%</b><span>${fmt(total)} de ${fmt(configured)} unidades · ${total>=configured?'passou '+fmt(total-configured):'faltam '+fmt(configured-total)}</span></div><div class="bar cob"><b style="width:${Math.min(pct,100)}%;--c:${pct>=100?'var(--k)':'var(--g)'}"></b></div>`:`<div class="empty" style="padding:10px 0">${t?'A meta cadastrada vale para o dia inteiro. Escolha "Todos os turnos" no topo para comparar.':missing.length?'Cadastre a meta diária dos galpões em Config › Geral.':'Sem dias com operação no período.'}</div>`}
+  <table class="tp" style="margin-top:10px"><tr><th>Galpão</th><th>Unidades</th><th>Meta</th><th>%</th></tr>${porGal.map(x=>`<tr><td>${esc(x.k)}</td><td>${fmt(x.q)}</td><td>${x.m&&!t?fmt(x.m):'—'}</td><td>${x.m&&!t?Math.round(x.q/x.m*100)+'%':'—'}</td></tr>`).join('')}</table></div>`;
+ target.innerHTML=`<dl class="stats solo">`+mgK('Produção coletiva',fmt(total),'unidades concluídas')+mgK('Pessoas com bipagem',fmt(people),'no período')+mgK('Ondas concluídas',fmt(P.length),people?'média de '+(P.length/people).toLocaleString('pt-BR',{maximumFractionDigits:1})+' por pessoa':'compartilhadas pela equipe')+mgK('Procurando',fmt(W.filter(w=>w.st===1).length),fmt(W.filter(w=>w.st===1).reduce((a,w)=>a+w.qty,0))+' unidades')+mgK('Hora extra',tz.xMs?hh(tz.xMs):'—',fmt(tz.xO)+(tz.xO===1?' onda':' ondas')+' · '+fmt(tz.xQ)+' un.')+mgK('Meta coletiva',canCompare?fmt(configured):'—',t?'escolha todos os turnos':missing.length?'configure a meta dos galpões':'dias com operação')+mgK('Atingimento',canCompare?fmt(pct)+'%':'—',canCompare?'da meta coletiva':'sem comparação disponível')+`</dl>
+ <div class="pfg"><div class="card"><h2>Produção da equipe ${single?'por hora':'por dia'} <small class="legend" style="margin:0">a barra verde é o pico</small></h2>${ch}</div>${meta}</div>
+ ${trn}
+ <div class="card" style="margin-top:12px"><h2>Total por tipo e tempo entre ondas</h2><div class="tw">${coTipos(W,P,people)}</div>
+ <details class="info"><summary>Como os números são calculados</summary>Somamos as unidades concluídas da equipe, sem ranking de pessoas. A meta é a soma da meta diária atual dos galpões nos dias com bipagem e no dia de hoje; como ela cobre o dia inteiro, a comparação só aparece com todos os turnos. Tempo por conjunto: da bipagem de um conjunto de ondas (bipadas no mesmo instante) até a seguinte do mesmo operador, sem contar o almoço e ignorando pausas acima de ${GAP()} min. A média por pessoa divide o total pelas ${fmt(people)} pessoas com bipagem. Faltas e horas extras não geram descontos automáticos.</details></div>
+ ${missing.length?`<div class="legend">Galpões sem meta diária: ${missing.map(esc).join(', ')}. Cadastre em Config › Geral.</div>`:''}`;
 }
 
 
@@ -1582,7 +1637,7 @@ function cfgOp(){
  if(ON&&me&&me.adm){const L=antigos();let ja="";try{ja=localStorage.getItem("rcondas.antigos.enviado")||""}catch(e){}
   if(L)$("#storInfo").innerHTML+="<br>Dados antigos neste aparelho: "+fmt(L.waves.length)+" ondas e "+L.ops.length+" operadores"+(ja?", já enviados":"")+'. <button class="btn alt sm" id="impB" style="margin-top:6px">'+(ja?"Enviar de novo":"Enviar para o banco")+"</button>"}
  $("#lims").innerHTML=TY.map(([n])=>`<label>${n}<input type="number" min="1" data-lim="${n}" value="${S.cfg.lim[n]}"></label>`).join("");
- $("#turnos").innerHTML=[1,2].map(t=>`<label>Início do ${t}º turno (hora)<input type="number" min="0" max="23" data-tn="${t}" data-k="ini" value="${S.cfg.turnos[t].ini}"></label><label>Fim do ${t}º turno (hora)<input type="number" min="1" max="24" data-tn="${t}" data-k="fim" value="${S.cfg.turnos[t].fim}"></label>`).join("");
+ $("#turnos").innerHTML=[1,2].map(t=>`<label>Início do ${t}º turno (hora)<input type="number" min="0" max="23" data-tn="${t}" data-k="ini" value="${S.cfg.turnos[t].ini}"></label><label>Fim do ${t}º turno (hora)<input type="number" min="1" max="24" data-tn="${t}" data-k="fim" value="${S.cfg.turnos[t].fim}"></label><label>Almoço do ${t}º turno: início<input type="time" data-al="${t}" data-k="ini" value="${m2hm(((S.cfg.alm||{})[t]||{}).ini)}"></label><label>Almoço do ${t}º turno: fim<input type="time" data-al="${t}" data-k="fim" value="${m2hm(((S.cfg.alm||{})[t]||{}).fim)}"></label>`).join("");
  $("#and").checked=!!S.cfg.and;$("#gap").value=GAP();$("#tol").value=S.cfg.tol}
 function cfgUsers(){
  $("#nextCode").textContent="próximo: "+nextCode();
@@ -2096,6 +2151,7 @@ document.addEventListener("change",e=>{const d=e.target.dataset,id=e.target.id;l
  if(ON){remChange(e);return}
  if(d.lim){S.cfg.lim[d.lim]=Math.max(1,+e.target.value||1);r=true}
  if(d.tn){S.cfg.turnos[d.tn][d.k]=Math.max(0,Math.min(24,+e.target.value||0));r=true}
+ if(d.al){const x=almCampos(d.al);if(x===false)toast("O fim do almoço precisa ser depois do início.");else if(x){S.cfg.alm=S.cfg.alm||{};S.cfg.alm[d.al]=x;r=true;toast(x.ini==null?"Almoço do "+d.al+"º turno removido":"Almoço do "+d.al+"º turno: "+m2hm(x.ini)+" às "+m2hm(x.fim))}}
  if(id==="and"){S.cfg.and=e.target.checked;
   if(!S.cfg.and){let n=0;S.waves.forEach(w=>{if(w.st!==0){w.st=0;w.fin=Date.now();w.auto=1;w.sync=online()?1:0;n++}});toast(n+" onda(s) finalizada(s) automaticamente")}r=true}
  if(id==="gap"){S.cfg.gap=Math.min(60,Math.max(1,+e.target.value||30));e.target.value=S.cfg.gap;r=true}

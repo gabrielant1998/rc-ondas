@@ -676,6 +676,20 @@ await T("91 Individual: dias abaixo da meta individual (na equipe e na ficha)",a
   const tb=rw.closest('table'),hd=[...tb.querySelector('tr').children].map(c=>c.textContent),i=hd.indexOf('Dias abaixo da meta');const eq=rw.children[i].textContent;
   $("#iOp").value="CL001";individual();return{eq,k:document.querySelector('#mgAb').textContent,res:[...document.querySelectorAll('#iBody tr')].map(t=>t.textContent).filter(t=>/Abaixo|Bateu/.test(t)).join(' / ')}});
  ok(/1 de 2/.test(r.eq),'equipe: '+r.eq);ok(/1/.test(r.k)&&/de 2 dias/.test(r.k),'ficha: '+r.k);ok(/Abaixo/.test(r.res)&&/faltaram 50 un/.test(r.res)&&/Bateu/.test(r.res),'resumo: '+r.res)});
+await T("92 Almoço: não conta como pausa nem atraso; ajuste por pessoa vale no lugar do turno",async()=>{const D=864e5,y=HR(0,0)-D,at=(h,m)=>y+h*36e5+m*6e4;
+ const st=base({waves:[WV('a','1','Itens Únicos',10,at(11,40)),WV('b','2','Itens Únicos',10,at(11,55)),WV('c','3','Itens Únicos',10,at(13,5)),WV('d','4','Itens Únicos',10,at(13,20)),WV('e','5','Itens Únicos',10,at(13,10),'CL002','Bruno Lima')]});st.cfg.alm={1:{ini:720,fim:780}};
+ const p=await page(b,st);
+ const r=await p.evaluate(y=>{const d=dk(y),o=S.ops[0],L=S.waves.filter(w=>w.op==='CL001'),sp=mgSplit(o,d,L),bruno=S.ops[1],Lb=S.waves.filter(w=>w.op==='CL002');
+  const a1=atrasoDia(bruno,d,Lb);S.ops[0].al={ini:780,fim:840};const sp2=mgSplit(S.ops[0],d,L);return{n:sp.nMs/6e4,a1,n2:sp2.nMs/6e4}},y);
+ ok(r.n===40,'tempo normal com almoço descontado deveria ser 40 min: '+r.n);
+ ok(r.a1===310,'atraso sem o almoço deveria ser 310 min: '+r.a1);
+ ok(r.n2===15,'com o almoço da pessoa às 13h, o intervalo 11:55-13:05 vira pausa: '+r.n2)});
+await T("93 Meta coletiva: pessoas por turno e hora extra da equipe seguem o filtro de turno",async()=>{
+ const st=base({waves:[WV('a','1','Itens Únicos',10,HR(15,40)),WV('b','2','Itens Únicos',10,HR(15,55)),WV('c','3','Itens Únicos',10,HR(16,30)),WV('d','4','Itens Únicos',10,HR(16,45)),WV('e','5','Itens Únicos',20,HR(18,0),'CL003','Carla Dias')]});
+ const p=await page(b,st);
+ const r=await p.evaluate(()=>{$("#gal").value="__all";$("#turnoF").value="";go("ind");document.querySelector('[data-gs="mc"]').click();const rows=[...document.querySelectorAll('#coTurnos tr')].map(t=>[...t.children].map(c=>c.textContent.trim()).join('|'));$("#turnoF").value="2";coletiva();const r2=[...document.querySelectorAll('#coTurnos tr')].map(t=>t.textContent.trim());return{rows,r2}});
+ const t1=r.rows.find(x=>x.startsWith('1º turno'))||'';ok(/\|1\|2\|/.test(t1)&&/2 ondas/.test(t1),'1º turno: '+t1);ok(r.rows.some(x=>x.startsWith('Total')),'total: '+r.rows.join(' / '));
+ ok(r.r2.length===2&&/2º turno/.test(r.r2[1]),'filtro 2º turno: '+r.r2.join(' / '))});
 await b.close();
 const w=Math.max(...R.map(r=>r[1].length));for(const r of R)console.log((r[0]==="PASS"?"✅":"❌")+" "+r[1].padEnd(w)+"  "+r[2]);
 console.log(`\n${R.filter(r=>r[0]==="PASS").length}/${R.length} passaram`)})();
