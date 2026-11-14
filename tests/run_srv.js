@@ -61,8 +61,10 @@ function fake(db){const cors={'access-control-allow-origin':'*','access-control-
    if(t==='presenca_registros'){if(!email)return J(route,401,{message:'permission denied',code:'42501'});return J(route,200,(db.presenca||[]).filter(r=>!r.cancelado_em&&escopo(db.operadores.find(o=>o.id===r.operador_id).galpao_id)))}
    if(/^presenca_(baixas|atrasos|historico|alteracoes)$/.test(t))return J(route,200,[]);
    if(t==='ondas'){if(!email)return J(route,401,{message:'permission denied for table ondas',code:'42501'});
-    const de=(q.get('registrada_em')||'gte.').slice(4),off=+q.get('offset')||0,lim=+q.get('limit')||1000;
-    return J(route,200,db.ondas.filter(o=>escopo(o.galpao_id)&&o.registrada_em>=de).sort((a,b)=>a.registrada_em<b.registrada_em?-1:1).slice(off,off+lim))}}
+    const de=(q.get('registrada_em')||'gte.').slice(4),au=q.get('atualizado_em'),off=+q.get('offset')||0,lim=+q.get('limit')||1000;db.calls.ondas=db.calls.ondas||{full:0,delta:0};if(off===0&&(au||q.get('registrada_em')))db.calls.ondas[au?'delta':'full']++;
+    const ua=o=>o.atualizado_em||o.registrada_em;
+    return J(route,200,db.ondas.filter(o=>escopo(o.galpao_id)&&o.registrada_em>=de&&(!au||ua(o)>=au.slice(4))).map(o=>Object.assign({atualizado_em:ua(o)},o)).sort((a,b)=>a.registrada_em<b.registrada_em?-1:1).slice(off,off+lim))}
+   if(t==='ondas_excluidas'){if(!email)return J(route,401,{message:'permission denied',code:'42501'});return J(route,200,(db.excl||[]).filter(x=>x.excluida_em>=(q.get('excluida_em')||'gte.').slice(4)))}}
   const podeC=gal=>g&&g.pode_config&&(g.admin||g.galpao_id===gal);
   if(t==='operadores'&&m==='POST'&&(body.inicio==null||body.fim==null))return J(route,400,{code:'23502',message:'null value in column "inicio" of relation "operadores" violates not-null constraint'});
   if(t==='operadores'&&m==='POST'){if(!podeC(body.galpao_id))return J(route,403,{code:'42501',message:'new row violates row-level security policy'});
@@ -368,6 +370,15 @@ await T('S31 Admin restringe abas de um gestor; gestor vê só as liberadas e n�
  await p.click('#mL tr:has-text("g2@x.com") [data-mabas]');await p.waitForTimeout(300);
  await p.click('#mAbas [data-abs="todas"]');await p.waitForTimeout(600);
  ok(db.gestores.find(g=>g.email==='g2@x.com').abas===null,'liberar todas não gravou null')});
+await T('S32 Sincronização: depois da 1ª carga baixa só o que mudou; exclusões somem; ao recarregar usa a cópia do aparelho',async()=>{const db=banco();const t0=new Date(Date.now()-36e5).toISOString();['s1','s2','s3'].forEach((id,i)=>db.ondas.push({id,wn:'90'+i,operador_id:db.operadores[0].id,galpao_id:G1,tipo:'Vários artigos',quantidade:10+i,status:0,registrada_em:t0,concluida_em:t0}));const p=await page(b,db);await login(p,'adm@x.com','senha1234');
+ const n0=await p.evaluate(()=>S.waves.filter(w=>w.srv).length),f0=db.calls.ondas.full;
+ const alvo=db.ondas[0],outro=db.ondas[1];const agora=new Date(Date.now()+60000).toISOString();alvo.quantidade=777;alvo.atualizado_em=agora;db.ondas.splice(1,1);db.excl=[{id:outro.id,excluida_em:agora}];
+ await p.evaluate(()=>pull());const r=await p.evaluate(([a,o])=>({q:(S.waves.find(w=>w.id===a)||{}).qty,tem:S.waves.some(w=>w.id===o),n:S.waves.filter(w=>w.srv).length}),[alvo.id,outro.id]);
+ ok(db.calls.ondas.full===f0&&db.calls.ondas.delta>=1,'deveria usar a sincronização incremental: '+JSON.stringify(db.calls.ondas));ok(r.q===777,'alteração não chegou: '+r.q);ok(!r.tem&&r.n===n0-1,'exclusão não chegou: '+JSON.stringify(r));
+ await p.waitForTimeout(1200);await p.reload();await p.waitForTimeout(900);
+ const r2=await p.evaluate(()=>({me:!!(me&&me.adm),n:S.waves.filter(w=>w.srv).length}));ok(r2.me&&r2.n===n0-1,'cópia do aparelho: '+JSON.stringify(r2));
+ ok(db.calls.ondas.full===f0,'recarregar não deveria baixar tudo de novo: '+JSON.stringify(db.calls.ondas));
+ await p.evaluate(()=>sair());await p.waitForTimeout(300);ok(await p.evaluate(()=>localStorage.getItem('rcondas.me')===null),'sair deveria apagar a cópia')});
 await b.close();
 const w=Math.max(...R.map(r=>r[1].length));for(const r of R)console.log((r[0]==='PASS'?'✅':'❌')+' '+r[1].padEnd(w)+'  '+r[2]);
 console.log(`\n${R.filter(r=>r[0]==='PASS').length}/${R.length} passaram`)})();

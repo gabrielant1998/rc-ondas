@@ -673,7 +673,7 @@ async function raw(path,o){o=o||{};
 let refP=null;
 function refresh(){ /* uma renovação por vez: várias chamadas juntas esperam a mesma */
  if(!refP)refP=(async()=>{try{setSess(tok(await raw("/auth/v1/token?grant_type=refresh_token",{method:"POST",auth:false,body:{refresh_token:sess.refresh_token}})))}
-  catch(e){if(e.status){setSess(null);me=null;limparGestao();S.waves=S.waves.filter(w=>!w.srv);authUI();if(view==="ind"||view==="his"||view==="cfg")go("painel");toast("Sua sessão expirou. Entre de novo.")}throw e}})().finally(()=>{refP=null});
+  catch(e){if(e.status){setSess(null);me=null;cacheLimpar();limparGestao();S.waves=S.waves.filter(w=>!w.srv);authUI();if(view==="ind"||view==="his"||view==="cfg")go("painel");toast("Sua sessão expirou. Entre de novo.")}throw e}})().finally(()=>{refP=null});
  return refP}
 async function api(path,o){if(sess&&sess.exp<Date.now()+60000)await refresh();
  try{return await raw(path,o)}catch(e){if(e.status===401&&sess){await refresh();return raw(path,o)}throw e}}
@@ -689,8 +689,26 @@ function errMsg(e){if(!e.status)return"Sem conexão com o servidor. Tente de nov
  if(c==="over_email_send_rate_limit")return"Muitos pedidos seguidos. Espere um minuto e tente de novo.";
  if(c==="42501"||e.status===401||e.status===403)return"Sem permissão para esta ação.";
  return e.message}
+/* sincronização: na 1ª vez (ou a cada 6 h) baixa as ondas dos 35 dias; no resto só o que mudou desde a última vez */
+const FULL_EVERY=6*36e5,PRES_EVERY=10*6e4;let SYNC={at:null,full:0},PRES_AT=0,pullP=null,pullNext=null;
+function pull(o){if(!pullP){pullP=pullReal(o||{}).finally(()=>{pullP=null});return pullP}
+ if(!pullNext)pullNext=pullP.catch(()=>{}).then(()=>{pullNext=null;return pull(o)});return pullNext}
+/* cópia das ondas do servidor no aparelho (IndexedDB aguenta bem mais que o localStorage) */
+const CACHE={db:null,
+ open(){if(this.db)return Promise.resolve(this.db);return new Promise(r=>{try{const q=indexedDB.open('rcondas',1);q.onupgradeneeded=()=>q.result.createObjectStore('kv');q.onsuccess=()=>{this.db=q.result;r(this.db)};q.onerror=()=>r(null)}catch(e){r(null)}})},
+ async get(k){const d=await this.open();if(!d)return null;return new Promise(r=>{try{const q=d.transaction('kv').objectStore('kv').get(k);q.onsuccess=()=>r(q.result||null);q.onerror=()=>r(null)}catch(e){r(null)}})},
+ async set(k,v){const d=await this.open();if(!d)return;return new Promise(r=>{try{const t=d.transaction('kv','readwrite');t.objectStore('kv').put(v,k);t.oncomplete=()=>r();t.onerror=()=>r()}catch(e){r()}})},
+ async del(k){const d=await this.open();if(!d)return;return new Promise(r=>{try{const t=d.transaction('kv','readwrite');t.objectStore('kv').delete(k);t.oncomplete=()=>r();t.onerror=()=>r()}catch(e){r()}})}};
+let cacheT=0;function cacheSalvar(){clearTimeout(cacheT);cacheT=setTimeout(()=>{if(!me||!sess)return;CACHE.set('srv',{email:sess.email,at:SYNC.at,full:SYNC.full,waves:S.waves.filter(w=>w.srv)});try{localStorage.setItem('rcondas.me',JSON.stringify({email:sess.email,me,gid:GID,gn:GN}))}catch(e){}},800)}
+function cacheLimpar(){SYNC={at:null,full:0};PRES_AT=0;CACHE.del('srv');try{localStorage.removeItem('rcondas.me')}catch(e){}}
+/* ao abrir: mostra na hora o que já está no aparelho; o servidor confere logo depois */
+async function cacheAbrir(){if(!sess||!sess.email)return false;let m=null;try{m=JSON.parse(localStorage.getItem('rcondas.me'))}catch(e){}
+ if(!m||m.email!==sess.email||!m.me)return false;const c=await CACHE.get('srv');
+ me=m.me;GID=m.gid||{};GN=m.gn||{};
+ if(c&&c.email===sess.email&&Array.isArray(c.waves)){const ids=new Set(c.waves.map(w=>w.id));S.waves=c.waves.concat(S.waves.filter(w=>!w.srv&&!ids.has(w.id)));SYNC={at:c.at,full:c.full||0}}
+ return true}
 /* traz cadastros e, para gestor, as ondas dos últimos 35 dias */
-async function pull(){
+async function pullReal(opt){
  const [gs,ts,cf,os]=await Promise.all([api("/rest/v1/galpoes?select=*&order=nome"),api("/rest/v1/tipos_onda?select=*&order=ordem"),api("/rest/v1/config?select=*"),api("/rest/v1/operadores?select=*&order=codigo")]);
  GID={};GN={};gs.forEach(g=>{GID[g.nome]=g.id;GN[g.id]=g.nome});
  S.gals=gs.map(g=>g.nome);S.metasInd={};gs.forEach(g=>{if(g.meta_ind_ondas||g.meta_ind_qtd||g.meta_ind_ret)S.metasInd[g.nome]={o:g.meta_ind_ondas||0,q:g.meta_ind_qtd||0,r:g.meta_ind_ret||0}});
@@ -705,28 +723,31 @@ async function pull(){
   const g=await api("/rest/v1/gestores?select=*&order=nome");
   S.ges=g.map(x=>({n:x.nome,u:x.email,g:x.galpao_id?GN[x.galpao_id]:null,adm:x.admin,pC:x.pode_config,pI:x.pode_individual,pR:x.pode_registros,ab:x.abas||null}));
   me=S.ges.find(x=>x.u===sess.email)||null;
-  if(!me){S.ges=[];SOL=[];const pd=pedidoPendente();try{await api("/rest/v1/rpc/solicitar_acesso",{method:"POST",body:{p_nome:pd?pd.nome:null,p_galpao:(pd&&GID[pd.galpao])||null}});localStorage.removeItem("rcondas.pedido");pedidoDados=null}catch(e){}setSess(null);toast("Ainda sem acesso. Pedido enviado ao administrador: quando ele liberar, entre de novo.",8000)}
+  if(!me){S.ges=[];SOL=[];const pd=pedidoPendente();try{await api("/rest/v1/rpc/solicitar_acesso",{method:"POST",body:{p_nome:pd?pd.nome:null,p_galpao:(pd&&GID[pd.galpao])||null}});localStorage.removeItem("rcondas.pedido");pedidoDados=null}catch(e){}setSess(null);cacheLimpar();toast("Ainda sem acesso. Pedido enviado ao administrador: quando ele liberar, entre de novo.",8000)}
   else{if(me.g)S.gal=me.g;SOL=[];if(me.adm)try{SOL=await api("/rest/v1/solicitacoes_gestor?select=email,criado_em,nome,galpao_id&order=criado_em")}catch(e){}}}
  else{S.ges=[];me=null;SOL=[]}
- TH={};
- if(me){try{const hs=await api("/rest/v1/presenca_alteracoes?select=operador_id,campo,valor_anterior,valor_novo,email,alterado_em&order=alterado_em.asc");hs.forEach(h=>{(TH[h.operador_id]=TH[h.operador_id]||[]).push({c:h.campo,a:h.valor_anterior,n:h.valor_novo,e:h.email,t:Date.parse(h.alterado_em)})})}catch(e){}}
- PRS={};PBX={};PHX={};ATR={};
+ const presAgora=me&&(opt.full||view==='ind'||view==='his'||!PRES_AT||Date.now()-PRES_AT>PRES_EVERY);
+ if(!me){TH={};PRS={};PBX={};PHX={};ATR={}}
+ if(presAgora){TH={};try{const hs=await api("/rest/v1/presenca_alteracoes?select=operador_id,campo,valor_anterior,valor_novo,email,alterado_em&order=alterado_em.asc");hs.forEach(h=>{(TH[h.operador_id]=TH[h.operador_id]||[]).push({c:h.campo,a:h.valor_anterior,n:h.valor_novo,e:h.email,t:Date.parse(h.alterado_em)})})}catch(e){}}
  if(me)await prProbe();
- if(me){const cd=dk(Date.now()-400*864e5);
+ if(presAgora){PRS={};PBX={};PHX={};ATR={};PRES_AT=Date.now();const cd=dk(Date.now()-400*864e5);
   try{const hs2=await api("/rest/v1/presenca_historico?select=operador_id,tabela,campo,valor_anterior,valor_novo,email,alterado_em&order=alterado_em.desc&limit=300");hs2.forEach(x=>{(PHX[x.operador_id]=PHX[x.operador_id]||[]).push({tab:x.tabela,c:x.campo,a:x.valor_anterior,n:x.valor_novo,e:x.email,t:Date.parse(x.alterado_em)})})}catch(e){}
   try{const rs=await api("/rest/v1/presenca_registros?select=id,operador_id,tipo,data_ini,data_fim,horario_ini,horario_fim,observacao,criado_por&cancelado_em=is.null&data_fim=gte."+cd);rs.forEach(r=>{(PRS[r.operador_id]=PRS[r.operador_id]||[]).push({id:r.id,t:r.tipo,i:r.data_ini,f:r.data_fim,hi:r.horario_ini,hf:r.horario_fim,o:r.observacao,e:r.criado_por})})}catch(e){}
   try{const bs=await api("/rest/v1/presenca_baixas?select=id,operador_id,data,saida&data=gte."+cd);bs.forEach(b=>{PBX[b.operador_id+'|'+b.data]={id:b.id,saida:Date.parse(b.saida)}})}catch(e){}
   try{const at=await api("/rest/v1/presenca_atrasos?select=id,operador_id,data,observacao,horario_justificado,criado_por&data=gte."+cd);at.forEach(a=>{ATR[a.operador_id+'|'+a.data]={id:a.id,obs:a.observacao,hj:a.horario_justificado,e:a.criado_por}})}catch(e){}}
  const mine=S.waves.filter(w=>!w.srv);
- if(me){const de=new Date(Date.now()-35*864e5).toISOString(),srv=[];
-  /* 4 páginas de 1000 por vez, em paralelo (antes era uma de cada vez e demorava) */
-  const OB="/rest/v1/ondas?select=id,wn,operador_id,galpao_id,tipo,quantidade,status,registrada_em,concluida_em,encerrada_auto,procura_sku,procura_local,procura_nome,procura_em,procura_hist,tempo_zerado"+PIC+"&registrada_em=gte."+encodeURIComponent(de)+"&order=registrada_em.asc,id.asc&limit=1000&offset=";
-  for(let off=0;;off+=4000){const R=await Promise.all([0,1,2,3].map(k=>api(OB+(off+k*1000))));let cut=false;
-   for(const p of R){
-   p.forEach(x=>{const o=OPSALL[x.operador_id];srv.push({id:x.id,wn:x.wn,oid:x.operador_id,op:o?(o.excluido_em?o.codigo+"~"+o.id.slice(0,6):o.codigo):"—",opn:o?o.nome:"Operador removido",gal:GN[x.galpao_id]||"—",ty:x.tipo,qty:x.quantidade,st:x.status,ts:Date.parse(x.registrada_em),fin:x.concluida_em?Date.parse(x.concluida_em):null,sync:1,srv:1,auto:x.encerrada_auto?1:0,sku:x.procura_sku||"",itens:prItensSrv(x.procura_itens),marcas:prMarcasSrv(x.procura_marcas),loc:x.procura_local||"",pn:x.procura_nome||"",pt:x.procura_em?Date.parse(x.procura_em):0,hist:prHistSrv(x.procura_hist),zt:x.tempo_zerado?1:0})});
-   if(p.length<1000){cut=true;break}}
-   if(cut||off>=56000)break}
-  const ids=new Set(srv.map(w=>w.id)),deMs=Date.parse(de);S.waves=srv.concat(mine.filter(w=>!ids.has(w.id)&&!(w.sync&&!w.err&&w.ts>=deMs)))}
+ if(me){const de=new Date(Date.now()-35*864e5).toISOString(),deMs=Date.parse(de),COLS="id,wn,operador_id,galpao_id,tipo,quantidade,status,registrada_em,concluida_em,encerrada_auto,procura_sku,procura_local,procura_nome,procura_em,procura_hist,tempo_zerado,atualizado_em"+PIC,
+   mapW=x=>{const o=OPSALL[x.operador_id];return {id:x.id,wn:x.wn,oid:x.operador_id,op:o?(o.excluido_em?o.codigo+"~"+o.id.slice(0,6):o.codigo):"—",opn:o?o.nome:"Operador removido",gal:GN[x.galpao_id]||"—",ty:x.tipo,qty:x.quantidade,st:x.status,ts:Date.parse(x.registrada_em),fin:x.concluida_em?Date.parse(x.concluida_em):null,sync:1,srv:1,auto:x.encerrada_auto?1:0,sku:x.procura_sku||"",itens:prItensSrv(x.procura_itens),marcas:prMarcasSrv(x.procura_marcas),loc:x.procura_local||"",pn:x.procura_nome||"",pt:x.procura_em?Date.parse(x.procura_em):0,hist:prHistSrv(x.procura_hist),zt:x.tempo_zerado?1:0}},
+   pages=async base=>{const out=[];for(let off=0;;off+=4000){const R=await Promise.all([0,1,2,3].map(k=>api(base+(off+k*1000))));let cut=false;for(const p of R){out.push(...p);if(p.length<1000){cut=true;break}}if(cut||off>=56000)break}return out},
+   maxAt=rows=>rows.reduce((m,x)=>x.atualizado_em&&(!m||Date.parse(x.atualizado_em)>Date.parse(m))?x.atualizado_em:m,SYNC.at);
+  const full=opt.full||!SYNC.at||Date.now()-SYNC.full>FULL_EVERY||!S.waves.some(w=>w.srv);let srv;
+  if(full){const rows=await pages("/rest/v1/ondas?select="+COLS+"&registrada_em=gte."+encodeURIComponent(de)+"&order=registrada_em.asc,id.asc&limit=1000&offset=");
+   srv=rows.map(mapW);SYNC={at:maxAt(rows)||new Date().toISOString(),full:Date.now()}}
+  else{const desde=encodeURIComponent(new Date(Date.parse(SYNC.at)-5000).toISOString());
+   const [rows,exc]=await Promise.all([pages("/rest/v1/ondas?select="+COLS+"&atualizado_em=gte."+desde+"&order=atualizado_em.asc,id.asc&limit=1000&offset="),api("/rest/v1/ondas_excluidas?select=id&excluida_em=gte."+desde).catch(()=>[])]);
+   const M=new Map(S.waves.filter(w=>w.srv).map(w=>[w.id,w]));rows.forEach(x=>M.set(x.id,mapW(x)));(exc||[]).forEach(x=>M.delete(x.id));
+   srv=[...M.values()].filter(w=>w.ts>=deMs).sort((a,b)=>a.ts-b.ts);SYNC.at=maxAt(rows)||SYNC.at}
+  const ids=new Set(srv.map(w=>w.id));S.waves=srv.concat(mine.filter(w=>!ids.has(w.id)&&!(w.sync&&!w.err&&w.ts>=deMs)));cacheSalvar()}
  else{const corte=Date.now()-3*864e5;S.waves=mine.filter(w=>!w.sync||w.err||w.ts>corte)}
  save();authUI()}
 /* fila de envio: cada onda tem id próprio, então reenviar nunca duplica */
@@ -809,7 +830,7 @@ async function esqueci(){const email=$("#lU").value.trim().toLowerCase();if(!ema
  try{await raw("/auth/v1/recover?redirect_to="+voltaPara(),{method:"POST",auth:false,body:{email}});toast("Se o e-mail estiver cadastrado, enviamos um link para criar nova senha.",9000)}
  catch(e){toast(errMsg(e),6000)}}
 async function sair(){try{await raw("/auth/v1/logout",{method:"POST"})}catch(e){}
- setSess(null);me=null;limparGestao();publicKey="";publicSeq++;publicLoading=false;S.ges=[];S.waves=S.waves.filter(w=>!w.srv);save();authUI();toast("Sessão encerrada");go("painel")}
+ setSess(null);me=null;cacheLimpar();limparGestao();publicKey="";publicSeq++;publicLoading=false;S.ges=[];S.waves=S.waves.filter(w=>!w.srv);save();authUI();toast("Sessão encerrada");go("painel")}
 function loginUI(){const pa=primeiroMode&&!recMode;$("#lNomeL").classList.toggle("hide",!pa);$("#lGalL").classList.toggle("hide",!pa);
  if(pa)$("#lG").innerHTML='<option value="">Escolha o galpão</option>'+S.gals.map(g=>`<option value="${esc(g)}">${esc(g)}</option>`).join("");
  $("#lNew").textContent=pa?"Criar acesso":"Primeiro acesso";
@@ -856,6 +877,7 @@ async function bootSrv(){let tinhaSess=false;try{tinhaSess=!!localStorage.getIte
  const lg=$("#cge .legend");if(lg)lg.textContent="O gestor cria a própria senha em Entrar, Primeiro acesso, usando este e-mail.";
  try{sess=JSON.parse(localStorage.getItem("rcondas.sess"))}catch(e){sess=null}
  if(!tinhaSess)go("painel");await lerRetorno();
+ if(tinhaSess&&await cacheAbrir()){authUI();go("painel");renderAll();bootDone();const t=document.getElementById("bootT");}
  try{await pull()}catch(e){if(e.status)toast(errMsg(e),6000)}
  authUI();if(!me&&tinhaSess)go("painel");renderAll();if(me&&!recMode)go("painel");push();if(me||!publicLoading)bootDone();
  setInterval(push,15000);
