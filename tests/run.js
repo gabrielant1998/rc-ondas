@@ -207,7 +207,7 @@ await T("40 Configurações: cartões da Operação recolhem e expandem",async()
  const recolheu=await p.isHidden('#lims');
  await p.click('#cop > .card:nth-child(1) .ch');await p.waitForTimeout(100);
  const abriu=await p.isVisible('#lims');
- ok(cartoes===3&&recolheu&&abriu,'cartões '+cartoes+', recolheu '+recolheu+', abriu '+abriu)});
+ ok(cartoes===2&&recolheu&&abriu,'cartões '+cartoes+', recolheu '+recolheu+', abriu '+abriu)});
 
 await T("41 Manutenção local: apaga só o período escolhido, depois de digitar APAGAR",async()=>{const S0=base({waves:[{id:"a",wn:"1",op:"CL001",opn:"Ana Souza",gal:"Galpão 1",ty:"Vários",qty:5,st:0,ts:Date.parse("2026-11-05T12:00:00-03:00"),fin:Date.parse("2026-11-05T12:05:00-03:00"),sync:1},{id:"b",wn:"2",op:"CL001",opn:"Ana Souza",gal:"Galpão 1",ty:"Vários",qty:5,st:0,ts:Date.parse("2026-11-20T12:00:00-03:00"),fin:Date.parse("2026-11-20T12:05:00-03:00"),sync:1}]});
  const p=await page(b,S0);p.on('dialog',d=>d.accept());await p.click('.tab[data-t="cfg"]');await p.click('[data-c="cma"]');await p.fill('#xDe','2026-11-01');await p.fill('#xAte','2026-11-10');
@@ -701,11 +701,19 @@ await T("94 Retrabalho fica fora das metas e tem meta individual própria",async
  ok(/90 de /.test(r.co)&&/retrabalho \(70\) fica fora/.test(r.co)&&/Galpão 19020045%/.test(r.co),'coletiva: '+r.co)});
 await T("95 Pausas programadas: Config adiciona e o intervalo do café não vira pausa",async()=>{const D=864e5,y=HR(0,0)-D,at=(h,m)=>y+h*36e5+m*6e4;
  const st=base({waves:[WV('a','1','Itens Únicos',10,at(9,10)),WV('b','2','Itens Únicos',10,at(9,50))]});
- const p=await page(b,st);await p.evaluate(()=>go('cfg'));await p.click('[data-pza="1"]');await p.waitForTimeout(150);
+ const p=await page(b,st);await p.evaluate(()=>{go('cfg');document.querySelector('[data-c="cho"]').click()});await p.click('[data-pza="1"]');await p.waitForTimeout(150);
  await p.fill('[data-pz="1"][data-i="0"][data-k="i"]','09:20');await p.fill('[data-pz="1"][data-i="0"][data-k="f"]','09:35');await p.press('[data-pz="1"][data-i="0"][data-k="f"]','Tab');await p.waitForTimeout(200);
  const r=await p.evaluate(y=>{const d=dk(y);return{pz:S.cfg.pz,n:mgSplit(S.ops[0],d,S.waves).nMs/6e4}},y);
  ok(r.pz[1]&&r.pz[1][0].i===560&&r.pz[1][0].f===575,'pausa salva: '+JSON.stringify(r.pz));ok(r.n===25,'40 min menos 15 de café = 25: '+r.n);
  await p.click('[data-pzx="1"][data-i="0"]');await p.waitForTimeout(150);ok((await p.evaluate(()=>S.cfg.pz[1].length))===0,'remover')});
+await T("96 Paradas da operação: registro em Config, aviso no Painel e o tempo parado não vira pausa",async()=>{const D=864e5,y=HR(0,0)-D,at=(h,m)=>y+h*36e5+m*6e4;
+ const st=base({waves:[WV('a','1','Itens Únicos',10,at(13,50)),WV('b','2','Itens Únicos',10,at(14,50))]});const p=await page(b,st);p.on('dialog',d=>d.accept());
+ await p.evaluate(()=>{go('cfg');document.querySelector('[data-c="cho"]').click()});await p.waitForTimeout(150);
+ await p.evaluate(y=>{$("#parDia").value=dk(y)},y);await p.fill('#parIni','14:00');await p.fill('#parFim','14:40');await p.selectOption('#parMot','Falta de energia');await p.click('#parSalvar');await p.waitForTimeout(200);
+ const r=await p.evaluate(y=>{const d=dk(y);return{n:S.paradas.length,sp:mgSplit(S.ops[0],d,S.waves).nMs/6e4,lista:document.querySelector('#parList').textContent}},y);
+ ok(r.n===1&&/Falta de energia/.test(r.lista),'registro: '+JSON.stringify(r));ok(r.sp===20,'60 min entre ondas menos 40 de parada = 20: '+r.sp);
+ await p.evaluate(y=>{$("#day").value=dk(y);go('painel');renderAll()},y);await p.waitForTimeout(200);ok(/Operação parada/.test(await p.textContent('#pFil')),'aviso no Painel');
+ await p.evaluate(()=>go('cfg'));await p.click('[data-pardel]');await p.waitForTimeout(200);ok((await p.evaluate(()=>S.paradas.length))===0,'excluir')});
 await b.close();
 const w=Math.max(...R.map(r=>r[1].length));for(const r of R)console.log((r[0]==="PASS"?"✅":"❌")+" "+r[1].padEnd(w)+"  "+r[2]);
 console.log(`\n${R.filter(r=>r[0]==="PASS").length}/${R.length} passaram`)})();

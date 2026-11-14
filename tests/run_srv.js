@@ -222,7 +222,7 @@ await T('S21 Cadastro sozinho: nome e galpão viram pedido e o administrador lib
  ok(pediu&&lista&&g&&g.nome==='Nova Pessoa'&&g.galpao_id===G2&&!db.pedidos.includes('nova@x.com'),'pediu '+pediu+', lista '+lista+', gestor '+!!g)});
 await T('S12 Admin: galpão, meta, limite, turno e gestor gravam no banco',async()=>{const db=banco();const p=await page(b,db);await login(p,'adm@x.com','senha1234');await p.click('.tab[data-t="cfg"]');
  await p.fill('[data-lim="Itens Únicos"]','250');await p.press('[data-lim="Itens Únicos"]','Tab');await p.waitForTimeout(400);
- await p.fill('[data-tn="1"][data-k="fim"]','17');await p.press('[data-tn="1"][data-k="fim"]','Tab');await p.waitForTimeout(400);
+ await p.click('[data-c="cho"]');await p.waitForTimeout(150);await p.fill('[data-tn="1"][data-k="fim"]','17');await p.press('[data-tn="1"][data-k="fim"]','Tab');await p.waitForTimeout(400);
  await p.click('[data-c="cga"]');await p.fill('#gN','Galpão Norte');await p.click('#gB');await p.waitForTimeout(450);
  await p.click('[data-c="cme"]');await p.fill('[data-gmeta="Galpão 2"]','3000');await p.press('[data-gmeta="Galpão 2"]','Tab');await p.waitForTimeout(450);
  await p.fill('#fmin','500');await p.press('#fmin','Tab');await p.waitForTimeout(450);const mmin=db.config[0].meta_minima;
