@@ -558,7 +558,7 @@ body[data-v=cfg] #turnoF,body[data-v=cfg] #gal,body[data-v=cfg] #day{display:non
   <div class="card"><h2>Galpões</h2><div class="tw" id="gL"></div><div class="legend" id="gLeg">As metas ficam na aba Metas. Renomear um galpão atualiza os registros já lançados.</div></div>
  </div>
 
- <div id="cma" class="grid two hide"><div class="card"><h2>Apagar registros do banco</h2>
+ <div id="cma" class="grid two hide"><div class="card hide" id="usoCard"><h2>Uso do banco de dados</h2><div id="usoBody" class="legend">Carregando…</div></div><div class="card"><h2>Apagar registros do banco</h2>
  <p class="legend">Apaga as ondas registradas no período escolhido. Só o administrador vê esta opção. Não tem volta: use "Ver quantos" antes.</p>
  <div class="f"><label>De<input type="date" id="xDe"></label><label>Até<input type="date" id="xAte"></label>
  <label>Galpão<select id="xGal"></select></label></div>
@@ -1754,7 +1754,13 @@ function xMan(){const de=$("#xDe").value,ate=$("#xAte").value,gn=$("#xGal").valu
  if(ate<de){toast("A data final é anterior à inicial");return null}
  return{de,ate,gn,gid:gn&&ON?GID[gn]:null}}
 function xLocal(q){const a=new Date(q.de+"T00:00:00").getTime(),b=new Date(q.ate+"T00:00:00").getTime()+864e5;return S.waves.filter(w=>w.ts>=a&&w.ts<b&&(!q.gn||w.gal===q.gn))}
-function cfgMan(){const v=$("#xGal").value;$("#xGal").innerHTML='<option value="">Todos os galpões</option>'+S.gals.map(g=>`<option value="${esc(g)}">${esc(g)}</option>`).join("");if(S.gals.includes(v))$("#xGal").value=v}
+async function usoBanco(){const c=$("#usoCard");if(!c)return;if(!ON||!me||!me.adm){c.classList.add("hide");return}c.classList.remove("hide");
+ try{const u=await api("/rest/v1/rpc/uso_banco",{method:"POST",body:{}}),p=u.banco_bytes/u.limite_bytes*100,mb=b=>(b/1048576).toLocaleString('pt-BR',{maximumFractionDigits:1})+' MB';
+  $("#usoBody").innerHTML=`<div class="cobig"><b class="num">${Math.round(p)}%</b><span>${mb(u.banco_bytes)} de ${mb(u.limite_bytes)} do plano grátis</span></div><div class="bar cob"><b style="width:${Math.min(p,100)}%;--c:${p>=70?'var(--rx)':'var(--g)'}"></b></div>
+  <p style="margin:10px 0 0">${fmt(u.ondas)} ondas guardadas, ocupando ${mb(u.ondas_bytes)}.${p>=70?' <b style="color:var(--rx)">Passou de 70%: é hora de planejar o plano Pro ou resumir as ondas mais antigas.</b>':' Com o volume atual, cada ano de ondas ocupa cerca de 120 MB.'}</p>`;if(p>=70&&!usoAvisado){usoAvisado=1;toast("Banco de dados em "+Math.round(p)+"% do limite do plano grátis. Veja em Config › Manutenção.",9000)}}
+ catch(e){$("#usoBody").textContent="Não foi possível consultar o uso agora."}}
+let usoAvisado=0;
+function cfgMan(){usoBanco();const v=$("#xGal").value;$("#xGal").innerHTML='<option value="">Todos os galpões</option>'+S.gals.map(g=>`<option value="${esc(g)}">${esc(g)}</option>`).join("");if(S.gals.includes(v))$("#xGal").value=v}
 async function xContar(){const q=xMan();if(!q)return;
  try{let n;if(ON)n=Number(await api("/rest/v1/rpc/apagar_ondas",{method:"POST",body:{p_de:q.de,p_ate:q.ate,p_galpao:q.gid||null,p_so_contar:true}}));else n=xLocal(q).length;
   $("#xRes").textContent=n+(n===1?" registro":" registros")+" neste período"+(q.gn?" do "+q.gn:"")+".";return n}
@@ -1836,14 +1842,14 @@ function hisProc(PW){if(PW===undefined)return'<div class="card" style="margin-to
  const kp=hK('Marcadas',fmt(R.length),'no período')+hK('Pendentes',fmt(n(r=>r.w.st===1)),'ainda procurando')+hK('Aguardando baixa',fmt(n(r=>r.w.st!==1&&r.et==='a')),'encontradas')+hK('Baixadas',fmt(n(r=>r.et==='b')),'concluídas')+hK('Tempo mediano procurando',md(R.filter(r=>r.ta).map(r=>r.tp)),'da marcação até achar, 6h às 20h')+hK('Tempo mediano até a baixa',md(R.filter(r=>r.tbx).map(r=>r.tbx)),'do achado até a baixa, 6h às 20h')+hK('Tempo mediano total',md(R.filter(r=>r.tb).map(r=>r.tot)),'da marcação até a baixa, 6h às 20h');
  return`<div class="card" style="margin-top:14px"><h2>Procurando: registro, tempo e conclusão</h2><dl class="stats solo">${kp}</dl><label class="hint" style="display:block;margin:12px 0 8px">Pesquisar<input id="hPq" type="search" value="${esc(HPR)}" placeholder="Onda, SKU, local ou nome" autocomplete="off"></label><div id="hPt">${hProcTable()}</div></div>`}
 function hisPessoas(P){HPBY={};P.forEach(w=>{(HPBY[w.op]=HPBY[w.op]||[]).push(w)});
- const L=Object.entries(HPBY).map(([op,a])=>({op,a,n:a[0].opn||'—',c:a[0].opc||String(op).split('~')[0],q:a.reduce((s,w)=>s+w.qty,0)})).sort((x,y)=>y.q-x.q);
+ const L=Object.entries(HPBY).map(([op,a])=>({op,a,n:a[0].opn||'—',c:a[0].opc||String(op).split('~')[0],q:a.reduce((s,w)=>s+w.qty,0),nn:a.reduce((s,w)=>s+(w.n||1),0)})).sort((x,y)=>y.q-x.q);
  return`<div class="card" style="margin-top:14px"><h2>Ondas por pessoa</h2>
  <label class="hint" style="display:block;margin-bottom:10px">Pesquisa universal<input id="hUni" type="search" value="${esc(HUQ)}" placeholder="Número da onda completo e Enter" autocomplete="off"></label><div id="hUniRes">${HUR}</div>
  <div class="legend" style="margin:6px 0 10px">${L.length} ${L.length===1?'pessoa':'pessoas'} no período. Abra o nome para ver todas as ondas e pesquisar por número.</div>
- ${L.map(p=>{const ty=TY.map(([n])=>[n,p.a.filter(w=>w.ty===n).length]).filter(x=>x[1]).map(x=>esc(x[0])+' '+x[1]).join(' · ');
-  return`<details class="hp" data-hp="${esc(p.op)}"${HOPEN.has(p.op)?' open':''}><summary><b>${esc(p.n)}</b> <small>${esc(p.c)}</small><span class="hps">${fmt(p.a.length)} ondas · ${fmt(p.q)} un.</span><small class="hpt2">${ty}</small></summary><div class="hpb">${HOPEN.has(p.op)?hpBody(p.op):''}</div></details>`}).join('')}</div>`}
-function hpBody(op){const a=HPBY[op]||[],q=nrm(HPQ[op]||'').trim(),f=(q?a.filter(w=>nrm(String(w.wn||'')).includes(q)):a).slice().sort((x,y)=>(y.fin||y.ts)-(x.fin||x.ts)),lim=300;
- return`<input type="search" data-hpq="${esc(op)}" value="${esc(HPQ[op]||'')}" placeholder="Pesquisar número da onda" autocomplete="off" aria-label="Pesquisar número da onda"><div class="tw"><table><tr><th>Data e hora</th><th>Onda</th><th>Tipo</th><th>Qtd</th></tr>${f.slice(0,lim).map(w=>`<tr><td>${hDT(w.fin||w.ts)}</td><td><b>${esc(wnS(w)||'—')}</b></td><td>${esc(w.ty)}</td><td class="num">${fmt(w.qty)}</td></tr>`).join('')||'<tr><td colspan="4">Nenhuma onda com esse número.</td></tr>'}</table></div><div class="legend">${f.length>lim?'Mostrando '+lim+' de '+f.length+'. Pesquise pelo número para achar as demais.':f.length+' '+(f.length===1?'onda':'ondas')+'.'}</div>`}
+ ${L.map(p=>{const ty=TY.map(([n])=>[n,p.a.filter(w=>w.ty===n).reduce((s,w)=>s+(w.n||1),0)]).filter(x=>x[1]).map(x=>esc(x[0])+' '+x[1]).join(' · ');
+  return`<details class="hp" data-hp="${esc(p.op)}"${HOPEN.has(p.op)?' open':''}><summary><b>${esc(p.n)}</b> <small>${esc(p.c)}</small><span class="hps">${fmt(p.nn)} ondas · ${fmt(p.q)} un.</span><small class="hpt2">${ty}</small></summary><div class="hpb">${HOPEN.has(p.op)?hpBody(p.op):''}</div></details>`}).join('')}</div>`}
+function hpBody(op){const a0=HPBY[op]||[],ag=a0.filter(w=>w.agg),a=a0.filter(w=>!w.agg),q=nrm(HPQ[op]||'').trim(),f=(q?a.filter(w=>nrm(String(w.wn||'')).includes(q)):a).slice().sort((x,y)=>(y.fin||y.ts)-(x.fin||x.ts)),lim=300;
+ return`<input type="search" data-hpq="${esc(op)}" value="${esc(HPQ[op]||'')}" placeholder="Pesquisar número da onda" autocomplete="off" aria-label="Pesquisar número da onda"><div class="tw"><table><tr><th>Data e hora</th><th>Onda</th><th>Tipo</th><th>Qtd</th></tr>${f.slice(0,lim).map(w=>`<tr><td>${hDT(w.fin||w.ts)}</td><td><b>${esc(wnS(w)||'—')}</b></td><td>${esc(w.ty)}</td><td class="num">${fmt(w.qty)}</td></tr>`).join('')||'<tr><td colspan="4">Nenhuma onda com esse número.</td></tr>'}</table></div><div class="legend">${f.length>lim?'Mostrando '+lim+' de '+f.length+'. Pesquise pelo número para achar as demais.':f.length+' '+(f.length===1?'onda':'ondas')+'.'}${ag.length?` Mais ${fmt(ag.reduce((x,w)=>x+(w.n||1),0))} ondas até ${new Date(Math.max(...ag.map(w=>w.ts))).toLocaleDateString('pt-BR')} aparecem só nos totais (a lista onda a onda guarda os últimos 35 dias; use a pesquisa universal para achar uma onda antiga).`:''}</div>`}
 async function hUniGo(raw){const q=raw.trim();HUQ=raw;const box=$("#hUniRes");
  if(q.length<9){HUR='<div class="legend">Digite o número da onda com pelo menos 9 caracteres e aperte Enter.</div>';box.innerHTML=HUR;return}
  box.innerHTML='<div class="legend">Buscando…</div>';let rows;
@@ -1861,9 +1867,16 @@ async function loadHis(force){
  if(!ON){HW=S.waves.filter(w=>w.ts>=s.getTime()&&w.ts<=e.getTime());HPW=HW.filter(w=>w.st!==0||(w.hist||[]).length);hAt=Date.now();hisRender();return}
  HW=null;HPW=null;hBusy=true;hisRender();
  try{const cols='id,wn,operador_id,galpao_id,tipo,quantidade,status,registrada_em,concluida_em,tempo_zerado',win='&registrada_em=gte.'+de+'&registrada_em=lt.'+ate+'&order=registrada_em.asc,id.asc';
-  const [arr,parr]=await Promise.all([hFetchAll('/rest/v1/ondas?select='+cols+'&status=eq.0'+win),hFetchAll('/rest/v1/ondas?select='+cols+',procura_sku,procura_local,procura_nome,procura_em,procura_hist'+PIC+'&or=(status.neq.0,procura_hist.not.is.null)'+win).catch(()=>undefined)]);
+  /* os últimos 35 dias já estão no aparelho (sincronização); o período mais antigo vem em totais do banco */
+  const temSrv=S.waves.some(w=>w.srv),cut=temSrv?(()=>{const d=new Date(Date.now()-34*864e5);d.setHours(0,0,0,0);return d.getTime()})():Infinity,ini=s.getTime(),fim=e.getTime();
+  const velho=async()=>{if(ini>=cut)return[];const lim=Math.min(cut,fim+1);
+   try{const ag=await api('/rest/v1/rpc/relatorio_agregado',{method:'POST',body:{p_ini:new Date(ini).toISOString(),p_fim:new Date(lim).toISOString()}});
+    return(ag||[]).map((x,i)=>{const o=OPSALL[x.operador_id],t=Date.parse(x.dia+'T12:00:00');return{id:'ag'+i+'|'+x.dia,agg:1,n:+x.ondas||0,wn:'',op:x.operador_id,opn:o?o.nome:'Operador removido',opc:o?String(o.codigo):'—',gal:GN[x.galpao_id]||'—',ty:x.tipo,qty:+x.unidades||0,st:0,ts:t,fin:t,srv:1}})}
+   catch(e){const a=await hFetchAll('/rest/v1/ondas?select='+cols+'&status=eq.0&registrada_em=gte.'+encodeURIComponent(new Date(ini).toISOString())+'&registrada_em=lt.'+encodeURIComponent(new Date(lim).toISOString())+'&order=registrada_em.asc,id.asc');return a.map(hRow)}};
+  const recentes=()=>S.waves.filter(w=>w.srv&&w.st===0&&w.ts>=Math.max(ini,cut)&&w.ts<=fim).map(w=>Object.assign({},w,{op:w.oid||w.op,opc:String(w.op).split('~')[0]}));
+  const [arr,parr]=await Promise.all([temSrv?velho().then(v=>v.concat(recentes())):hFetchAll('/rest/v1/ondas?select='+cols+'&status=eq.0'+win).then(a=>a.map(hRow)),hFetchAll('/rest/v1/ondas?select='+cols+',procura_sku,procura_local,procura_nome,procura_em,procura_hist'+PIC+'&or=(status.neq.0,procura_hist.not.is.null)'+win).catch(()=>undefined)]);
   if(seq!==hSeq)return;
-  const rows=arr.map(hRow),ids=new Set(rows.map(w=>w.id)),mine=S.waves.filter(w=>!w.srv&&!ids.has(w.id)&&w.ts>=s.getTime()&&w.ts<=e.getTime());
+  const rows=arr,ids=new Set(rows.map(w=>w.id)),mine=S.waves.filter(w=>!w.srv&&!ids.has(w.id)&&w.ts>=s.getTime()&&w.ts<=e.getTime());
   HW=rows.concat(mine);HPW=parr?parr.map(hRow).concat(mine.filter(w=>w.st!==0||(w.hist||[]).length)):undefined;hAt=Date.now();hBusy=false;hisRender();
  }catch(err){if(seq!==hSeq)return;HW=undefined;hBusy=false;hisRender()}
 }
@@ -1897,10 +1910,11 @@ function hisRender(){
  const vis=$("#hVis").value,met=$("#hMet").value,p=+$("#hPer").value,g=restricted()?myG():$("#hGal").value,low=met==='t',f=met==='t'?mm:fmt;
  const LG=HW.filter(w=>g==='__all'?visG().includes(w.gal):w.gal===g),so=$("#hOp"),ov=so.value,om=new Map();LG.forEach(w=>{if(!om.has(w.op))om.set(w.op,(w.opn||'—')+', '+(w.opc||String(w.op).split('~')[0]))});
  const okey=[...om.entries()].sort((a,b)=>a[1].localeCompare(b[1],'pt-BR')).map(([k,v])=>`<option value="${esc(k)}">${esc(v)}</option>`).join('');if(so.dataset.k!==okey){so.dataset.k=okey;so.innerHTML='<option value="">Todos os operadores</option>'+okey;so.value=om.has(ov)?ov:''}
- const L=so.value?LG.filter(w=>w.op===so.value):LG,P=prod(L),C=durs(L),U={},O={},D={},HU={},HO={},HD={};
- P.forEach(w=>{const t=w.fin||w.ts,d=dk(t),h=new Date(t).getHours();U[d]=(U[d]||0)+w.qty;O[d]=(O[d]||0)+1;HU[d+'|'+h]=(HU[d+'|'+h]||0)+w.qty;HO[d+'|'+h]=(HO[d+'|'+h]||0)+1});
+ const L=so.value?LG.filter(w=>w.op===so.value):LG,P=prod(L),C=durs(L.filter(w=>!w.agg)),NN=a=>a.reduce((x,w)=>x+(w.n||1),0),U={},O={},D={},HU={},HO={},HD={};
+ P.forEach(w=>{const t=w.fin||w.ts,d=dk(t),h=new Date(t).getHours();U[d]=(U[d]||0)+w.qty;O[d]=(O[d]||0)+(w.n||1);HU[d+'|'+h]=(HU[d+'|'+h]||0)+w.qty;HO[d+'|'+h]=(HO[d+'|'+h]||0)+(w.n||1)});
  C.forEach(c=>{const d=dk(c.t),h=new Date(c.t).getHours(),z={d:c.d,q:c.qty||1};(D[d]=D[d]||[]).push(z);(HD[d+'|'+h]=HD[d+'|'+h]||[]).push(z)});
  const dayV=d=>met==='u'?(U[d]||0):met==='o'?(O[d]||0):(D[d]?wa(D[d]):0),agg=ds=>met==='t'?wa(ds.flatMap(d=>D[d]||[])):ds.reduce((s,d)=>s+(met==='u'?U[d]||0:O[d]||0),0);
+ const temAgg=L.some(w=>w.agg),aggAte=temAgg?Math.max(...L.filter(w=>w.agg).map(w=>w.ts)):0;
  const today=dk(Date.now()),nome=met==='u'?'unidades':met==='o'?'ondas':'tempo médio ponderado por conjunto';
  if(!P.length){el.innerHTML='<div class="card"><div class="empty">Ainda não há ondas concluídas neste período'+(so.value?' para esse operador':g!=='__all'?' para '+esc(g):'')+'.</div></div>';return}
  /* mediana por dia da semana (só dias com produção) -> base da previsão */
@@ -1945,8 +1959,8 @@ function hisRender(){
   tb=`<div class="card" style="margin-top:14px"><h2>Meses</h2><div class="tw"><table><tr><th>Mês</th><th>${met==='t'?'Média pond.':'Total'}</th><th>Dias com produção</th><th>Mediana por dia</th></tr>${ms.slice().reverse().map(m=>{const a=inM(m);return`<tr><td>${MES[+m.slice(5)-1]}/${m.slice(0,4)}</td><td class="num">${mv(m)?f(mv(m)):'—'}</td><td class="num">${a.filter(d=>dayV(d)>0).length}</td><td class="num">${a.length?f(med(a.map(dayV).filter(v=>v>0))):'—'}</td></tr>`}).join('')}</table></div><div class="legend">Previsão: soma da mediana de cada dia da semana nos dias que faltam. Quartis dão a faixa.</div></div>`;
  }
  /* quebra por tipo */
- const tr=TY.map(([n,c])=>{const q=P.filter(w=>w.ty===n),d=C.filter(x=>x.w.ty===n).map(x=>({d:x.d,q:x.qty||1}));return`<tr><td><b>${esc(n)}</b></td><td class="num">${fmt(q.length)}</td><td class="num">${fmt(q.reduce((a,w)=>a+w.qty,0))}</td><td class="num">${d.length?mm(wa(d)):'—'}</td></tr>`}).join('');
- el.innerHTML=`<div data-hs="evo"><dl class="stats solo">${kp}</dl><div class="card" style="margin-top:14px"><h2>${ttl}${nome}</h2>${ch}${ex}</div>${tb}</div><div data-hs="tipo"><div class="card" style="margin-top:14px"><h2>Por tipo de onda no período</h2><div class="tw"><table><tr><th>Tipo</th><th>Ondas</th><th>Unidades</th><th>Tempo médio ponderado por conjunto</th></tr>${tr}</table></div><div class="legend">Tempo médio ponderado: cada conjunto pesa pelas unidades que produziu, então conjuntos grandes influenciam mais que os pequenos.</div>${foraLim(L)}</div></div><div data-hs="pro">${hisProc(HPW===undefined?undefined:(HPW||[]).filter(w=>(g==='__all'?visG().includes(w.gal):w.gal===g)&&(!so.value||w.op===so.value)))}</div><div data-hs="pes">${hisPessoas(P)}</div>`;hsShow();
+ const tr=TY.map(([n,c])=>{const q=P.filter(w=>w.ty===n),d=C.filter(x=>x.w.ty===n).map(x=>({d:x.d,q:x.qty||1}));return`<tr><td><b>${esc(n)}</b></td><td class="num">${fmt(NN(q))}</td><td class="num">${fmt(q.reduce((a,w)=>a+w.qty,0))}</td><td class="num">${d.length?mm(wa(d)):'—'}</td></tr>`}).join('');
+ el.innerHTML=`<div data-hs="evo"><dl class="stats solo">${kp}</dl><div class="card" style="margin-top:14px"><h2>${ttl}${nome}</h2>${ch}${ex}${temAgg&&met==='t'?`<div class="legend">O tempo médio usa o detalhe de cada onda, guardado só para os últimos 35 dias. Os dias até ${new Date(aggAte).toLocaleDateString('pt-BR')} mostram unidades e ondas, mas não o tempo.</div>`:''}</div>${tb}</div><div data-hs="tipo"><div class="card" style="margin-top:14px"><h2>Por tipo de onda no período</h2><div class="tw"><table><tr><th>Tipo</th><th>Ondas</th><th>Unidades</th><th>Tempo médio ponderado por conjunto</th></tr>${tr}</table></div><div class="legend">Tempo médio ponderado: cada conjunto pesa pelas unidades que produziu, então conjuntos grandes influenciam mais que os pequenos.</div>${foraLim(L)}</div></div><div data-hs="pro">${hisProc(HPW===undefined?undefined:(HPW||[]).filter(w=>(g==='__all'?visG().includes(w.gal):w.gal===g)&&(!so.value||w.op===so.value)))}</div><div data-hs="pes">${hisPessoas(P)}</div>`;hsShow();
 }
 
 /* ===================== acesso ===================== */

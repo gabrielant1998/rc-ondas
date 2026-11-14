@@ -45,6 +45,7 @@ function fake(db){const cors={'access-control-allow-origin':'*','access-control-
    const group=(key,more)=>Object.values(selected.reduce((a,w)=>{const k=key(w);if(!a[k])a[k]=more(w);a[k].qtd+=w.quantidade;a[k].ondas++;return a},{}));
    const tipos=group(w=>w.tipo,w=>({tipo:w.tipo,qtd:0,ondas:0})),gals=group(w=>w.galpao_id,w=>({nome:db.galpoes.find(g=>g.id===w.galpao_id).nome,qtd:0,ondas:0,pessoas:0}));
    return J(route,200,{total:selected.reduce((n,w)=>n+w.quantidade,0),ondas:selected.length,pessoas:new Set(selected.map(w=>w.operador_id)).size,extra_un:0,extra_ondas:0,dur_ms:0,dur_n:0,dur_tipos:[],horas:[],tipos,galpoes:gals})}
+  if(t==='rpc/relatorio_agregado'){db.calls.agg=(db.calls.agg||0)+1;const M=new Map();db.ondas.filter(o=>escopo(o.galpao_id)&&o.status===0&&o.registrada_em>=body.p_ini&&o.registrada_em<body.p_fim).forEach(o=>{const d=new Date(Date.parse(o.concluida_em||o.registrada_em)-3*36e5).toISOString().slice(0,10),k=[d,o.galpao_id,o.operador_id,o.tipo].join('|'),r=M.get(k)||{dia:d,galpao_id:o.galpao_id,operador_id:o.operador_id,tipo:o.tipo,ondas:0,unidades:0};r.ondas++;r.unidades+=o.quantidade;M.set(k,r)});return J(route,200,[...M.values()])}
   if(t==='rpc/registrar_ondas'){db.calls.rpc++;return J(route,200,body.lote.map(o=>{
     if(db.ondas.some(x=>x.id===o.id))return{id:o.id,resultado:'ja_existia',detalhe:null};
     if(db.ondas.some(x=>normWN(x.wn)===normWN(o.wn)))return{id:o.id,resultado:'wn_repetido',detalhe:'A onda '+o.wn+' já foi registrada'};
@@ -379,6 +380,14 @@ await T('S32 Sincronização: depois da 1ª carga baixa só o que mudou; exclus�
  const r2=await p.evaluate(()=>({me:!!(me&&me.adm),n:S.waves.filter(w=>w.srv).length}));ok(r2.me&&r2.n===n0-1,'cópia do aparelho: '+JSON.stringify(r2));
  ok(db.calls.ondas.full===f0,'recarregar não deveria baixar tudo de novo: '+JSON.stringify(db.calls.ondas));
  await p.evaluate(()=>sair());await p.waitForTimeout(300);ok(await p.evaluate(()=>localStorage.getItem('rcondas.me')===null),'sair deveria apagar a cópia')});
+await T('S33 Relatórios de 12 meses: ondas antigas vêm em totais do banco e somam com as recentes',async()=>{const db=banco();const velho=new Date(Date.now()-100*864e5).toISOString(),novo=new Date(Date.now()-2*864e5).toISOString();
+ for(let i=0;i<5;i++)db.ondas.push({id:'v'+i,wn:'70'+i,operador_id:db.operadores[0].id,galpao_id:G1,tipo:'Vários artigos',quantidade:100,status:0,registrada_em:velho,concluida_em:velho});
+ db.ondas.push({id:'n1',wn:'801',operador_id:db.operadores[0].id,galpao_id:G1,tipo:'Itens Únicos',quantidade:40,status:0,registrada_em:novo,concluida_em:novo});
+ const p=await page(b,db);await login(p,'adm@x.com','senha1234');
+ await p.evaluate(()=>{go('his');$('#hVis').value='mes';hisFill();$('#hPer').value='12';$('#hMet').value='o';loadHis(true)});await p.waitForTimeout(900);
+ const r=await p.evaluate(()=>({kp:document.querySelector('#hBody').textContent.replace(/\s+/g,' '),agg:(HW||[]).filter(w=>w.agg).length}));
+ ok(db.calls.agg>=1&&r.agg>=1,'deveria usar os totais do banco: '+JSON.stringify({calls:db.calls.agg,agg:r.agg}));
+ await p.evaluate(()=>{$('#hMet').value='u';hisRender()});const t=await p.evaluate(()=>document.querySelector('#hBody').textContent.replace(/\s+/g,' '));ok(/540/.test(t),'total de unidades 500+40: '+t.slice(0,300))});
 await b.close();
 const w=Math.max(...R.map(r=>r[1].length));for(const r of R)console.log((r[0]==='PASS'?'✅':'❌')+' '+r[1].padEnd(w)+'  '+r[2]);
 console.log(`\n${R.filter(r=>r[0]==='PASS').length}/${R.length} passaram`)})();
