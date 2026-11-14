@@ -197,7 +197,7 @@ await T("33 Gestão: falta sem bipagem e hora extra estimada",async()=>{const no
  const make=(id,op,h,qty)=>({id,wn:id,op,opn:op==='CL001'?'Ana Souza':'Bruno Lima',gal:'Galpão 1',ty:'Vários artigos',qty,st:0,ts:baseT+h*36e5,fin:baseT+h*36e5,sync:1});
  const p=await page(b,base({waves:[make('a','CL001',16.5,10),make('b','CL001',16.75,15)]}));
  const r=await p.evaluate(t=>{$('#day').value=dk(t);go('ind');return{txt:$('#iBody').textContent,extra:mgExtra(S.ops[0],dk(t),S.waves),ref:mgReference(S.ops[0],mgData())}},baseT);
- ok(r.txt.includes('Bruno Lima')&&r.txt.includes('Pendentes de conferência'),'sem tabela de pendentes');ok(r.extra.ms===15*60000,'extra '+r.extra.ms);ok(r.ref===10000,'meta '+r.ref);
+ ok(r.txt.includes('Bruno Lima')&&r.txt.includes('Pendentes'),'sem tabela de pendentes');ok(r.extra.ms===15*60000,'extra '+r.extra.ms);ok(r.ref===10000,'meta '+r.ref);
  await p.evaluate(()=>{$('#iOp').value='CL002';individual()});ok((await p.textContent('#iBody')).includes('Pendente de conferência'),'pendente não sinalizado');
 });
 
@@ -660,6 +660,22 @@ await T("89 Painel: ritmo esperado, ranking de pessoas e mapa de calor pessoa x 
  await p.click('#chH .sleg [data-pft="Itens Únicos"]');await p.waitForTimeout(200);
  const f=await p.evaluate(()=>({rank:document.querySelectorAll('#chP .gal').length,rit:document.querySelector('#vivoRit').classList.contains('hide')}));
  ok(f.rank===1&&f.rit,'filtro pela legenda: '+JSON.stringify(f))});
+await T("90 Equipe: ondas e tempo no horário normal e na hora extra, total da equipe que segue o filtro de turno",async()=>{
+ const st=base({waves:[WV('a','1','Itens Únicos',10,HR(15,40)),WV('b','2','Itens Únicos',10,HR(15,55)),WV('c','3','Itens Únicos',10,HR(16,10)),WV('d','4','Itens Únicos',10,HR(16,30)),WV('e','5','Itens Únicos',10,HR(16,45)),WV('f','6','Itens Únicos',20,HR(17,0),'CL003','Carla Dias')]});
+ const p=await page(b,st);
+ const r=await p.evaluate(()=>{$("#gal").value="__all";$("#turnoF").value="";go("ind");individual();const rw=[...document.querySelectorAll('#iBody tr')].find(t=>/Ana Souza/.test(t.textContent)),c=[...rw.children].map(x=>x.textContent);return{n:c[c.length-2],x:c[c.length-1],tot:document.querySelector('#mgTot').textContent.replace(/\s+/g,' ')}});
+ ok(/3 ondas/.test(r.n)&&/0h35/.test(r.n),'normal: '+r.n);ok(/2 ondas/.test(r.x)&&/0h30/.test(r.x),'extra: '+r.x);ok(/Total da equipe/.test(r.tot)&&/70/.test(r.tot),'total: '+r.tot);
+ const t1=await p.evaluate(()=>{$("#turnoF").value="1";individual();return document.querySelector('#mgTot').textContent.replace(/\s+/g,' ')});
+ ok(/1º turno/.test(t1)&&/50/.test(t1)&&!/70/.test(t1),'total do 1º turno: '+t1);
+ const f=await p.evaluate(()=>{$("#turnoF").value="";individual();$("#iOp").value="CL001";individual();return [...document.querySelectorAll('#mgNx tr')].map(r=>[...r.children].map(c=>c.textContent.trim()).join('|')).join(' / ')});
+ ok(/Horário normal\|3\|30\|0h35/.test(f)&&/Hora extra\|2\|20\|0h30/.test(f),'ficha: '+f)});
+await T("91 Individual: dias abaixo da meta individual (na equipe e na ficha)",async()=>{const D=864e5;
+ const st=base({metasInd:{"Galpão 1":{q:100}},waves:[WV('a','1','Itens Únicos',50,HR(9,0)-D),WV('b','2','Itens Únicos',60,HR(9,0)),WV('c','3','Itens Únicos',90,HR(10,0))]});
+ const p=await page(b,st);
+ const r=await p.evaluate(()=>{$("#gal").value="__all";$("#turnoF").value="";go("ind");$("#iPer").value="7";individual();const rw=[...document.querySelectorAll('#iBody tr')].find(t=>/Ana Souza/.test(t.textContent));
+  const tb=rw.closest('table'),hd=[...tb.querySelector('tr').children].map(c=>c.textContent),i=hd.indexOf('Dias abaixo da meta');const eq=rw.children[i].textContent;
+  $("#iOp").value="CL001";individual();return{eq,k:document.querySelector('#mgAb').textContent,res:[...document.querySelectorAll('#iBody tr')].map(t=>t.textContent).filter(t=>/Abaixo|Bateu/.test(t)).join(' / ')}});
+ ok(/1 de 2/.test(r.eq),'equipe: '+r.eq);ok(/1/.test(r.k)&&/de 2 dias/.test(r.k),'ficha: '+r.k);ok(/Abaixo/.test(r.res)&&/faltaram 50 un/.test(r.res)&&/Bateu/.test(r.res),'resumo: '+r.res)});
 await b.close();
 const w=Math.max(...R.map(r=>r[1].length));for(const r of R)console.log((r[0]==="PASS"?"✅":"❌")+" "+r[1].padEnd(w)+"  "+r[2]);
 console.log(`\n${R.filter(r=>r[0]==="PASS").length}/${R.length} passaram`)})();
