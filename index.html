@@ -324,6 +324,25 @@ td .btn.d:hover,td .pill.off[data-adel]:hover{background:var(--r);color:#fff;bor
 .pzB{grid-column:1/-1;border-top:1px dashed var(--line);padding-top:8px;margin-bottom:6px;display:grid;gap:6px}.pzH{font-size:13.5px;font-weight:600}.pzH small{font-weight:400;color:var(--mut)}
 .pzR{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr) auto;gap:6px;align-items:center;padding:6px 0;border-bottom:1px solid var(--line)}.pzR input[data-k=n]{grid-column:1/-1}.pzX{font-size:13px;color:var(--rx)}.pzR input{min-width:0;width:100%;box-sizing:border-box}.pzR span{font-size:13px;color:var(--mut)}
 .pzT{position:relative;height:14px;background:color-mix(in srgb,var(--g) 10%,var(--card));border-radius:3px;margin-top:4px}.pzT i{position:absolute;top:0;bottom:0;background:var(--o);border-radius:2px}.pzT i.al{background:var(--k)}.pzT span{position:absolute;top:15px;font-size:11px;color:var(--mut)}.pzT span:last-child{right:0}.pzB{padding-bottom:14px}
+
+/* tela de carregamento */
+#boot{position:fixed;inset:0;z-index:9999;display:grid;place-items:center;background:radial-gradient(120% 90% at 50% 35%,#163f8c 0%,#0d2a5e 55%,#081a3b 100%);color:#fff;transition:opacity .45s ease,visibility .45s}
+#boot.out{opacity:0;visibility:hidden;pointer-events:none}
+.bt-c{display:grid;justify-items:center;gap:10px;text-align:center;padding:24px}
+.bt-w{width:120px;height:60px;fill:none;stroke:#8fb4ff;stroke-width:5;stroke-linecap:round}
+.bt-w path{stroke-dasharray:150;stroke-dashoffset:150;animation:btw 1.8s ease-in-out infinite}.bt-w path+path{stroke:#fff;animation-delay:.25s}
+@keyframes btw{0%{stroke-dashoffset:150}50%{stroke-dashoffset:0}100%{stroke-dashoffset:-150}}
+.bt-n{font:800 34px/1 var(--fd);letter-spacing:.01em}.bt-t{font:500 15px var(--fb);color:#c2cde3;min-height:20px}
+.bt-b{display:flex;gap:6px;align-items:flex-end;height:26px;margin-top:6px}.bt-b i{width:7px;border-radius:3px;background:#8fb4ff;animation:btb 1s ease-in-out infinite}
+.bt-b i:nth-child(2){animation-delay:.12s}.bt-b i:nth-child(3){animation-delay:.24s;background:#fff}.bt-b i:nth-child(4){animation-delay:.36s}.bt-b i:nth-child(5){animation-delay:.48s}
+@keyframes btb{0%,100%{height:6px;opacity:.5}50%{height:26px;opacity:1}}
+@media(prefers-reduced-motion:reduce){.bt-w path{animation:none;stroke-dashoffset:0}.bt-b i{animation:none;height:14px}}
+/* esqueleto enquanto o painel recarrega */
+.skel{display:grid;grid-template-columns:1.2fr 1fr;gap:12px}.skel i{display:block;height:150px;border-radius:6px;background:linear-gradient(90deg,var(--card) 0%,color-mix(in srgb,var(--line) 70%,var(--card)) 50%,var(--card) 100%);background-size:200% 100%;animation:sk 1.2s linear infinite;border:1px solid var(--line)}
+@keyframes sk{0%{background-position:200% 0}100%{background-position:-200% 0}}
+@media(prefers-reduced-motion:reduce){.skel i{animation:none}}
+/* painel público: sem os gráficos por pessoa, a grade se reorganiza */
+@media(min-width:1200px){#painel.pub .pgrid{grid-template-areas:"h h t" "g g t"}}
 details.info{margin-top:8px;font-size:13.5px;color:var(--mut)}details.info summary{cursor:pointer;color:var(--ink);font-weight:600;list-style:none;display:inline-flex;align-items:center;gap:6px}
 details.info summary:before{content:"?";width:16px;height:16px;border-radius:50%;border:1px solid var(--mut);display:inline-grid;place-items:center;font-size:10.5px;color:var(--mut)}
 details.info summary::-webkit-details-marker{display:none}details.info[open] summary{margin-bottom:4px}
@@ -382,6 +401,10 @@ body[data-v=cfg] #turnoF,body[data-v=cfg] #gal,body[data-v=cfg] #day{display:non
 </style>
 </head>
 <body>
+<div id="boot" role="status" aria-live="polite"><div class="bt-c">
+ <svg class="bt-w" viewBox="0 0 120 60" aria-hidden="true"><path d="M4 22c12-14 20 14 38 0s26 14 38 0 26 14 38 0"/><path d="M4 42c12-14 20 14 38 0s26 14 38 0 26 14 38 0"/></svg>
+ <div class="bt-n">RC Ondas</div><div class="bt-t" id="bootT">Carregando a produção do dia…</div>
+ <div class="bt-b" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div></div></div>
 <div id="mgBar" class="mgbar hide" role="progressbar" aria-label="Atualizando"></div>
 <div class="app">
 <nav class="side" aria-label="Principal">
@@ -821,6 +844,8 @@ async function importar(){const L=antigos();if(!L||!(me&&me.adm))return;
   await pull();cfgRender();renderAll();
   toast("Dados antigos: "+(tot.ok+tot.ja_existia)+" ondas no banco, "+(tot.wn_repetido+tot.recusada+tot.sem_operador)+" não entraram.",10000)}
  catch(e){toast("Envio interrompido: "+errMsg(e)+" Pode tentar de novo, nada duplica.",9000);cfgRender()}}
+let bootOk=false;function bootDone(){if(bootOk)return;bootOk=true;const b=document.getElementById("boot");if(b){b.classList.add("out");setTimeout(()=>b.remove(),600)}}
+setTimeout(()=>{const t=document.getElementById("bootT");if(t&&!bootOk)t.textContent="A conexão está lenta, ainda carregando…"},6000);setTimeout(bootDone,15000);
 async function bootSrv(){
  $("#lExtra").classList.remove("hide");loginUI();
  $("#mP2").closest("label").classList.add("hide");$("#mU").placeholder="nome@empresa.com";$("#mU").type="email";$("#mU").closest("label").firstChild.textContent="E-mail do gestor";
@@ -828,7 +853,7 @@ async function bootSrv(){
  try{sess=JSON.parse(localStorage.getItem("rcondas.sess"))}catch(e){sess=null}
  go("painel");await lerRetorno();
  try{await pull()}catch(e){if(e.status)toast(errMsg(e),6000)}
- authUI();renderAll();if(me&&!recMode)go("painel");push();
+ authUI();renderAll();if(me&&!recMode)go("painel");push();if(me||!publicLoading)bootDone();
  setInterval(push,15000);
  setInterval(()=>{if(online()&&document.visibilityState==="visible"&&!pushing)pull().then(()=>{renderAll();if(view==="ind")loadManagement()}).catch(()=>{})},60000)}
 
@@ -919,10 +944,10 @@ async function painelPublico(force=false){
  const d=$("#day").value,g=$("#gal").value,t=$("#turnoF").value,key=[d,g,t].join('|');
  if(!d)return;if(!force&&key===publicKey&&publicData&&Date.now()-publicAt<45000){desenhaPainelPublico(publicData,g,t);return}if(!force&&key===publicKey&&publicLoading)return;
  publicKey=key;publicData=null;publicLoading=true;const seq=++publicSeq;
- $("#kpis").innerHTML='<div class="card">Carregando produção…</div>';["#chH","#pFil","#tTipos","#gals","#pace"].forEach(x=>$(x).innerHTML='');$("#peak").textContent='';
+ $("#kpis").innerHTML='<div class="skel" aria-label="Carregando produção"><i></i><i></i></div>';["#chH","#pFil","#tTipos","#gals","#pace"].forEach(x=>$(x).innerHTML='');$("#peak").textContent='';
  try{const x=await raw('/rest/v1/rpc/painel_publico',{method:'POST',auth:false,body:{p_dia:d,p_galpao:g&&g!=='__all'?(GID[g]||null):null,p_turno:t?+t:null}});
-  if(seq!==publicSeq)return;publicLoading=false;if(view!=='painel'||me)return;publicData=x;publicAt=Date.now();desenhaPainelPublico(x,g,t);
- }catch(e){if(seq!==publicSeq)return;publicLoading=false;if(me)return;publicKey='';$("#kpis").innerHTML='<div class="card">Não foi possível carregar o painel. Confira a conexão e tente novamente.</div>'}
+  if(seq!==publicSeq)return;publicLoading=false;if(view!=='painel'||me)return;publicData=x;publicAt=Date.now();desenhaPainelPublico(x,g,t);if(typeof bootDone==='function')setTimeout(bootDone,150);
+ }catch(e){if(seq!==publicSeq)return;publicLoading=false;if(me)return;publicKey='';$("#kpis").innerHTML='<div class="card">Não foi possível carregar o painel. Confira a conexão e tente novamente.</div>';if(typeof bootDone==='function')bootDone()}
 }
 const PF={ty:new Set(),ot:false};
 function pFilHtml(tv,tot,ro){const tt=tv.reduce((q,x)=>q+x.v,0)||tot||0,act=PF.ty.size||PF.ot;
@@ -945,7 +970,7 @@ function desenhaPainelPublico(x,g,t){
  TY.forEach(([name])=>{const z=dt.find(q=>q.tipo===name)||{};if(+z.n)tm[name]=+(z.pond!=null?z.pond:z.mediana)||0});
  $("#pFil").innerHTML=pFilHtml(tv,tot,true);$("#tTipos").innerHTML=tabTipos(tv,tot,tm,true);
  $("#gals").innerHTML=tabGals((x.galpoes||[]).map(z=>({k:z.nome,v:+z.qtd||0,m:+MT()[z.nome]||0,o:+z.ondas||0,p:+z.pessoas||0})),null,true);
- ["#vivo","#pRank","#pHeat","#pFun","#pDis","#pRad"].forEach(i=>{const e=$(i);if(e&&e.classList)e.classList.add("hide")});
+ {const pe=$("#painel");if(pe&&pe.classList)pe.classList.add("pub")}["#vivo","#pRank","#pHeat","#pFun","#pDis","#pRad"].forEach(i=>{const e=$(i);if(e&&e.classList)e.classList.add("hide")});
  $("#pace").innerHTML='<span class="legend">Painel público com totais consolidados. Registros ainda offline aparecem após a sincronização.</span>';
 }
 
@@ -1006,7 +1031,7 @@ function painel(){
   tot=P.reduce((s,w)=>s+w.qty,0),ond=P.length,pes=new Set(P.map(w=>w.op)).size,
   D=durs(L),md=wA(D),ot=P.filter(isOT),
   {a}=hourly(allF,g),a2=meias(allF,g),mx=Math.max(...a);
- ["#pRank","#pHeat","#pFun","#pDis","#pRad"].forEach(i=>$(i).classList.remove("hide"));
+ $("#painel").classList.remove("pub");["#pRank","#pHeat","#pFun","#pDis","#pRad"].forEach(i=>$(i).classList.remove("hide"));
  const TF=$("#turnoF").value,TW=TF?S.cfg.turnos[TF]:{ini:Math.min(S.cfg.turnos[1].ini,S.cfg.turnos[2].ini),fim:Math.max(S.cfg.turnos[1].fim,S.cfg.turnos[2].fim)};
  const nowF=new Date().getHours()+new Date().getMinutes()/60,isNow=$("#day").value===dk(Date.now());
  const hWin=Math.max(TW.fim-TW.ini,1),elapsed=isNow?Math.min(Math.max(nowF-TW.ini,0),hWin):hWin,remain=isNow?Math.max(TW.fim-Math.max(nowF,TW.ini),0):0;
@@ -2218,7 +2243,7 @@ document.addEventListener("change",async e=>{const t=e.target;if(!t.classList)re
   if(!ON||!me||!me.pR){toast("Sem permissão para registrar o motivo.");return}
   await atrSalvar(t.dataset.ao,t.dataset.ad,{observacao:t.value.trim()||null},"Motivo do atraso salvo")}});
 try{storeLen=(localStorage.getItem(LS)||"").length}catch(e){}
-authUI();segs();goStep(1);if(ON)bootSrv();else go("painel");setInterval(tick,1000);
+authUI();segs();goStep(1);if(ON)bootSrv();else{go("painel");bootDone()}setInterval(tick,1000);
 (function(){if(location.protocol==="file:")return;let base=null,shown=false;
  async function chk(){try{const r=await fetch(location.pathname+"?v="+Date.now(),{cache:"no-store"});if(!r.ok)return;const t=await r.text(),k=t.length+":"+h32(t);
   if(base===null){base=k;return}if(k===base||shown)return;
