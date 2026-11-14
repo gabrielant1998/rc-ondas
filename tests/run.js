@@ -176,7 +176,7 @@ await T("29 Registros antigos (formato anterior) continuam abrindo",async()=>{co
 await T("30 Dados antigos: 'Vários' e 'Múltiplos' viram os nomes novos, com limites preservados",async()=>{const S=base({waves:[
   {id:"a",wn:"1",op:"CL001",opn:"Ana Souza",gal:"Galpão 1",ty:"Vários",qty:3,st:0,ts:Date.now(),fin:Date.now(),sync:1},
   {id:"b",wn:"2",op:"CL001",opn:"Ana Souza",gal:"Galpão 1",ty:"Múltiplos",qty:4,st:0,ts:Date.now(),fin:Date.now(),sync:1}]});S.cfg.lim["Vários"]=777;
- const p=await page(b,S);const r=await p.evaluate(()=>({t:S.waves.map(w=>w.ty),lim:S.cfg.lim,txt:document.querySelector("#chT").textContent}));
+ const p=await page(b,S);const r=await p.evaluate(()=>({t:S.waves.map(w=>w.ty),lim:S.cfg.lim,txt:document.querySelector("#pFil").textContent}));
  ok(r.t.join()==="Vários artigos,Múltiplas quantidades","tipos: "+r.t);ok(r.lim["Vários artigos"]===777&&r.lim["Vários"]===undefined,"limite: "+JSON.stringify(r.lim));
  ok(r.lim["Retrabalho"]===1000&&r.lim["Pacote do mesmo"]===1000,"limites novos ausentes");ok(!/Vários\b(?! artigos)/.test(r.txt),"painel ainda mostra nome antigo")});
 
@@ -185,7 +185,7 @@ await T("31 Retrabalho e Pacote do mesmo: registram, aparecem no Painel e respei
  await p.fill('[data-q="0"]','50');await p.click('#save');await p.waitForTimeout(200);
  await openReg(p,"CL002","Pacote do mesmo");await typeRows(p,[[7102,8],[7103,9]]);await p.click('#save');await p.waitForTimeout(200);
  const s=await st(p);ok(s.waves.map(w=>w.ty).join()==="Retrabalho,Pacote do mesmo,Pacote do mesmo","tipos gravados: "+s.waves.map(w=>w.ty));
- const txt=await p.evaluate(()=>{go("painel");return [...document.querySelectorAll("#chT .rl")].map(r=>r.querySelector("b").textContent+" "+r.querySelector(".num").textContent).join(" | ")});
+ const txt=await p.evaluate(()=>{go("painel");return [...document.querySelectorAll("#pFil .pf")].map(r=>r.querySelector(".pn").textContent+" "+r.querySelector(".pfv").textContent).join(" | ")});
  ok(/Retrabalho\s*50/.test(txt)&&/Pacote do mesmo\s*17/.test(txt),"painel: "+txt);
  await p.reload();await p.waitForTimeout(200);ok((await p.evaluate(()=>S.waves.map(w=>w.ty).join()))==="Retrabalho,Pacote do mesmo,Pacote do mesmo","perdeu o tipo ao recarregar");return txt.slice(0,160)});
 
@@ -267,10 +267,11 @@ await T("46 Coletiva: total por tipo com tempo entre ondas e média por pessoa",
  await p.evaluate(()=>{go('ind');document.querySelector('[data-gs="mc"]').click()});const t=(await p.textContent('#coBody')).replace(/\s+/g,' ');
  ok(t.includes('Total por tipo e tempo entre ondas'),'sem card');const linha=t.match(/Vários artigos230(\d\d:\d\d)([\d,]+)(\d\d:\d\d)/);
  ok(linha&&linha[1]==='10:00'&&linha[2]==='1'&&linha[3]==='05:00','Vários: '+(linha&&linha.slice(1).join('|'))+' | '+t.slice(t.indexOf('Total por tipo'),t.indexOf('Total por tipo')+500))});
-await T("47 Painel: ranking de tipos pela mediana do tempo, maior primeiro",async()=>{
+await T("47 Painel: tabela de tipos mostra o tempo por onda de cada tipo",async()=>{
  const p=await page(b,base({waves:[WV('a','1','Vários artigos',10,HR(9,0)),WV('b','2','Itens Únicos',10,HR(9,10)),WV('c','3','Vários artigos',10,HR(9,12)),WV('d','4','Itens Únicos',10,HR(9,30))]}));
- await p.evaluate(()=>go('painel'));const t=(await p.textContent('#tmp')).replace(/\s+/g,' ');
- ok(t.indexOf('1º Vários artigos')>=0&&t.indexOf('2º Itens Únicos')>=0&&t.indexOf('1º Vários artigos')<t.indexOf('2º Itens Únicos')&&t.includes('14:00'),t.slice(0,300))});
+ await p.evaluate(()=>go('painel'));const t=await p.evaluate(()=>[...document.querySelectorAll('#tTipos tr')].map(r=>[...r.children].map(c=>c.textContent.trim()).join('|')).join('\n'));
+ const row=n=>(t.split('\n').find(l=>l.startsWith(n))||'').split('|');
+ ok(row('Vários artigos')[3]!=='—'&&/\d/.test(row('Vários artigos')[3]),'Vários artigos sem tempo: '+t);ok(row('Itens Únicos')[3]!=='—','Itens Únicos sem tempo: '+t);ok(row('Retrabalho')[3]==='—','Retrabalho deveria ficar sem tempo: '+t)});
 await T("48 Controle de Ondas: última bipagem de cada operador conta tempo ao vivo dentro do intervalo máximo",async()=>{const n=Date.now(),m=60000;
  const p=await page(b,base({waves:[WV('a','1','Vários artigos',10,n-50*m),WV('b','2','Vários artigos',20,n-5*m),WV('c','3','Itens Únicos',7,n-2*m,'CL002','Bruno Lima'),WV('d','4','Itens Únicos',3,n-45*m,'CL003','Carla Dias')]}));
  await p.evaluate(()=>go('op'));await p.click('.ssub [data-v="ctl"]');await p.waitForTimeout(1200);
@@ -636,10 +637,29 @@ await T("86 Lista de presença: colunas Horário justificado e Motivo do atraso 
  ok(h.includes('Motivo do atraso')&&h.includes('Horário justificado'),'cabeçalho: '+JSON.stringify(h));
  ok(await p.evaluate(()=>document.querySelectorAll('input.atrM').length)===0,'campo editável apareceu sem servidor');});
 
-await T("87 Painel: 4 gráficos (área, colunas, rosca, barras) e duas tabelas na lateral direita",async()=>{const p=await page(b,base({waves:[WV('q1','Q1','Vários artigos',50,HR(9,10)),WV('q2','Q2','Itens Únicos',30,HR(10,5)),WV('q3','Q3','Pacote do mesmo',20,HR(10,40))]}));
+await T("87 Painel: 4 gráficos (área, colunas, ranking, mapa de calor), cartões de tipo e duas tabelas na lateral direita",async()=>{const p=await page(b,base({waves:[WV('q1','Q1','Vários artigos',50,HR(9,10)),WV('q2','Q2','Itens Únicos',30,HR(10,5)),WV('q3','Q3','Pacote do mesmo',20,HR(10,40))]}));
  await p.evaluate(()=>go('painel'));await p.waitForTimeout(250);
- const r=await p.evaluate(()=>{const v=s=>document.querySelector(s),box=e=>e.getBoundingClientRect();return{n:[...document.querySelectorAll('#painel .pc')].filter(e=>e.offsetParent).length,area:!!v('#vivoC polygon'),bars:!!v('#chH svg'),rosca:!!v('#chT .rosca circle[stroke-dasharray]'),tmp:!!v('#tmp .gal'),t1:!!v('#tTipos table tr td'),t2:!!v('#gals table tr td'),dir:box(v('#tTipos')).left>box(v('#chT')).right-1&&box(v('#gals')).left>box(v('#vivo')).right-1}});
+ const r=await p.evaluate(()=>{const v=s=>document.querySelector(s),box=e=>e.getBoundingClientRect();return{n:[...document.querySelectorAll('#painel .pc')].filter(e=>e.offsetParent).length,area:!!v('#vivoC polygon'),bars:!!v('#chH svg'),rosca:!!v('#pFil .pf'),tmp:!!v('#chP .gal')||!!v('#chP svg')||!!v('#chP .bar'),t1:!!v('#tTipos table tr td'),t2:!!v('#gals table tr td'),dir:box(v('#tTipos')).left>box(v('#pRank')).right-1&&box(v('#gals')).left>box(v('#vivo')).right-1}});
  ok(r.n===4,'cartões de gráfico: '+r.n);ok(r.area&&r.bars&&r.rosca&&r.tmp,'gráficos: '+JSON.stringify(r));ok(r.t1&&r.t2,'tabelas: '+JSON.stringify(r));ok(r.dir,'tabelas não ficam à direita')});
+await T("88 Painel: cartões de tipo filtram tudo, Limpar filtros volta, e hora extra filtra pelo KPI",async()=>{const p=await page(b,base({waves:[WV('q1','Q1','Vários artigos',50,HR(9,10)),WV('q2','Q2','Itens Únicos',30,HR(10,5)),WV('q3','Q3','Pacote do mesmo',20,HR(10,40),'CL002','Bruno Lima')]}));
+ await p.evaluate(()=>go('painel'));await p.waitForTimeout(250);
+ const big=()=>p.evaluate(()=>document.querySelector('.placar .num').textContent.replace(/\D/g,''));
+ ok(await big()==='100','total sem filtro: '+await big());
+ await p.click('#pFil [data-pft="Itens Únicos"]');await p.waitForTimeout(200);
+ ok(await big()==='30','filtrado: '+await big());
+ const r=await p.evaluate(()=>({on:document.querySelector('#pFil [data-pft="Itens Únicos"]').getAttribute('aria-pressed'),fil:!!document.querySelector('#pFil .pfa'),stk:[...document.querySelectorAll('#chH .stk rect')].length,rank:document.querySelector('#chP').textContent,pessoas:document.querySelector('#rankN').textContent}));
+ ok(r.on==='true'&&r.fil,'cartão ativo e indicador: '+JSON.stringify(r));ok(r.stk>0,'colunas empilhadas');ok(/1 pessoa/.test(r.pessoas),'ranking refiltrado: '+r.pessoas);
+ await p.click('#tTipos [data-pft="Vários artigos"]');await p.waitForTimeout(200);ok(await big()==='80','dois tipos: '+await big());
+ await p.click('#pFil [data-pfx]');await p.waitForTimeout(200);ok(await big()==='100','limpar: '+await big());ok(!(await p.$('#pFil .pfa')),'indicador some');
+ await p.click('.kpi[data-pfk="ot"]');await p.waitForTimeout(200);ok(await p.evaluate(()=>document.querySelector('.kpi[data-pfk="ot"]').getAttribute('aria-pressed'))==='true','KPI hora extra ativo');
+ await p.click('.kpi[data-pfk="ot"]');await p.waitForTimeout(200);ok(await big()==='100','hora extra desligada: '+await big())});
+await T("89 Painel: ritmo esperado, ranking de pessoas e mapa de calor pessoa x hora",async()=>{const p=await page(b,base({waves:[WV('q1','Q1','Vários artigos',50,HR(9,10)),WV('q2','Q2','Itens Únicos',30,HR(10,5),'CL002','Bruno Lima')]}));
+ await p.evaluate(()=>go('painel'));await p.waitForTimeout(250);
+ const r=await p.evaluate(()=>({rank:document.querySelectorAll('#chP .gal').length,heat:document.querySelectorAll('#chM .heat td[title]').length,cheio:[...document.querySelectorAll('#chM .heat td')].filter(c=>c.textContent.trim()).length,leg:!document.querySelector('#vivoRit').classList.contains('hide')||'sem meta',stk:!!document.querySelector('#chH .stk .sleg button')}));
+ ok(r.rank===2,'ranking: '+JSON.stringify(r));ok(r.heat>0&&r.cheio===2,'mapa de calor: '+JSON.stringify(r));ok(r.stk,'legenda empilhada');
+ await p.click('#chH .sleg [data-pft="Itens Únicos"]');await p.waitForTimeout(200);
+ const f=await p.evaluate(()=>({rank:document.querySelectorAll('#chP .gal').length,rit:document.querySelector('#vivoRit').classList.contains('hide')}));
+ ok(f.rank===1&&f.rit,'filtro pela legenda: '+JSON.stringify(f))});
 await b.close();
 const w=Math.max(...R.map(r=>r[1].length));for(const r of R)console.log((r[0]==="PASS"?"✅":"❌")+" "+r[1].padEnd(w)+"  "+r[2]);
 console.log(`\n${R.filter(r=>r[0]==="PASS").length}/${R.length} passaram`)})();
