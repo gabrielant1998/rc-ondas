@@ -294,6 +294,35 @@ a[data-pick]{display:inline-block;padding:8px 0 2px;color:var(--gx);font-weight:
 .ssub button:focus-visible{outline:2px solid #8fb4ff;outline-offset:1px}
 @media(min-width:761px){#sub,#gsub,#psub,#hsub,#csub{display:none}}
 @media(max-width:760px){.ssub{display:none}}
+
+/* ===== modo compacto (computador) e limpeza visual ===== */
+@media(min-width:761px){
+ body{font-size:14px}main{padding:16px 24px 40px;max-width:1600px}
+ header.top{margin-bottom:12px;padding-bottom:9px}header.top h1{font-size:28px}
+ select,input,button.b{min-height:36px;padding:6px 9px}.btn{min-height:36px;padding:8px 14px}.btn.sm{min-height:30px;padding:5px 11px}
+ .card{padding:14px 16px}.card h2{font-size:15.5px;margin-bottom:10px}
+ .kpi{padding:8px 14px}
+ #lims,#turnos{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 10px;align-items:end}#lims label,#turnos label{min-width:0;font-size:12.5px}#lims input,#turnos input{width:100%;min-width:0;box-sizing:border-box}
+}
+.hlg{grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px}
+.hl{background:var(--card);border:1px solid var(--line);border-left:3px solid var(--ac);padding:9px 12px 10px}
+.hl:before,.hl:after,.hl .hli,.hl .hlc,.hl .hlav,.hl .hls,.hl .hl2{display:none}
+.hl:hover{transform:none;box-shadow:none}.hl.vz{display:none}
+.hlh{margin-bottom:2px}.hlt{font:500 12.5px var(--fb);color:var(--mut)}
+.hlw{order:2}.hl1{font-size:13.5px}.hl1 small{display:inline;margin-left:6px}
+.hlv{font:700 23px/1.1 var(--fd);color:var(--ink);margin:2px 0 1px}.hld{font-size:12px;margin:0}
+.hl{display:flex;flex-direction:column}.hl .hlh{order:0}.hl .hlv{order:1}.hl .hld{order:3}
+td .btn.d,td .pill.off[data-adel]{background:none;color:var(--rx);border:1px solid var(--line);min-height:28px;padding:3px 10px;font-weight:600}
+td .btn.d:hover,td .pill.off[data-adel]:hover{background:var(--r);color:#fff;border-color:var(--r)}
+.pfh{display:flex;align-items:center;gap:12px;margin-bottom:12px;flex-wrap:wrap}.pfh .pfb{color:var(--mut);font-size:13px}.pfh .pfa{width:42px;height:42px;border-radius:50%;background:color-mix(in srgb,var(--g) 14%,var(--card));color:var(--g);font:700 15px/42px var(--fb);text-align:center;flex:none}
+.pfh .pft{flex:1;min-width:200px}.pfh .pft h2{font:700 22px/1.1 var(--fd);margin:0 0 2px}.pfh .pfn{display:flex;align-items:center;gap:8px}
+.pfg{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);gap:12px;margin-top:12px;align-items:start}@media(max-width:900px){.pfg{grid-template-columns:minmax(0,1fr)}}.pfg>.card{min-width:0}
+details.info{margin-top:8px;font-size:12.5px;color:var(--mut)}details.info summary{cursor:pointer;color:var(--ink);font-weight:600;list-style:none;display:inline-flex;align-items:center;gap:6px}
+details.info summary:before{content:"?";width:16px;height:16px;border-radius:50%;border:1px solid var(--mut);display:inline-grid;place-items:center;font-size:10.5px;color:var(--mut)}
+details.info summary::-webkit-details-marker{display:none}details.info[open] summary{margin-bottom:4px}
+
+#cfg>.grid+.grid,#pSku{margin-top:12px}
+body[data-v=cfg] #turnoF,body[data-v=cfg] #gal,body[data-v=cfg] #day{display:none}
 /* Folha de produção para imprimir (A4 paisagem, 1 página por pessoa) */
 #folha{display:none}
 @media print{
@@ -351,8 +380,8 @@ a[data-pick]{display:inline-block;padding:8px 0 2px;color:var(--gx);font-weight:
  <button class="tab on" data-t="painel"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20V11M10 20V5M16 20v-6M2 20h20"/></svg>Painel</button>
  <button class="tab" data-t="op"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13 2 4 14h7l-1 8 9-12h-7z"/></svg>Operação</button>
  <button class="tab" data-t="prs"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6"/><path d="m20 20-4.2-4.2"/></svg>Procurando</button>
- <button class="tab" data-t="ind"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3.5"/><path d="M5 21c0-4 3.5-6 7-6s7 2 7 6"/></svg><span class="nav-long">Gestão operacional</span><span class="nav-short">Gestão</span></button>
- <button class="tab" data-t="his"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19V5M4 19h16"/><path d="M8 15l3-4 3 2 5-6"/></svg>Histórico</button>
+ <button class="tab" data-t="ind"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3.5"/><path d="M5 21c0-4 3.5-6 7-6s7 2 7 6"/></svg><span class="nav-long">Equipe</span><span class="nav-short">Equipe</span></button>
+ <button class="tab" data-t="his"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19V5M4 19h16"/><path d="M8 15l3-4 3 2 5-6"/></svg>Relatórios</button>
  <button class="tab" data-t="cfg"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/></svg>Config</button>
  <div class="sp"></div>
  <div class="who" id="who"></div>
@@ -392,7 +421,7 @@ a[data-pick]{display:inline-block;padding:8px 0 2px;color:var(--gx);font-weight:
 
 <!-- ======================= OPERAÇÃO ======================= -->
 <section id="op" class="hide">
- <div class="sub" id="sub"><button data-s="reg" class="on">Registro</button><button data-s="ctl" id="subCtl">Controle de Ondas</button><button data-s="ace">Ondas concluídas do dia</button></div>
+ <div class="sub" id="sub"><button data-s="reg" class="on">Registro</button><button data-s="ctl" id="subCtl">Em andamento</button><button data-s="ace">Concluídas do dia</button></div>
 
  <div id="reg" class="grid two">
   <div class="card"><h2>Nova onda</h2>
@@ -432,14 +461,14 @@ a[data-pick]{display:inline-block;padding:8px 0 2px;color:var(--gx);font-weight:
 
 <!-- ======================= INDIVIDUAL ======================= -->
 <section id="ind" class="hide">
- <div class="sub" id="gsub"><button data-gs="mi" class="on">Meta individual</button><button data-gs="mc">Meta coletiva</button><button data-gs="chk">Lista de presença</button></div>
+ <div class="sub" id="gsub"><button data-gs="mi" class="on">Equipe e metas</button><button data-gs="mc">Meta coletiva</button><button data-gs="chk">Presença</button></div>
  <div class="ctl" style="margin-bottom:12px"><select id="iOp" aria-label="Operador"></select><select id="iPer" aria-label="Período"><option value="1">Dia selecionado</option><option value="7">Últimos 7 dias</option><option value="30">Últimos 30 dias</option><option value="90">Últimos 90 dias</option></select><button class="btn" id="iPrint" type="button">Imprimir folha</button></div>
  <div id="mgStatus" class="legend hide" role="status"></div><div id="iBody"></div><div id="coBody" class="hide"></div><div id="ckBody" class="hide"></div>
 </section>
 
 <!-- ======================= PROCURANDO ======================= -->
 <section id="prs" class="hide">
- <div class="sub" id="psub"><button data-p="bip" class="on">Bipar onda</button><button data-p="sku">SKU procurando</button><button data-p="his">Histórico</button></div>
+ <div class="sub" id="psub"><button data-p="bip" class="on">Pendentes</button><button data-p="sku" data-merge="1">SKU procurando</button><button data-p="his">Histórico</button></div>
  <div id="pBip" class="grid two"><div class="card"><h2>Bipar onda</h2><div class="f">
    <label>Bipar onda <input id="prBip" placeholder="Bipe a onda" autocomplete="off"></label>
    <div id="prRes"></div></div></div></div>
@@ -460,7 +489,7 @@ a[data-pick]{display:inline-block;padding:8px 0 2px;color:var(--gx);font-weight:
 
 <!-- ======================= CONFIG ======================= -->
 <section id="cfg" class="hide">
- <div class="sub" id="csub"><button data-c="cop" class="on">Operação</button><button data-c="cus">Usuários</button><button data-c="cme">Metas</button><button data-c="cga">Galpões</button><button data-c="cge">Gestores</button><button data-c="cma">Manutenção</button></div>
+ <div class="sub" id="csub"><button data-c="cop" class="on">Geral</button><button data-c="cus">Pessoas</button><button data-c="cme" data-merge="1">Metas</button><button data-c="cga">Galpões</button><button data-c="cge" data-merge="1">Gestores</button><button data-c="cma">Manutenção</button></div>
 
  <div id="cop" class="grid two">
   <div class="card"><h2>Limite por onda</h2><div class="f" id="lims"></div></div>
@@ -482,7 +511,7 @@ a[data-pick]{display:inline-block;padding:8px 0 2px;color:var(--gx);font-weight:
   <div class="card"><h2>Usuários <span id="uCnt"></span></h2><div class="tw" id="uL"></div></div>
  </div>
 
- <div id="cme" class="grid two hide">
+ <div id="cme" class="grid two">
   <div class="card"><h2 id="mTit">Meta de hoje</h2><div class="tw" id="mtL"></div><div class="legend" id="mLeg"></div></div>
   <div class="card" id="fCard"><h2>Animação de meta batida</h2>
    <div class="f"><label>Meta mínima para mostrar a animação (unidades)<input type="number" id="fmin" min="0" max="10000000" step="1" placeholder="0 = sempre que bater a meta"></label></div>
@@ -931,6 +960,8 @@ document.addEventListener("click",e=>{const tg=e.target;if(!tg.closest)return;
  const gB=tg.closest("[data-pfg]");if(gB&&gB.closest("#painel")){const k=gB.dataset.pfg,sl=$("#gal"),tem=[...sl.options].some(o=>o.value==="__all");sl.value=sl.value===k&&tem?"__all":k;sl.onchange({target:sl});return}
  if(tg.closest("[data-pfx]")){PF.ty.clear();PF.ot=false;renderAll();return}
  const kk=tg.closest("[data-pfk]");if(kk&&kk.closest("#painel")){if(kk.dataset.pfk==="ot"){PF.ot=!PF.ot;renderAll()}else go("prs")}});
+document.addEventListener("click",e=>{const b=e.target.closest&&e.target.closest("[data-pnav]");if(!b||!b.closest("#iBody")||!INDX)return;e.preventDefault();const st=+b.dataset.pnav,sel=$("#iOp");
+ if(!st){sel.value="";individual();return}const i=INDX.ops.findIndex(x=>x.m===sel.value),n=INDX.ops[i+st];if(n){sel.value=n.m;individual();$("#iBody").scrollIntoView({block:"start"})}});
 document.addEventListener("keydown",e=>{if((e.key==="Enter"||e.key===" ")&&e.target.matches&&e.target.matches(".kpi[data-pfk]")){e.preventDefault();e.target.click()}});
 function painel(){
  const g=$("#gal").value==="__all"?null:$("#gal").value,all=dayWaves().filter(inTurno),L0=g?all.filter(w=>w.gal===g):all,P0=prod(L0),tot0=P0.reduce((s,w)=>s+w.qty,0),
@@ -1481,20 +1512,48 @@ function individual(){
   $("#iBody").innerHTML=destaques(rows,data)+`<div class="card" style="margin-top:14px"><h2>Equipe no período <span class="tag">${t?t+"º turno":"Todos os turnos"} · ${rows.length} ${rows.length===1?"pessoa":"pessoas"}</span></h2><div class="tw"><table><tr><th>Operador</th><th>Turno</th><th>1º bipe</th><th>Atraso</th><th>Unidades / meta</th><th>Ondas / meta</th><th>Referência</th><th title="Faltas injustificadas">Faltas</th><th title="Pendentes de conferência">Pendentes</th><th>Dias abaixo da meta</th><th>Horário normal</th><th>Hora extra</th></tr>`+
    rows.map(x=>`<tr><td><a href="#" data-pick="${esc(x.o.m)}">${esc(x.o.n)}</a><br><small>${esc(x.o.m.split('~')[0])}</small></td><td style="white-space:nowrap">${x.dia.t.ini}–${x.dia.t.fim}h</td><td>${x.dia.p?new Date(x.dia.p.ts).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}):'—'}</td><td>${x.dia.p&&x.dia.p.diff>0?'<span class="tag" title="Possível atraso">'+hh(x.dia.p.diff*6e4)+'</span>':'—'}</td><td><b>${x.mi.q?vsMeta(x.qty,x.mi.q):fmt(x.qty)}</b></td><td>${x.mi.o?vsMeta(x.n,x.mi.o):x.n}</td><td>${x.ref===null?'Sem meta':fmt(x.ref)+' un.'}</td><td>${x.miss}</td><td>${x.pend}</td><td>${mgAbTxt(x.ab)}</td><td>${mgOT(x.sp.nO,x.sp.nMs)}</td><td>${mgOT(x.sp.xO,x.sp.xMs)}</td></tr>`).join('')+(()=>{const z=mgSoma(rows.map(x=>x.sp)),q=rows.reduce((a,x)=>a+x.qty,0),n=rows.reduce((a,x)=>a+x.n,0);
    return`<tr class="tot" id="mgTot"><td><b>Total da equipe</b><br><small>${t?t+'º turno':'todos os turnos'}</small></td><td></td><td></td><td>${(n=>n?n+(n===1?' pessoa':' pessoas'):'—')(rows.filter(x=>x.dia.p&&x.dia.p.diff>0).length)}</td><td><b>${fmt(q)}</b></td><td><b>${fmt(n)}</b></td><td></td><td>${rows.reduce((a,x)=>a+x.miss,0)}</td><td>${rows.reduce((a,x)=>a+x.pend,0)}</td><td>${rows.some(x=>x.ab)?rows.reduce((a,x)=>a+(x.ab?x.ab.n:0),0)+' dias':'—'}</td><td>${mgOT(z.nO,z.nMs)}</td><td>${mgOT(z.xO,z.xMs)}</td></tr>`})()+
-   `</table></div><div class="legend">As metas individuais (ondas e unidades por dia) vêm de Configurações, Metas e valem para cada dia com bipagem. A referência divide a meta diária atual do galpão entre as pessoas com bipagem no dia. É uma referência ajustável pelo movimento, não um ranking. Pendente indica ausência de bipagem em dia com operação no turno; confirme folgas, atestados, declarações e outras atividades antes de registrar falta. Horário normal e hora extra mostram as ondas concluídas e o tempo somado entre bipagens dentro e fora do turno (com a tolerância), sem contar pausas acima do intervalo máximo.</div></div>`;return;
+   `</table></div><details class="info"><summary>Como os números são calculados</summary>As metas individuais (ondas e unidades por dia) vêm de Configurações, Metas e valem para cada dia com bipagem. A referência divide a meta diária atual do galpão entre as pessoas com bipagem no dia. É uma referência ajustável pelo movimento, não um ranking. Pendente indica ausência de bipagem em dia com operação no turno; confirme folgas, atestados, declarações e outras atividades antes de registrar falta. Horário normal e hora extra mostram as ondas concluídas e o tempo somado entre bipagens dentro e fora do turno (com a tolerância), sem contar pausas acima do intervalo máximo.</details></div>`;return;
  }
  const o=selected,L=data.days.flatMap(d=>data.byOpDay.get(d+'|'+o.m)||[]),P=prod(L),qty=P.reduce((s,w)=>s+w.qty,0),ref=mgReference(o,data);
- const daily=data.days.slice().reverse().filter(d=>mgEligible(o,d)).map(d=>{const w=data.byOpDay.get(d+'|'+o.m)||[],p=prod(w),x=mgExtra(o,d,w);return{d,w,p,x,sp:mgSplit(o,d,w),status:mgStatus(o,d,w,data)}}),miss=daily.filter(x=>x.status.startsWith('Falta')).length,pend=daily.filter(x=>x.status.startsWith('Pendente')).length,extra=daily.reduce((s,x)=>s+x.x.ms,0),ot=daily.reduce((s,x)=>s+x.x.count,0);
- const types=TY.map(([n,c])=>({k:n,v:P.filter(w=>w.ty===n).reduce((s,w)=>s+w.qty,0),s:P.filter(w=>w.ty===n).length+' ondas',c}));
- const history=L.slice().sort((a,b)=>b.ts-a.ts);
- $("#iBody").innerHTML=`<dl class="stats solo">`+
- mgK('Produção de '+esc(o.n),fmt(qty),'unidades concluídas')+mgK('Ondas concluídas',fmt(P.length),fmt(L.length)+' registros no total')+
- mgK('Meta individual: unidades',MI()[o.g]&&MI()[o.g].q?vsMeta(qty,metaInd(o,L).q):'—',MI()[o.g]&&MI()[o.g].q?'por dia com bipagem':'defina em Configurações')+mgK('Meta individual: ondas',MI()[o.g]&&MI()[o.g].o?vsMeta(P.length,metaInd(o,L).o):'—',MI()[o.g]&&MI()[o.g].o?'por dia com bipagem':'defina em Configurações')+mgK('Referência individual',ref===null?'—':fmt(ref),ref===null?'defina a meta do galpão':fmt(qty/ref*100)+'% da referência')+
- (()=>{const a=mgAbaixo(o,data);return`<div class="kpi" id="mgAb"><dt>Dias abaixo da meta individual</dt><dd class="num" style="color:${a&&a.n?'var(--rx)':'inherit'}">${a===null?'—':a.d?a.n:'—'}</dd><dd class="sm">${a===null?'defina a meta em Configurações':a.d?'de '+a.d+(a.d===1?' dia':' dias')+' com bipagem':'sem dias com bipagem'}</dd></div>`})()+mgK('Faltas injustificadas',fmt(miss),'registradas pelo gestor')+mgK('Pendentes de conferência',fmt(pend),'dias sem bipagem')+`</dl>
- <div class="grid two" style="margin-top:14px"><div class="card"><h2>Produção por tipo</h2>${bars(types)}</div><div class="card" id="mgNx"><h2>Horário normal × hora extra</h2>${(()=>{const z=mgSoma(daily.map(x=>x.sp)),r=(q,t)=>t>=18e5?fmt(q/(t/36e5)):'—',ln=(k,o2,q,t)=>`<tr><td><b>${k}</b></td><td>${fmt(o2)}</td><td>${fmt(q)}</td><td>${t?hh(t):'—'}</td><td>${r(q,t)}</td></tr>`;
- return`<div class="tw"><table><tr><th></th><th>Ondas</th><th>Unidades</th><th>Tempo</th><th>Un./hora</th></tr>${ln('Horário normal',z.nO,z.nQ,z.nMs)}${ln('Hora extra',z.xO,z.xQ,z.xMs)}</table></div>`})()}
- <div class="legend">Tempo somado entre bipagens dentro e fora do turno (com a tolerância); pausas acima do intervalo máximo ficam de fora. A referência é a meta diária do galpão dividida entre quem bipou no dia. Não substitui o controle de ponto.</div></div></div>
- ${mgTempo(o,L)}
+ const daily=data.days.slice().reverse().filter(d=>mgEligible(o,d)).map(d=>{const w=data.byOpDay.get(d+'|'+o.m)||[],p=prod(w),x=mgExtra(o,d,w);return{d,w,p,x,sp:mgSplit(o,d,w),status:mgStatus(o,d,w,data)}}),miss=daily.filter(x=>x.status.startsWith('Falta')).length,pend=daily.filter(x=>x.status.startsWith('Pendente')).length;
+ const history=L.slice().sort((a,b)=>b.ts-a.ts),single=data.days.length===1,dia=mgDia(o,data),mi=metaInd(o,L);
+ /* equipe para comparar: as mesmas pessoas da lista (filtros de galpão e turno) */
+ const EQ=ops.map(x=>{const l=data.days.flatMap(d=>data.byOpDay.get(d+'|'+x.m)||[]),pp=prod(l);return{o:x,L:l,P:pp,q:pp.reduce((s,w)=>s+w.qty,0)}}),ativos=EQ.filter(x=>x.P.length),
+  rk=ativos.slice().sort((x,y)=>y.q-x.q),pos=rk.findIndex(x=>x.o.m===o.m)+1,mOnd=ativos.length?ativos.reduce((s,x)=>s+x.P.length,0)/ativos.length:0,
+  rit=l=>{const C=durs(l),tm=C.reduce((s,c)=>s+c.d,0),cu=C.reduce((s,c)=>s+c.qty,0);return tm>=18e5?cu/(tm/36e5):0},rP=rit(L),rE=rit(ativos.flatMap(x=>x.L)),pc=(a,b)=>b?Math.round((a/b-1)*100):0,sg=v=>`<b style="color:${v>=0?'var(--k)':'var(--rx)'}">${v>0?'+':''}${v}%</b>`;
+ const idx=ops.findIndex(x=>x.m===o.m),ini=String(o.n).trim().split(/\s+/).slice(0,2).map(x=>x[0]).join('').toUpperCase(),A=mgAbaixo(o,data);
+ const hd=`<div class="card pfh"><button type="button" class="lk pfb" data-pnav="0">‹ Equipe</button><span class="pfa">${esc(ini)}</span><div class="pft"><h2>${esc(o.n)}</h2><div class="legend" style="margin:0">${esc(o.m.split('~')[0])} · ${dia.t.ini}h às ${dia.t.fim}h (${o.t===2?'2º':'1º'} turno) · ${esc(o.g||'sem galpão')}${dia.p?' · 1º bipe '+new Date(dia.p.ts).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})+(dia.p.diff>0?' <span class="tag" style="background:var(--o);color:#fff">atraso '+hh(dia.p.diff*6e4)+'</span>':''):''}</div></div>
+  <span class="pfn"><button type="button" class="btn alt sm" data-pnav="-1" ${idx<=0?'disabled':''} aria-label="Pessoa anterior">‹</button><span class="legend" style="margin:0">${idx+1} de ${ops.length}</span><button type="button" class="btn alt sm" data-pnav="1" ${idx>=ops.length-1?'disabled':''} aria-label="Próxima pessoa">›</button></span></div>`;
+ const kp=`<dl class="stats solo">`+mgK('Unidades',fmt(qty),mi.q?vsMeta(qty,mi.q)+' da meta individual':ref===null?'unidades concluídas':Math.round(qty/ref*100)+'% da referência ('+fmt(ref)+')')
+  +mgK('Ondas',fmt(P.length),(mi.o?vsMeta(P.length,mi.o)+' da meta · ':'')+'equipe: '+mOnd.toLocaleString('pt-BR',{maximumFractionDigits:1})+' por pessoa')
+  +mgK('Ritmo',rP?fmt(rP)+' un./h':'—',rP&&rE?'equipe '+fmt(rE)+' un./h '+sg(pc(rP,rE)):'precisa de 30 min medidos')
+  +mgK('Posição',pos?pos+'º':'—',pos?'de '+ativos.length+' com produção':'sem produção')
+  +`<div class="kpi" id="mgAb"><dt>Dias abaixo da meta individual</dt><dd class="num" style="color:${A&&A.n?'var(--rx)':'inherit'}">${A===null?'—':A.d?A.n:'—'}</dd><dd class="sm">${A===null?'defina a meta em Configurações':A.d?'de '+A.d+(A.d===1?' dia':' dias')+' com bipagem':'sem dias com bipagem'}</dd></div>`
+  +mgK('Faltas / pendentes',fmt(miss)+' / '+fmt(pend),'faltas registradas · dias a conferir')+`</dl>`;
+ /* produção por hora (um dia) ou por dia (período), com a média da equipe */
+ const bk=w=>single?new Date(w.fin||w.ts).getHours():dk(w.fin||w.ts),keys=single?(()=>{const hs=P.map(w=>new Date(w.fin||w.ts).getHours());const a0=Math.min(dia.t.ini,...hs),a1=Math.max(dia.t.fim-1,...hs);const r=[];for(let h=a0;h<=a1;h++)r.push(h);return r})():data.days.slice(),
+  me_=keys.map(k=>P.filter(w=>bk(w)===k).reduce((s,w)=>s+w.qty,0)),te=keys.map(k=>{const xs=ativos.map(x=>x.P.filter(w=>bk(w)===k).reduce((s,w)=>s+w.qty,0)).filter(v=>v>0);return xs.length?xs.reduce((s,v)=>s+v,0)/xs.length:0});
+ const ch=(()=>{if(!keys.length||!P.length)return'<div class="empty">Sem produção no período.</div>';const W=640,H=230,l=36,r=8,t=16,bt=24,n=keys.length,bw=(W-l-r)/n,mx=nice(Math.max(...me_,...te,1)*1.12),Y=v=>t+(H-t-bt)*(1-v/mx),lb=k=>single?k+'h':k.slice(8,10)+'/'+k.slice(5,7),stp=Math.ceil(n/16);
+  let g=`<svg class="ch" viewBox="0 0 ${W} ${H}" role="img" aria-label="Produção de ${esc(o.n)} ${single?'por hora':'por dia'} e média da equipe">`+[0,.5,1].map(f=>`<line x1="${l}" x2="${W-r}" y1="${Y(mx*f)}" y2="${Y(mx*f)}" stroke="var(--line)"/><text x="${l-5}" y="${Y(mx*f)+4}" text-anchor="end">${fmt(mx*f)}</text>`).join('');
+  keys.forEach((k,i)=>{const v=me_[i],x=l+i*bw,w=Math.max(Math.min(bw*.6,34),4);if(v)g+=`<rect x="${x+(bw-w)/2}" y="${Y(v)}" width="${w}" height="${Y(0)-Y(v)}" rx="3" fill="var(--g)"><title>${lb(k)}: ${fmt(v)} un. (equipe ${fmt(te[i])})</title></rect>`+(bw>=26?`<text x="${x+bw/2}" y="${Y(v)-4}" text-anchor="middle" style="fill:var(--ink)">${fmt(v)}</text>`:'');if(i%stp===0)g+=`<text x="${x+bw/2}" y="${H-6}" text-anchor="middle">${lb(k)}</text>`});
+  const pts=keys.map((k,i)=>te[i]?(l+i*bw+bw/2)+','+Y(te[i]):null).filter(Boolean);if(pts.length>1)g+=`<polyline points="${pts.join(' ')}" fill="none" stroke="var(--ink)" stroke-width="2" stroke-dasharray="5 4"/>`;
+  return g+`</svg><div class="legend"><i class="dot" style="background:var(--g)"></i>${esc(o.n.split(' ')[0])} &nbsp; <span style="display:inline-block;width:16px;border-top:2px dashed var(--ink);vertical-align:3px"></span> média da equipe (quem produziu)</div>`})();
+ /* linha do dia: cada onda é um bloco; pausas e hora extra marcadas */
+ const linha=(()=>{if(!single||!P.length)return'';const d0=new Date(data.days[0]+'T00:00:00').getTime(),T=P.map(w=>({t:w.fin||w.ts,w})).sort((a,b)=>a.t-b.t),h0=Math.min(dia.t.ini,new Date(T[0].t).getHours()),h1=Math.max(dia.t.fim,new Date(T[T.length-1].t).getHours()+1),W=640,H=96,l=10,r=10,X=t=>l+(t-d0-h0*36e5)/((h1-h0)*36e5)*(W-l-r),mq=Math.max(...T.map(x=>x.w.qty),1),gap=GAP()*6e4;
+  let g=`<svg class="ch" viewBox="0 0 ${W} ${H}" role="img" aria-label="Linha do dia de ${esc(o.n)}"><rect x="${X(d0+dia.t.ini*36e5)}" y="16" width="${X(d0+dia.t.fim*36e5)-X(d0+dia.t.ini*36e5)}" height="46" rx="4" fill="color-mix(in srgb,var(--g) 6%,var(--card))"/><text x="${X(d0+dia.t.ini*36e5)+4}" y="12">turno ${dia.t.ini}h–${dia.t.fim}h</text>`;
+  if(h1>dia.t.fim)g+=`<rect x="${X(d0+dia.t.fim*36e5)}" y="16" width="${X(d0+h1*36e5)-X(d0+dia.t.fim*36e5)}" height="46" fill="color-mix(in srgb,var(--o) 14%,var(--card))"/><text x="${X(d0+h1*36e5)}" y="12" text-anchor="end" style="fill:var(--o)">hora extra</text>`;
+  if(h0<dia.t.ini)g+=`<rect x="${X(d0+h0*36e5)}" y="16" width="${X(d0+dia.t.ini*36e5)-X(d0+h0*36e5)}" height="46" fill="color-mix(in srgb,var(--o) 14%,var(--card))"/>`;
+  T.forEach((x,i)=>{if(i&&x.t-T[i-1].t>gap){const a=X(T[i-1].t),b=X(x.t);g+=`<rect x="${a+4}" y="18" width="${Math.max(b-a-6,2)}" height="42" fill="none" stroke="var(--o)" stroke-dasharray="3 3" rx="3"><title>Pausa de ${hh(x.t-T[i-1].t)}</title></rect>`+(b-a>34?`<text x="${(a+b)/2}" y="43" text-anchor="middle" style="fill:var(--o);font-size:10.5px">${hh(x.t-T[i-1].t)}</text>`:'')}});
+  T.forEach(x=>{const ty=TY.find(z=>z[0]===x.w.ty)||TY[0],h=Math.max(x.w.qty/mq*42,4);g+=`<rect x="${X(x.t)-3}" y="${62-h}" width="6" height="${h}" rx="1.5" fill="${ty[1]}"><title>${new Date(x.t).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})} · ${esc(wnS(x.w)||'')} ${esc(x.w.ty)}: ${fmt(x.w.qty)} un.</title></rect>`});
+  for(let h=h0;h<=h1;h++)g+=`<text x="${X(d0+h*36e5)}" y="${H-14}" text-anchor="middle">${h}h</text>`;
+  return`<div class="card"><h2>Linha do dia</h2>${g}</svg><div class="legend">Cada traço é uma onda (altura = unidades). Caixas tracejadas são pausas acima de ${GAP()} min.</div></div>`})();
+ /* por tipo, comparando unidades por onda com a equipe */
+ const AT=ativos.flatMap(x=>x.P),DP=durs(L),tipos=`<div class="card"><h2>Por tipo de onda</h2><div class="tw"><table><tr><th>Tipo</th><th>Ondas</th><th>Unidades</th><th>Tempo</th><th>Un./onda</th><th>vs. equipe</th></tr>`+TY.map(([n,c])=>{const q=P.filter(w=>w.ty===n),u=q.reduce((s,w)=>s+w.qty,0),e=AT.filter(w=>w.ty===n),eu=e.length?e.reduce((s,w)=>s+w.qty,0)/e.length:0,uo=q.length?u/q.length:0,dd=DP.filter(x=>x.w.ty===n);
+  return q.length?`<tr><td><i class="dot" style="background:${c}"></i>${esc(n)}</td><td>${q.length}</td><td>${fmt(u)}</td><td>${dd.length?mm(wA(dd)):'—'}</td><td>${fmt(uo)}</td><td>${eu?sg(pc(uo,eu)):'—'}</td></tr>`:''}).join('')+`</table></div>${P.length?'':'<div class="empty">Sem produção no período.</div>'}</div>`;
+ const nx=`<div class="card" id="mgNx"><h2>Horário normal × hora extra</h2>${(()=>{const z=mgSoma(daily.map(x=>x.sp)),r=(q,t)=>t>=18e5?fmt(q/(t/36e5)):'—',ln=(k,o2,q,t)=>`<tr><td><b>${k}</b></td><td>${fmt(o2)}</td><td>${fmt(q)}</td><td>${t?hh(t):'—'}</td><td>${r(q,t)}</td></tr>`;
+  return`<div class="tw"><table><tr><th></th><th>Ondas</th><th>Unidades</th><th>Tempo</th><th>Un./hora</th></tr>${ln('Horário normal',z.nO,z.nQ,z.nMs)}${ln('Hora extra',z.xO,z.xQ,z.xMs)}</table></div>`})()}
+  <details class="info"><summary>Como é calculado</summary>Tempo somado entre bipagens dentro e fora do turno (com a tolerância); pausas acima de ${GAP()} min ficam de fora. A referência é a meta diária do galpão dividida entre quem bipou no dia. Não substitui o controle de ponto.</details></div>`;
+ $("#iBody").innerHTML=hd+kp+`<div class="pfg"><div class="card"><h2>${single?'Produção por hora':'Produção por dia'}</h2>${ch}</div>${nx}</div><div class="pfg">${linha||tipos}${linha?tipos:''}</div>${mgTempo(o,L)}
  <div class="card" style="margin-top:14px"><h2>Resumo por dia</h2><div class="tw"><table><tr><th>Data</th><th>Situação</th><th>Unidades</th><th>Ondas</th><th>Tempo trabalhado</th><th>Meta individual</th><th>Horário normal</th><th>Hora extra</th></tr>`+
  (()=>{const AB=mgAbaixo(o,data),ad=new Map(((AB&&AB.dias)||[]).map(z=>[z.d,z]));return daily.map(x=>{const ts=x.w.map(w=>w.ts),z=ad.get(x.d);return `<tr><td>${new Date(x.d+'T12:00').toLocaleDateString('pt-BR')}</td><td>${x.status}</td><td>${fmt(x.p.reduce((s,w)=>s+w.qty,0))}</td><td>${x.p.length}</td><td>${ts.length>1&&Math.max(...ts)>Math.min(...ts)?hh(Math.max(...ts)-Math.min(...ts)):'—'}</td><td>${!z?'—':z.ab?`<span class="tag" style="background:var(--rx);color:#fff">Abaixo</span> <small>${[z.fq?'faltaram '+fmt(z.fq)+' un.':'',z.fo?'faltaram '+z.fo+(z.fo===1?' onda':' ondas'):''].filter(Boolean).join(', ')}</small>`:'<span class="tag" style="background:var(--k);color:#fff">Bateu</span>'}</td><td>${mgOT(x.sp.nO,x.sp.nMs)}</td><td>${mgOT(x.sp.xO,x.sp.xMs)}</td></tr>`}).join('')})()+
  `</table></div><div class="legend">Pendente de conferência: sem bipagem no dia após o fim do turno, quando houve operação no mesmo galpão e turno. Não é falta automática: o gestor confere e registra falta, atestado, declaração ou folga.</div></div>
@@ -1758,7 +1817,7 @@ function hisRender(){
 
 /* ===================== acesso ===================== */
 const needAuth=k=>ON?!me:S.ges.length>0&&!(me&&(k==="cfg"?me.pC:me.pI));
-const ABAS_T=[["painel","Painel"],["op","Operação"],["prs","Procurando"],["ind","Gestão operacional"],["his","Histórico"],["cfg","Config"]];let mAbasU=null;
+const ABAS_T=[["painel","Painel"],["op","Operação"],["prs","Procurando"],["ind","Equipe"],["his","Relatórios"],["cfg","Config"]];let mAbasU=null;
 const isI=t=>t==="ind"||t==="his";
 /* aba só aparece se o perfil atual pode abri-la; o que não é acessível fica oculto */
 function podeVer(t){if(ON&&me&&!me.adm&&me.ab&&!me.ab.includes(t))return false;if(t==="op"||t==="painel"||t==="prs")return true;if(ON)return !!me&&(isI(t)?!!me.pI:!!me.pC);if(t==="painel")return true;return !needAuth(t)}
@@ -1769,9 +1828,9 @@ function go(t){if(ON&&me&&!me.adm&&me.ab&&!podeVer(t)){const f=ABAS_T.find(([k])
  updTabs();
  if((t==="cfg"||isI(t))&&needAuth(t)){$("#login").classList.remove("hide");$("#lU").focus();pend=t;return}
  if(ON&&me&&((t==="cfg"&&!me.pC)||(isI(t)&&!me.pI))){toast("Seu acesso não inclui esta área.");return}
- view=t;["painel","op","prs","ind","his","cfg"].forEach(s=>$("#"+s).classList.toggle("hide",s!==t));
+ view=t;document.body.dataset.v=t;["painel","op","prs","ind","his","cfg"].forEach(s=>$("#"+s).classList.toggle("hide",s!==t));
  $$(".tab[data-t]").forEach(b=>b.classList.toggle("on",b.dataset.t===t));
- $("#ttl").textContent={painel:"Painel",op:"Operação",ind:"Gestão operacional",his:"Histórico",prs:"Procurando",cfg:"Configurações"}[t];
+ $("#ttl").textContent={painel:"Painel",op:"Operação",ind:"Equipe",his:"Relatórios",prs:"Procurando",cfg:"Configurações"}[t];
  if(t==="cfg")cfgRender();if(t==="his")hisOpen();if(t==="prs"){procurando();psub(window.__ps||"bip")}if(t==="ind"){individual();loadManagement({cache:true})}renderAll();
  if(t==="op"&&!$("#s1").classList.contains("hide"))setTimeout(()=>$("#opIn").focus({preventScroll:true}),60)}
 let pend=null;
@@ -1909,10 +1968,10 @@ $("#prQ").oninput=procurando;
 document.addEventListener("click",e=>{const t=e.target;if(t.id==="prAdd"){const box=$("#prItens");if(box){const d=document.createElement("div");d.innerHTML=prLinha({s:"",q:""},box.children.length);const n=d.firstChild;n.querySelector(".pidel").hidden=false;box.appendChild(n);n.querySelector(".pis").focus()}return}if(t.classList&&t.classList.contains("pidel")){const r=t.closest(".prir");if(r)r.remove();return}if(t.id==="prOk")prSalvar();else if(t.id==="prAOk")prAchar();else if(t.id==="prBOk")prBaixar();else if(t.id==="prFOk")prFinalizar();
  else if(t.id==="prCan"){prW=null;$("#prRes").innerHTML="";$("#prFin").innerHTML="";const f=$("#prBip");if(f&&view==="prs"&&!$("#pBip").classList.contains("hide"))f.focus()}
  const a=t.closest&&t.closest("[data-prf]");if(a)prAbrir(a.dataset.prf,"finalizar");const b=t.closest&&t.closest("[data-prb]");if(b)prAbrir(b.dataset.prb,"baixa")});
-function psub(k){window.__ps=k;$$("#psub button").forEach(b=>b.classList.toggle("on",b.dataset.p===k));[["bip","pBip"],["sku","pSku"],["his","pHis"]].forEach(([a,id])=>$("#"+id).classList.toggle("hide",a!==k));setTimeout(()=>{if(view!=="prs")return;const f=k==="bip"?$("#prBip"):k==="sku"?$("#prQ"):null;if(f)f.focus({preventScroll:true})},60)}
+function psub(k){window.__ps=k;$$("#psub button").forEach(b=>b.classList.toggle("on",b.dataset.p===(k==="sku"?"bip":k)));[["bip","pBip"],["sku","pSku"],["his","pHis"]].forEach(([a,id])=>$("#"+id).classList.toggle("hide",k==="his"?a!=="his":a==="his"));setTimeout(()=>{if(view!=="prs")return;const f=k==="bip"?$("#prBip"):k==="sku"?$("#prQ"):null;if(f)f.focus({preventScroll:true})},60)}
 $("#psub").onclick=e=>{const k=e.target.dataset.p;if(k)psub(k)};
 $("#sub").onclick=e=>{const s=e.target.dataset.s;if(!s)return;$$("#sub button").forEach(b=>b.classList.toggle("on",b===e.target));["reg","ctl","ace"].forEach(x=>$("#"+x).classList.toggle("hide",x!==s));tick();if(s==="ace")aceLista()};
-$("#csub").onclick=e=>{const c=e.target.dataset.c;if(!c)return;csub=c;$$("#csub button").forEach(b=>b.classList.toggle("on",b===e.target));["cop","cus","cme","cga","cge","cma"].forEach(x=>$("#"+x).classList.toggle("hide",x!==c));if(c==="cge"&&ON&&me&&me.adm)pull().then(()=>cfgGes()).catch(()=>{});if(c==="cma")cfgMan()};
+$("#csub").onclick=e=>{const c=e.target.dataset.c;if(!c)return;csub=c;$$("#csub button").forEach(b=>b.classList.toggle("on",b===e.target));{const G={cop:["cop","cme"],cme:["cop","cme"],cus:["cus","cge"],cge:["cus","cge"]}[c]||[c],gv=x=>x!=="cge"||!soMeta();["cop","cus","cme","cga","cge","cma"].forEach(x=>$("#"+x).classList.toggle("hide",!(G.includes(x)&&gv(x))));$$("#csub button").forEach(b=>b.classList.toggle("on",b.dataset.c===({cme:"cop",cge:"cus"}[c]||c)))}if(c==="cus"&&ON&&me&&me.adm)pull().then(()=>cfgGes()).catch(()=>{});if(c==="cge"&&ON&&me&&me.adm)pull().then(()=>cfgGes()).catch(()=>{});if(c==="cma")cfgMan()};
 $("#iPrint").onclick=imprimirFolhas;$("#iOp").onchange=()=>{mgShown=100;individual()};$("#iPer").onchange=()=>{mgShown=100;individual();coletiva();loadManagement()};
 $("#iBody").addEventListener("click",e=>{if(e.target.id==="mgMore"){mgShown+=100;individual()}if(e.target.id==="mgTurnoSave")mgSalvarTurno();if(e.target.id==="presSalvar")presSalvar();if(e.target.id==="presBaixa")presBaixa();if(e.target.id==="presAtrSalvar")presAtrSalvar();if(e.target.dataset&&e.target.dataset.cancel)presCancelar(e.target.dataset.cancel)});
 const hojeSemana=()=>mondayOf(dk(Date.now()));
@@ -2107,7 +2166,7 @@ const SUBS={op:["sub","s"],ind:["gsub","gs"],prs:["psub","p"],his:["hsub","hs"],
 function sideSubs(){
  $$(".ssub").forEach(e=>e.remove());const k=SUBS[view];if(!k)return;const bar=document.getElementById(k[0]),tab=document.querySelector('nav.side .tab[data-t="'+view+'"]');if(!bar||!tab)return;
  const box=document.createElement("div");box.className="ssub";box.setAttribute("role","group");box.setAttribute("aria-label","Abas de "+tab.textContent.trim());
- [...bar.querySelectorAll("button")].filter(b=>!b.classList.contains("hide")&&b.style.display!=="none").forEach(b=>{const x=document.createElement("button");x.type="button";x.textContent=b.textContent;x.className=b.classList.contains("on")?"on":"";x.dataset.v=b.dataset[k[1]];x.onclick=()=>{b.click();sideSubs()};box.appendChild(x)});
+ [...bar.querySelectorAll("button")].filter(b=>!b.classList.contains("hide")&&b.style.display!=="none"&&!b.dataset.merge).forEach(b=>{const x=document.createElement("button");x.type="button";x.textContent=b.textContent;x.className=b.classList.contains("on")?"on":"";x.dataset.v=b.dataset[k[1]];x.onclick=()=>{b.click();sideSubs()};box.appendChild(x)});
  tab.insertAdjacentElement("afterend",box)}
 (function(){let tm=0;const re=()=>{clearTimeout(tm);tm=setTimeout(sideSubs,30)};Object.values(SUBS).forEach(([id])=>{const b=document.getElementById(id);if(b)new MutationObserver(re).observe(b,{attributes:true,subtree:true,childList:true,attributeFilter:["class","style"]})});sideSubs()})();
 

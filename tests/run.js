@@ -24,7 +24,7 @@ const st=async p=>{const s=await p.evaluate(()=>JSON.parse(localStorage.getItem(
 async function openReg(p,op,ty){ty=NEWTY[ty]||ty;await p.click('.tab[data-t="op"]');await p.waitForTimeout(120);await p.fill('#opIn','');await p.type('#opIn',op);await p.waitForTimeout(250);
  await p.click(`[data-ty="${ty}"] span`);await p.waitForTimeout(400)}
 async function typeRows(p,rows){for(const [wn,q] of rows){await p.keyboard.type(String(wn));await p.keyboard.press('Enter');await p.keyboard.type(String(q));await p.keyboard.press('Enter')}}
-async function T(name,fn){const t0=Date.now();try{const info=await fn();R.push(["PASS",name,(info||"")+` (${Date.now()-t0}ms)`])}catch(e){R.push(["FALHA",name,e.message.split("\n")[0]])}}
+async function T(name,fn){if(process.env.ONLY&&!process.env.ONLY.split(",").some(k=>name.startsWith(k+" ")))return;const t0=Date.now();try{const info=await fn();R.push(["PASS",name,(info||"")+` (${Date.now()-t0}ms)`])}catch(e){if(process.env.ONLY)console.log(e.message.slice(0,1500));R.push(["FALHA",name,e.message.split("\n")[0]])}}
 (async()=>{const b=await chromium.launch();
 
 await T("01 Volume: 20.000 ondas carregam e o Painel renderiza rápido",async()=>{const S=bigState(20000);const p=await page(b,S);
@@ -248,7 +248,7 @@ await T("43 Procurando em 3 etapas: pendente com SKU, encontrada vai ao históri
  await p.fill('#prNome','Maria Souza');await p.press('#prNome','Enter');
  h=(await p.textContent('#prHist')).replace(/\s+/g,' ');ok(h.includes('Maria Souza')&&!h.includes('Dar baixa'),'baixa não apareceu: '+h);
  await p.fill('#prBip','123');await p.press('#prBip','Enter');ok(!(await p.isVisible('#prNome'))&&(await p.textContent('#prRes')).includes('já tem baixa'),'onda baixada deveria só informar');
- await p.click('.ssub [data-v="sku"]');await p.fill('#prQ','maria');ok((await p.textContent('#prHist')).includes('123'),'pesquisa por nome não achou');
+ await p.click('.ssub [data-v="bip"]');await p.fill('#prQ','maria');ok((await p.textContent('#prHist')).includes('123'),'pesquisa por nome não achou');
  await p.fill('#prQ','zzzz');ok((await p.textContent('#prHist')).includes('Nada encontrado'),'pesquisa sem resultado')});
 await T("44 Procurando: WN inexistente e onda em difícil acesso não abrem formulário",async()=>{
  const p=await page(b,base({waves:[WV('a','900','Vários artigos',10,HR(9,0),'CL001','Ana Souza',2)]}));
@@ -310,8 +310,8 @@ await T("73 Mini abas na lateral: aparecem sob a aba ativa e abrem de forma inde
  const n=await p.$$eval('.ssub button',a=>a.map(x=>x.textContent));ok(n.length===4&&n[0].includes('Evolução'),'abas laterais: '+n);
  await p.click('.ssub [data-v="pes"]');await p.waitForTimeout(200);ok(await p.$eval('.ssub [data-v="pes"]',e=>e.classList.contains('on')),'marca a aba ativa');
  ok(await p.$eval('#hsub [data-hs="pes"]',e=>e.classList.contains('on')),'a aba interna acompanha');
- await p.evaluate(()=>go('prs'));await p.waitForTimeout(200);ok((await p.$$('.ssub')).length===1&&(await p.$$eval('.ssub button',a=>a.length))===3,'só as abas da área ativa aparecem');
- await p.click('.ssub [data-v="sku"]');await p.waitForTimeout(150);ok(await p.isVisible('#prSku')||true,'abre SKU');
+ await p.evaluate(()=>go('prs'));await p.waitForTimeout(200);ok((await p.$$('.ssub')).length===1&&(await p.$$eval('.ssub button',a=>a.length))===2,'só as abas da área ativa aparecem (Pendentes e Histórico)');
+ await p.click('.ssub [data-v="his"]');await p.waitForTimeout(150);ok(await p.isVisible('#prHist'),'abre Histórico');
  const m=await page(b,base(),{vp:{width:390,height:800},sidebarSubs:true});await m.evaluate(()=>go('his'));await m.waitForTimeout(200);ok(!(await m.isVisible('.ssub')),'no celular fica a barra interna');ok(await m.isVisible('#hsub'),'barra interna no celular')});
 await T("74 Cards de destaque chamativos: ícone, troféu, iniciais, pódio com barras",async()=>{
  const b0=HR(9,0);const W=[WV('d1','D1','Vários artigos',100,b0),WV('d2','D2','Itens Únicos',40,b0+10*60000),WV('d3','D3','Vários artigos',60,b0+20*60000),WV('d4','D4','Vários artigos',60,b0+30*60000),WV('e1','E1','Itens Únicos',10,b0,'CL002','Bruno Lima'),WV('e2','E2','Itens Únicos',10,b0+20*60000,'CL002','Bruno Lima'),WV('e3','E3','Itens Únicos',5,b0+40*60000,'CL002','Bruno Lima')];
@@ -370,7 +370,7 @@ await T("54 Histórico: só gestores e administradores veem a aba",async()=>{
  const p=await page(b,S);ok(!(await p.isVisible('.tab[data-t="his"]')),'aba visível sem login');
  await p.evaluate(()=>go('his'));ok(await p.isVisible('#login'),'deveria pedir login');
  await p.fill('#lU','adm@x.com');await p.fill('#lP','123');await p.click('#lB');await p.waitForTimeout(300);
- ok(await p.isVisible('.tab[data-t="his"]'),'aba some após login');ok((await p.textContent('#ttl')).includes('Histórico'),'não abriu: '+await p.textContent('#ttl'))});
+ ok(await p.isVisible('.tab[data-t="his"]'),'aba some após login');ok((await p.textContent('#ttl')).includes('Relatórios'),'não abriu: '+await p.textContent('#ttl'))});
 await T("55 Painel: gráfico alterna Hora e 30 min, mantém necessário por hora; temporizador removido",async()=>{
  const p=await page(b,base({waves:[WV('q1','Q1','Vários artigos',50,HR(9,10)),WV('q2','Q2','Vários artigos',30,HR(9,40)),WV('q3','Q3','Itens Únicos',20,HR(10,5))]}));
  await p.evaluate(()=>go('painel'));let t=await p.textContent('#chH');ok(/9h/.test(t)&&!/9:30/.test(t),'hora: '+t.slice(0,120));
@@ -378,7 +378,7 @@ await T("55 Painel: gráfico alterna Hora e 30 min, mantém necessário por hora
  ok((await p.textContent('#peak')).includes('pico 9h')||(await p.textContent('#peak')).includes('pico 9:30'),'pico');
  await p.click('#hSeg [data-m="h"]');ok(!/9:30/.test(await p.textContent('#chH')),'voltou à hora');
  ok(!(await p.$('#tauto'))&&!(await p.$('#tman')),'temporizador ainda existe');
- await p.evaluate(()=>go('op'));ok((await p.textContent('#sub')).includes('Ondas concluídas do dia')&&!(await p.textContent('#sub')).includes('Acompanhamento'),'nome da aba')});
+ await p.evaluate(()=>go('op'));ok((await p.textContent('#sub')).includes('Concluídas do dia')&&!(await p.textContent('#sub')).includes('Acompanhamento'),'nome da aba')});
 await T("56 Controle de Ondas: ver ondas do mesmo lançamento e pesquisar por onda ou nome",async()=>{
  const n=Date.now()-60000;const p=await page(b,base({waves:[WV('l1','LA1','Pacote do mesmo',10,n),WV('l2','LA2','Pacote do mesmo',20,n+500),WV('l3','LA3','Pacote do mesmo',30,n+900),WV('m1','MB1','Itens Únicos',5,n-20000,'CL002','Bruno Lima')]}));
  await p.evaluate(()=>{S.cfg.and=true;go('op')});await p.click('.ssub [data-v="ctl"]');await p.waitForTimeout(200);
@@ -458,7 +458,7 @@ await T("62 Procurando em aba própria: lista SKU/onda/quantidade com pesquisa e
  const p=await page(b,base({waves:[w1,w2]}));
  ok(!(await p.$('#sub [data-s="pro"]')),'subaba antiga ainda existe em Operação');
  await p.click('.tab[data-t="prs"]');ok((await p.textContent('#ttl')).includes('Procurando'),'título');
- await p.click('.ssub [data-v="sku"]');ok((await p.textContent('#psub')).includes('SKU procurando (2)'),'contador');
+ await p.click('.ssub [data-v="bip"]');ok((await p.textContent('#psub')).includes('SKU procurando (2)'),'contador');ok(await p.isVisible('#prList'),'lista junto do bipar');
  let t=(await p.textContent('#prList')).replace(/\s+/g,' ');ok(t.includes('SKU-1')&&t.includes('WN500100')&&t.includes('40')&&t.includes('Finalizar onda'),'lista: '+t);
  await p.fill('#prQ','sku-2');t=await p.textContent('#prList');ok(t.includes('WN500200')&&!t.includes('WN500100'),'pesquisa');
  await p.fill('#prQ','');await p.click('[data-prf="f1"]');ok(await p.isVisible('#prNome'),'abre pedindo nome');
