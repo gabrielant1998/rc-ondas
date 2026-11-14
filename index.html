@@ -321,6 +321,9 @@ td .btn.d:hover,td .pill.off[data-adel]:hover{background:var(--r);color:#fff;bor
 .cobig{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}.cobig b{font-size:34px;line-height:1}.cobig span{color:var(--mut);font-size:13px}.bar.cob{height:10px;margin-top:8px}
 .tw i.dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:7px;vertical-align:middle}
 .pg{display:flex;align-items:center;gap:10px;justify-content:flex-end;margin-top:8px;font-size:13px;color:var(--mut)}
+.pzB{grid-column:1/-1;border-top:1px dashed var(--line);padding-top:8px;margin-bottom:6px;display:grid;gap:6px}.pzH{font-size:13.5px;font-weight:600}.pzH small{font-weight:400;color:var(--mut)}
+.pzR{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr) auto;gap:6px;align-items:center;padding:6px 0;border-bottom:1px solid var(--line)}.pzR input[data-k=n]{grid-column:1/-1}.pzX{font-size:13px;color:var(--rx)}.pzR input{min-width:0;width:100%;box-sizing:border-box}.pzR span{font-size:13px;color:var(--mut)}
+.pzT{position:relative;height:14px;background:color-mix(in srgb,var(--g) 10%,var(--card));border-radius:3px;margin-top:4px}.pzT i{position:absolute;top:0;bottom:0;background:var(--o);border-radius:2px}.pzT i.al{background:var(--k)}.pzT span{position:absolute;top:15px;font-size:11px;color:var(--mut)}.pzT span:last-child{right:0}.pzB{padding-bottom:14px}
 details.info{margin-top:8px;font-size:13.5px;color:var(--mut)}details.info summary{cursor:pointer;color:var(--ink);font-weight:600;list-style:none;display:inline-flex;align-items:center;gap:6px}
 details.info summary:before{content:"?";width:16px;height:16px;border-radius:50%;border:1px solid var(--mut);display:inline-grid;place-items:center;font-size:10.5px;color:var(--mut)}
 details.info summary::-webkit-details-marker{display:none}details.info[open] summary{margin-bottom:4px}
@@ -669,7 +672,7 @@ async function pull(){
  GID={};GN={};gs.forEach(g=>{GID[g.nome]=g.id;GN[g.id]=g.nome});
  S.gals=gs.map(g=>g.nome);S.metasInd={};gs.forEach(g=>{if(g.meta_ind_ondas||g.meta_ind_qtd||g.meta_ind_ret)S.metasInd[g.nome]={o:g.meta_ind_ondas||0,q:g.meta_ind_qtd||0,r:g.meta_ind_ret||0}});
  ts.forEach(t=>{S.cfg.lim[t.nome]=t.limite});
- const c=cf[0];if(c){S.cfg.turnos={1:{ini:c.turno1_ini,fim:c.turno1_fim},2:{ini:c.turno2_ini,fim:c.turno2_fim}};S.cfg.gap=Math.min(+c.intervalo_max_min||30,60);S.cfg.tol=c.tolerancia_min;S.cfg.metaMin=+c.meta_minima||0;S.cfg.and=c.ondas_em_andamento;S.cfg.alm={1:{ini:c.almoco1_ini,fim:c.almoco1_fim},2:{ini:c.almoco2_ini,fim:c.almoco2_fim}}}
+ const c=cf[0];if(c){S.cfg.turnos={1:{ini:c.turno1_ini,fim:c.turno1_fim},2:{ini:c.turno2_ini,fim:c.turno2_fim}};S.cfg.gap=Math.min(+c.intervalo_max_min||30,60);S.cfg.tol=c.tolerancia_min;S.cfg.metaMin=+c.meta_minima||0;S.cfg.and=c.ondas_em_andamento;S.cfg.alm={1:{ini:c.almoco1_ini,fim:c.almoco1_fim},2:{ini:c.almoco2_ini,fim:c.almoco2_fim}};S.cfg.pz=c.pausas||{}}
  OPSALL={};os.forEach(o=>{OPSALL[o.id]=o});
  S.ops=os.filter(o=>!o.excluido_em).map(o=>({id:o.id,m:o.codigo,n:o.nome,t:o.turno,ini:o.inicio,fim:o.fim,al:{ini:o.almoco_ini,fim:o.almoco_fim},g:GN[o.galpao_id],criado:o.criado_em}));
  if(!S.gals.includes(S.gal))S.gal=S.gals[0];
@@ -716,6 +719,21 @@ async function rem(fn,msg){
  if(!online()){toast("Sem internet. Cadastros e alterações precisam de conexão.",5000);if(view==="cfg")cfgRender();return false}
  try{await fn();await pull();if(view==="cfg")cfgRender();renderAll();if(msg)toast(msg);return true}
  catch(e){toast(errMsg(e),6000);if(view==="cfg")cfgRender();return false}}
+function pzBloco(t){const L=pausasT(t),tn=S.cfg.turnos[t],al=(S.cfg.alm||{})[t],W=tn.fim>tn.ini?(tn.fim-tn.ini)*60:1,P=m=>Math.max(0,Math.min(100,(m-tn.ini*60)/W*100));
+ return`<div class="pzB"><div class="pzH">Outras pausas do ${t}º turno <small>café, ginástica laboral…</small></div>`+L.map((p,i)=>`<div class="pzR"><input type="text" data-pz="${t}" data-i="${i}" data-k="n" value="${esc(p.n||'')}" maxlength="30" placeholder="Nome" aria-label="Nome da pausa"><input type="time" data-pz="${t}" data-i="${i}" data-k="i" value="${m2hm(p.i)}" aria-label="Início da pausa"><span>às</span><input type="time" data-pz="${t}" data-i="${i}" data-k="f" value="${m2hm(p.f)}" aria-label="Fim da pausa"><button type="button" class="lk pzX" data-pzx="${t}" data-i="${i}" aria-label="Remover pausa">Remover</button></div>`).join('')
+ +`<button type="button" class="btn alt sm" data-pza="${t}">+ Adicionar pausa</button>`
+ +`<div class="pzT" aria-hidden="true" title="Turno ${tn.ini}h às ${tn.fim}h">${al&&al.ini!=null?`<i style="left:${P(al.ini)}%;width:${P(al.fim)-P(al.ini)}%" class="al"></i>`:''}${L.map(p=>`<i style="left:${P(p.i)}%;width:${Math.max(P(p.f)-P(p.i),.6)}%"></i>`).join('')}<span>${tn.ini}h</span><span>${tn.fim}h</span></div></div>`}
+/* lê as pausas do turno na tela; null = incompleta (espera), false = inválida */
+function pzCampos(t){const rows=[...document.querySelectorAll(`.pzR input[data-pz="${t}"][data-k="i"]`)].map(x=>+x.dataset.i);const out=[];
+ for(const i of rows){const v=k=>document.querySelector(`[data-pz="${t}"][data-i="${i}"][data-k="${k}"]`).value,a=hm2m(v('i')),b=hm2m(v('f')),n=v('n').trim().slice(0,30)||'Pausa';if(a==null||b==null)return null;if(!(b>a))return false;out.push({n,i:a,f:b})}
+ out.sort((x,y)=>x.i-y.i);for(let k=1;k<out.length;k++)if(out[k].i<out[k-1].f)return false;return out}
+async function pzSalvar(t,L){const pz=JSON.parse(JSON.stringify(S.cfg.pz||{}));pz[t]=L;
+ if(!ON){S.cfg.pz=pz;save();cfgRender();renderAll();toast("Pausas do "+t+"º turno salvas");return}
+ return rem(()=>mut(CFGP,"PATCH",{pausas:pz}),"Pausas do "+t+"º turno salvas")}
+document.addEventListener("change",e=>{const d=e.target.dataset;if(d.pz===undefined)return;const x=pzCampos(d.pz);if(x===null)return;if(x===false){toast("Confira as pausas: o fim precisa ser depois do início e elas não podem se sobrepor.",5000);return}pzSalvar(+d.pz,x)});
+document.addEventListener("click",e=>{const a=e.target.closest&&e.target.closest("[data-pza],[data-pzx]");if(!a)return;const t=+(a.dataset.pza||a.dataset.pzx),L=pausasT(t).slice();
+ if(a.dataset.pza){const tn=S.cfg.turnos[t],last=L.length?L[L.length-1].f:tn.ini*60+90,i=Math.min(last+60,tn.fim*60-15);L.push({n:'Café',i,f:i+15})}else L.splice(+a.dataset.i,1);
+ if(ON&&!(me&&me.pC)){toast("Sem permissão para alterar a configuração.");return}pzSalvar(t,L)});
 function almCampos(t){const g=k=>{const i=document.querySelector(`[data-al="${t}"][data-k="${k}"]`);return i?hm2m(i.value):null},a=g('ini'),b=g('fim');if(a==null&&b==null)return{ini:null,fim:null};if(a==null||b==null)return null;return b>a?{ini:a,fim:b}:false}
 function remChange(e){const d=e.target.dataset,id=e.target.id,v=e.target.value;
  if(d.al){const x=almCampos(d.al);if(x===null)return;if(x===false){toast("O fim do almoço precisa ser depois do início.");return}return rem(()=>mut(CFGP,"PATCH",{["almoco"+d.al+"_ini"]:x.ini,["almoco"+d.al+"_fim"]:x.fim}),"Almoço do "+d.al+"º turno atualizado")}
@@ -831,7 +849,11 @@ const turnoPadrao=t=>{const x=S.cfg.turnos[t===2?2:1];return{inicio:x.ini,fim:x.
 const m2hm=m=>m==null?'':String(Math.floor(m/60)).padStart(2,'0')+':'+String(m%60).padStart(2,'0'),hm2m=v=>{const x=/^(\d{1,2}):(\d{2})$/.exec(v||'');return x?(+x[1])*60+(+x[2]):null};
 function almocoOf(o){if(!o)return null;const p=o.al;if(p&&p.ini!=null&&p.fim!=null&&p.fim>p.ini)return p;const a=((S.cfg&&S.cfg.alm)||{})[o.t===2?2:1];return a&&a.ini!=null&&a.fim!=null&&a.fim>a.ini?a:null}
 /* quanto do intervalo [a,b] (ms) cai no almoço da pessoa */
-function almOv(o,a,b){const al=almocoOf(o);if(!al||!(b>a))return 0;const d=new Date(a);d.setHours(0,0,0,0);let s=0;for(let k=0;k<2;k++){const z=d.getTime()+k*864e5,x=z+al.ini*6e4,y=z+al.fim*6e4;s+=Math.max(0,Math.min(b,y)-Math.max(a,x))}return s}
+/* pausas programadas do turno (café, ginástica etc.), além do almoço */
+function pausasT(t){const z=((S.cfg&&S.cfg.pz)||{})[t===2?2:1];return Array.isArray(z)?z.filter(p=>p&&p.i!=null&&p.f>p.i):[]}
+function janelas(o){if(!o)return[];const al=almocoOf(o),L=pausasT(o.t).map(p=>({ini:p.i,fim:p.f,n:p.n||'Pausa'}));if(al)L.unshift({ini:al.ini,fim:al.fim,n:'Almoço',al:1});return L}
+/* quanto do intervalo [a,b] (ms) cai no almoço ou nas pausas programadas da pessoa */
+function almOv(o,a,b){const J=janelas(o);if(!J.length||!(b>a))return 0;const d=new Date(a);d.setHours(0,0,0,0);let s=0;for(let k=0;k<2;k++){const z=d.getTime()+k*864e5;J.forEach(j=>{const x=z+j.ini*6e4,y=z+j.fim*6e4;s+=Math.max(0,Math.min(b,y)-Math.max(a,x))})}return Math.min(s,b-a)}
 function turnoOf(o,d){
  if(!o||o.ini==null||o.fim==null)return S.cfg.turnos[o&&o.t===2?2:1];
  /* o turno vale retroativamente: sempre o horário atual da pessoa, em todos os dias (horas extras, atrasos e históricos). As alterações ficam registradas em TH apenas para auditoria. */
@@ -1477,7 +1499,7 @@ function folhaInsights(o,data,L,P,qty,mi,single){
  /* concretos: atraso, pausas fora do almoço e hora mais fraca */
  if(single&&P.length){const d=data.days[0],m=atrasoDia(o,d,L),tn=turnoOf(o,d);if(m>(S.cfg.tol||0))mel.push('Primeiro bipe às '+presHm(Math.min(...L.map(w=>w.ts)))+', '+hh(m*6e4)+' depois do início do turno ('+tn.ini+'h)'+(my?'. No seu ritmo, isso equivale a cerca de '+fmt(Math.round(my*m/60))+' unidades.':'.'))}
  {let n=0,t=0;data.days.forEach(d=>{const tn=turnoOf(o,d),z=new Date(d+'T00:00:00').getTime(),a0=z+tn.ini*36e5,a1=z+tn.fim*36e5,ts=(data.byOpDay.get(d+'|'+o.m)||[]).map(w=>w.fin||w.ts).filter(x=>x>=a0&&x<=a1).sort((a,b)=>a-b);for(let i=1;i<ts.length;i++){const g=ts[i]-ts[i-1]-almOv(o,ts[i-1],ts[i]);if(g>GAP()*6e4){n++;t+=g}}});
-  if(n&&t>=45*6e4)mel.push((n===1?'1 pausa':n+' pausas')+' acima de '+GAP()+' min fora do almoço, somando '+hh(t)+'. Se estava aguardando onda, avise o líder para o tempo parado ficar explicado.')}
+  if(n&&t>=45*6e4)mel.push((n===1?'1 pausa':n+' pausas')+' acima de '+GAP()+' min fora do almoço e das pausas programadas, somando '+hh(t)+'. Se estava aguardando onda, avise o líder para o tempo parado ficar explicado.')}
  if(single&&P.length>=4){const h={};P.forEach(w=>{const k=new Date(w.fin||w.ts).getHours();h[k]=(h[k]||0)+w.qty});const ks=Object.keys(h).map(Number).sort((a,b)=>a-b),al=almocoOf(o),noAl=k=>!al||!(k*60>=al.ini&&(k+1)*60<=al.fim),mid=ks.slice(1,-1).filter(noAl);if(mid.length>=2){const av=ks.reduce((a,k)=>a+h[k],0)/ks.length,lo=mid.reduce((a,k)=>h[k]<h[a]?k:a,mid[0]);if(h[lo]<av*.6)mel.push('Às '+lo+'h foram '+fmt(h[lo])+' unidades, bem abaixo da sua média de '+fmt(Math.round(av))+' por hora. Vale ver o que travou nesse horário.')}}
  if(my&&tr&&my<=tr*.9)mel.push(pk(['Ritmo de '+Math.round(my)+' un/h, '+pc(1-my/tr)+'% abaixo da média da equipe. Reduzir pausas entre bipagens ajuda.','Há espaço para ganhar velocidade: média da equipe é '+Math.round(tr)+' un/h e a sua foi '+Math.round(my)+'.'],5));
  if(lento)mel.push(lento.n+' leva '+mn(lento.a)+' por conjunto, '+pc(lento.r-1)+'% acima da equipe ('+mn(lento.b)+'). Peça dicas de quem é mais rápido nesse tipo.');
@@ -1507,7 +1529,7 @@ function folhaHTML(o,data){
  /* linha do dia: ondas, almoço e pausas fora do almoço */
  const linha=(()=>{if(!single||!P.length)return'';const d0=new Date(data.days[0]+'T00:00:00').getTime(),T=P.map(w=>w.fin||w.ts).sort((a,b)=>a-b),tn=turnoOf(o,data.days[0]),h0=Math.min(tn.ini,new Date(T[0]).getHours()),h1=Math.max(tn.fim,new Date(T[T.length-1]).getHours()+1),W=560,H=64,X=t=>6+(t-d0-h0*36e5)/((h1-h0)*36e5)*(W-12),al=almocoOf(o),gap=GAP()*6e4;
   let g=`<svg viewBox="0 0 ${W} ${H}" class="fl-ln" role="img" aria-label="Linha do dia"><rect x="${X(d0+tn.ini*36e5)}" y="6" width="${X(d0+tn.fim*36e5)-X(d0+tn.ini*36e5)}" height="30" rx="3" fill="#eef3fd"/>`;
-  if(al){const a=X(d0+al.ini*6e4),b=X(d0+al.fim*6e4);g+=`<rect x="${a}" y="6" width="${b-a}" height="30" fill="#dff2ee"/><text x="${(a+b)/2}" y="25" font-size="11" text-anchor="middle" fill="#0b7f70">almoço</text>`}
+  janelas(o).forEach(j=>{const a=X(d0+j.ini*6e4),b=X(d0+j.fim*6e4);g+=`<rect x="${a}" y="6" width="${Math.max(b-a,2)}" height="30" fill="#dff2ee"/>`+(b-a>=24?`<text x="${(a+b)/2}" y="25" font-size="${b-a>=44?11:9}" text-anchor="middle" fill="#0b7f70">${esc(j.al?'almoço':j.n.toLowerCase())}</text>`:'')});
   T.forEach((t,i)=>{if(i&&t-T[i-1]-almOv(o,T[i-1],t)>gap){const a=X(T[i-1]),b=X(t);g+=`<rect x="${a+3}" y="8" width="${Math.max(b-a-5,2)}" height="26" fill="none" stroke="#b85c00" stroke-dasharray="3 3" rx="2"/>`+(b-a>30?`<text x="${(a+b)/2}" y="25" font-size="10" text-anchor="middle" fill="#b85c00">${hh(t-T[i-1]-almOv(o,T[i-1],t))}</text>`:'')}});
   T.forEach(t=>{g+=`<rect x="${X(t)-1.5}" y="10" width="3" height="22" fill="#0f4bd0"/>`});
   for(let h=h0;h<=h1;h++)g+=`<text x="${X(d0+h*36e5)}" y="${H-12}" font-size="11" text-anchor="middle" fill="#55627a">${h}h</text>`;
@@ -1586,11 +1608,11 @@ function individual(){
   let g=`<svg class="ch" viewBox="0 0 ${W} ${H}" role="img" aria-label="Linha do dia de ${esc(o.n)}"><rect x="${X(d0+dia.t.ini*36e5)}" y="16" width="${X(d0+dia.t.fim*36e5)-X(d0+dia.t.ini*36e5)}" height="46" rx="4" fill="color-mix(in srgb,var(--g) 6%,var(--card))"/><text x="${X(d0+dia.t.ini*36e5)+4}" y="12">turno ${dia.t.ini}h–${dia.t.fim}h</text>`;
   if(h1>dia.t.fim)g+=`<rect x="${X(d0+dia.t.fim*36e5)}" y="16" width="${X(d0+h1*36e5)-X(d0+dia.t.fim*36e5)}" height="46" fill="color-mix(in srgb,var(--o) 14%,var(--card))"/><text x="${X(d0+h1*36e5)}" y="12" text-anchor="end" style="fill:var(--o)">hora extra</text>`;
   if(h0<dia.t.ini)g+=`<rect x="${X(d0+h0*36e5)}" y="16" width="${X(d0+dia.t.ini*36e5)-X(d0+h0*36e5)}" height="46" fill="color-mix(in srgb,var(--o) 14%,var(--card))"/>`;
-  {const al=almocoOf(o);if(al){const a=X(d0+al.ini*6e4),b=X(d0+al.fim*6e4);g+=`<rect x="${a}" y="16" width="${Math.max(b-a,2)}" height="46" fill="color-mix(in srgb,var(--k) 16%,var(--card))"/><text x="${(a+b)/2}" y="43" text-anchor="middle" style="fill:var(--k);font-size:10.5px">almoço</text>`}}
+  janelas(o).forEach(j=>{const a=X(d0+j.ini*6e4),b=X(d0+j.fim*6e4);g+=`<rect x="${a}" y="16" width="${Math.max(b-a,2)}" height="46" fill="color-mix(in srgb,var(--k) 16%,var(--card))"><title>${esc(j.n)} ${m2hm(j.ini)}–${m2hm(j.fim)}</title></rect>`+(b-a>=26?`<text x="${(a+b)/2}" y="43" text-anchor="middle" style="fill:var(--k);font-size:10.5px">${esc(j.al?'almoço':j.n.toLowerCase())}</text>`:'')});
   T.forEach((x,i)=>{if(i&&x.t-T[i-1].t-almOv(o,T[i-1].t,x.t)>gap){const a=X(T[i-1].t),b=X(x.t);g+=`<rect x="${a+4}" y="18" width="${Math.max(b-a-6,2)}" height="42" fill="none" stroke="var(--o)" stroke-dasharray="3 3" rx="3"><title>Pausa de ${hh(x.t-T[i-1].t)}</title></rect>`+(b-a>34?`<text x="${(a+b)/2}" y="43" text-anchor="middle" style="fill:var(--o);font-size:10.5px">${hh(x.t-T[i-1].t)}</text>`:'')}});
   T.forEach(x=>{const ty=TY.find(z=>z[0]===x.w.ty)||TY[0],h=Math.max(x.w.qty/mq*42,4);g+=`<rect x="${X(x.t)-3}" y="${62-h}" width="6" height="${h}" rx="1.5" fill="${ty[1]}"><title>${new Date(x.t).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})} · ${esc(wnS(x.w)||'')} ${esc(x.w.ty)}: ${fmt(x.w.qty)} un.</title></rect>`});
   for(let h=h0;h<=h1;h++)g+=`<text x="${X(d0+h*36e5)}" y="${H-14}" text-anchor="middle">${h}h</text>`;
-  return`<div class="card"><h2>Linha do dia</h2>${g}</svg><div class="legend">Cada traço é uma onda (altura = unidades). Caixas tracejadas são pausas acima de ${GAP()} min fora do almoço; a faixa verde é o almoço.</div></div>`})();
+  return`<div class="card"><h2>Linha do dia</h2>${g}</svg><div class="legend">Cada traço é uma onda (altura = unidades). Caixas tracejadas são pausas acima de ${GAP()} min fora do almoço e das pausas programadas (faixas verdes).</div></div>`})();
  /* por tipo, comparando unidades por onda com a equipe */
  const AT=ativos.flatMap(x=>x.P),DP=durs(L),tipos=`<div class="card"><h2>Por tipo de onda</h2><div class="tw"><table><tr><th>Tipo</th><th>Ondas</th><th>Unidades</th><th>Tempo</th><th>Un./onda</th><th>vs. equipe</th></tr>`+TY.map(([n,c])=>{const q=P.filter(w=>w.ty===n),u=q.reduce((s,w)=>s+w.qty,0),e=AT.filter(w=>w.ty===n),eu=e.length?e.reduce((s,w)=>s+w.qty,0)/e.length:0,uo=q.length?u/q.length:0,dd=DP.filter(x=>x.w.ty===n);
   return q.length?`<tr><td><i class="dot" style="background:${c}"></i>${esc(n)}</td><td>${q.length}</td><td>${fmt(u)}</td><td>${dd.length?mm(wA(dd)):'—'}</td><td>${fmt(uo)}</td><td>${eu?sg(pc(uo,eu)):'—'}</td></tr>`:''}).join('')+`</table></div>${P.length?'':'<div class="empty">Sem produção no período.</div>'}</div>`;
@@ -1643,7 +1665,7 @@ function cfgOp(){
  if(ON&&me&&me.adm){const L=antigos();let ja="";try{ja=localStorage.getItem("rcondas.antigos.enviado")||""}catch(e){}
   if(L)$("#storInfo").innerHTML+="<br>Dados antigos neste aparelho: "+fmt(L.waves.length)+" ondas e "+L.ops.length+" operadores"+(ja?", já enviados":"")+'. <button class="btn alt sm" id="impB" style="margin-top:6px">'+(ja?"Enviar de novo":"Enviar para o banco")+"</button>"}
  $("#lims").innerHTML=TY.map(([n])=>`<label>${n}<input type="number" min="1" data-lim="${n}" value="${S.cfg.lim[n]}"></label>`).join("");
- $("#turnos").innerHTML=[1,2].map(t=>`<label>Início do ${t}º turno (hora)<input type="number" min="0" max="23" data-tn="${t}" data-k="ini" value="${S.cfg.turnos[t].ini}"></label><label>Fim do ${t}º turno (hora)<input type="number" min="1" max="24" data-tn="${t}" data-k="fim" value="${S.cfg.turnos[t].fim}"></label><label>Almoço do ${t}º turno: início<input type="time" data-al="${t}" data-k="ini" value="${m2hm(((S.cfg.alm||{})[t]||{}).ini)}"></label><label>Almoço do ${t}º turno: fim<input type="time" data-al="${t}" data-k="fim" value="${m2hm(((S.cfg.alm||{})[t]||{}).fim)}"></label>`).join("");
+ $("#turnos").innerHTML=[1,2].map(t=>`<label>Início do ${t}º turno (hora)<input type="number" min="0" max="23" data-tn="${t}" data-k="ini" value="${S.cfg.turnos[t].ini}"></label><label>Fim do ${t}º turno (hora)<input type="number" min="1" max="24" data-tn="${t}" data-k="fim" value="${S.cfg.turnos[t].fim}"></label><label>Almoço do ${t}º turno: início<input type="time" data-al="${t}" data-k="ini" value="${m2hm(((S.cfg.alm||{})[t]||{}).ini)}"></label><label>Almoço do ${t}º turno: fim<input type="time" data-al="${t}" data-k="fim" value="${m2hm(((S.cfg.alm||{})[t]||{}).fim)}"></label>${pzBloco(t)}`).join("");
  $("#and").checked=!!S.cfg.and;$("#gap").value=GAP();$("#tol").value=S.cfg.tol}
 function cfgUsers(){
  $("#nextCode").textContent="próximo: "+nextCode();

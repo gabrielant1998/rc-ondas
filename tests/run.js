@@ -699,6 +699,13 @@ await T("94 Retrabalho fica fora das metas e tem meta individual própria",async
  ok(/sem 70 de retrabalho/.test(r.pl),'painel: '+r.pl);
  ok(/60 \/ 100/.test(r.rw)&&/70 \/ 50/.test(r.rw),'equipe: '+r.rw);
  ok(/90 de /.test(r.co)&&/retrabalho \(70\) fica fora/.test(r.co)&&/Galpão 19020045%/.test(r.co),'coletiva: '+r.co)});
+await T("95 Pausas programadas: Config adiciona e o intervalo do café não vira pausa",async()=>{const D=864e5,y=HR(0,0)-D,at=(h,m)=>y+h*36e5+m*6e4;
+ const st=base({waves:[WV('a','1','Itens Únicos',10,at(9,10)),WV('b','2','Itens Únicos',10,at(9,50))]});
+ const p=await page(b,st);await p.evaluate(()=>go('cfg'));await p.click('[data-pza="1"]');await p.waitForTimeout(150);
+ await p.fill('[data-pz="1"][data-i="0"][data-k="i"]','09:20');await p.fill('[data-pz="1"][data-i="0"][data-k="f"]','09:35');await p.press('[data-pz="1"][data-i="0"][data-k="f"]','Tab');await p.waitForTimeout(200);
+ const r=await p.evaluate(y=>{const d=dk(y);return{pz:S.cfg.pz,n:mgSplit(S.ops[0],d,S.waves).nMs/6e4}},y);
+ ok(r.pz[1]&&r.pz[1][0].i===560&&r.pz[1][0].f===575,'pausa salva: '+JSON.stringify(r.pz));ok(r.n===25,'40 min menos 15 de café = 25: '+r.n);
+ await p.click('[data-pzx="1"][data-i="0"]');await p.waitForTimeout(150);ok((await p.evaluate(()=>S.cfg.pz[1].length))===0,'remover')});
 await b.close();
 const w=Math.max(...R.map(r=>r[1].length));for(const r of R)console.log((r[0]==="PASS"?"✅":"❌")+" "+r[1].padEnd(w)+"  "+r[2]);
 console.log(`\n${R.filter(r=>r[0]==="PASS").length}/${R.length} passaram`)})();
