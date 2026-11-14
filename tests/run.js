@@ -185,7 +185,7 @@ await T("31 Retrabalho e Pacote do mesmo: registram, aparecem no Painel e respei
  await p.fill('[data-q="0"]','50');await p.click('#save');await p.waitForTimeout(200);
  await openReg(p,"CL002","Pacote do mesmo");await typeRows(p,[[7102,8],[7103,9]]);await p.click('#save');await p.waitForTimeout(200);
  const s=await st(p);ok(s.waves.map(w=>w.ty).join()==="Retrabalho,Pacote do mesmo,Pacote do mesmo","tipos gravados: "+s.waves.map(w=>w.ty));
- const txt=await p.evaluate(()=>{go("painel");return document.querySelector("#chT").textContent.replace(/\s+/g," ")});
+ const txt=await p.evaluate(()=>{go("painel");return [...document.querySelectorAll("#chT .rl")].map(r=>r.querySelector("b").textContent+" "+r.querySelector(".num").textContent).join(" | ")});
  ok(/Retrabalho\s*50/.test(txt)&&/Pacote do mesmo\s*17/.test(txt),"painel: "+txt);
  await p.reload();await p.waitForTimeout(200);ok((await p.evaluate(()=>S.waves.map(w=>w.ty).join()))==="Retrabalho,Pacote do mesmo,Pacote do mesmo","perdeu o tipo ao recarregar");return txt.slice(0,160)});
 
@@ -636,6 +636,10 @@ await T("86 Lista de presença: colunas Horário justificado e Motivo do atraso 
  ok(h.includes('Motivo do atraso')&&h.includes('Horário justificado'),'cabeçalho: '+JSON.stringify(h));
  ok(await p.evaluate(()=>document.querySelectorAll('input.atrM').length)===0,'campo editável apareceu sem servidor');});
 
+await T("87 Painel: 4 gráficos (área, colunas, rosca, barras) e duas tabelas na lateral direita",async()=>{const p=await page(b,base({waves:[WV('q1','Q1','Vários artigos',50,HR(9,10)),WV('q2','Q2','Itens Únicos',30,HR(10,5)),WV('q3','Q3','Pacote do mesmo',20,HR(10,40))]}));
+ await p.evaluate(()=>go('painel'));await p.waitForTimeout(250);
+ const r=await p.evaluate(()=>{const v=s=>document.querySelector(s),box=e=>e.getBoundingClientRect();return{n:[...document.querySelectorAll('#painel .pc')].filter(e=>e.offsetParent).length,area:!!v('#vivoC polygon'),bars:!!v('#chH svg'),rosca:!!v('#chT .rosca circle[stroke-dasharray]'),tmp:!!v('#tmp .gal'),t1:!!v('#tTipos table tr td'),t2:!!v('#gals table tr td'),dir:box(v('#tTipos')).left>box(v('#chT')).right-1&&box(v('#gals')).left>box(v('#vivo')).right-1}});
+ ok(r.n===4,'cartões de gráfico: '+r.n);ok(r.area&&r.bars&&r.rosca&&r.tmp,'gráficos: '+JSON.stringify(r));ok(r.t1&&r.t2,'tabelas: '+JSON.stringify(r));ok(r.dir,'tabelas não ficam à direita')});
 await b.close();
 const w=Math.max(...R.map(r=>r[1].length));for(const r of R)console.log((r[0]==="PASS"?"✅":"❌")+" "+r[1].padEnd(w)+"  "+r[2]);
 console.log(`\n${R.filter(r=>r[0]==="PASS").length}/${R.length} passaram`)})();

@@ -38,9 +38,17 @@ header.top h1{font:700 34px/1 var(--fd)}
 .ctl{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
 .grid{display:grid;gap:14px}#painel .two{align-items:start}.two{grid-template-columns:repeat(auto-fit,minmax(300px,1fr))}.g21{grid-template-columns:repeat(auto-fit,minmax(300px,1fr))}
 @media(min-width:1100px){.g21{grid-template-columns:2fr 1fr}}
-.pgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-top:14px}.pw{min-width:0}.pw>.card{height:100%}
-@media(max-width:760px){.pgrid{grid-template-columns:1fr}}
-#painel #chH svg{max-height:240px;width:100%}#vivoLeg{display:flex;gap:18px;flex-wrap:wrap}#vivoLeg i{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:6px;vertical-align:-1px}#vivoLeg i.ln{height:3px;border:0;border-radius:2px;vertical-align:3px;width:18px}#painel .card h2 .pill{margin-left:6px;vertical-align:middle}#vivoL table th,#concL table th{padding:4px 8px}#vivoL table td,#concL table td{padding:3px 8px}#vivoL .big{font-size:inherit}
+.pmain{display:grid;grid-template-columns:minmax(0,1fr);gap:14px;margin-top:14px;align-items:start}
+.pcharts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;min-width:0}
+.pc{display:flex;flex-direction:column;min-width:0}.pc>#vivoC,.pc>#chT,.pc>#chH{flex:1;display:flex;flex-direction:column;justify-content:center}
+.ptabs{display:grid;gap:14px;min-width:0}
+@media(min-width:1180px){.pmain{grid-template-columns:minmax(0,1fr) 340px}}
+@media(max-width:760px){.pcharts{grid-template-columns:1fr}}
+.tp{font-size:13px}.tp th,.tp td{padding:7px 6px}.tp th:not(:first-child),.tp td:not(:first-child){text-align:right}.tp td{border-bottom:1px solid var(--line)}.tg td:first-child{white-space:nowrap}.tp .dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:7px}
+.rosca{display:flex;flex-direction:column;gap:14px;align-items:center}.rosca svg{width:100%;max-width:190px;display:block}
+.rleg{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 16px;width:100%}.rl{display:flex;align-items:center;gap:8px;min-width:0}.rl .dot{flex:none;width:10px;height:10px;border-radius:50%}.rl .rn{flex:1;min-width:0;display:flex;flex-direction:column;line-height:1.25}.rl .rn small{color:var(--mut);font-size:11.5px}.rl .num{font-weight:700;font-size:15px}
+.rosca .rc-n{font-size:5.4px;font-weight:700;font-family:inherit;fill:var(--ink)}.rosca .rc-s{font-size:2.8px;font-family:inherit;fill:var(--mut)}
+#painel #chH svg{max-height:300px;width:100%}#vivoLeg{display:flex;gap:18px;flex-wrap:wrap}#vivoLeg i{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:6px;vertical-align:-1px}#vivoLeg i.ln{height:3px;border:0;border-radius:2px;vertical-align:3px;width:18px}#painel .card h2 .pill{margin-left:6px;vertical-align:middle}#vivoL table th,#concL table th{padding:4px 8px}#vivoL table td,#concL table td{padding:3px 8px}#vivoL .big{font-size:inherit}
 .pg{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:10px}.pg span{color:var(--mut);font-size:13px}
 #reg{align-items:start}
 @media(min-width:1100px){#reg{grid-template-columns:5fr 7fr}}
@@ -348,14 +356,18 @@ a[data-pick]{display:inline-block;padding:8px 0 2px;color:var(--gx);font-weight:
 <!-- ======================= PAINEL ======================= -->
 <section id="painel">
  <div id="kpis"></div>
- <div class="pgrid" id="pGrid">
-  <div class="pw" id="vivo"><div class="card"><h2>Acumulado do dia: bipado x concluído <span class="pill" id="vivoN"></span><span class="pill" id="concN"></span></h2><div id="vivoC"></div>
-  <div class="legend" id="vivoLeg"><span><i style="background:var(--t);opacity:.6"></i>Quantidade bipada (área)</span><span><i class="ln" style="background:var(--g)"></i>Quantidade concluída (linha)</span></div></div>
- </div>
-  <div class="pw"><div class="card"><h2><span id="hTit">Produção por hora</span> <span id="peak"></span><span class="hm" id="hSeg" role="group" aria-label="Intervalo do gráfico"><button data-m="h" class="on">Hora</button><button data-m="m">30 min</button></span></h2><div id="chH"></div><div id="pace"></div></div></div>
-  <div class="pw"><div class="card"><h2>Quantidades por tipo de onda</h2><div id="chT"></div></div></div>
-  <div class="pw"><div class="card"><h2>Produção por galpão</h2><div id="gals"></div></div></div>
-  <div class="pw"><div class="card"><h2>Tempo de onda por tipo</h2><div id="tmp"></div></div></div>
+ <div class="pmain">
+  <div class="pcharts">
+   <div class="card pc" id="vivo"><h2>Acumulado do dia <span class="pill" id="vivoN"></span><span class="pill" id="concN"></span></h2><div id="vivoC"></div>
+    <div class="legend" id="vivoLeg"><span><i style="background:var(--t);opacity:.6"></i>Quantidade bipada (área)</span><span><i class="ln" style="background:var(--g)"></i>Quantidade concluída (linha)</span></div></div>
+   <div class="card pc"><h2><span id="hTit">Produção por hora</span> <span id="peak"></span><span class="hm" id="hSeg" role="group" aria-label="Intervalo do gráfico"><button data-m="h" class="on">Hora</button><button data-m="m">30 min</button></span></h2><div id="chH"></div><div id="pace"></div></div>
+   <div class="card pc"><h2>Participação por tipo de onda</h2><div id="chT"></div></div>
+   <div class="card pc"><h2>Tempo de onda por tipo</h2><div id="tmp"></div></div>
+  </div>
+  <aside class="ptabs" aria-label="Tabelas informativas">
+   <div class="card"><h2>Tipos de onda</h2><div class="tw" id="tTipos"></div></div>
+   <div class="card"><h2>Galpões</h2><div class="tw" id="gals"></div></div>
+  </aside>
  </div>
 </section>
 
@@ -804,7 +816,7 @@ const avg=a=>a.length?a.reduce((s,v)=>s+v,0)/a.length:0;
 /* ===================== gráficos ===================== */
 const nice=v=>{const e=Math.pow(10,Math.floor(Math.log10(v))),m=v/e;return[1,1.2,1.5,2,2.5,3,4,5,6,7,8,10].find(x=>m<=x)*e};
 function barsSvg(a,i0,i1,ov){ov=ov||{};const sc=ov.half?.5:1,LT=i=>ov.half?(i%2?(i>>1)+":30":(i>>1)+"h"):i+"h",lab=[],v=[];for(let i=i0;i<=i1;i++){lab.push(i);v.push(a[i])}
- const W=innerWidth<760?380:600,H=innerWidth<760?240:250,p=innerWidth<760?30:38,mx=nice(Math.max(...v,(ov.avg||0)*sc,1)*1.08),needUp=ov.need&&ov.need*sc>mx,bw=(W-p*2)/v.length,hi=v.indexOf(Math.max(...v)),act=v.filter(x=>x>0),lo=act.length>1?v.indexOf(Math.min(...act)):-1;
+ const W=innerWidth<760?380:600,H=innerWidth<760?240:(ov.tall?290:250),p=innerWidth<760?30:38,mx=nice(Math.max(...v,(ov.avg||0)*sc,1)*1.08),needUp=ov.need&&ov.need*sc>mx,bw=(W-p*2)/v.length,hi=v.indexOf(Math.max(...v)),act=v.filter(x=>x>0),lo=act.length>1?v.indexOf(Math.min(...act)):-1;
  let s=`<svg class="ch" viewBox="0 0 ${W} ${H}" role="img" aria-label="Produção por hora">`+[0,1,2].map(i=>`<line x1="${p}" x2="${W-p}" y1="${H-24-i*(H-44)/2}" y2="${H-24-i*(H-44)/2}" stroke="var(--line)"/>${i?`<text x="${p-6}" y="${H-20-i*(H-44)/2}" text-anchor="end">${fmt(mx*i/2)}</text>`:""}`).join("");
  const bwid=Math.max(Math.min(bw*0.46,30),6),halo="fill:var(--ink);paint-order:stroke;stroke:var(--card);stroke-width:4px;stroke-linejoin:round";
  v.forEach((q,i)=>{const h=Math.max(q/mx*(H-44),q?2:0),cx=p+i*bw+bw/2,x=cx-bwid/2,top=H-24-h,r=Math.min(4,h,bwid/2),c=q&&i===hi?"var(--g)":i===lo?"var(--r)":"var(--t)";
@@ -822,20 +834,26 @@ async function painelPublico(force=false){
  const d=$("#day").value,g=$("#gal").value,t=$("#turnoF").value,key=[d,g,t].join('|');
  if(!d)return;if(!force&&key===publicKey&&publicData&&Date.now()-publicAt<45000){desenhaPainelPublico(publicData,g,t);return}if(!force&&key===publicKey&&publicLoading)return;
  publicKey=key;publicData=null;publicLoading=true;const seq=++publicSeq;
- $("#kpis").innerHTML='<div class="card">Carregando produção…</div>';["#chH","#chT","#gals","#tmp","#pace"].forEach(x=>$(x).innerHTML='');$("#peak").textContent='';
+ $("#kpis").innerHTML='<div class="card">Carregando produção…</div>';["#chH","#chT","#tTipos","#gals","#tmp","#pace"].forEach(x=>$(x).innerHTML='');$("#peak").textContent='';
  try{const x=await raw('/rest/v1/rpc/painel_publico',{method:'POST',auth:false,body:{p_dia:d,p_galpao:g&&g!=='__all'?(GID[g]||null):null,p_turno:t?+t:null}});
   if(seq!==publicSeq)return;publicLoading=false;if(view!=='painel'||me)return;publicData=x;publicAt=Date.now();desenhaPainelPublico(x,g,t);
  }catch(e){if(seq!==publicSeq)return;publicLoading=false;if(me)return;publicKey='';$("#kpis").innerHTML='<div class="card">Não foi possível carregar o painel. Confira a conexão e tente novamente.</div>'}
 }
+function rosca(tv,tot){const R=15.9155,vis=tv.filter(x=>x.v>0);let off=0;
+ const arcs=tot?vis.map(x=>{const p=x.v/tot*100,c=`<circle cx="21" cy="21" r="${R}" fill="none" style="stroke:${x.c}" stroke-width="5.2" stroke-dasharray="${p.toFixed(3)} ${(100-p).toFixed(3)}" stroke-dashoffset="${(25-off).toFixed(3)}"><title>${esc(x.n)}: ${fmt(x.v)}</title></circle>`;off+=p;return c}).join(""):"";
+ return`<div class="rosca"><svg viewBox="0 0 42 42" role="img" aria-label="Participação de cada tipo de onda nas unidades produzidas"><circle cx="21" cy="21" r="${R}" fill="none" stroke="var(--line)" stroke-width="5.2"/>${arcs}<text x="21" y="21" text-anchor="middle" class="rc-n">${fmt(tot)}</text><text x="21" y="26.4" text-anchor="middle" class="rc-s">unidades</text></svg><div class="rleg">`+
+  tv.map(x=>`<div class="rl" style="--c:${x.c}"><i class="dot" style="background:${x.c}"></i><span class="rn"><b>${esc(x.n)}</b><small>${fmt(x.k)} ${x.k===1?"onda":"ondas"}${tot&&x.v?", "+Math.round(x.v/tot*100)+"%":""}</small></span><span class="num">${fmt(x.v)}</span></div>`).join("")+`</div></div>`}
+function tabTipos(tv,tot){return`<table class="tp"><tr><th>Tipo</th><th>Ondas</th><th>Un./onda</th><th>% total</th></tr>`+tv.map(x=>`<tr><td><i class="dot" style="background:${x.c}"></i>${esc(x.n)}</td><td>${fmt(x.k)}</td><td>${x.k?fmt(x.v/x.k):"—"}</td><td>${tot&&x.v?Math.round(x.v/tot*100)+"%":"—"}</td></tr>`).join("")+`</table>`}
+function tabGals(rs){return rs.length?`<table class="tp tg"><tr><th>Galpão</th><th>Unidades</th><th>% meta</th><th>Ondas</th><th>Pessoas</th></tr>`+rs.map(r=>`<tr><td>${esc(r.k)}</td><td>${fmt(r.v)}</td><td>${r.m?Math.round(r.v/r.m*100)+"%":"—"}</td><td>${fmt(r.o)}</td><td>${fmt(r.p)}</td></tr>`).join("")+`</table>`:'<div class="empty">Sem galpões.</div>'}
 function desenhaPainelPublico(x,g,t){
  const tot=+x.total||0,n=+x.ondas||0,pes=+x.pessoas||0,meta=g&&g!=='__all'?(+MT()[g]||0):S.gals.reduce((s,k)=>s+(+MT()[k]||0),0);
  const K=(a,b,c)=>`<div class="kpi"><dt>${a}</dt><dd class="num">${b}</dd><dd class="sm">${c||''}</dd></div>`;
  const metaTxt=t?'Meta diária do galpão completo':meta?'Meta diária: '+fmt(meta)+' unidades':'Meta diária não cadastrada';
  $("#kpis").innerHTML=`<div class="placar"><div><div class="num">${fmt(tot)}</div><div class="un">unidades produzidas</div></div><div class="regua"><div class="hd"><span>${metaTxt}</span><b>${!t&&meta?fmt(tot/meta*100)+'% da meta':''}</b></div><div class="trk"><b style="width:${!t&&meta?Math.min(100,tot/meta*100):0}%"></b></div></div></div><dl class="stats">`+
  K('Ondas concluídas',fmt(n),'')+K('Pessoas',fmt(pes),'com produção')+K('Tempo médio ponderado por conjunto',x.dur_n?mm(+(x.dur_pond!=null?x.dur_pond:x.dur_mediana)||0):'—',x.dur_n?fmt(x.dur_n)+' conjuntos':'sem medições')+K('Unidades por onda',n?fmt(tot/n):'0','em média')+K('Procurando',fmt((x.procurando||{}).ondas||0),fmt((x.procurando||{}).qtd||0)+' unidades')+K('Produção fora do turno',fmt(x.extra_un||0),'unidades em '+fmt(x.extra_ondas||0)+' ondas')+'</dl>';if(!t)metaCheck(tot,meta,g,{ondas:n,pessoas:pes});
- const a=Array(24).fill(0);(x.horas||[]).forEach(z=>a[z.hora]=+z.qtd);const a2=x.meias?Array(48).fill(0):null;if(a2)x.meias.forEach(z=>a2[z.slot]=+z.qtd);$("#chH").innerHTML=chartH(a,a2);$("#peak").textContent=tot?peakTxt(a,a2):'';
- const types=x.tipos||[];$("#chT").innerHTML=TY.map(([name,c])=>{const z=types.find(v=>v.tipo===name)||{};return `<div class="trow" style="--c:${c}">${ico(name)}<b>${name}</b><span class="v"><span class="num">${fmt(z.qtd||0)}</span><small>${fmt(z.ondas||0)} ondas</small></span></div>`}).join('');
- $("#gals").innerHTML=bars((x.galpoes||[]).map(z=>({k:z.nome,v:+z.qtd||0,s:fmt(z.ondas)+' ondas, '+fmt(z.pessoas)+' pessoas',c:'var(--g)'})));
+ const a=Array(24).fill(0);(x.horas||[]).forEach(z=>a[z.hora]=+z.qtd);const a2=x.meias?Array(48).fill(0):null;if(a2)x.meias.forEach(z=>a2[z.slot]=+z.qtd);$("#chH").innerHTML=chartH(a,a2,{tall:1});$("#peak").textContent=tot?peakTxt(a,a2):'';
+ const types=x.tipos||[],tv=TY.map(([name,c])=>{const z=types.find(v=>v.tipo===name)||{};return{n:name,c,v:+z.qtd||0,k:+z.ondas||0}});$("#chT").innerHTML=rosca(tv,tot);$("#tTipos").innerHTML=tabTipos(tv,tot);
+ $("#gals").innerHTML=tabGals((x.galpoes||[]).map(z=>({k:z.nome,v:+z.qtd||0,m:+MT()[z.nome]||0,o:+z.ondas||0,p:+z.pessoas||0})));
  const dt=x.dur_tipos||[];const rk=v=>{const z=dt.find(q=>q.tipo===v)||{};return +z.n?(+(z.pond!=null?z.pond:z.mediana)||0):0},TYR=TY.slice().sort((a,b)=>rk(b[0])-rk(a[0]));$("#tmp").innerHTML=TYR.map(([name,c])=>{const z=dt.find(v=>v.tipo===name)||{},n=+z.n||0,ms=n?(+(z.pond!=null?z.pond:z.mediana)||0):0;return `<div class="gal"><div class="r"><b>${n?(TYR.findIndex(q=>q[0]===name)+1)+'º ':''}${name}</b><span>${n?mm(ms):'—'} <small style="color:var(--mut)">${n} ${n===1?'conjunto':'conjuntos'}</small></span></div><div class="bar"><b style="width:${n?Math.min(ms/(GAP()*6e4)*100,100):0}%;--c:${c}"></b></div></div>`}).join('')+`<div class="legend">Média ponderada pelas unidades de cada conjunto de ondas, até ${GAP()} min. Retrabalho, Maiores/Pesados e ondas que passaram por Procurando não entram no tempo do conjunto (o tempo de procurando é medido à parte).</div>`;
  $("#pace").innerHTML='<span class="legend">Painel público com totais consolidados. Registros ainda offline aparecem após a sincronização.</span>';
 }
@@ -870,14 +888,12 @@ function painel(){
   K("Unidades por onda",ond?fmt(tot/ond):"0","em média")+
   K("Procurando",fmt(PR.length),fmt(PR.reduce((a,w)=>a+w.qty,0))+" unidades")+
   K("Hora extra",fmt(ot.reduce((s,w)=>s+w.qty,0)),"unidades em "+ot.length+" ondas")+"</dl>";metaCheck(tot,metaT,g,festaEx(P,metaT,ond,pes));
- $("#chH").innerHTML=chartH(a,a2,{need:need});
+ $("#chH").innerHTML=chartH(a,a2,{need:need,tall:1});
  $("#pace").innerHTML=metaT&&isNow&&faltam>0&&remain>0?"Para bater a meta é preciso fazer <b>"+fmt(need)+" unidades por hora</b>"+(upw?", perto de "+ondH.toLocaleString("pt-BR",{maximumFractionDigits:1})+" ondas por hora":"")+". A média até agora é de "+fmt(avgH)+" por hora.":"";
  $("#peak").textContent=mx?peakTxt(a,a2):"";
  {const tv=TY.map(([n,c])=>{const q=P.filter(w=>w.ty===n);return{n,c,v:q.reduce((s,w)=>s+w.qty,0),k:q.length}});
-  $("#chT").innerHTML=`<div class="stack${tot?"":" vazio"}" role="img" aria-label="Participação de cada tipo de onda">`+tv.filter(x=>x.v).map(x=>`<i style="--c:${x.c};flex:${x.v}" title="${x.n}: ${fmt(x.v)}"></i>`).join("")+"</div>"+
-   tv.map(x=>`<div class="trow" style="--c:${x.c}">${ico(x.n)}<b>${x.n}</b><span class="v"><span class="num">${fmt(x.v)}</span><small>${x.k} ${x.k===1?"onda":"ondas"}${tot&&x.v?", "+Math.round(x.v/tot*100)+"%":""}</small></span></div>`).join("")}
- $("#gals").innerHTML=bars(visG().map((k,i)=>{const q=prod(all).filter(w=>w.gal===k);
-  const v0=q.reduce((s,w)=>s+w.qty,0),m=MT()[k];return{k,v:v0,p:m?Math.min(v0/m*100,100):null,s:(m?Math.round(v0/m*100)+"% da meta de "+fmt(m)+", ":"")+q.length+" ondas, "+(new Set(q.map(w=>w.op)).size===1?"1 pessoa":new Set(q.map(w=>w.op)).size+" pessoas"),c:["var(--g)","var(--v)","var(--a)","var(--t)"][i%4]}}));
+  $("#chT").innerHTML=rosca(tv,tot);$("#tTipos").innerHTML=tabTipos(tv,tot)}
+ $("#gals").innerHTML=tabGals(visG().map(k=>{const q=prod(all).filter(w=>w.gal===k);return{k,v:q.reduce((s,w)=>s+w.qty,0),m:+MT()[k]||0,o:q.length,p:new Set(q.map(w=>w.op)).size}}));
  const Dg=durs(L);
  const TYR=TY.slice().sort((a,b)=>wA(Dg.filter(x=>x.w.ty===b[0]))-wA(Dg.filter(x=>x.w.ty===a[0])));
  $("#tmp").innerHTML=TYR.map(([n,c])=>{const dc=Dg.filter(x=>x.w.ty===n),d=dc;
@@ -942,14 +958,14 @@ function painelVivo(){const pub=ON&&!me,bx=$("#vivo");if(!bx)return;bx.classList
  const tb=bip.reduce((a,b)=>a+b,0),tc=con.reduce((a,b)=>a+b,0);
  $("#vivoN").textContent=LV.length+(LV.length===1?" onda em andamento":" ondas em andamento");$("#concN").textContent=fmt(C.length)+" concluídas";
  if(!tb){$("#vivoC").innerHTML='<div class="empty">Ainda não há ondas bipadas neste dia.</div>';return}
- const [i0,i1]=win48(bip.map((v,i)=>v+con[i])),n=i1-i0+1,W=860,Ht=190,L=50,R=14,T=22,B=26,pw=W-L-R,ph=Ht-T-B;
+ const [i0,i1]=win48(bip.map((v,i)=>v+con[i])),n=i1-i0+1,W=400,Ht=290,L=42,R=12,T=26,B=28,pw=W-L-R,ph=Ht-T-B;
  let a1=0,a2=0;const ab=[],ac=[];for(let k=0;k<48;k++){a1+=bip[k];a2+=con[k];ab.push(a1);ac.push(a2)}
  const mx=Math.max(1,ab[i1]),step=Math.pow(10,Math.floor(Math.log10(mx))),top=Math.ceil(mx/step)*step,y=v=>T+ph-v/top*ph,x=k=>L+(n>1?pw*(k-i0)/(n-1):pw/2);
  let g='';for(let k=0;k<=2;k++){const v=top*k/2;g+=`<line x1="${L}" x2="${W-R}" y1="${y(v)}" y2="${y(v)}" stroke="var(--line)"/><text x="${L-6}" y="${y(v)+4}" text-anchor="end" font-size="11" fill="var(--mut)">${fmt(v)}</text>`}
  const pb=[],pc=[];for(let k=i0;k<=i1;k++){pb.push(x(k)+","+y(ab[k]));pc.push(x(k)+","+y(ac[k]))}
- let lab='';for(let k=i0;k<=i1;k++)if(k%2===0||n<=10)lab+=`<text x="${x(k)}" y="${Ht-8}" text-anchor="middle" font-size="11" fill="var(--mut)">${k%2?(k>>1)+":30":(k>>1)+"h"}</text>`;
+ let lab='';for(let k=i0;k<=i1;k++)if(k%(n>20?4:2)===0||n<=8)lab+=`<text x="${x(k)}" y="${Ht-8}" text-anchor="middle" font-size="11" fill="var(--mut)">${k%2?(k>>1)+":30":(k>>1)+"h"}</text>`;
  const ex=x(i1),gap=ab[i1]-ac[i1];
- $("#vivoC").innerHTML=`<svg viewBox="0 0 ${W} ${Ht}" role="img" aria-label="Acumulado do dia: área com a quantidade bipada e linha com a quantidade concluída. Bipado ${fmt(tb)}, concluído ${fmt(tc)}." style="width:100%;height:auto;max-height:200px"><defs><linearGradient id="vvA" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="var(--t)" stop-opacity=".55"/><stop offset="1" stop-color="var(--t)" stop-opacity=".06"/></linearGradient></defs>${g}<polygon points="${x(i0)},${y(0)} ${pb.join(" ")} ${ex},${y(0)}" fill="url(#vvA)"/><polyline points="${pb.join(" ")}" fill="none" stroke="var(--t)" stroke-width="1.6" stroke-dasharray="5 4"/><polyline points="${pc.join(" ")}" fill="none" stroke="var(--g)" stroke-width="2.8" stroke-linejoin="round" stroke-linecap="round"/><circle cx="${ex}" cy="${y(ab[i1])}" r="4" fill="var(--t)"/><circle cx="${ex}" cy="${y(ac[i1])}" r="4.5" fill="var(--g)" stroke="var(--card,#fff)" stroke-width="1.5"/><text x="${ex-8}" y="${y(ab[i1])-8}" text-anchor="end" font-size="12" font-weight="700" fill="var(--mut)">bipado ${fmt(ab[i1])}</text>${gap>0?`<text x="${ex-8}" y="${y(ac[i1])+16}" text-anchor="end" font-size="12" font-weight="700" fill="var(--g)">concluído ${fmt(ac[i1])}</text>`:`<text x="${ex-8}" y="${y(ac[i1])+16}" text-anchor="end" font-size="12" font-weight="700" fill="var(--g)">concluído ${fmt(ac[i1])}</text>`}${lab}</svg>`}
+ $("#vivoC").innerHTML=`<svg viewBox="0 0 ${W} ${Ht}" role="img" aria-label="Acumulado do dia: área com a quantidade bipada e linha com a quantidade concluída. Bipado ${fmt(tb)}, concluído ${fmt(tc)}." style="width:100%;height:auto"><defs><linearGradient id="vvA" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="var(--t)" stop-opacity=".55"/><stop offset="1" stop-color="var(--t)" stop-opacity=".06"/></linearGradient></defs>${g}<polygon points="${x(i0)},${y(0)} ${pb.join(" ")} ${ex},${y(0)}" fill="url(#vvA)"/><polyline points="${pb.join(" ")}" fill="none" stroke="var(--t)" stroke-width="1.6" stroke-dasharray="5 4"/><polyline points="${pc.join(" ")}" fill="none" stroke="var(--g)" stroke-width="2.8" stroke-linejoin="round" stroke-linecap="round"/><circle cx="${ex}" cy="${y(ab[i1])}" r="4" fill="var(--t)"/><circle cx="${ex}" cy="${y(ac[i1])}" r="4.5" fill="var(--g)" stroke="var(--card,#fff)" stroke-width="1.5"/><text x="${ex-8}" y="${y(ab[i1])-8}" text-anchor="end" font-size="12" font-weight="700" fill="var(--mut)">bipado ${fmt(ab[i1])}</text>${gap>0?`<text x="${ex-8}" y="${y(ac[i1])+16}" text-anchor="end" font-size="12" font-weight="700" fill="var(--g)">concluído ${fmt(ac[i1])}</text>`:`<text x="${ex-8}" y="${y(ac[i1])+16}" text-anchor="end" font-size="12" font-weight="700" fill="var(--g)">concluído ${fmt(ac[i1])}</text>`}${lab}</svg>`}
 /* Acompanhamento: ondas concluídas do dia em páginas de 50 linhas */
 let ACEP=0;const ACE_N=50;
 function aceLista(){const el=$("#aceL");if(!el)return;
