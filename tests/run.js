@@ -690,6 +690,15 @@ await T("93 Meta coletiva: pessoas por turno e hora extra da equipe seguem o fil
  const r=await p.evaluate(()=>{$("#gal").value="__all";$("#turnoF").value="";go("ind");document.querySelector('[data-gs="mc"]').click();const rows=[...document.querySelectorAll('#coTurnos tr')].map(t=>[...t.children].map(c=>c.textContent.trim()).join('|'));$("#turnoF").value="2";coletiva();const r2=[...document.querySelectorAll('#coTurnos tr')].map(t=>t.textContent.trim());return{rows,r2}});
  const t1=r.rows.find(x=>x.startsWith('1º turno'))||'';ok(/\|1\|2\|/.test(t1)&&/2 ondas/.test(t1),'1º turno: '+t1);ok(r.rows.some(x=>x.startsWith('Total')),'total: '+r.rows.join(' / '));
  ok(r.r2.length===2&&/2º turno/.test(r.r2[1]),'filtro 2º turno: '+r.r2.join(' / '))});
+await T("94 Retrabalho fica fora das metas e tem meta individual própria",async()=>{
+ const st=base({metasInd:{"Galpão 1":{q:100,r:50}},waves:[WV('a','1','Itens Únicos',60,HR(9,0)),WV('b','2','Retrabalho',70,HR(9,30)),WV('c','3','Itens Únicos',30,HR(10,0),'CL002','Bruno Lima')]});
+ const p=await page(b,st);
+ const r=await p.evaluate(()=>{MT()['Galpão 1']=200;$("#gal").value="__all";go('painel');renderAll();const pl=document.querySelector('#kpis .regua').textContent;
+  go('ind');$("#turnoF").value="";individual();const rw=[...document.querySelectorAll('#iBody tr')].find(t=>/Ana Souza/.test(t.textContent)).textContent.replace(/\s+/g,' ');
+  document.querySelector('[data-gs="mc"]').click();const co=document.querySelector('#coMeta').textContent.replace(/\s+/g,' ');return{pl,rw,co}});
+ ok(/sem 70 de retrabalho/.test(r.pl),'painel: '+r.pl);
+ ok(/60 \/ 100/.test(r.rw)&&/70 \/ 50/.test(r.rw),'equipe: '+r.rw);
+ ok(/90 de /.test(r.co)&&/retrabalho \(70\) fica fora/.test(r.co)&&/Galpão 19020045%/.test(r.co),'coletiva: '+r.co)});
 await b.close();
 const w=Math.max(...R.map(r=>r[1].length));for(const r of R)console.log((r[0]==="PASS"?"✅":"❌")+" "+r[1].padEnd(w)+"  "+r[2]);
 console.log(`\n${R.filter(r=>r[0]==="PASS").length}/${R.length} passaram`)})();

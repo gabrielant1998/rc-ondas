@@ -606,6 +606,8 @@ Object.keys(DEF.cfg).forEach(k=>{if(S.cfg[k]==null)S.cfg[k]=JSON.parse(JSON.stri
 if(!S.metasDia)S.metasDia={};
 function hoje(){const d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")}
 function MI(){S.metasInd=S.metasInd||{};return S.metasInd}
+/* Retrabalho não entra nas metas (do dia, coletiva e individual); tem meta individual própria */
+const RET='Retrabalho',semRet=a=>a.filter(w=>w.ty!==RET),soRet=a=>a.filter(w=>w.ty===RET),qtdOf=a=>a.reduce((s,w)=>s+w.qty,0);
 function MT(){S.metasDia=S.metasDia||{};const k=hoje();if(!S.metasDia[k]){S.metasDia[k]={};Object.keys(S.metasDia).sort().slice(0,-60).forEach(x=>{if(x!==k)delete S.metasDia[x]})}return S.metasDia[k]}
 /* nomes antigos de tipo -> nomes novos, sem perder registros nem limites */
 S.waves.forEach(w=>{if(TYREN[w.ty])w.ty=TYREN[w.ty]});
@@ -665,7 +667,7 @@ function errMsg(e){if(!e.status)return"Sem conexão com o servidor. Tente de nov
 async function pull(){
  const [gs,ts,cf,os]=await Promise.all([api("/rest/v1/galpoes?select=*&order=nome"),api("/rest/v1/tipos_onda?select=*&order=ordem"),api("/rest/v1/config?select=*"),api("/rest/v1/operadores?select=*&order=codigo")]);
  GID={};GN={};gs.forEach(g=>{GID[g.nome]=g.id;GN[g.id]=g.nome});
- S.gals=gs.map(g=>g.nome);S.metasInd={};gs.forEach(g=>{if(g.meta_ind_ondas||g.meta_ind_qtd)S.metasInd[g.nome]={o:g.meta_ind_ondas||0,q:g.meta_ind_qtd||0}});
+ S.gals=gs.map(g=>g.nome);S.metasInd={};gs.forEach(g=>{if(g.meta_ind_ondas||g.meta_ind_qtd||g.meta_ind_ret)S.metasInd[g.nome]={o:g.meta_ind_ondas||0,q:g.meta_ind_qtd||0,r:g.meta_ind_ret||0}});
  ts.forEach(t=>{S.cfg.lim[t.nome]=t.limite});
  const c=cf[0];if(c){S.cfg.turnos={1:{ini:c.turno1_ini,fim:c.turno1_fim},2:{ini:c.turno2_ini,fim:c.turno2_fim}};S.cfg.gap=Math.min(+c.intervalo_max_min||30,60);S.cfg.tol=c.tolerancia_min;S.cfg.metaMin=+c.meta_minima||0;S.cfg.and=c.ondas_em_andamento;S.cfg.alm={1:{ini:c.almoco1_ini,fim:c.almoco1_fim},2:{ini:c.almoco2_ini,fim:c.almoco2_fim}}}
  OPSALL={};os.forEach(o=>{OPSALL[o.id]=o});
@@ -728,7 +730,7 @@ function remChange(e){const d=e.target.dataset,id=e.target.id,v=e.target.value;
  if(d.ug2){const o=opOf(d.ug2);if(o)return rem(()=>mut("/rest/v1/operadores?id=eq."+o.id,"PATCH",{galpao_id:GID[v]}),o.n+" agora no "+v)}
  if(d.gre!==undefined){const old=S.gals[+d.gre],nv=v.trim();if(!nv){cfgGals();return}
   return rem(()=>mut("/rest/v1/galpoes?id=eq."+GID[old],"PATCH",{nome:nv}),"Galpão renomeado")}
- if(d.gmo!==undefined||d.gmq!==undefined){const campo=d.gmo!==undefined?"meta_ind_ondas":"meta_ind_qtd",gn=d.gmo!==undefined?d.gmo:d.gmq,n=Math.floor(+v),gid=GID[gn];return rem(()=>mut("/rest/v1/galpoes?id=eq."+gid,"PATCH",{[campo]:n>0?n:null}),"Meta individual salva")}
+ if(d.gmo!==undefined||d.gmq!==undefined||d.gmr!==undefined){const campo=d.gmo!==undefined?"meta_ind_ondas":d.gmr!==undefined?"meta_ind_ret":"meta_ind_qtd",gn=d.gmo!==undefined?d.gmo:d.gmr!==undefined?d.gmr:d.gmq,n=Math.floor(+v),gid=GID[gn];return rem(()=>mut("/rest/v1/galpoes?id=eq."+gid,"PATCH",{[campo]:n>0?n:null}),"Meta individual salva")}
  if(d.gmeta!==undefined){const n=Math.floor(+v),gid=GID[d.gmeta];return rem(()=>n>0?api("/rest/v1/metas_diarias?on_conflict=galpao_id,data",{method:"POST",body:{galpao_id:gid,data:hoje(),meta:n},prefer:"resolution=merge-duplicates,return=representation"}):api("/rest/v1/metas_diarias?galpao_id=eq."+gid+"&data=eq."+hoje(),{method:"DELETE"}),n>0?"Meta de hoje salva":"Meta de hoje removida")}}
 function remWave(d){const id=d.fin||d.sd||d.del,w=S.waves.find(x=>x.id===id);if(!w)return;
  if(!w.srv){
@@ -909,13 +911,13 @@ function tabTipos(tv,tot,tm,ro){tm=tm||{};return`<table class="tp"><tr><th>Tipo<
   return`<tr class="${PF.ty.has(x.n)?"on":""}"><td><i class="dot" style="background:${x.c}"></i>${lb}</td><td>${fmt(x.k)}</td><td>${x.k?fmt(x.v/x.k):"—"}</td><td>${tm[x.n]?mm(tm[x.n]):"—"}</td><td>${tot&&x.v?Math.round(x.v/tot*100)+"%":"—"}</td></tr>`}).join("")
   +`</table><div class="legend">Tempo: média ponderada por conjunto de ondas; pausas acima de ${GAP()} min ficam de fora.${ro?"":" Clique em um tipo para filtrar o painel."}</div>`}
 function tabGals(rs,sel,ro){return rs.length?`<table class="tp tg"><tr><th>Galpão</th><th>Unidades</th><th>% meta</th><th>Ondas</th><th>Pessoas</th></tr>`+rs.map(r=>{const nm=esc(r.k),lb=ro?nm:`<button type="button" class="lk" data-pfg="${nm}">${nm}</button>`;
-  return`<tr class="${sel&&sel===r.k?"on":""}"><td>${lb}</td><td>${fmt(r.v)}</td><td>${r.m?Math.round(r.v/r.m*100)+"%":"—"}</td><td>${fmt(r.o)}</td><td>${fmt(r.p)}</td></tr>`}).join("")+`</table>${ro?"":'<div class="legend">Clique em um galpão para filtrar; clique de novo para ver todos.</div>'}`:'<div class="empty">Sem galpões.</div>'}
+  return`<tr class="${sel&&sel===r.k?"on":""}"><td>${lb}</td><td>${fmt(r.v)}</td><td>${r.m?Math.round((r.vm!=null?r.vm:r.v)/r.m*100)+"%":"—"}</td><td>${fmt(r.o)}</td><td>${fmt(r.p)}</td></tr>`}).join("")+`</table>${ro?"":'<div class="legend">Clique em um galpão para filtrar; clique de novo para ver todos.</div>'}`:'<div class="empty">Sem galpões.</div>'}
 function desenhaPainelPublico(x,g,t){
- const tot=+x.total||0,n=+x.ondas||0,pes=+x.pessoas||0,meta=g&&g!=='__all'?(+MT()[g]||0):S.gals.reduce((s,k)=>s+(+MT()[k]||0),0);
+ const tot=+x.total||0,totM=tot-(+((x.tipos||[]).find(z=>z.tipo==='Retrabalho')||{}).qtd||0),n=+x.ondas||0,pes=+x.pessoas||0,meta=g&&g!=='__all'?(+MT()[g]||0):S.gals.reduce((s,k)=>s+(+MT()[k]||0),0);
  const K=(a,b,c)=>`<div class="kpi"><dt>${a}</dt><dd class="num">${b}</dd><dd class="sm">${c||''}</dd></div>`;
  const metaTxt=t?'Meta diária do galpão completo':meta?'Meta diária: '+fmt(meta)+' unidades':'Meta diária não cadastrada';
- $("#kpis").innerHTML=`<div class="placar"><div><div class="num">${fmt(tot)}</div><div class="un">unidades produzidas</div></div><div class="regua"><div class="hd"><span>${metaTxt}</span><b>${!t&&meta?fmt(tot/meta*100)+'% da meta':''}</b></div><div class="trk"><b style="width:${!t&&meta?Math.min(100,tot/meta*100):0}%"></b></div></div></div><dl class="stats">`+
- K('Ondas concluídas',fmt(n),'')+K('Pessoas',fmt(pes),'com produção')+K('Tempo médio ponderado por conjunto',x.dur_n?mm(+(x.dur_pond!=null?x.dur_pond:x.dur_mediana)||0):'—',x.dur_n?fmt(x.dur_n)+' conjuntos':'sem medições')+K('Unidades por onda',n?fmt(tot/n):'0','em média')+K('Procurando',fmt((x.procurando||{}).ondas||0),fmt((x.procurando||{}).qtd||0)+' unidades')+K('Produção fora do turno',fmt(x.extra_un||0),'unidades em '+fmt(x.extra_ondas||0)+' ondas')+'</dl>';if(!t)metaCheck(tot,meta,g,{ondas:n,pessoas:pes});
+ $("#kpis").innerHTML=`<div class="placar"><div><div class="num">${fmt(tot)}</div><div class="un">unidades produzidas</div></div><div class="regua"><div class="hd"><span>${metaTxt}</span><b>${!t&&meta?fmt(totM/meta*100)+'% da meta'+(tot>totM?' (sem retrabalho)':''):''}</b></div><div class="trk"><b style="width:${!t&&meta?Math.min(100,totM/meta*100):0}%"></b></div></div></div><dl class="stats">`+
+ K('Ondas concluídas',fmt(n),'')+K('Pessoas',fmt(pes),'com produção')+K('Tempo médio ponderado por conjunto',x.dur_n?mm(+(x.dur_pond!=null?x.dur_pond:x.dur_mediana)||0):'—',x.dur_n?fmt(x.dur_n)+' conjuntos':'sem medições')+K('Unidades por onda',n?fmt(tot/n):'0','em média')+K('Procurando',fmt((x.procurando||{}).ondas||0),fmt((x.procurando||{}).qtd||0)+' unidades')+K('Produção fora do turno',fmt(x.extra_un||0),'unidades em '+fmt(x.extra_ondas||0)+' ondas')+'</dl>';if(!t)metaCheck(totM,meta,g,{ondas:n,pessoas:pes});
  const a=Array(24).fill(0);(x.horas||[]).forEach(z=>a[z.hora]=+z.qtd);const a2=x.meias?Array(48).fill(0):null;if(a2)x.meias.forEach(z=>a2[z.slot]=+z.qtd);$("#chH").innerHTML=chartH(a,a2,{tall:1});$("#peak").textContent=tot?peakTxt(a,a2):'';
  const types=x.tipos||[],tv=TY.map(([name,c])=>{const z=types.find(v=>v.tipo===name)||{};return{n:name,c,v:+z.qtd||0,k:+z.ondas||0}}),dt=x.dur_tipos||[],tm={};
  TY.forEach(([name])=>{const z=dt.find(q=>q.tipo===name)||{};if(+z.n)tm[name]=+(z.pond!=null?z.pond:z.mediana)||0});
@@ -977,7 +979,7 @@ document.addEventListener("click",e=>{const b=e.target.closest&&e.target.closest
  if(!st){sel.value="";individual();return}const i=INDX.ops.findIndex(x=>x.m===sel.value),n=INDX.ops[i+st];if(n){sel.value=n.m;individual();$("#iBody").scrollIntoView({block:"start"})}});
 document.addEventListener("keydown",e=>{if((e.key==="Enter"||e.key===" ")&&e.target.matches&&e.target.matches(".kpi[data-pfk]")){e.preventDefault();e.target.click()}});
 function painel(){
- const g=$("#gal").value==="__all"?null:$("#gal").value,all=dayWaves().filter(inTurno),L0=g?all.filter(w=>w.gal===g):all,P0=prod(L0),tot0=P0.reduce((s,w)=>s+w.qty,0),
+ const g=$("#gal").value==="__all"?null:$("#gal").value,all=dayWaves().filter(inTurno),L0=g?all.filter(w=>w.gal===g):all,P0=prod(L0),tot0=P0.reduce((s,w)=>s+w.qty,0),totM=qtdOf(semRet(P0)),retD=tot0-totM,
   allF=all.filter(pfOk),L=L0.filter(pfOk),P=prod(L),act=PF.ty.size||PF.ot,
   tot=P.reduce((s,w)=>s+w.qty,0),ond=P.length,pes=new Set(P.map(w=>w.op)).size,
   D=durs(L),md=wA(D),ot=P.filter(isOT),
@@ -987,17 +989,17 @@ function painel(){
  const nowF=new Date().getHours()+new Date().getMinutes()/60,isNow=$("#day").value===dk(Date.now());
  const hWin=Math.max(TW.fim-TW.ini,1),elapsed=isNow?Math.min(Math.max(nowF-TW.ini,0),hWin):hWin,remain=isNow?Math.max(TW.fim-Math.max(nowF,TW.ini),0):0;
  const metaT=g?(+MT()[g]||0):visG().reduce((s,k)=>s+(+MT()[k]||0),0);
- const faltam=Math.max(metaT-tot0,0),need=remain>0?faltam/remain:0,avgH=elapsed>0?tot0/elapsed:0,upw=P0.length?tot0/P0.length:0,ondH=upw?need/upw:0;
+ const faltam=Math.max(metaT-totM,0),need=remain>0?faltam/remain:0,avgH=elapsed>0?totM/elapsed:0,upw=P0.length?tot0/P0.length:0,ondH=upw?need/upw:0;
  const F=TW.fim>TW.ini?TW.fim:TW.fim+24,vao=F-TW.ini,nf=nowF<TW.ini&&TW.fim<=TW.ini?nowF+24:nowF,
-  pct=metaT?Math.min(tot0/metaT*100,100):0,nowP=isNow&&nf>=TW.ini&&nf<=F?(nf-TW.ini)/vao*100:null,
-  esp=metaT?metaT*Math.min(Math.max(nf-TW.ini,0),vao)/vao:0,dif=tot0-esp,passo=vao>12?2:1;
+  pct=metaT?Math.min(totM/metaT*100,100):0,nowP=isNow&&nf>=TW.ini&&nf<=F?(nf-TW.ini)/vao*100:null,
+  esp=metaT?metaT*Math.min(Math.max(nf-TW.ini,0),vao)/vao:0,dif=totM-esp,passo=vao>12?2:1;
  let tk="";for(let x=TW.ini;x<=F;x+=passo)tk+=`<span style="left:${(x-TW.ini)/vao*100}%">${x%24}h</span>`;
  const msg=!metaT?"Meta de hoje não definida. Cadastre em Configurações, Metas.":faltam<=0?"Meta batida":!isNow?"Faltaram "+fmt(faltam)+" para a meta":nf>F?"Turno encerrado, faltaram "+fmt(faltam):nf<TW.ini?"O turno ainda não começou":dif>=0?fmt(dif)+" à frente do ritmo":fmt(-dif)+" atrás do ritmo",
   ruim=metaT&&faltam>0&&(!isNow||nf>F||(nf>=TW.ini&&dif<0));
  const PR=S.waves.filter(w=>w.st===1&&inView(w)&&(!g||w.gal===g)&&(!PF.ty.size||PF.ty.has(w.ty)));
  const K=(t,v,s,k)=>`<div class="kpi${k==="ot"&&PF.ot?" on":""}"${k?` data-pfk="${k}" role="button" tabindex="0"${k==="ot"?` aria-pressed="${PF.ot}"`:""} title="${k==="ot"?"Clique para filtrar só a hora extra":"Abrir a aba Procurando"}"`:""}><dt>${t}</dt><dd class="num">${v}</dd><dd class="sm">${s||""}</dd></div>`;
  $("#kpis").innerHTML=`<div class="placar"><div><div class="num">${fmt(tot)}</div><div class="un">${act?"unidades no filtro (dia: "+fmt(tot0)+")":"unidades produzidas"}</div></div>
-  <div class="regua"><div class="hd"><span>${metaT?Math.round(tot0/metaT*100)+"% da meta de "+fmt(metaT):"Produção do turno"}</span><b class="${ruim?"bad":""}">${msg}</b></div>
+  <div class="regua"><div class="hd"><span>${metaT?Math.round(totM/metaT*100)+"% da meta de "+fmt(metaT)+(retD?" (sem "+fmt(retD)+" de retrabalho)":""):"Produção do turno"}</span><b class="${ruim?"bad":""}">${msg}</b></div>
   <div class="trk" style="--n:${vao}" role="img" aria-label="Régua do turno: ${Math.round(pct)}% da meta. ${msg}"><b style="width:${pct}%"></b>${nowP!=null?`<i class="now" style="left:${nowP}%"></i>`:""}</div><div class="tks" aria-hidden="true">${tk}</div></div></div>
  <dl class="stats">`+
   K("Ondas concluídas",fmt(ond),"")+
@@ -1005,13 +1007,13 @@ function painel(){
   K("Tempo médio ponderado por conjunto",D.length?mm(md):"—",D.length?"em "+D.length+" conjuntos":"sem medições")+
   K("Unidades por onda",ond?fmt(tot/ond):"0","em média")+
   K("Procurando",fmt(PR.length),fmt(PR.reduce((a,w)=>a+w.qty,0))+" unidades","prs")+
-  K("Hora extra",fmt(ot.reduce((s,w)=>s+w.qty,0)),"unidades em "+ot.length+" ondas","ot")+"</dl>";metaCheck(tot0,metaT,g,festaEx(P0,metaT,P0.length,new Set(P0.map(w=>w.op)).size));
+  K("Hora extra",fmt(ot.reduce((s,w)=>s+w.qty,0)),"unidades em "+ot.length+" ondas","ot")+"</dl>";metaCheck(totM,metaT,g,festaEx(P0,metaT,P0.length,new Set(P0.map(w=>w.op)).size));
  $("#chH").innerHTML=stackH(allF,g,{need:act?0:need});
  $("#pace").innerHTML=metaT&&isNow&&faltam>0&&remain>0?"Para bater a meta é preciso fazer <b>"+fmt(need)+" unidades por hora</b>"+(upw?", perto de "+ondH.toLocaleString("pt-BR",{maximumFractionDigits:1})+" ondas por hora":"")+". A média até agora é de "+fmt(avgH)+" por hora.":"";
  $("#peak").textContent=mx?peakTxt(a,a2):"";
  {const Lt=L0.filter(w=>!PF.ot||isOT(w)),Pt=prod(Lt),Dt=durs(Lt),tm={},tv=TY.map(([n,c])=>{const q=Pt.filter(w=>w.ty===n),dc=Dt.filter(x=>x.w.ty===n);if(dc.length)tm[n]=wA(dc);return{n,c,v:q.reduce((s,w)=>s+w.qty,0),k:q.length}}),tt=tv.reduce((q,x)=>q+x.v,0);
   $("#pFil").innerHTML=pFilHtml(tv,tt,false);$("#tTipos").innerHTML=tabTipos(tv,tt,tm,false)+foraLim(Lt)}
- $("#gals").innerHTML=tabGals(visG().map(k=>{const q=prod(allF).filter(w=>w.gal===k);return{k,v:q.reduce((s,w)=>s+w.qty,0),m:act?0:(+MT()[k]||0),o:q.length,p:new Set(q.map(w=>w.op)).size}}),g,false);
+ $("#gals").innerHTML=tabGals(visG().map(k=>{const q=prod(allF).filter(w=>w.gal===k);return{k,v:q.reduce((s,w)=>s+w.qty,0),vm:qtdOf(semRet(q)),m:act?0:(+MT()[k]||0),o:q.length,p:new Set(q.map(w=>w.op)).size}}),g,false);
  {const by=new Map();P.forEach(w=>{const r=by.get(w.op)||{k:w.opn||w.op,v:0,o:0};r.v+=w.qty;r.o++;by.set(w.op,r)});const R=[...by.values()].sort((x,y)=>y.v-x.v);
   $("#rankN").textContent=R.length?fmt(R.length)+(R.length===1?" pessoa":" pessoas"):"";
   $("#chP").innerHTML=R.length?bars(R.slice(0,7).map(r=>({k:r.k,v:r.v,s:r.o+(r.o===1?" onda":" ondas"),c:"var(--t)"})))+(R.length>7?`<div class="legend">Mostrando as 7 maiores de ${R.length}.</div>`:""):'<div class="empty">Sem produção neste filtro.</div>'}
@@ -1263,7 +1265,7 @@ async function presBaixa(){
  if(ok)await loadManagement();
 }
 function mgReference(o,data){let sum=0,has=false;for(const d of data.days){const own=data.byOpDay.get(d+'|'+o.m)||[],people=data.byGalDay.get(d+'|'+o.g),meta=+MT()[o.g]||0;if(own.length&&people&&people.size&&meta){sum+=meta/people.size;has=true}}return has?sum:null}
-function metaInd(o,L){const m=MI()[o.g]||{},dias=Math.max(new Set(prod(L).map(w=>dk(w.ts))).size,1);return{o:m.o?m.o*dias:0,q:m.q?m.q*dias:0}}
+function metaInd(o,L){const m=MI()[o.g]||{},dias=Math.max(new Set(prod(L).map(w=>dk(w.ts))).size,1);return{o:m.o?m.o*dias:0,q:m.q?m.q*dias:0,r:m.r?m.r*dias:0}}
 const vsMeta=(v,m)=>m?`${fmt(v)} / ${fmt(m)} <small>${Math.round(v/m*100)}%</small>`:"—";
 const mgK=(t,v,sub)=>`<div class="kpi"><dt>${t}</dt><dd class="num">${v}</dd><dd class="sm">${sub||''}</dd></div>`;
 const mn=ms=>{const m=Math.floor(ms/6e4),sg=Math.round(ms%6e4/1e3);return m+" min"+(sg?" "+String(sg).padStart(2,"0")+" s":"")};
@@ -1442,7 +1444,7 @@ function folhaInsights(o,data,L,P,qty,mi,single){
  const seed=[...String(o.m)].reduce((a,c)=>a+c.charCodeAt(0),0)+qty+P.length*7,pk=(a,i)=>a[(seed+(i||0))%a.length];
  const nome=String(o.n).split(' ')[0].toLowerCase().replace(/^./,c=>c.toUpperCase()),days=[...new Set(P.map(w=>dk(w.ts)))].sort(),nd=days.length;
  const rate=C=>{const tm=C.reduce((a,c)=>a+c.d,0),cu=C.reduce((a,c)=>a+c.qty,0);return C.length>=3&&tm>0?cu/(tm/36e5):0};
- const C=durs(L),my=rate(C),mates=new Set(data.ops.filter(x=>x.g===o.g&&x.t===o.t).map(x=>x.m)),TC=durs(data.waves.filter(w=>mates.has(w.op))),tr=rate(TC),pctM=mi.q?Math.round(qty/mi.q*100):0;
+ const C=durs(L),my=rate(C),mates=new Set(data.ops.filter(x=>x.g===o.g&&x.t===o.t).map(x=>x.m)),TC=durs(data.waves.filter(w=>mates.has(w.op))),tr=rate(TC),PM=semRet(P),qM=qtdOf(PM),rQ=qtdOf(soRet(P)),pctM=mi.q?Math.round(qM/mi.q*100):0;
  const f1=x=>x.toLocaleString('pt-BR',{maximumFractionDigits:1}),pc=x=>Math.round(Math.abs(x)*100);
  // evolução: 1ª metade x 2ª metade do período
  let ev=null;
@@ -1454,11 +1456,11 @@ function folhaInsights(o,data,L,P,qty,mi,single){
  const el=data.days.filter(d=>mgEligible(o,d)),faltas=el.filter(d=>mgStatus(o,d,data.byOpDay.get(d+'|'+o.m)||[],data).startsWith('Falta')).length;
  const proc=L.filter(w=>(w.hist||[]).some(e=>e.e==='m')).length,ajud=data.waves.filter(w=>w.pn&&String(w.pn).toLowerCase()===String(o.n).toLowerCase()&&(w.hist||[]).some(e=>e.e==='b')).length;
  const pos=[],mel=[];
- const ref=mgReference(o,data),pctR=ref?Math.round(qty/ref*100):0,pctO=mi.o?Math.round(P.length/mi.o*100):0,mdU=(MI()[o.g]||{}).q||0,avgD=nd?qty/nd:0;
- if(mi.q){const dif=qty-mi.q;
-  if(pctM>=100)pos.push(pk(['Bateu a meta de unidades: '+fmt(qty)+' de '+fmt(mi.q)+' ('+pctM+'%), '+fmt(dif)+' a mais que o previsto.','Meta de unidades superada ('+pctM+'%): +'+fmt(dif)+' unidades. Ritmo e constância aparecem no resultado.'],1));
+ const ref=mgReference(o,data),pctR=ref?Math.round(qty/ref*100):0,pctO=mi.o?Math.round(PM.length/mi.o*100):0,mdU=(MI()[o.g]||{}).q||0,avgD=nd?qty/nd:0;
+ if(mi.q){const dif=qM-mi.q;
+  if(pctM>=100)pos.push(pk(['Bateu a meta de unidades: '+fmt(qM)+' de '+fmt(mi.q)+' ('+pctM+'%), '+fmt(dif)+' a mais que o previsto.','Meta de unidades superada ('+pctM+'%): +'+fmt(dif)+' unidades. Ritmo e constância aparecem no resultado.'],1));
   else if(pctM>=90)pos.push('Muito perto da meta de unidades ('+pctM+'%): faltaram só '+fmt(-dif)+' unidades.');}
- if(mi.o&&pctO>=100)pos.push('Meta de ondas cumprida: '+fmt(P.length)+' de '+fmt(mi.o)+' ('+pctO+'%).');
+ if(mi.o&&pctO>=100)pos.push('Meta de ondas cumprida: '+fmt(PM.length)+' de '+fmt(mi.o)+' ('+pctO+'%).');
  if(!mi.q&&ref&&pctR>=100)pos.push('Acima da referência do galpão ('+pctR+'%): entregou mais que a parte dele na meta do dia.');
 
  if(my&&tr&&my>=tr*1.08)pos.push(pk(['Ritmo de '+Math.round(my)+' un/h, '+pc(my/tr-1)+'% acima da média da equipe no mesmo turno.','Coleta '+pc(my/tr-1)+'% mais rápido que a média do turno ('+Math.round(my)+' un/h).'],2));
@@ -1467,10 +1469,11 @@ function folhaInsights(o,data,L,P,qty,mi,single){
  if(!single&&el.length>=3&&faltas===0&&nd>=el.length)pos.push('Presença total: bipou em todos os '+el.length+' dias do período.');
  if(ajud>0)pos.push('Ajudou a finalizar '+ajud+(ajud===1?' onda':' ondas')+' que estavam em Procurando. Boa colaboração.');
  if(!pos.length&&qty)pos.push(pk(['Manteve a produção ativa no período: cada onda ajuda a fechar a meta do galpão.','Constância na rotina: o histórico já dá base para metas individuais mais precisas.'],4));
- if(mi.q&&pctM<90&&qty){const f=mi.q-qty;mel.push(pctM<80?pk(['Unidades em '+pctM+'% da meta: faltaram '+fmt(f)+'.'+(nd>1&&mdU?' Média de '+fmt(Math.round(avgD))+' un/dia contra meta de '+fmt(mdU)+'.':'')+' Vale combinar com o líder o que está travando o ritmo.','Meta de unidades em '+pctM+' % ('+fmt(f)+' unidades abaixo).'+(my?' No seu ritmo de '+Math.round(my)+' un/h, isso equivale a cerca de '+Math.max(1,Math.round(f/my*60))+' min de trabalho.':'')],11):'Faltaram '+fmt(f)+' unidades para a meta ('+pctM+'%).'+(my?' No seu ritmo, cerca de '+Math.max(1,Math.round(f/my*60))+' min a mais já fechariam.':''))}
- if(mi.o&&pctO<90&&P.length)mel.push('Meta de ondas em '+pctO+'% ('+fmt(P.length)+' de '+fmt(mi.o)+'). Agrupar ondas do mesmo tipo pode ajudar a fechar mais ondas.');
+ if(mi.q&&pctM<90&&qty){const f=mi.q-qM;mel.push(pctM<80?pk(['Unidades em '+pctM+'% da meta: faltaram '+fmt(f)+'.'+(nd>1&&mdU?' Média de '+fmt(Math.round(avgD))+' un/dia contra meta de '+fmt(mdU)+'.':'')+' Vale combinar com o líder o que está travando o ritmo.','Meta de unidades em '+pctM+' % ('+fmt(f)+' unidades abaixo).'+(my?' No seu ritmo de '+Math.round(my)+' un/h, isso equivale a cerca de '+Math.max(1,Math.round(f/my*60))+' min de trabalho.':'')],11):'Faltaram '+fmt(f)+' unidades para a meta ('+pctM+'%).'+(my?' No seu ritmo, cerca de '+Math.max(1,Math.round(f/my*60))+' min a mais já fechariam.':''))}
+ if(mi.o&&pctO<90&&P.length)mel.push('Meta de ondas em '+pctO+'% ('+fmt(PM.length)+' de '+fmt(mi.o)+'). Agrupar ondas do mesmo tipo pode ajudar a fechar mais ondas.');
  if(!mi.q&&ref&&pctR<85&&qty)mel.push('Produção em '+pctR+'% da referência do galpão. Converse com o líder para entender o que atrapalhou.');
  if(!mi.q&&!mi.o&&!ref&&qty)mel.push('Sem meta definida para o galpão. Peça ao gestor para configurar a meta individual e o feedback fica mais preciso.');
+ if(mi.r){const pr=Math.round(rQ/mi.r*100);if(pr>=100)pos.push('Meta de retrabalho cumprida: '+fmt(rQ)+' de '+fmt(mi.r)+' unidades ('+pr+'%).');else if(rQ||pr<100)mel.push('Retrabalho em '+pr+'% da meta ('+fmt(rQ)+' de '+fmt(mi.r)+' unidades).')}
  /* concretos: atraso, pausas fora do almoço e hora mais fraca */
  if(single&&P.length){const d=data.days[0],m=atrasoDia(o,d,L),tn=turnoOf(o,d);if(m>(S.cfg.tol||0))mel.push('Primeiro bipe às '+presHm(Math.min(...L.map(w=>w.ts)))+', '+hh(m*6e4)+' depois do início do turno ('+tn.ini+'h)'+(my?'. No seu ritmo, isso equivale a cerca de '+fmt(Math.round(my*m/60))+' unidades.':'.'))}
  {let n=0,t=0;data.days.forEach(d=>{const tn=turnoOf(o,d),z=new Date(d+'T00:00:00').getTime(),a0=z+tn.ini*36e5,a1=z+tn.fim*36e5,ts=(data.byOpDay.get(d+'|'+o.m)||[]).map(w=>w.fin||w.ts).filter(x=>x>=a0&&x<=a1).sort((a,b)=>a-b);for(let i=1;i<ts.length;i++){const g=ts[i]-ts[i-1]-almOv(o,ts[i-1],ts[i]);if(g>GAP()*6e4){n++;t+=g}}});
@@ -1491,7 +1494,7 @@ function folhaInsights(o,data,L,P,qty,mi,single){
  else if(my&&tr)p3=my>=tr?' Acima da média do turno.':' Abaixo da média do turno.';
  return{resumo:qty?p1+p2+p3:nome+' não teve produção registrada no período.',mel:mel.slice(0,4),pos:pos.slice(0,3)}}
 function folhaHTML(o,data){
- const L=data.days.flatMap(d=>data.byOpDay.get(d+'|'+o.m)||[]),P=prod(L),qty=P.reduce((a,w)=>a+w.qty,0),C=durs(L),tm=C.reduce((a,c)=>a+c.d,0),cu=C.reduce((a,c)=>a+c.qty,0),rate=C.length>=3&&tm>0?Math.round(cu/(tm/36e5)):0,mi=metaInd(o,L),dias=new Set(P.map(w=>dk(w.ts))).size,single=data.days.length===1;
+ const L=data.days.flatMap(d=>data.byOpDay.get(d+'|'+o.m)||[]),P=prod(L),qty=P.reduce((a,w)=>a+w.qty,0),qM=qtdOf(semRet(P)),C=durs(L),tm=C.reduce((a,c)=>a+c.d,0),cu=C.reduce((a,c)=>a+c.qty,0),rate=C.length>=3&&tm>0?Math.round(cu/(tm/36e5)):0,mi=metaInd(o,L),dias=new Set(P.map(w=>dk(w.ts))).size,single=data.days.length===1;
  let ser;
  if(single){const h={};P.forEach(w=>{const k=new Date(w.ts).getHours();h[k]=(h[k]||0)+w.qty});const ks=Object.keys(h).map(Number),a=ks.length?Math.min(...ks):7,b=ks.length?Math.max(...ks):16,i0=Math.max(0,Math.min(a,b-5)),i1=Math.min(23,Math.max(b,a+5));ser=[];for(let i=i0;i<=i1;i++)ser.push([i+'h',h[i]||0])}
  else ser=data.days.map(d=>[d.slice(8)+'/'+d.slice(5,7),prod(data.byOpDay.get(d+'|'+o.m)||[]).reduce((a,w)=>a+w.qty,0)]);
@@ -1509,11 +1512,11 @@ function folhaHTML(o,data){
   T.forEach(t=>{g+=`<rect x="${X(t)-1.5}" y="10" width="3" height="22" fill="#0f4bd0"/>`});
   for(let h=h0;h<=h1;h++)g+=`<text x="${X(d0+h*36e5)}" y="${H-12}" font-size="11" text-anchor="middle" fill="#55627a">${h}h</text>`;
   return`<h3 style="margin-top:2mm">Linha do dia <span style="font-weight:400;color:#55627a;font-size:9pt">· traço = onda; tracejado = pausa</span></h3>${g}</svg>`})();
- const topT=types.slice().sort((a,b)=>b.v-a.v)[0]||{n:'',v:0,o:0};const pct=mi.q?Math.round(qty/mi.q*100):0,IN=folhaInsights(o,data,L,P,qty,mi,single),msg=!qty?'Até a próxima!':pct>=100?'Meta batida. Parabéns!':'Obrigado pelo seu trabalho!';
+ const topT=types.slice().sort((a,b)=>b.v-a.v)[0]||{n:'',v:0,o:0};const pct=mi.q?Math.round(qM/mi.q*100):0,IN=folhaInsights(o,data,L,P,qty,mi,single),msg=!qty?'Até a próxima!':pct>=100?'Meta batida. Parabéns!':'Obrigado pelo seu trabalho!';
  const d0=data.days[0],d1=data.days[data.days.length-1],fd=d=>new Date(d+'T12:00').toLocaleDateString('pt-BR'),per=single?new Date(d0+'T12:00').toLocaleDateString('pt-BR',{weekday:'long',day:'numeric',month:'long',year:'numeric'}):fd(d0)+' a '+fd(d1);
  return `<section class="fl"><aside class="fl-s"><div class="fl-logo"><img src="${LOGO}" alt="RC Armazém"></div><small>RC Ondas · Minha produção</small><h1>${esc(o.n)}</h1><div class="mt">Matrícula ${esc(String(o.m).split('~')[0])}</div><div class="info"><b>Galpão</b>${esc(o.g||'—')}<b>Turno</b>${o.t===2?'2º turno':'1º turno'}<b>Período</b>${esc(per)}</div></aside>
  <div class="fl-m"><div class="fl-hd"><h2>${esc(msg)}</h2><span>${single?'Produção por hora':'Produção por dia'}</span></div>
- <div class="fl-k"><div><em>Unidades</em><b>${fmt(qty)}</b><span>concluídas</span></div><div><em>Ondas</em><b>${fmt(P.length)}</b><span>concluídas</span></div><div><em>Unidades por hora</em><b>${rate?fmt(rate):'—'}</b><span>${rate?'no ritmo medido':'poucos conjuntos medidos'}</span></div><div><em>${mi.q?'Meta de unidades':'Dias com produção'}</em><b>${mi.q?pct+'%':dias}</b>${mi.q?`<u class="mb"><b style="width:${Math.min(pct,100)}%;background:${pct>=100?'#0b7f70':'#b85c00'}"></b></u><span>${fmt(qty)} de ${fmt(mi.q)} · ${qty>=mi.q?'passou '+fmt(qty-mi.q):'faltaram '+fmt(mi.q-qty)}</span>`:`<span>${best[1]?'melhor: '+best[0]+' ('+fmt(best[1])+' un.)':''}</span>`}</div></div>
+ <div class="fl-k"><div><em>Unidades</em><b>${fmt(qty)}</b><span>concluídas</span></div><div><em>Ondas</em><b>${fmt(P.length)}</b><span>concluídas</span></div><div><em>Unidades por hora</em><b>${rate?fmt(rate):'—'}</b><span>${rate?'no ritmo medido':'poucos conjuntos medidos'}</span></div><div><em>${mi.q?'Meta de unidades':'Dias com produção'}</em><b>${mi.q?pct+'%':dias}</b>${mi.q?`<u class="mb"><b style="width:${Math.min(pct,100)}%;background:${pct>=100?'#0b7f70':'#b85c00'}"></b></u><span>${fmt(qM)} de ${fmt(mi.q)} · ${qM>=mi.q?'passou '+fmt(qM-mi.q):'faltaram '+fmt(mi.q-qM)}${qty>qM?' · sem retrabalho':''}</span>`:`<span>${best[1]?'melhor: '+best[0]+' ('+fmt(best[1])+' un.)':''}</span>`}</div></div>
  <div class="fl-g"><div><h3>${single?'Unidades por hora':'Unidades por dia'}${best[1]?` <span style="font-weight:400;color:#55627a;font-size:9pt">· melhor: ${best[0]} (${fmt(best[1])})</span>`:''}</h3>${svg}${linha}</div><div><h3>Você × equipe por tipo <span style="font-weight:400;color:#55627a;font-size:8.5pt">· cinza = média do turno</span></h3><div class="fl-t">${tb}</div></div></div>
  <div class="fl-i"><div class="r"><h4>1 · Resumo</h4><p>${esc(IN.resumo)}</p></div><div class="m"><h4>2 · Pontos a melhorar</h4><ul>${IN.mel.map(x=>`<li>${esc(x)}</li>`).join('')}</ul></div><div class="p"><h4>3 · Pontos positivos</h4><ul>${IN.pos.map(x=>`<li>${esc(x)}</li>`).join('')}</ul></div></div>
  <div class="fl-f"><span>Gerado em ${new Date().toLocaleString('pt-BR')}</span><strong>RC Ondas</strong></div></div></section>`}
@@ -1532,7 +1535,7 @@ function mgSplit(o,d,L){const P=prod(L),times=L.map(w=>w.fin||w.ts).filter(Numbe
  return{nMs,xMs,nO:N.length,xO:X.length,nQ:N.reduce((s,w)=>s+w.qty,0),xQ:X.reduce((s,w)=>s+w.qty,0)}}
 /* dias com bipagem em que a pessoa não bateu a meta individual (unidades e/ou ondas por dia) */
 function mgAbaixo(o,data){const m=MI()[o.g]||{};if(!m.q&&!m.o)return null;const dias=[];
- data.days.forEach(k=>{const P=prod(data.byOpDay.get(k+'|'+o.m)||[]);if(!P.length)return;const q=P.reduce((a,w)=>a+w.qty,0),fq=m.q&&q<m.q,fo=m.o&&P.length<m.o;dias.push({d:k,ab:!!(fq||fo),fq:fq?m.q-q:0,fo:fo?m.o-P.length:0})});
+ data.days.forEach(k=>{const P0=prod(data.byOpDay.get(k+'|'+o.m)||[]);if(!P0.length)return;const P=semRet(P0),q=P.reduce((a,w)=>a+w.qty,0),fq=m.q&&q<m.q,fo=m.o&&P.length<m.o;dias.push({d:k,ab:!!(fq||fo),fq:fq?m.q-q:0,fo:fo?m.o-P.length:0})});
  return{n:dias.filter(x=>x.ab).length,d:dias.length,dias}}
 const mgAbTxt=a=>a===null?'<span class="note">sem meta</span>':a.d?`<b style="color:${a.n?'var(--rx)':'var(--k)'}">${a.n}</b> de ${a.d}`:'—';
 const mgSoma=a=>a.reduce((r,x)=>{for(const k in x)r[k]=(r[k]||0)+x[k];return r},{nMs:0,xMs:0,nO:0,xO:0,nQ:0,xQ:0});
@@ -1546,10 +1549,10 @@ function individual(){
  if(!ops.length){$("#iBody").innerHTML='<div class="card"><div class="empty">Nenhum operador para os filtros selecionados.</div></div>';return}
  const selected=ops.find(o=>o.m===sel.value);
  if(!selected){
-  const rows=ops.map(o=>{const L=data.days.flatMap(d=>data.byOpDay.get(d+'|'+o.m)||[]),P=prod(L),days=data.days.map(d=>mgStatus(o,d,data.byOpDay.get(d+'|'+o.m)||[],data)),extra=data.days.map(d=>mgExtra(o,d,data.byOpDay.get(d+'|'+o.m)||[]));return{o,qty:P.reduce((s,w)=>s+w.qty,0),n:P.length,ref:mgReference(o,data),mi:metaInd(o,L),miss:days.filter(x=>x.startsWith('Falta')).length,pend:days.filter(x=>x.startsWith('Pendente')).length,ms:extra.reduce((s,x)=>s+x.ms,0),ot:extra.reduce((s,x)=>s+x.count,0),dia:mgDia(o,data),ab:mgAbaixo(o,data),sp:mgSoma(data.days.map(d=>mgSplit(o,d,data.byOpDay.get(d+'|'+o.m)||[])))}});
-  $("#iBody").innerHTML=destaques(rows,data)+`<div class="card" style="margin-top:14px"><h2>Equipe no período <span class="tag">${t?t+"º turno":"Todos os turnos"} · ${rows.length} ${rows.length===1?"pessoa":"pessoas"}</span></h2><div class="tw"><table><tr><th>Operador</th><th>Turno</th><th>1º bipe</th><th>Atraso</th><th>Unidades / meta</th><th>Ondas / meta</th><th>Referência</th><th title="Faltas injustificadas">Faltas</th><th title="Pendentes de conferência">Pendentes</th><th>Dias abaixo da meta</th><th>Horário normal</th><th>Hora extra</th></tr>`+
-   rows.map(x=>`<tr><td><a href="#" data-pick="${esc(x.o.m)}">${esc(x.o.n)}</a><br><small>${esc(x.o.m.split('~')[0])}</small></td><td style="white-space:nowrap">${x.dia.t.ini}–${x.dia.t.fim}h</td><td>${x.dia.p?new Date(x.dia.p.ts).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}):'—'}</td><td>${x.dia.p&&x.dia.p.diff>0?'<span class="tag" title="Possível atraso">'+hh(x.dia.p.diff*6e4)+'</span>':'—'}</td><td><b>${x.mi.q?vsMeta(x.qty,x.mi.q):fmt(x.qty)}</b></td><td>${x.mi.o?vsMeta(x.n,x.mi.o):x.n}</td><td>${x.ref===null?'Sem meta':fmt(x.ref)+' un.'}</td><td>${x.miss}</td><td>${x.pend}</td><td>${mgAbTxt(x.ab)}</td><td>${mgOT(x.sp.nO,x.sp.nMs)}</td><td>${mgOT(x.sp.xO,x.sp.xMs)}</td></tr>`).join('')+(()=>{const z=mgSoma(rows.map(x=>x.sp)),q=rows.reduce((a,x)=>a+x.qty,0),n=rows.reduce((a,x)=>a+x.n,0);
-   return`<tr class="tot" id="mgTot"><td><b>Total da equipe</b><br><small>${t?t+'º turno':'todos os turnos'}</small></td><td></td><td></td><td>${(n=>n?n+(n===1?' pessoa':' pessoas'):'—')(rows.filter(x=>x.dia.p&&x.dia.p.diff>0).length)}</td><td><b>${fmt(q)}</b></td><td><b>${fmt(n)}</b></td><td></td><td>${rows.reduce((a,x)=>a+x.miss,0)}</td><td>${rows.reduce((a,x)=>a+x.pend,0)}</td><td>${rows.some(x=>x.ab)?rows.reduce((a,x)=>a+(x.ab?x.ab.n:0),0)+' dias':'—'}</td><td>${mgOT(z.nO,z.nMs)}</td><td>${mgOT(z.xO,z.xMs)}</td></tr>`})()+
+  const rows=ops.map(o=>{const L=data.days.flatMap(d=>data.byOpDay.get(d+'|'+o.m)||[]),P=prod(L),days=data.days.map(d=>mgStatus(o,d,data.byOpDay.get(d+'|'+o.m)||[],data)),extra=data.days.map(d=>mgExtra(o,d,data.byOpDay.get(d+'|'+o.m)||[]));return{o,qty:P.reduce((s,w)=>s+w.qty,0),n:P.length,qm:qtdOf(semRet(P)),nm:semRet(P).length,rq:qtdOf(soRet(P)),ref:mgReference(o,data),mi:metaInd(o,L),miss:days.filter(x=>x.startsWith('Falta')).length,pend:days.filter(x=>x.startsWith('Pendente')).length,ms:extra.reduce((s,x)=>s+x.ms,0),ot:extra.reduce((s,x)=>s+x.count,0),dia:mgDia(o,data),ab:mgAbaixo(o,data),sp:mgSoma(data.days.map(d=>mgSplit(o,d,data.byOpDay.get(d+'|'+o.m)||[])))}});
+  $("#iBody").innerHTML=destaques(rows,data)+`<div class="card" style="margin-top:14px"><h2>Equipe no período <span class="tag">${t?t+"º turno":"Todos os turnos"} · ${rows.length} ${rows.length===1?"pessoa":"pessoas"}</span></h2><div class="tw"><table><tr><th>Operador</th><th>Turno</th><th>1º bipe</th><th>Atraso</th><th title="Sem retrabalho quando há meta">Unidades / meta</th><th>Ondas / meta</th><th>Retrabalho / meta</th><th>Referência</th><th title="Faltas injustificadas">Faltas</th><th title="Pendentes de conferência">Pendentes</th><th>Dias abaixo da meta</th><th>Horário normal</th><th>Hora extra</th></tr>`+
+   rows.map(x=>`<tr><td><a href="#" data-pick="${esc(x.o.m)}">${esc(x.o.n)}</a><br><small>${esc(x.o.m.split('~')[0])}</small></td><td style="white-space:nowrap">${x.dia.t.ini}–${x.dia.t.fim}h</td><td>${x.dia.p?new Date(x.dia.p.ts).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}):'—'}</td><td>${x.dia.p&&x.dia.p.diff>0?'<span class="tag" title="Possível atraso">'+hh(x.dia.p.diff*6e4)+'</span>':'—'}</td><td><b>${x.mi.q?vsMeta(x.qm,x.mi.q):fmt(x.qty)}</b></td><td>${x.mi.o?vsMeta(x.nm,x.mi.o):x.n}</td><td>${x.mi.r?vsMeta(x.rq,x.mi.r):x.rq?fmt(x.rq):'—'}</td><td>${x.ref===null?'Sem meta':fmt(x.ref)+' un.'}</td><td>${x.miss}</td><td>${x.pend}</td><td>${mgAbTxt(x.ab)}</td><td>${mgOT(x.sp.nO,x.sp.nMs)}</td><td>${mgOT(x.sp.xO,x.sp.xMs)}</td></tr>`).join('')+(()=>{const z=mgSoma(rows.map(x=>x.sp)),q=rows.reduce((a,x)=>a+x.qty,0),n=rows.reduce((a,x)=>a+x.n,0);
+   return`<tr class="tot" id="mgTot"><td><b>Total da equipe</b><br><small>${t?t+'º turno':'todos os turnos'}</small></td><td></td><td></td><td>${(n=>n?n+(n===1?' pessoa':' pessoas'):'—')(rows.filter(x=>x.dia.p&&x.dia.p.diff>0).length)}</td><td><b>${fmt(q)}</b></td><td><b>${fmt(n)}</b></td><td><b>${fmt(rows.reduce((a,x)=>a+x.rq,0))}</b></td><td></td><td>${rows.reduce((a,x)=>a+x.miss,0)}</td><td>${rows.reduce((a,x)=>a+x.pend,0)}</td><td>${rows.some(x=>x.ab)?rows.reduce((a,x)=>a+(x.ab?x.ab.n:0),0)+' dias':'—'}</td><td>${mgOT(z.nO,z.nMs)}</td><td>${mgOT(z.xO,z.xMs)}</td></tr>`})()+
    `</table></div><details class="info"><summary>Como os números são calculados</summary>As metas individuais (ondas e unidades por dia) vêm de Configurações, Metas e valem para cada dia com bipagem. A referência divide a meta diária atual do galpão entre as pessoas com bipagem no dia. É uma referência ajustável pelo movimento, não um ranking. Pendente indica ausência de bipagem em dia com operação no turno; confirme folgas, atestados, declarações e outras atividades antes de registrar falta. Horário normal e hora extra mostram as ondas concluídas e o tempo somado entre bipagens dentro e fora do turno (com a tolerância), sem contar pausas acima do intervalo máximo.</details></div>`;return;
  }
  const o=selected,L=data.days.flatMap(d=>data.byOpDay.get(d+'|'+o.m)||[]),P=prod(L),qty=P.reduce((s,w)=>s+w.qty,0),ref=mgReference(o,data);
@@ -1562,9 +1565,11 @@ function individual(){
  const idx=ops.findIndex(x=>x.m===o.m),ini=String(o.n).trim().split(/\s+/).slice(0,2).map(x=>x[0]).join('').toUpperCase(),A=mgAbaixo(o,data);
  const hd=`<div class="card pfh"><button type="button" class="lk pfb" data-pnav="0">‹ Equipe</button><span class="pfa">${esc(ini)}</span><div class="pft"><h2>${esc(o.n)}</h2><div class="legend" style="margin:0">${esc(o.m.split('~')[0])} · ${dia.t.ini}h às ${dia.t.fim}h (${o.t===2?'2º':'1º'} turno)${(a=>a?' · almoço '+m2hm(a.ini)+'–'+m2hm(a.fim):'')(almocoOf(o))} · ${esc(o.g||'sem galpão')}${dia.p?' · 1º bipe '+new Date(dia.p.ts).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})+(dia.p.diff>0?' <span class="tag" style="background:var(--o);color:#fff">atraso '+hh(dia.p.diff*6e4)+'</span>':''):''}</div></div>
   <span class="pfn"><button type="button" class="btn alt sm" data-pnav="-1" ${idx<=0?'disabled':''} aria-label="Pessoa anterior">‹</button><span class="legend" style="margin:0">${idx+1} de ${ops.length}</span><button type="button" class="btn alt sm" data-pnav="1" ${idx>=ops.length-1?'disabled':''} aria-label="Próxima pessoa">›</button></span></div>`;
- const kp=`<dl class="stats solo">`+mgK('Unidades',fmt(qty),mi.q?vsMeta(qty,mi.q)+' da meta individual':ref===null?'unidades concluídas':Math.round(qty/ref*100)+'% da referência ('+fmt(ref)+')')
-  +mgK('Ondas',fmt(P.length),(mi.o?vsMeta(P.length,mi.o)+' da meta · ':'')+'equipe: '+mOnd.toLocaleString('pt-BR',{maximumFractionDigits:1})+' por pessoa')
+ const qM=qtdOf(semRet(P)),nM=semRet(P).length,rQ=qtdOf(soRet(P));
+ const kp=`<dl class="stats solo">`+mgK('Unidades',fmt(qty),mi.q?vsMeta(qM,mi.q)+' da meta individual'+(rQ?' (sem retrabalho)':''):ref===null?'unidades concluídas':Math.round(qty/ref*100)+'% da referência ('+fmt(ref)+')')
+  +mgK('Ondas',fmt(P.length),(mi.o?vsMeta(nM,mi.o)+' da meta · ':'')+'equipe: '+mOnd.toLocaleString('pt-BR',{maximumFractionDigits:1})+' por pessoa')
   +mgK('Ritmo',rP?fmt(rP)+' un./h':'—',rP&&rE?'equipe '+fmt(rE)+' un./h '+sg(pc(rP,rE)):'precisa de 30 min medidos')
+  +mgK('Retrabalho',fmt(rQ),mi.r?vsMeta(rQ,mi.r)+' da meta de retrabalho':'unidades · fora das metas')
   +mgK('Posição',pos?pos+'º':'—',pos?'de '+ativos.length+' com produção':'sem produção')
   +`<div class="kpi" id="mgAb"><dt>Dias abaixo da meta individual</dt><dd class="num" style="color:${A&&A.n?'var(--rx)':'inherit'}">${A===null?'—':A.d?A.n:'—'}</dd><dd class="sm">${A===null?'defina a meta em Configurações':A.d?'de '+A.d+(A.d===1?' dia':' dias')+' com bipagem':'sem dias com bipagem'}</dd></div>`
   +mgK('Faltas / pendentes',fmt(miss)+' / '+fmt(pend),'faltas registradas · dias a conferir')+`</dl>`;
@@ -1604,15 +1609,15 @@ function coTipos(W,P,people){const D=durs(W),pp=Math.max(people,1);
 function coletiva(){
  const target=$("#coBody");if(!mgPronto()){target.innerHTML=mgState&&/Não foi/.test(mgState)?'<div class="card"><div class="empty">'+esc(mgState)+'</div></div>':esqueleto();return}
  const data=mgData(),g=$("#gal").value,t=$("#turnoF").value,opmap=new Map(data.ops.map(o=>[o.m,o]));
- const W=data.waves.filter(w=>(g==='__all'||w.gal===g)&&(!t||String((opmap.get(w.op)||{}).t)===t)),P=prod(W),total=P.reduce((s,w)=>s+w.qty,0),people=new Set(W.map(w=>w.op)).size;
+ const W=data.waves.filter(w=>(g==='__all'||w.gal===g)&&(!t||String((opmap.get(w.op)||{}).t)===t)),P=prod(W),total=P.reduce((s,w)=>s+w.qty,0),totM=qtdOf(semRet(P)),people=new Set(W.map(w=>w.op)).size;
  const gals=(g==='__all'?visG():[g]).filter(Boolean),active=data.days.flatMap(d=>gals.filter(k=>d===dk(Date.now())||data.byGalDay.has(d+'|'+k)).map(k=>({d,k}))),missing=gals.filter(k=>!(+MT()[k]>0));
  const configured=active.reduce((sum,x)=>sum+(+MT()[x.k]||0),0),canCompare=!t&&!missing.length&&configured>0;
  const types=TY.map(([n,c])=>({k:n,v:P.filter(w=>w.ty===n).reduce((s,w)=>s+w.qty,0),s:P.filter(w=>w.ty===n).length+' ondas',c}));
  const single=data.days.length===1,bk=w=>single?new Date(w.fin||w.ts).getHours():dk(w.fin||w.ts),keys=single?(()=>{const hs=P.map(w=>new Date(w.fin||w.ts).getHours());if(!hs.length)return[];const r=[];for(let h=Math.min(...hs);h<=Math.max(...hs);h++)r.push(h);return r})():data.days.slice(),
-  vals=keys.map(k=>P.filter(w=>bk(w)===k).reduce((s2,w)=>s2+w.qty,0)),pes=keys.map(k=>new Set(P.filter(w=>bk(w)===k).map(w=>w.op)).size),pct=canCompare?total/configured*100:0;
+  vals=keys.map(k=>P.filter(w=>bk(w)===k).reduce((s2,w)=>s2+w.qty,0)),pes=keys.map(k=>new Set(P.filter(w=>bk(w)===k).map(w=>w.op)).size),pct=canCompare?totM/configured*100:0;
  const ch=keys.length?(()=>{const Wd=640,H=220,l=40,r=8,tp=18,bt=24,n=keys.length,bw=(Wd-l-r)/n,mx=nice(Math.max(...vals,1)*1.12),Y=v=>tp+(H-tp-bt)*(1-v/mx),lb=k=>single?k+'h':k.slice(8,10)+'/'+k.slice(5,7),stp=Math.ceil(n/16),best=vals.indexOf(Math.max(...vals));
   return`<svg class="ch" viewBox="0 0 ${Wd} ${H}" role="img" aria-label="Produção da equipe ${single?'por hora':'por dia'}">`+[0,.5,1].map(f=>`<line x1="${l}" x2="${Wd-r}" y1="${Y(mx*f)}" y2="${Y(mx*f)}" stroke="var(--line)"/><text x="${l-5}" y="${Y(mx*f)+4}" text-anchor="end">${fmt(mx*f)}</text>`).join('')+keys.map((k,i)=>{const v=vals[i],x=l+i*bw,w=Math.max(Math.min(bw*.6,34),4);return(v?`<rect x="${x+(bw-w)/2}" y="${Y(v)}" width="${w}" height="${Y(0)-Y(v)}" rx="3" fill="${i===best?'var(--k)':'var(--g)'}"><title>${lb(k)}: ${fmt(v)} un. · ${pes[i]} ${pes[i]===1?'pessoa':'pessoas'}</title></rect>`+(bw>=26?`<text x="${x+bw/2}" y="${Y(v)-4}" text-anchor="middle" style="fill:var(--ink)">${fmt(v)}</text>`:''):'')+(i%stp===0?`<text x="${x+bw/2}" y="${H-6}" text-anchor="middle">${lb(k)}</text>`:'')}).join('')+'</svg>'})():'<div class="empty">Sem produção no período.</div>';
- const porGal=gals.map(k=>{const q=P.filter(w=>w.gal===k).reduce((s2,w)=>s2+w.qty,0),m=active.filter(x=>x.k===k).length*(+MT()[k]||0);return{k,q,m}});
+ const porGal=gals.map(k=>{const q=qtdOf(semRet(P.filter(w=>w.gal===k))),m=active.filter(x=>x.k===k).length*(+MT()[k]||0);return{k,q,m}});
  /* turnos: pessoas e hora extra da equipe (segue os filtros de galpão e turno) */
  const tRows=[1,2].filter(x=>!t||String(x)===t).map(x=>{const os=data.ops.filter(o=>o.t===x&&(g==='__all'||o.g===g)&&(!o.excluido||data.waves.some(w=>w.op===o.m)));
   const per=os.map(o=>{const sp=mgSoma(data.days.map(d=>mgSplit(o,d,data.byOpDay.get(d+'|'+o.m)||[])));return{o,sp,ativo:sp.nO+sp.xO>0}}),z=mgSoma(per.map(q=>q.sp));
@@ -1621,8 +1626,8 @@ function coletiva(){
   +tRows.map(r=>`<tr><td><b>${r.x}º turno</b><br><small>${S.cfg.turnos[r.x].ini}h às ${S.cfg.turnos[r.x].fim}h</small></td><td>${fmt(r.at)}</td><td>${fmt(r.cad)}</td><td>${mgOT(r.z.nO,r.z.nMs)}</td><td>${mgOT(r.z.xO,r.z.xMs)}</td><td>${fmt(r.z.xQ)}${r.z.nQ+r.z.xQ?` <small>(${Math.round(r.z.xQ/(r.z.nQ+r.z.xQ)*100)}%)</small>`:''}</td><td>${fmt(r.xp)}</td></tr>`).join('')
   +(tRows.length>1?`<tr class="tot"><td><b>Total</b></td><td><b>${fmt(tRows.reduce((a,r)=>a+r.at,0))}</b></td><td><b>${fmt(tRows.reduce((a,r)=>a+r.cad,0))}</b></td><td>${mgOT(tz.nO,tz.nMs)}</td><td>${mgOT(tz.xO,tz.xMs)}</td><td><b>${fmt(tz.xQ)}</b></td><td><b>${fmt(tRows.reduce((a,r)=>a+r.xp,0))}</b></td></tr>`:'')
   +`</table></div><div class="legend">Turno do cadastro de cada pessoa. Tempo somado entre bipagens dentro e fora do turno (com a tolerância), sem o almoço e sem pausas acima de ${GAP()} min.</div></div>`;
- const meta=`<div class="card" id="coMeta"><h2>Meta coletiva</h2>${canCompare?`<div class="cobig"><b class="num">${fmt(pct)}%</b><span>${fmt(total)} de ${fmt(configured)} unidades · ${total>=configured?'passou '+fmt(total-configured):'faltam '+fmt(configured-total)}</span></div><div class="bar cob"><b style="width:${Math.min(pct,100)}%;--c:${pct>=100?'var(--k)':'var(--g)'}"></b></div>`:`<div class="empty" style="padding:10px 0">${t?'A meta cadastrada vale para o dia inteiro. Escolha "Todos os turnos" no topo para comparar.':missing.length?'Cadastre a meta diária dos galpões em Config › Geral.':'Sem dias com operação no período.'}</div>`}
-  <table class="tp" style="margin-top:10px"><tr><th>Galpão</th><th>Unidades</th><th>Meta</th><th>%</th></tr>${porGal.map(x=>`<tr><td>${esc(x.k)}</td><td>${fmt(x.q)}</td><td>${x.m&&!t?fmt(x.m):'—'}</td><td>${x.m&&!t?Math.round(x.q/x.m*100)+'%':'—'}</td></tr>`).join('')}</table></div>`;
+ const meta=`<div class="card" id="coMeta"><h2>Meta coletiva</h2>${canCompare?`<div class="cobig"><b class="num">${fmt(pct)}%</b><span>${fmt(totM)} de ${fmt(configured)} unidades · ${totM>=configured?'passou '+fmt(totM-configured):'faltam '+fmt(configured-totM)}${total>totM?' · retrabalho ('+fmt(total-totM)+') fica fora':''}</span></div><div class="bar cob"><b style="width:${Math.min(pct,100)}%;--c:${pct>=100?'var(--k)':'var(--g)'}"></b></div>`:`<div class="empty" style="padding:10px 0">${t?'A meta cadastrada vale para o dia inteiro. Escolha "Todos os turnos" no topo para comparar.':missing.length?'Cadastre a meta diária dos galpões em Config › Geral.':'Sem dias com operação no período.'}</div>`}
+  <table class="tp" style="margin-top:10px"><tr><th>Galpão</th><th>Unidades sem retrabalho</th><th>Meta</th><th>%</th></tr>${porGal.map(x=>`<tr><td>${esc(x.k)}</td><td>${fmt(x.q)}</td><td>${x.m&&!t?fmt(x.m):'—'}</td><td>${x.m&&!t?Math.round(x.q/x.m*100)+'%':'—'}</td></tr>`).join('')}</table></div>`;
  target.innerHTML=`<dl class="stats solo">`+mgK('Produção coletiva',fmt(total),'unidades concluídas')+mgK('Pessoas com bipagem',fmt(people),'no período')+mgK('Ondas concluídas',fmt(P.length),people?'média de '+(P.length/people).toLocaleString('pt-BR',{maximumFractionDigits:1})+' por pessoa':'compartilhadas pela equipe')+mgK('Procurando',fmt(W.filter(w=>w.st===1).length),fmt(W.filter(w=>w.st===1).reduce((a,w)=>a+w.qty,0))+' unidades')+mgK('Hora extra',tz.xMs?hh(tz.xMs):'—',fmt(tz.xO)+(tz.xO===1?' onda':' ondas')+' · '+fmt(tz.xQ)+' un.')+mgK('Meta coletiva',canCompare?fmt(configured):'—',t?'escolha todos os turnos':missing.length?'configure a meta dos galpões':'dias com operação')+mgK('Atingimento',canCompare?fmt(pct)+'%':'—',canCompare?'da meta coletiva':'sem comparação disponível')+`</dl>
  <div class="pfg"><div class="card"><h2>Produção da equipe ${single?'por hora':'por dia'} <small class="legend" style="margin:0">a barra verde é o pico</small></h2>${ch}</div>${meta}</div>
  ${trn}
@@ -1657,7 +1662,7 @@ function cfgGals(){const gest=soMeta();$("#gNovo").classList.toggle("hide",gest)
 /* aba Metas: meta do dia, metas individuais e meta mínima da animação */
 function cfgMetas(){const gest=soMeta();
  $("#mTit").textContent=gest?"Meta de hoje":"Metas por galpão";
- $("#mtL").innerHTML=`<table><tr><th>Galpão</th><th>Meta de hoje<br><small>unidades no dia</small></th><th>Meta individual<br><small>ondas por dia</small></th><th>Meta individual<br><small>unidades por dia</small></th></tr>`+S.gals.filter(g=>!gest||g===me.g).map(g=>`<tr><td><b>${esc(g)}</b></td><td><input type="number" min="0" data-gmeta="${esc(g)}" aria-label="Meta de hoje de ${esc(g)}" value="${MT()[g]||""}" placeholder="sem meta" style="width:130px"></td><td><input type="number" min="0" data-gmo="${esc(g)}" aria-label="Meta individual de ondas por dia em ${esc(g)}" value="${(MI()[g]||{}).o||""}" placeholder="sem meta" style="width:110px"></td><td><input type="number" min="0" data-gmq="${esc(g)}" aria-label="Meta individual de unidades por dia em ${esc(g)}" value="${(MI()[g]||{}).q||""}" placeholder="sem meta" style="width:110px"></td></tr>`).join("")+"</table>";
+ $("#mtL").innerHTML=`<table><tr><th>Galpão</th><th>Meta de hoje<br><small>unidades no dia</small></th><th>Meta individual<br><small>ondas por dia</small></th><th>Meta individual<br><small>unidades por dia, sem retrabalho</small></th><th>Meta de retrabalho<br><small>unidades por dia</small></th></tr>`+S.gals.filter(g=>!gest||g===me.g).map(g=>`<tr><td><b>${esc(g)}</b></td><td><input type="number" min="0" data-gmeta="${esc(g)}" aria-label="Meta de hoje de ${esc(g)}" value="${MT()[g]||""}" placeholder="sem meta" style="width:130px"></td><td><input type="number" min="0" data-gmo="${esc(g)}" aria-label="Meta individual de ondas por dia em ${esc(g)}" value="${(MI()[g]||{}).o||""}" placeholder="sem meta" style="width:110px"></td><td><input type="number" min="0" data-gmq="${esc(g)}" aria-label="Meta individual de unidades por dia em ${esc(g)}" value="${(MI()[g]||{}).q||""}" placeholder="sem meta" style="width:110px"></td><td><input type="number" min="0" data-gmr="${esc(g)}" aria-label="Meta individual de retrabalho por dia em ${esc(g)}" value="${(MI()[g]||{}).r||""}" placeholder="sem meta" style="width:110px"></td></tr>`).join("")+"</table>";
  $("#mLeg").textContent="A meta de hoje vale só para o dia de hoje: cada dia começa sem meta e você preenche de novo, e os dias anteriores ficam salvos. As metas individuais valem para cada dia com bipagem.";
  const fm=$("#fmin");if(fm&&document.activeElement!==fm)fm.value=S.cfg.metaMin||"";
  const mn=+S.cfg.metaMin||0;$("#fLeg").textContent=mn?"A festa abre sozinha, uma vez por dia, quando a produção do dia chegar à meta e a pelo menos "+fmt(mn)+" unidades. Abaixo disso o placar só fica dourado.":"Sem mínimo: a festa abre sozinha, uma vez por dia, assim que a produção do dia chegar à meta. Informe um valor para só comemorar metas a partir dele."}
@@ -2164,7 +2169,7 @@ document.addEventListener("change",e=>{const d=e.target.dataset,id=e.target.id;l
   if(!nv||S.gals.some((g,j)=>j!==i&&g.toLowerCase()===nv.toLowerCase())){toast("Nome inválido ou repetido");cfgGals();return}
   S.gals[i]=nv;const mt0=MT();if(mt0[old]!=null){mt0[nv]=mt0[old];delete mt0[old]}S.waves.forEach(w=>{if(w.gal===old)w.gal=nv});S.ops.forEach(o=>{if(o.g===old)o.g=nv});S.ges.forEach(x=>{if(x.g===old)x.g=nv});
   if(S.gal===old)S.gal=nv;r=true;toast("Galpão renomeado")}
- if(d.gmo!==undefined||d.gmq!==undefined){const k=d.gmo!==undefined?"o":"q",gn=d.gmo!==undefined?d.gmo:d.gmq,v=Math.floor(+e.target.value)||0,m=MI()[gn]=MI()[gn]||{o:0,q:0};m[k]=v>0?v:0;if(!m.o&&!m.q)delete MI()[gn];r=true;toast("Meta individual salva")}
+ if(d.gmo!==undefined||d.gmq!==undefined||d.gmr!==undefined){const k=d.gmo!==undefined?"o":d.gmr!==undefined?"r":"q",gn=d.gmo!==undefined?d.gmo:d.gmr!==undefined?d.gmr:d.gmq,v=Math.floor(+e.target.value)||0,m=MI()[gn]=MI()[gn]||{o:0,q:0,r:0};m[k]=v>0?v:0;if(!m.o&&!m.q&&!m.r)delete MI()[gn];r=true;toast("Meta individual salva")}
  if(d.gmeta!==undefined){const v=Math.floor(+e.target.value);if(v>0)MT()[d.gmeta]=v;else delete MT()[d.gmeta];r=true;toast(v>0?"Meta de "+d.gmeta+": "+fmt(v):"Meta removida")}
  if(r){save();if(view==="cfg")cfgRender();renderAll()}});
 
