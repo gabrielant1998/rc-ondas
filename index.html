@@ -719,9 +719,13 @@ async function pull(){
   try{const at=await api("/rest/v1/presenca_atrasos?select=id,operador_id,data,observacao,horario_justificado,criado_por&data=gte."+cd);at.forEach(a=>{ATR[a.operador_id+'|'+a.data]={id:a.id,obs:a.observacao,hj:a.horario_justificado,e:a.criado_por}})}catch(e){}}
  const mine=S.waves.filter(w=>!w.srv);
  if(me){const de=new Date(Date.now()-35*864e5).toISOString(),srv=[];
-  for(let off=0;;off+=1000){const p=await api("/rest/v1/ondas?select=id,wn,operador_id,galpao_id,tipo,quantidade,status,registrada_em,concluida_em,encerrada_auto,procura_sku,procura_local,procura_nome,procura_em,procura_hist,tempo_zerado"+PIC+"&registrada_em=gte."+encodeURIComponent(de)+"&order=registrada_em.asc&limit=1000&offset="+off);
+  /* 4 páginas de 1000 por vez, em paralelo (antes era uma de cada vez e demorava) */
+  const OB="/rest/v1/ondas?select=id,wn,operador_id,galpao_id,tipo,quantidade,status,registrada_em,concluida_em,encerrada_auto,procura_sku,procura_local,procura_nome,procura_em,procura_hist,tempo_zerado"+PIC+"&registrada_em=gte."+encodeURIComponent(de)+"&order=registrada_em.asc,id.asc&limit=1000&offset=";
+  for(let off=0;;off+=4000){const R=await Promise.all([0,1,2,3].map(k=>api(OB+(off+k*1000))));let cut=false;
+   for(const p of R){
    p.forEach(x=>{const o=OPSALL[x.operador_id];srv.push({id:x.id,wn:x.wn,oid:x.operador_id,op:o?(o.excluido_em?o.codigo+"~"+o.id.slice(0,6):o.codigo):"—",opn:o?o.nome:"Operador removido",gal:GN[x.galpao_id]||"—",ty:x.tipo,qty:x.quantidade,st:x.status,ts:Date.parse(x.registrada_em),fin:x.concluida_em?Date.parse(x.concluida_em):null,sync:1,srv:1,auto:x.encerrada_auto?1:0,sku:x.procura_sku||"",itens:prItensSrv(x.procura_itens),marcas:prMarcasSrv(x.procura_marcas),loc:x.procura_local||"",pn:x.procura_nome||"",pt:x.procura_em?Date.parse(x.procura_em):0,hist:prHistSrv(x.procura_hist),zt:x.tempo_zerado?1:0})});
-   if(p.length<1000||off>=59000)break}
+   if(p.length<1000){cut=true;break}}
+   if(cut||off>=56000)break}
   const ids=new Set(srv.map(w=>w.id)),deMs=Date.parse(de);S.waves=srv.concat(mine.filter(w=>!ids.has(w.id)&&!(w.sync&&!w.err&&w.ts>=deMs)))}
  else{const corte=Date.now()-3*864e5;S.waves=mine.filter(w=>!w.sync||w.err||w.ts>corte)}
  save();authUI()}
@@ -845,15 +849,15 @@ async function importar(){const L=antigos();if(!L||!(me&&me.adm))return;
   toast("Dados antigos: "+(tot.ok+tot.ja_existia)+" ondas no banco, "+(tot.wn_repetido+tot.recusada+tot.sem_operador)+" não entraram.",10000)}
  catch(e){toast("Envio interrompido: "+errMsg(e)+" Pode tentar de novo, nada duplica.",9000);cfgRender()}}
 let bootOk=false;function bootDone(){if(bootOk)return;bootOk=true;const b=document.getElementById("boot");if(b){b.classList.add("out");setTimeout(()=>b.remove(),600)}}
-setTimeout(()=>{const t=document.getElementById("bootT");if(t&&!bootOk)t.textContent="A conexão está lenta, ainda carregando…"},6000);setTimeout(bootDone,15000);
-async function bootSrv(){
+setTimeout(()=>{const t=document.getElementById("bootT");if(t&&!bootOk)t.textContent="A conexão está lenta, ainda carregando…"},6000);setTimeout(bootDone,25000);
+async function bootSrv(){let tinhaSess=false;try{tinhaSess=!!localStorage.getItem("rcondas.sess")}catch(e){}if(tinhaSess){const t=document.getElementById("bootT");if(t)t.textContent="Entrando como gestor…"}
  $("#lExtra").classList.remove("hide");loginUI();
  $("#mP2").closest("label").classList.add("hide");$("#mU").placeholder="nome@empresa.com";$("#mU").type="email";$("#mU").closest("label").firstChild.textContent="E-mail do gestor";
  const lg=$("#cge .legend");if(lg)lg.textContent="O gestor cria a própria senha em Entrar, Primeiro acesso, usando este e-mail.";
  try{sess=JSON.parse(localStorage.getItem("rcondas.sess"))}catch(e){sess=null}
- go("painel");await lerRetorno();
+ if(!tinhaSess)go("painel");await lerRetorno();
  try{await pull()}catch(e){if(e.status)toast(errMsg(e),6000)}
- authUI();renderAll();if(me&&!recMode)go("painel");push();if(me||!publicLoading)bootDone();
+ authUI();if(!me&&tinhaSess)go("painel");renderAll();if(me&&!recMode)go("painel");push();if(me||!publicLoading)bootDone();
  setInterval(push,15000);
  setInterval(()=>{if(online()&&document.visibilityState==="visible"&&!pushing)pull().then(()=>{renderAll();if(view==="ind")loadManagement()}).catch(()=>{})},60000)}
 
@@ -946,7 +950,7 @@ async function painelPublico(force=false){
  publicKey=key;publicData=null;publicLoading=true;const seq=++publicSeq;
  $("#kpis").innerHTML='<div class="skel" aria-label="Carregando produção"><i></i><i></i></div>';["#chH","#pFil","#tTipos","#gals","#pace"].forEach(x=>$(x).innerHTML='');$("#peak").textContent='';
  try{const x=await raw('/rest/v1/rpc/painel_publico',{method:'POST',auth:false,body:{p_dia:d,p_galpao:g&&g!=='__all'?(GID[g]||null):null,p_turno:t?+t:null}});
-  if(seq!==publicSeq)return;publicLoading=false;if(view!=='painel'||me)return;publicData=x;publicAt=Date.now();desenhaPainelPublico(x,g,t);if(typeof bootDone==='function')setTimeout(bootDone,150);
+  if(seq!==publicSeq)return;publicLoading=false;if(view!=='painel'||me)return;publicData=x;publicAt=Date.now();desenhaPainelPublico(x,g,t);if(typeof bootDone==='function'&&!me)setTimeout(bootDone,150);
  }catch(e){if(seq!==publicSeq)return;publicLoading=false;if(me)return;publicKey='';$("#kpis").innerHTML='<div class="card">Não foi possível carregar o painel. Confira a conexão e tente novamente.</div>';if(typeof bootDone==='function')bootDone()}
 }
 const PF={ty:new Set(),ot:false};
