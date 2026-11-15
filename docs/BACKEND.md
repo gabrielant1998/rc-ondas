@@ -64,3 +64,9 @@ node tests/run_srv.js
 - Uma pessoa sem bipagem é sinalizada como **falta a conferir** somente depois do fim do seu turno e quando houve alguma atividade registrada no mesmo galpão e turno. Dias anteriores ao cadastro, futuros ou sem operação identificada não contam como falta. A ausência de bipagem não comprova ausência ao trabalho.
 - A hora extra estimada soma apenas os intervalos entre bipagens fora do turno e da tolerância configurada, quando esses intervalos não ultrapassam o intervalo máximo. Uma bipagem isolada ou uma pausa maior não permite calcular a duração. Não é controle de ponto.
 - O histórico usa as metas e os turnos **atuais**, pois o sistema não mantém versões anteriores dessas configurações.
+
+## Várias ondas por lançamento
+
+Em Configurações → Geral → Limite por onda, o administrador pode permitir ou bloquear várias linhas para cada tipo. A opção é salva em `tipos_onda.multiplas_no_lancamento` e compartilhada entre os aparelhos; a atualização automática ocorre quando cada aparelho sincroniza as configurações. Por padrão, Pacote do mesmo, Maiores/Pesados e Retrabalho continuam permitindo várias linhas.
+
+A opção controla o formulário de lançamento e não modifica as regras de unicidade do número da onda no banco. Em Retrabalho, o formulário usa SKU e conserva a regra existente de aceitar o mesmo SKU em registros diferentes.

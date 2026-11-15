@@ -714,6 +714,15 @@ await T("96 Paradas da operação: registro em Config, aviso no Painel e o tempo
  ok(r.n===1&&/Falta de energia/.test(r.lista),'registro: '+JSON.stringify(r));ok(r.sp===20,'60 min entre ondas menos 40 de parada = 20: '+r.sp);
  await p.evaluate(y=>{$("#day").value=dk(y);go('painel');renderAll()},y);await p.waitForTimeout(200);ok(/Operação parada/.test(await p.textContent('#pFil')),'aviso no Painel');
  await p.evaluate(()=>go('cfg'));await p.click('[data-pardel]');await p.waitForTimeout(200);ok((await p.evaluate(()=>S.paradas.length))===0,'excluir')});
+await T("150 Configuração: várias ondas por tipo podem ser ativadas e desativadas",async()=>{
+ const p=await page(b,base());await p.click('.tab[data-t="cfg"]');
+ const multi=p.locator('[data-multi="Vários artigos"]'),pesados=p.locator('[data-multi="Maiores/Pesados"]');
+ ok(!(await multi.isChecked())&&(await pesados.isChecked()),'padrão mudou');await multi.check();await pesados.uncheck();await p.reload();
+ await p.click('.tab[data-t="cfg"]');ok(await p.isChecked('[data-multi="Vários artigos"]'),'ativação não persistiu');ok(!(await p.isChecked('[data-multi="Maiores/Pesados"]')),'desativação não persistiu');
+ await openReg(p,'CL001','Vários artigos');ok(await p.isVisible('#addRow'),'tipo ativado não permite incluir outra onda');
+ await typeRows(p,[[8901,3],[8902,4]]);await p.click('#save');await p.waitForTimeout(200);ok((await st(p)).waves.length===2,'não registrou as duas ondas');
+ await openReg(p,'CL001','Maiores/Pesados');ok(await p.isHidden('#addRow'),'tipo desativado ainda permite várias ondas');
+});
 await b.close();
 const w=Math.max(...R.map(r=>r[1].length));for(const r of R)console.log((r[0]==="PASS"?"✅":"❌")+" "+r[1].padEnd(w)+"  "+r[2]);
 console.log(`\n${R.filter(r=>r[0]==="PASS").length}/${R.length} passaram`)})();

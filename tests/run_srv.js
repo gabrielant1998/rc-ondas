@@ -9,7 +9,7 @@ const normWN=s=>{s=String(s).replace(/\s+/g,'');return /^\d+$/.test(s)?s.replace
 const HJ=(()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')})();
 function banco(){return{down:false,expiresIn:3600,calls:{rpc:0,refresh:0},seq:1,
  galpoes:[{id:G1,nome:'Galpão 1'},{id:G2,nome:'Galpão 2'}],metas:[{galpao_id:G1,data:HJ,meta:2000}],
- tipos:[['Vários artigos',1000],['Múltiplas quantidades',1000],['Itens Únicos',100],['Maiores/Pesados',10],['Retrabalho',1000],['Pacote do mesmo',1000]].map((t,i)=>({nome:t[0],limite:t[1],ordem:i+1})),
+ tipos:[['Vários artigos',1000],['Múltiplas quantidades',1000],['Itens Únicos',100],['Maiores/Pesados',10],['Retrabalho',1000],['Pacote do mesmo',1000]].map((t,i)=>({nome:t[0],limite:t[1],ordem:i+1,multiplas_no_lancamento:['Maiores/Pesados','Retrabalho','Pacote do mesmo'].includes(t[0])})),
  config:[{id:true,turno1_ini:7,turno1_fim:16,turno2_ini:16,turno2_fim:23,intervalo_max_min:30,tolerancia_min:15,ondas_em_andamento:true}],
  operadores:[{id:'00000000-0000-4000-8000-0000000000b1',codigo:'CL001',nome:'Ana Souza',turno:1,galpao_id:G1,excluido_em:null},
              {id:'00000000-0000-4000-8000-0000000000b2',codigo:'CL002',nome:'Carla Dias',turno:2,galpao_id:G2,excluido_em:null}],
@@ -388,6 +388,14 @@ await T('S33 Relatórios de 12 meses: ondas antigas vêm em totais do banco e so
  const r=await p.evaluate(()=>({kp:document.querySelector('#hBody').textContent.replace(/\s+/g,' '),agg:(HW||[]).filter(w=>w.agg).length}));
  ok(db.calls.agg>=1&&r.agg>=1,'deveria usar os totais do banco: '+JSON.stringify({calls:db.calls.agg,agg:r.agg}));
  await p.evaluate(()=>{$('#hMet').value='u';hisRender()});const t=await p.evaluate(()=>document.querySelector('#hBody').textContent.replace(/\s+/g,' '));ok(/540/.test(t),'total de unidades 500+40: '+t.slice(0,300))});
+await T('S90 Configuração de várias ondas é compartilhada pelo servidor',async()=>{
+ const db=banco(),p=await page(b,db);await login(p,'adm@x.com','senha1234');await p.click('.tab[data-t="cfg"]');
+ await p.check('[data-multi="Vários artigos"]');await p.waitForTimeout(450);ok(db.tipos.find(x=>x.nome==='Vários artigos').multiplas_no_lancamento===true,'ativação não gravou');
+ await p.uncheck('[data-multi="Maiores/Pesados"]');await p.waitForTimeout(450);ok(db.tipos.find(x=>x.nome==='Maiores/Pesados').multiplas_no_lancamento===false,'desativação não gravou');
+ const outra=await page(b,db);await outra.click('.tab[data-t="op"]');await outra.fill('#opIn','CL001');await outra.waitForTimeout(300);await outra.click('[data-ty="Vários artigos"]');await outra.waitForTimeout(400);
+ ok(await outra.isVisible('#addRow'),'outro aparelho não recebeu ativação');await outra.click('#b3');await outra.click('[data-ty="Maiores/Pesados"]');await outra.waitForTimeout(400);
+ ok(await outra.isHidden('#addRow'),'outro aparelho não recebeu desativação');
+});
 await b.close();
 const w=Math.max(...R.map(r=>r[1].length));for(const r of R)console.log((r[0]==='PASS'?'✅':'❌')+' '+r[1].padEnd(w)+'  '+r[2]);
 console.log(`\n${R.filter(r=>r[0]==='PASS').length}/${R.length} passaram`)})();

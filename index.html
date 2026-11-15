@@ -527,7 +527,10 @@ body[data-v=cfg] #turnoF,body[data-v=cfg] #gal,body[data-v=cfg] #day{display:non
  <div class="sub" id="csub"><button data-c="cop" class="on">Geral</button><button data-c="cho">Horários e paradas</button><button data-c="cus">Pessoas</button><button data-c="cme" data-merge="1">Metas</button><button data-c="cga">Galpões</button><button data-c="cge" data-merge="1">Gestores</button><button data-c="cma">Manutenção</button></div>
 
  <div id="cop" class="grid two">
-  <div class="card"><h2>Limite por onda</h2><div class="f" id="lims"></div></div>
+  <div class="card"><h2>Limite por onda</h2><div class="f" id="lims"></div>
+   <div style="margin-top:22px"><strong>Várias ondas no mesmo lançamento</strong>
+    <div class="legend">Ative para bipar várias ondas do mesmo tipo de uma vez. Os números das ondas devem ser diferentes; no retrabalho, informe o SKU.</div>
+    <div class="f" id="multiL" style="margin-top:12px;gap:9px"></div></div></div>
   <div class="card"><h2>Ondas</h2><div class="f">
    <div id="storInfo" style="font-size:13px;color:var(--mut)"></div>
    <label class="row"><input type="checkbox" id="and" style="min-height:auto"> Modo de ondas em andamento</label>
@@ -624,7 +627,8 @@ const SRV=(()=>{let f=null;try{f=localStorage.getItem("rcondas.srv")}catch(e){}
  return liga?{url:(window.__RC_SRV_URL||"https://fiqintmclivzckmfjeml.supabase.co"),key:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZpcWludG1jbGl2emNrbWZqZW1sIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTQ0MzM3MDcsImV4cCI6MjExMDAwOTcwN30.Aj8AGWwytOLEKm3P4I9nB-9u1FxZDI4fYJoWOUOs0AE"}:null})();
 const ON=!!SRV;
 const LS=ON?"rcondas.srv1":"rcondas.v2",$=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
-const DEF={cfg:{lim:{"Vários artigos":1000,"Múltiplas quantidades":1000,"Itens Únicos":100,"Maiores/Pesados":10,"Retrabalho":1000,"Pacote do mesmo":1000},and:true,gap:30,tol:15,metaMin:0,
+const MULTI_DEF={"Vários artigos":false,"Múltiplas quantidades":false,"Itens Únicos":false,"Maiores/Pesados":true,"Retrabalho":true,"Pacote do mesmo":true};
+const DEF={cfg:{multi:MULTI_DEF,lim:{"Vários artigos":1000,"Múltiplas quantidades":1000,"Itens Únicos":100,"Maiores/Pesados":10,"Retrabalho":1000,"Pacote do mesmo":1000},and:true,gap:30,tol:15,metaMin:0,
  turnos:{1:{ini:7,fim:16},2:{ini:16,fim:23}}},gals:["Galpão 1","Galpão 2","Galpão 3"],ops:[],ges:[],waves:[],gal:"Galpão 1",off:false,man:{log:[]}};
 let S;try{S=JSON.parse(localStorage.getItem(LS))}catch(e){}
 /* formato compacto: ondas como listas, cabe ~2x mais no aparelho */
@@ -650,7 +654,7 @@ function MT(){S.metasDia=S.metasDia||{};const k=hoje();if(!S.metasDia[k]){S.meta
 /* nomes antigos de tipo -> nomes novos, sem perder registros nem limites */
 S.waves.forEach(w=>{if(TYREN[w.ty])w.ty=TYREN[w.ty]});
 Object.keys(TYREN).forEach(k=>{if(S.cfg.lim[k]!=null){if(S.cfg.lim[TYREN[k]]==null)S.cfg.lim[TYREN[k]]=S.cfg.lim[k];delete S.cfg.lim[k]}});
-TY.forEach(([n])=>{if(S.cfg.lim[n]==null)S.cfg.lim[n]=DEF.cfg.lim[n]||1000});
+TY.forEach(([n])=>{if(S.cfg.lim[n]==null)S.cfg.lim[n]=DEF.cfg.lim[n]||1000;if(S.cfg.multi[n]==null)S.cfg.multi[n]=!!MULTI_DEF[n]});
 if(!ON&&!S.gals.length)S.gals=["Galpão 1"];
 if(!S.gals.includes(S.gal))S.gal=S.gals[0];
 let ty=TY[0][0],st=0,draft=[],tim={op:null,t0:0},view="painel",me=null,uT=1,csub="cop",gsub="mi";
@@ -724,7 +728,7 @@ async function pullReal(opt){
  const [gs,ts,cf,os]=await Promise.all([api("/rest/v1/galpoes?select=*&order=nome"),api("/rest/v1/tipos_onda?select=*&order=ordem"),api("/rest/v1/config?select=*"),api("/rest/v1/operadores?select=*&order=codigo")]);
  GID={};GN={};gs.forEach(g=>{GID[g.nome]=g.id;GN[g.id]=g.nome});
  S.gals=gs.map(g=>g.nome);S.metasInd={};gs.forEach(g=>{if(g.meta_ind_ondas||g.meta_ind_qtd||g.meta_ind_ret)S.metasInd[g.nome]={o:g.meta_ind_ondas||0,q:g.meta_ind_qtd||0,r:g.meta_ind_ret||0}});
- ts.forEach(t=>{S.cfg.lim[t.nome]=t.limite});
+ ts.forEach(t=>{S.cfg.lim[t.nome]=t.limite;if(typeof t.multiplas_no_lancamento==="boolean")S.cfg.multi[t.nome]=t.multiplas_no_lancamento});
  const c=cf[0];if(c){S.cfg.turnos={1:{ini:c.turno1_ini,fim:c.turno1_fim},2:{ini:c.turno2_ini,fim:c.turno2_fim}};S.cfg.gap=Math.min(+c.intervalo_max_min||30,60);S.cfg.tol=c.tolerancia_min;S.cfg.metaMin=+c.meta_minima||0;S.cfg.and=c.ondas_em_andamento;S.cfg.alm={1:{ini:c.almoco1_ini,fim:c.almoco1_fim},2:{ini:c.almoco2_ini,fim:c.almoco2_fim}};S.cfg.pz=c.pausas||{}}
  OPSALL={};os.forEach(o=>{OPSALL[o.id]=o});
  S.ops=os.filter(o=>!o.excluido_em).map(o=>({id:o.id,m:o.codigo,n:o.nome,t:o.turno,ini:o.inicio,fim:o.fim,al:{ini:o.almoco_ini,fim:o.almoco_fim},g:GN[o.galpao_id],criado:o.criado_em}));
@@ -799,6 +803,7 @@ function almCampos(t){const g=k=>{const i=document.querySelector(`[data-al="${t}
 function remChange(e){const d=e.target.dataset,id=e.target.id,v=e.target.value;
  if(d.al){const x=almCampos(d.al);if(x===null)return;if(x===false){toast("O fim do almoço precisa ser depois do início.");return}return rem(()=>mut(CFGP,"PATCH",{["almoco"+d.al+"_ini"]:x.ini,["almoco"+d.al+"_fim"]:x.fim}),"Almoço do "+d.al+"º turno atualizado")}
  if(d.lim)return rem(()=>mut("/rest/v1/tipos_onda?nome=eq."+encodeURIComponent(d.lim),"PATCH",{limite:Math.max(1,Math.floor(+v)||1)}),"Limite atualizado");
+ if(d.multi!==undefined){const enabled=e.target.checked;return rem(()=>mut("/rest/v1/tipos_onda?nome=eq."+encodeURIComponent(d.multi),"PATCH",{multiplas_no_lancamento:enabled}),"Lançamento de várias ondas "+(enabled?"ativado":"desativado")+" para "+d.multi)}
  if(d.tn)return rem(()=>mut(CFGP,"PATCH",{["turno"+d.tn+"_"+d.k]:Math.max(0,Math.min(24,Math.floor(+v)||0))}),"Turno atualizado");
  if(id==="gap")return rem(()=>mut(CFGP,"PATCH",{intervalo_max_min:Math.min(60,Math.max(1,Math.floor(+v)||30))}),"Configuração atualizada");
  if(id==="tol")return rem(()=>mut(CFGP,"PATCH",{tolerancia_min:Math.max(0,Math.floor(+v)||0)}),"Configuração atualizada");
@@ -1116,7 +1121,7 @@ function painel(){
 }
 
 /* ===================== OPERAÇÃO ===================== */
-function multiOnda(){return ty==="Pacote do mesmo"||ty==="Maiores/Pesados"||ty==="Retrabalho"}
+function multiOnda(nome=ty){return !!(S.cfg.multi&&S.cfg.multi[nome])}
 const isRT=()=>ty==="Retrabalho";
 const wnS=w=>w&&w.ty==="Retrabalho"?String(w.wn||"").split("~")[0]:(w&&w.wn);
 function updMulti(){const b=$("#addRow");if(b)b.style.display=multiOnda()?"block":"none"}
@@ -1147,7 +1152,7 @@ function check(){const o=curOp();if(!o){toast("Identifique um operador cadastrad
 function opRows(list,ctl){const canR=!S.ges.length||(me&&me.pR);
  return list.length?`<table><tr><th>Operador</th><th>Onda</th><th>Tipo</th><th>Qtd</th><th>Status</th><th>Hora</th>${ctl?"<th>Tempo</th><th>Ação</th>":""}</tr>`+list.map(w=>{const o=opOf(w.op);
  return`<tr><td><div class="who2">${av(w.opn)}<div>${esc(w.opn)}<br><small>${esc(w.op.split("~")[0])}${w.op.includes("~")?" (excluído)":""}, ${esc(w.gal)}${o?", "+o.t+"ºT":""}</small></div></div></td><td><b>${esc(wnS(w)||"—")}</b></td><td>${w.ty}</td><td><b>${fmt(w.qty)}</b></td><td><span class="st ${SC[w.st]}">${ST[w.st]}</span>${isOT(w)?' <span class="st so">extra</span>':""}${w.err?'<br><span class="st s2" title="'+esc(w.err)+'">recusada</span> <a href="#" data-del="'+w.id+'" class="pill off">Remover</a><br><small>'+esc(w.err)+"</small>":""}</td><td style="white-space:nowrap">${new Date(w.ts).toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"})}${ctl?"":(w.err?"":w.sync?' <span title="Sincronizado" aria-label="Sincronizado" style="color:var(--gx)">✓</span>':' <span class="st s1">pendente</span>')}</td>${ctl?`<td class="num" data-el="${w.ts}">${mm(Date.now()-w.ts)}</td><td><a href="#" data-fin="${w.id}" class="pill">Concluir</a> <a href="#" data-sd="${w.id}" class="pill warn">Difícil</a>${canR?` <a href="#" data-del="${w.id}" class="pill off">Excluir</a>`:""}</td>`:""}</tr>`}).join("")+"</table>":'<div class="empty">Nenhuma onda registrada.</div>'}
-function operacao(){const L=dayWaves().slice().reverse();$("#cnt").textContent=L.length+" hoje";$("#last").innerHTML=opRows(L.slice(0,8));
+function operacao(){updMulti();const L=dayWaves().slice().reverse();$("#cnt").textContent=L.length+" hoje";$("#last").innerHTML=opRows(L.slice(0,8));
  $("#opl").innerHTML=S.ops.map(o=>`<option value="${o.m}">${esc(o.n)}, ${o.t}º turno</option>`).join("");
  $("#subCtl").classList.toggle("hide",!S.cfg.and);
  const open=S.waves.filter(w=>w.st!==0&&inView(w)&&(!$("#fOp").value||w.op===$("#fOp").value)&&(!$("#fTy").value||w.ty===$("#fTy").value)&&(!$("#fSt").value||w.st==$("#fSt").value));
@@ -1733,6 +1738,7 @@ function cfgOp(){
  if(ON&&me&&me.adm){const L=antigos();let ja="";try{ja=localStorage.getItem("rcondas.antigos.enviado")||""}catch(e){}
   if(L)$("#storInfo").innerHTML+="<br>Dados antigos neste aparelho: "+fmt(L.waves.length)+" ondas e "+L.ops.length+" operadores"+(ja?", já enviados":"")+'. <button class="btn alt sm" id="impB" style="margin-top:6px">'+(ja?"Enviar de novo":"Enviar para o banco")+"</button>"}
  $("#lims").innerHTML=TY.map(([n])=>`<label>${n}<input type="number" min="1" data-lim="${n}" value="${S.cfg.lim[n]}"></label>`).join("");
+ $("#multiL").innerHTML=TY.map(([n])=>`<label class="row"><input type="checkbox" data-multi="${esc(n)}" ${multiOnda(n)?"checked":""}${ON&&!(me&&me.adm)?" disabled":""}>${esc(n)}</label>`).join("");
  $("#turnos").innerHTML=[1,2].map(t=>`<label>Início do ${t}º turno (hora)<input type="number" min="0" max="23" data-tn="${t}" data-k="ini" value="${S.cfg.turnos[t].ini}"></label><label>Fim do ${t}º turno (hora)<input type="number" min="1" max="24" data-tn="${t}" data-k="fim" value="${S.cfg.turnos[t].fim}"></label><label>Almoço do ${t}º turno: início<input type="time" data-al="${t}" data-k="ini" value="${m2hm(((S.cfg.alm||{})[t]||{}).ini)}"></label><label>Almoço do ${t}º turno: fim<input type="time" data-al="${t}" data-k="fim" value="${m2hm(((S.cfg.alm||{})[t]||{}).fim)}"></label>${pzBloco(t)}`).join("");
  $("#and").checked=!!S.cfg.and;$("#gap").value=GAP();$("#tol").value=S.cfg.tol}
 function cfgUsers(){
@@ -2170,7 +2176,9 @@ const hojeSemana=()=>mondayOf(dk(Date.now()));
 $("#gsub").onclick=e=>{const x=e.target.dataset.gs;if(!x)return;gsub=x;$$("#gsub button").forEach(b=>b.classList.toggle("on",b===e.target));$("#iBody").classList.toggle("hide",x!=="mi");$("#coBody").classList.toggle("hide",x!=="mc");$("#ckBody").classList.toggle("hide",x!=="chk");$("#iOp").classList.toggle("hide",x!=="mi");$("#iPrint").classList.toggle("hide",x!=="mi");$("#iPer").classList.toggle("hide",x==="chk");if(x==="chk")ckEntrar();else if(x==="mc"){coletiva();loadManagement({cache:true})}else{individual();loadManagement({cache:true})}};
 
 document.addEventListener("click",e=>{const d=e.target.dataset,t=e.target;
- const tyB=t.closest&&t.closest("[data-ty]");if(tyB){ty=tyB.dataset.ty;if(!multiOnda()&&rows.length>1)rows.splice(1);segs();setTimeout(()=>goStep(3),260)}
+ const tyB=t.closest&&t.closest("[data-ty]");if(tyB){const next=tyB.dataset.ty;
+  if(!multiOnda(next)&&rows.slice(1).some(r=>String(r.wn||"").trim()||String(r.q||"").trim())&&!confirm("Este tipo aceita uma onda por lançamento. Descartar as linhas adicionais ainda não salvas?"))return;
+  ty=next;if(!multiOnda()&&rows.length>1)rows.splice(1);segs();setTimeout(()=>goStep(3),260)}
  if(d.st!==undefined&&t.matches("[data-st]")){st=+d.st;segs()}
  if(d.ut){uT=+d.ut;cfgUsers()}
  if(d.goto){go("cfg");const b=document.querySelector('[data-c="'+d.goto+'"]');if(b)b.click()}
@@ -2226,7 +2234,7 @@ $("#opIn").onkeydown=e=>{
  if(e.key==="Escape"){$("#opSug").innerHTML="";sugL=[]}};
 $("#b2").onclick=()=>goStep(1);
 $("#b3").onclick=()=>goStep(2);
-$("#addRow").onclick=()=>{rows.push({wn:"",q:""});renderRows();setTimeout(()=>{const a=$$("[data-wn]");if(a.length)a[a.length-1].focus()},60)};
+$("#addRow").onclick=()=>{if(!multiOnda())return;rows.push({wn:"",q:""});renderRows();setTimeout(()=>{const a=$$("[data-wn]");if(a.length)a[a.length-1].focus()},60)};
 $("#rowsL").oninput=e=>{const d=e.target.dataset;if(d.wn!==undefined)rows[+d.wn].wn=e.target.value;if(d.q!==undefined)rows[+d.q].q=e.target.value;
  const last=rows[rows.length-1];
  if(multiOnda()&&(last.wn||"").trim()&&String(last.q||"").trim()){rows.push({wn:"",q:""});$("#rowsL").insertAdjacentHTML("beforeend",rowHtml(rows[rows.length-1],rows.length-1))}};
@@ -2236,6 +2244,7 @@ $("#rowsL").onkeydown=e=>{if(e.key!=="Enter")return;const d=e.target.dataset;
 $("#rowsL").onclick=e=>{const i=e.target.dataset.rmrow;if(i!==undefined){rows.splice(+i,1);if(!rows.length)rows.push({wn:"",q:""});renderRows()}};
 $("#save").onclick=()=>{const o=findOp($("#opIn").value);
  if(!o){toast("Identifique o operador");goStep(1);return}
+ if(!multiOnda()&&rows.filter(r=>String(r.wn||"").trim()||String(r.q||"").trim()).length>1){toast("Este tipo permite apenas uma onda por lançamento. Remova as linhas adicionais.",6000);return}
  const bad={},list=[];
  rows.forEach((r,i)=>{const rt=isRT(),wn=rt?String(r.wn||"").replace(/\s+/g,"").toUpperCase().replace(/~/g,""):normWN(r.wn),q=Number(String(r.q).replace(",","."));
   if(!wn&&!r.q)return;
@@ -2287,6 +2296,7 @@ $("#mB").onclick=()=>{const n=$("#mN").value.trim(),u=$("#mU").value.trim(),p=$(
 document.addEventListener("change",e=>{const d=e.target.dataset,id=e.target.id;let r=false;
  if(ON){remChange(e);return}
  if(d.lim){S.cfg.lim[d.lim]=Math.max(1,+e.target.value||1);r=true}
+ if(d.multi!==undefined){S.cfg.multi[d.multi]=e.target.checked;r=true;toast("Lançamento de várias ondas "+(e.target.checked?"ativado":"desativado")+" para "+d.multi)}
  if(d.tn){S.cfg.turnos[d.tn][d.k]=Math.max(0,Math.min(24,+e.target.value||0));r=true}
  if(d.al){const x=almCampos(d.al);if(x===false)toast("O fim do almoço precisa ser depois do início.");else if(x){S.cfg.alm=S.cfg.alm||{};S.cfg.alm[d.al]=x;r=true;toast(x.ini==null?"Almoço do "+d.al+"º turno removido":"Almoço do "+d.al+"º turno: "+m2hm(x.ini)+" às "+m2hm(x.fim))}}
  if(id==="and"){S.cfg.and=e.target.checked;
