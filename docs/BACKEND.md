@@ -76,3 +76,15 @@ A opção controla o formulário de lançamento e não modifica as regras de uni
 O código ou nome completo digitado tem prioridade sobre sugestões; quando vários nomes correspondem à busca, o operador precisa escolher uma das opções. A pessoa selecionada fica vinculada ao ID do cadastro até o salvamento, e se o ID associado ao código mudar, o aplicativo pede uma nova seleção. Ao atualizar o cache, as ondas são remapeadas por ID para que códigos de pessoas excluídas não sejam confundidos com novos cadastros.
 
 Códigos de pessoas excluídas podem ser reaproveitados. Antes disso, retire os crachás antigos: um crachá antigo que contenha o mesmo código identifica o cadastro ativo atual.
+
+
+## Produção da coleta
+
+O relatório Work Package Statistics entra por erramentas/coleta/importar_coleta.py e fica em duas tabelas: coleta_lotes (um lote por loja, dia e arquivo; reimportar substitui) e coleta_producao (uma linha por pessoa, com ondas, pacotes por tipo, pacote total e produtos). O relatório não traz o número de cada onda, então a coleta não vira ondas.
+
+A entrada é a função importar_coleta(lote jsonb), liberada só para a chave de serviço. Ela recusa o lote quando os pacotes por tipo não fecham com o pacote total (diferença de 1 unidade é arredondamento da origem e passa) e quando o mesmo nome aparece duas vezes; o mesmo arquivo reenviado não duplica.
+
+A leitura do painel é 
+anking_coleta(dia, loja): totais do lote, Top 3 de ondas, pacotes e produtos, e Top 3 por tipo de onda. Como mostra nome de pessoa, exige gestor com permissão individual; os demais recebem sem_permissao. Computador e máquina vêm somados na origem e a importação não separa os dois.
+
+Teste: supabase/tests/coleta_test.sql (16 verificações).
