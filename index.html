@@ -723,6 +723,10 @@ async function cacheAbrir(){if(!sess||!sess.email)return false;let m=null;try{m=
  me=m.me;GID=m.gid||{};GN=m.gn||{};
  if(c&&c.email===sess.email&&Array.isArray(c.waves)){const ids=new Set(c.waves.map(w=>w.id));S.waves=c.waves.concat(S.waves.filter(w=>!w.srv&&!ids.has(w.id)));SYNC={at:c.at,full:c.full||0}}
  return true}
+/* Mantém cada onda ligada ao ID da pessoa, mesmo se um código for reutilizado. */
+function atualizarIdentidadeOnda(w){if(!w.oid)return w;const o=OPSALL[w.oid];
+ if(o){w.op=o.excluido_em?o.codigo+"~"+o.id.slice(0,6):o.codigo;w.opn=o.nome}
+ else{w.op="—~"+String(w.oid).slice(0,6);if(w.srv)w.opn="Operador removido"}return w}
 /* traz cadastros e, para gestor, as ondas dos últimos 35 dias */
 async function pullReal(opt){
  const [gs,ts,cf,os]=await Promise.all([api("/rest/v1/galpoes?select=*&order=nome"),api("/rest/v1/tipos_onda?select=*&order=ordem"),api("/rest/v1/config?select=*"),api("/rest/v1/operadores?select=*&order=codigo")]);
@@ -766,6 +770,7 @@ async function pullReal(opt){
    srv=[...M.values()].filter(w=>w.ts>=deMs).sort((a,b)=>a.ts-b.ts);SYNC.at=maxAt(rows)||SYNC.at}
   const ids=new Set(srv.map(w=>w.id));S.waves=srv.concat(mine.filter(w=>!ids.has(w.id)&&!(w.sync&&!w.err&&w.ts>=deMs)));cacheSalvar()}
  else{const corte=Date.now()-3*864e5;S.waves=mine.filter(w=>!w.sync||w.err||w.ts>corte)}
+ S.waves.forEach(atualizarIdentidadeOnda);
  save();authUI()}
 /* fila de envio: cada onda tem id próprio, então reenviar nunca duplica */
 async function push(){
@@ -903,7 +908,7 @@ async function bootSrv(){let tinhaSess=false;try{tinhaSess=!!localStorage.getIte
 
 /* ===================== usuários / códigos ===================== */
 function nextCode(){const used=new Set(S.ops.map(o=>o.m));for(let i=1;i<1000;i++){const c="CL"+String(i).padStart(3,"0");if(!used.has(c))return c}return"CL999"}
-function findOp(v){v=(v||"").trim().toLowerCase();return S.ops.find(o=>o.m.toLowerCase()===v||o.n.toLowerCase()===v)}
+function findOp(v){v=(v||"").trim().toLowerCase();return S.ops.find(o=>o.m.toLowerCase()===v)||S.ops.find(o=>o.n.toLowerCase()===v)}
 function opOf(code){return S.ops.find(o=>o.m===code)}
 const h32=s=>{let h=5381;for(let i=0;i<s.length;i++)h=(h*33^s.charCodeAt(i))>>>0;return h.toString(36)};
 
@@ -2190,7 +2195,7 @@ document.addEventListener("click",e=>{const d=e.target.dataset,t=e.target;
  if(d.del){e.preventDefault();if(S.ges.length&&!(me&&me.pR)){toast("Sem permissão para excluir registros");return}
   S.waves=S.waves.filter(x=>x.id!==d.del);save();renderAll();toast("Registro excluído")}
  if(d.udel){const o=opOf(d.udel),n=S.waves.filter(w=>w.op===d.udel).length;
-  if(!confirm("Excluir "+o.n+" ("+o.m+")?"+(n?"\n\nOs "+n+" registro(s) já lançados são mantidos no histórico.":"")+"\n\nO código "+o.m+" volta a ficar disponível."))return;
+  if(!confirm("Excluir "+o.n+" ("+o.m+")?"+(n?"\n\nOs "+n+" registro(s) já lançados são mantidos no histórico.":"")+"\n\nO código "+o.m+" volta a ficar disponível. Antes de reutilizá-lo, retire os crachás antigos para evitar atribuir ondas à pessoa errada."))return;
   if(ON){rem(()=>mut("/rest/v1/operadores?id=eq."+o.id,"PATCH",{excluido_em:new Date().toISOString()}),"Usuário excluído, código "+o.m+" liberado");return}
   const tag=d.udel+"~"+Date.now().toString(36);S.waves.forEach(w=>{if(w.op===d.udel)w.op=tag});S.ops=S.ops.filter(x=>x.m!==d.udel);save();cfgUsers();renderAll();toast("Usuário excluído, código "+o.m+" liberado")}
  if(d.gdel){const g=S.gals[+d.gdel];if(!ON&&S.gals.length<2)return;
@@ -2210,28 +2215,39 @@ document.addEventListener("click",e=>{const d=e.target.dataset,t=e.target;
   S.ges.splice(+d.mdel,1);if(me===g)me=null;authUI();save();cfgGes();toast("Gestor excluído")}
 });
 const nrm=t=>String(t||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().trim();
-let sugI=-1,sugL=[];
+let sugI=-1,sugL=[],operadorSelecionado=null;
+function confirmarOperador(o){operadorSelecionado={id:o.id||null,m:o.m,n:o.n};track(o);goStep(2)}
+function mesmoOperador(o){const a=operadorSelecionado;if(!a||!o)return false;
+ if(ON&&(!a.id||!o.id))return false;
+ return a.id?o.id===a.id:(o.m===a.m&&o.n===a.n)}
 function opSugest(){const q=nrm($("#opIn").value),box=$("#opSug");sugI=-1;sugL=[];
  if(!q){box.innerHTML="";$("#opIn").setAttribute("aria-expanded","false");return}
  const ck=q.length>=2&&/^(cl\d*|\d+)$/.test(q),sc=o=>{const n=nrm(o.n),c=o.m.toLowerCase();if(n===q||(ck&&c===q))return-1;if(n.startsWith(q)||(ck&&c.startsWith(q)))return 0;if(n.split(/\s+/).some(w=>w.startsWith(q)))return 1;if(ck&&c.includes(q))return 2;return 9};
  const all=S.ops.map(o=>[o,sc(o)]).filter(x=>x[1]<9).sort((a,b)=>a[1]-b[1]||a[0].n.localeCompare(b[0].n)).map(x=>x[0]);sugL=all.slice(0,8);
  box.innerHTML=sugL.length?sugL.map(o=>`<button type="button" class="cracha" role="option" data-sug="${esc(o.m)}">${av(o.n)}<div><b>${esc(o.n)}</b><small>${o.m}, ${o.t}º turno${o.g?", "+esc(o.g):""}</small></div></button>`).join("")+(all.length>8?`<div class="legend">Mais ${all.length-8} nomes. Continue digitando.</div>`:""):'<div class="legend">Nenhum operador encontrado.</div>';
  $("#opIn").setAttribute("aria-expanded",String(sugL.length>0))}
-function opEscolher(code){const o=opOf(code);if(!o)return;$("#opIn").value=o.m;$("#opSug").innerHTML="";$("#opIn").setAttribute("aria-expanded","false");curOp();track(o);goStep(2)}
-$("#opIn").oninput=()=>{const o=curOp(),q=$("#opIn").value;
+function opEscolher(code,esperado){const o=opOf(code);if(!o)return;
+ if(esperado&&((esperado.id&&o.id!==esperado.id)||(!esperado.id&&o.n!==esperado.n))){opSugest();toast("O cadastro da pessoa mudou. Selecione novamente.",6000);return}
+ $("#opIn").value=o.m;$("#opSug").innerHTML="";$("#opIn").setAttribute("aria-expanded","false");sugL=[];sugI=-1;curOp();confirmarOperador(o)}
+$("#opIn").oninput=()=>{operadorSelecionado=null;const o=curOp(),q=$("#opIn").value;
  if(!o){opSugest();return}
  const porCodigo=o.m.toLowerCase()===q.trim().toLowerCase();
  if(!porCodigo&&S.ops.some(x=>x!==o&&nrm(x.n).startsWith(nrm(q)))){opSugest();return}
- $("#opSug").innerHTML="";track(o);
- setTimeout(()=>{if(!$("#s1").classList.contains("hide")&&findOp($("#opIn").value)===o)goStep(2)},150)};
-document.addEventListener("click",e=>{const b=e.target.closest&&e.target.closest("[data-sug]");if(b)opEscolher(b.dataset.sug)});
+ $("#opSug").innerHTML="";$("#opIn").setAttribute("aria-expanded","false");sugL=[];sugI=-1;track(o);
+ setTimeout(()=>{if(!$("#s1").classList.contains("hide")&&findOp($("#opIn").value)===o)confirmarOperador(o)},150)};
+document.addEventListener("click",e=>{const b=e.target.closest&&e.target.closest("[data-sug]");if(b){const o=sugL.find(x=>x.m===b.dataset.sug);if(o)opEscolher(b.dataset.sug,o);else{opSugest();toast("Selecione a pessoa novamente.")}}});
 function qtyOk(){const q=Math.floor(+$("#qty").value);if(!q||q<1){toast("Informe a quantidade");return}
  if(q>S.cfg.lim[ty]){toast("Limite de "+fmt(S.cfg.lim[ty])+" excedido para "+ty);return}return q}
-$("#n1").onclick=()=>{const o=curOp();if(!o){toast("Identifique um operador cadastrado");$("#opIn").focus();return}track(o);goStep(2)};
+$("#n1").onclick=()=>{const o=curOp();if(!o){toast("Identifique um operador cadastrado");$("#opIn").focus();return}confirmarOperador(o)};
 $("#opIn").onkeydown=e=>{
  if((e.key==="ArrowDown"||e.key==="ArrowUp")&&sugL.length){e.preventDefault();sugI=(sugI+(e.key==="ArrowDown"?1:-1)+sugL.length)%sugL.length;$$("#opSug [data-sug]").forEach((b,i)=>b.classList.toggle("on",i===sugI));return}
- if(e.key==="Enter"){e.preventDefault();if(sugL.length){opEscolher(sugL[sugI>=0?sugI:0].m);return}$("#n1").click()}
- if(e.key==="Escape"){$("#opSug").innerHTML="";sugL=[]}};
+ if(e.key==="Enter"){e.preventDefault();const texto=$("#opIn").value.trim().toLowerCase(),exato=findOp(texto);
+  if(exato&&exato.m.toLowerCase()===texto){opEscolher(exato.m,exato);return}
+  if(sugI>=0&&sugL[sugI]){const o=sugL[sugI];opEscolher(o.m,o);return}
+  if(exato){opEscolher(exato.m,exato);return}
+  if(sugL.length===1){const o=sugL[0];opEscolher(o.m,o);return}
+  if(sugL.length>1){toast("Há mais de uma pessoa. Selecione o nome desejado.",5000);return}$("#n1").click()}
+ if(e.key==="Escape"){$("#opSug").innerHTML="";$("#opIn").setAttribute("aria-expanded","false");sugL=[];sugI=-1}};
 $("#b2").onclick=()=>goStep(1);
 $("#b3").onclick=()=>goStep(2);
 $("#addRow").onclick=()=>{if(!multiOnda())return;rows.push({wn:"",q:""});renderRows();setTimeout(()=>{const a=$$("[data-wn]");if(a.length)a[a.length-1].focus()},60)};
@@ -2243,7 +2259,7 @@ $("#rowsL").onkeydown=e=>{if(e.key!=="Enter")return;const d=e.target.dataset;
  else if(d.q!==undefined){e.preventDefault();const n=$('[data-wn="'+(+d.q+1)+'"]');if(n)n.focus();else $("#save").focus()}};
 $("#rowsL").onclick=e=>{const i=e.target.dataset.rmrow;if(i!==undefined){rows.splice(+i,1);if(!rows.length)rows.push({wn:"",q:""});renderRows()}};
 $("#save").onclick=()=>{const o=findOp($("#opIn").value);
- if(!o){toast("Identifique o operador");goStep(1);return}
+ if(!o||!mesmoOperador(o)){operadorSelecionado=null;toast("A pessoa selecionada mudou. Confira o nome e selecione novamente.",7000);goStep(1);return}
  if(!multiOnda()&&rows.filter(r=>String(r.wn||"").trim()||String(r.q||"").trim()).length>1){toast("Este tipo permite apenas uma onda por lançamento. Remova as linhas adicionais.",6000);return}
  const bad={},list=[];
  rows.forEach((r,i)=>{const rt=isRT(),wn=rt?String(r.wn||"").replace(/\s+/g,"").toUpperCase().replace(/~/g,""):normWN(r.wn),q=Number(String(r.q).replace(",","."));
@@ -2259,7 +2275,7 @@ $("#save").onclick=()=>{const o=findOp($("#opIn").value);
  const k=Object.keys(bad);if(k.length){toast(bad[k[0]]);return}
  if(!list.length){toast("Informe pelo menos uma onda");return}
  track(o);if(commit(list.map(x=>mk(o,x.q,0,x.wn)))===false)return;
- rows=[{wn:"",q:""}];$("#opIn").value="";$("#opName").textContent="";$("#opSug").innerHTML="";sugL=[];goStep(1)};
+ rows=[{wn:"",q:""}];operadorSelecionado=null;$("#opIn").value="";$("#opName").textContent="";$("#opSug").innerHTML="";sugL=[];sugI=-1;goStep(1)};
 ["#fOp","#fTy","#fSt"].forEach(i=>$(i).onchange=operacao);
 /* cadastros */
 $("#uB").onclick=()=>{const n=$("#uN").value.trim().replace(/\s+/g," ");

@@ -70,3 +70,9 @@ node tests/run_srv.js
 Em Configurações → Geral → Limite por onda, o administrador pode permitir ou bloquear várias linhas para cada tipo. A opção é salva em `tipos_onda.multiplas_no_lancamento` e compartilhada entre os aparelhos; a atualização automática ocorre quando cada aparelho sincroniza as configurações. Por padrão, Pacote do mesmo, Maiores/Pesados e Retrabalho continuam permitindo várias linhas.
 
 A opção controla o formulário de lançamento e não modifica as regras de unicidade do número da onda no banco. Em Retrabalho, o formulário usa SKU e conserva a regra existente de aceitar o mesmo SKU em registros diferentes.
+
+## Identificação da pessoa na bipagem
+
+O código ou nome completo digitado tem prioridade sobre sugestões; quando vários nomes correspondem à busca, o operador precisa escolher uma das opções. A pessoa selecionada fica vinculada ao ID do cadastro até o salvamento, e se o ID associado ao código mudar, o aplicativo pede uma nova seleção. Ao atualizar o cache, as ondas são remapeadas por ID para que códigos de pessoas excluídas não sejam confundidos com novos cadastros.
+
+Códigos de pessoas excluídas podem ser reaproveitados. Antes disso, retire os crachás antigos: um crachá antigo que contenha o mesmo código identifica o cadastro ativo atual.

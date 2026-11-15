@@ -723,6 +723,14 @@ await T("150 Configuração: várias ondas por tipo podem ser ativadas e desativ
  await typeRows(p,[[8901,3],[8902,4]]);await p.click('#save');await p.waitForTimeout(200);ok((await st(p)).waves.length===2,'não registrou as duas ondas');
  await openReg(p,'CL001','Maiores/Pesados');ok(await p.isHidden('#addRow'),'tipo desativado ainda permite várias ondas');
 });
+await T("151 Leitor rápido: Enter não troca o operador por sugestão antiga",async()=>{
+ const ops=[{m:'CL024',n:'Ana Teste',id:'ana',t:1,g:'Galpão 1'},{m:'CL022',n:'Isabella Teste',id:'isa',t:1,g:'Galpão 1'}];const p=await page(b,base({ops}));
+ await p.evaluate(()=>{go('op');const x=document.querySelector('#opIn');for(const c of 'CL022'){x.value+=c;x.dispatchEvent(new Event('input',{bubbles:true}))}x.dispatchEvent(new KeyboardEvent('keydown',{key:'Enter',bubbles:true}))});
+ const r=await p.evaluate(()=>({codigo:$('#opIn').value,escolhido:mesmoOperador(opOf('CL022')),info:$('#sum2').textContent}));
+ ok(r.codigo==='CL022'&&r.escolhido&&r.info.includes('Isabella Teste'),'identificação trocada: '+JSON.stringify(r));
+ await p.click('[data-ty="Vários artigos"]');await p.waitForTimeout(350);await typeRows(p,[[997001,5]]);await p.click('#save');await p.waitForTimeout(150);
+ const w=(await st(p)).waves;ok(w.length===1&&w[0].op==='CL022'&&w[0].opn==='Isabella Teste','onda associada à pessoa errada');
+});
 await b.close();
 const w=Math.max(...R.map(r=>r[1].length));for(const r of R)console.log((r[0]==="PASS"?"✅":"❌")+" "+r[1].padEnd(w)+"  "+r[2]);
 console.log(`\n${R.filter(r=>r[0]==="PASS").length}/${R.length} passaram`)})();
