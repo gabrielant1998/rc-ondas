@@ -749,17 +749,18 @@ await T("98 Meta coletiva: top 3 de tipos por unidades e ondas e contribuição 
  ok(/1ºRetrabalho100un/.test(r[0])&&/2ºItensÚnicos80un/.test(r[0])&&/3ºVáriosartigos60/.test(r[0]),'top unidades: '+r[0]);
  ok(/1ºItensÚnicos2ondas/.test(r[1]),'top ondas: '+r[1]);
  ok(/ItensÚnicos50%/.test(r[2])&&/Váriosartigos37,5%/.test(r[2])&&/Pacotedomesmo12,5%/.test(r[2])&&/Retrabalho\(100un\.\)ficafora/.test(r[2]),'contribuição: '+r[2])});
-await T("99 Produção individual: gráfico de produtividade com meta individual, cota da meta do dia e contribuição; imprime",async()=>{
+await T("99 Produção individual: gráfico de produtividade com meta individual e contribuição; imprime",async()=>{
  const st=base({metasInd:{"Galpão 1":{q:100}},waves:[WV('a','1','Itens Únicos',120,HR(9,0)),WV('b','2','Retrabalho',50,HR(9,30)),WV('c','3','Itens Únicos',80,HR(10,0),'CL002','Bruno Lima')]});
  const p=await page(b,st);
  const r=await p.evaluate(()=>{MT()['Galpão 1']=400;$("#gal").value="Galpão 1";$("#turnoF").value="";go('ind');const tabs=[...document.querySelectorAll('#gsub button')].map(x=>x.textContent);individual();document.querySelector('[data-ivw="graf"]').click();
   const rows=[...document.querySelectorAll('.pgt tr')].map(t=>[...t.children].map(c=>c.textContent.trim()).join('|'));return{n:S.ops.filter(o=>o.g==='Galpão 1').length,tabs,rows,bars:document.querySelectorAll('.pgv rect').length,lines:document.querySelectorAll('.pgv path').length}});
  ok(r.tabs[0]==='Produção individual'&&r.tabs[1]==='Produção da equipe','abas: '+r.tabs);
- ok(r.bars===r.n&&r.lines===2,'barras e linhas: '+JSON.stringify(r));
- ok(/^1º\|Ana Souza\|120\|100\|120%\|200\|30%$/.test(r.rows[1]),'Ana: '+r.rows[1]);ok(/^2º\|Bruno Lima\|80\|100\|80%\|200\|20%$/.test(r.rows[2]),'Bruno: '+r.rows[2]);
+ ok(r.bars===r.n&&r.lines===1,'barras e linhas: '+JSON.stringify(r));
+ ok(/^1º\|Ana Souza\|120\|100\|120%\|30%$/.test(r.rows[1]),'Ana: '+r.rows[1]);ok(/^2º\|Bruno Lima\|80\|100\|80%\|20%$/.test(r.rows[2]),'Bruno: '+r.rows[2]);
  const r2=await p.evaluate(()=>{const s=document.querySelector('#pgOrd');s.value='alfa';s.dispatchEvent(new Event('change',{bubbles:true}));return[...document.querySelectorAll('.pgt tr')].slice(1,-1).map(t=>t.children[1].textContent.trim())});
  ok(r2.length===r.n&&r2.join()===r2.slice().sort((x,y)=>x.localeCompare(y,'pt-BR')).join(),'ordem alfabética com todas as pessoas: '+r2);
  await p.evaluate(()=>{window.print=()=>{}});await p.click('#pgPrint');await p.waitForTimeout(250);
+ ok(await p.evaluate(()=>!/Cota/.test(document.querySelector('#iBody').textContent)),'sem cota da meta');
  ok(await p.evaluate(()=>document.body.classList.contains('printing')&&/Produtividade por pessoa/.test(document.querySelector('#folha').textContent)),'folha de impressão')});
 await b.close();
 const w=Math.max(...R.map(r=>r[1].length));for(const r of R)console.log((r[0]==="PASS"?"✅":"❌")+" "+r[1].padEnd(w)+"  "+r[2]);
