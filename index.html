@@ -346,6 +346,16 @@ td .btn.d:hover,td .pill.off[data-adel]:hover{background:var(--r);color:#fff;bor
 .g2f{display:grid;grid-template-columns:1fr 1fr;gap:8px 10px}.g2f label{min-width:0}.g2f input,.g2f select{width:100%;box-sizing:border-box}
 .parBan{flex:1 0 100%;background:color-mix(in srgb,var(--o) 14%,var(--card));border:1px solid color-mix(in srgb,var(--o) 50%,var(--line));border-left:4px solid var(--o);border-radius:6px;padding:8px 12px;font-size:14px}.parBan b{color:var(--o);margin-right:6px}
 .tp.pl th,.tp.pl td{text-align:left}
+.coSec{font-size:13px;font-weight:600;color:var(--mut);margin:18px 0 6px;letter-spacing:.01em}
+#coTurnos{margin-top:0!important}
+.tkG3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}@media(max-width:900px){.tkG3{grid-template-columns:minmax(0,1fr)}}
+.tk h2{margin-bottom:10px}.tkL{list-style:none;margin:0;padding:0;display:grid;gap:12px}.tkL li{display:grid;grid-template-columns:28px minmax(0,1fr);gap:8px;align-items:start}
+.tkP{font-weight:700;font-size:15px;color:var(--mut);padding-top:1px}.tkL li:first-child .tkP{color:var(--ink)}
+.tkN{display:flex;justify-content:space-between;gap:8px;font-size:14px}.tkN span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.tkN b{white-space:nowrap}.tkN small{font-weight:400;color:var(--mut)}
+.tkT{height:10px;background:var(--line);border-radius:5px;margin:5px 0 3px;overflow:hidden}.tkT b{display:block;height:100%;border-radius:0 5px 5px 0}
+.tkS{font-size:12px;color:var(--mut)}
+.tkS100{display:flex;gap:2px;height:22px;border-radius:6px;overflow:hidden;margin:2px 0 12px}.tkS100 b{display:block;min-width:3px}
+.tkG{list-style:none;margin:0;padding:0;display:grid;gap:6px}.tkG li{display:grid;grid-template-columns:minmax(0,1fr) auto 70px;gap:8px;font-size:14px;align-items:baseline}.tkG li span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.tkG small{color:var(--mut);text-align:right}
 .fdsR{margin-top:6px}.fdsR>b{font-size:13px;font-weight:600}.fdsL{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;margin-top:2px}.fdsL label{font-size:12px;color:var(--mut);display:flex;flex-direction:column;gap:2px;margin:0}.fdsL input{width:100%;min-width:0;box-sizing:border-box;min-height:34px;padding:4px 6px}@media(max-width:1600px){.fdsL{grid-template-columns:repeat(2,minmax(0,1fr))}}
 details.info{margin-top:8px;font-size:13.5px;color:var(--mut)}details.info summary{cursor:pointer;color:var(--ink);font-weight:600;list-style:none;display:inline-flex;align-items:center;gap:6px}
 details.info summary:before{content:"?";width:16px;height:16px;border-radius:50%;border:1px solid var(--mut);display:inline-grid;place-items:center;font-size:10.5px;color:var(--mut)}
@@ -1723,6 +1733,15 @@ function individual(){
 function coTipos(W,P,people){const D=durs(W),pp=Math.max(people,1);
  const tot=P.reduce((a,w)=>a+w.qty,0)||1;return`<table><tr><th>Tipo</th><th>Ondas</th><th>Unidades</th><th>Tempo médio ponderado por conjunto</th><th>Ondas por pessoa</th><th>Tempo por pessoa</th><th style="width:22%">Participação</th></tr>`+TY.map(([n,c])=>{const q=P.filter(w=>w.ty===n),dcc=D.filter(x=>x.w.ty===n),d=dcc.map(x=>x.d),sum=d.reduce((a,v)=>a+v,0);
   const u=q.reduce((a,w)=>a+w.qty,0);return`<tr${q.length?'':' style="opacity:.45"'}><td><i class="dot" style="background:${c}"></i><b>${esc(n)}</b></td><td>${fmt(q.length)}</td><td>${fmt(q.reduce((a,w)=>a+w.qty,0))}</td><td>${d.length?mm(wA(dcc)):"—"}</td><td>${(q.length/pp).toLocaleString("pt-BR",{maximumFractionDigits:1})}</td><td>${d.length?mm(sum/pp):"—"}</td><td><div class="bar" title="${Math.round(u/tot*100)}% das unidades"><b style="width:${u/tot*100}%;--c:${c}"></b></div></td></tr>`}).join("")+"</table>"}
+/* Tipos de onda: top 3 por unidades e por ondas + contribuição de cada tipo para a meta */
+function coTop(P){const R=TY.map(([n,c])=>{const q=P.filter(w=>w.ty===n);return{n,c,o:q.length,u:q.reduce((a,w)=>a+w.qty,0)}}).filter(x=>x.o);
+ if(!R.length)return'';const tu=R.reduce((a,x)=>a+x.u,0)||1,to=R.reduce((a,x)=>a+x.o,0)||1;
+ const top=(k,tt,un,tit,sub)=>{const L=R.slice().sort((a,b)=>b[k]-a[k]).slice(0,3),mx=L[0][k]||1;
+  return`<div class="card tk"><h2>${tit} <small class="legend" style="margin:0">${sub}</small></h2><ol class="tkL">${L.map((x,i)=>`<li><span class="tkP">${i+1}º</span><div class="tkB"><div class="tkN"><span><i class="dot" style="background:${x.c}"></i>${esc(x.n)}</span><b class="num">${fmt(x[k])} <small>${un}</small></b></div><div class="tkT"><b style="width:${Math.max(x[k]/mx*100,2)}%;background:${x.c}"></b></div><small class="tkS">${Math.round(x[k]/tt*100)}% do total</small></div></li>`).join('')}</ol></div>`};
+ const M=R.filter(x=>x.n!==RET).sort((a,b)=>b.u-a.u),tm=M.reduce((a,x)=>a+x.u,0),ret=R.find(x=>x.n===RET);
+ const ctb=`<div class="card tk"><h2>Contribuição para a meta <small class="legend" style="margin:0">% das unidades</small></h2>${tm?`<div class="tkS100" role="img" aria-label="Contribuição de cada tipo: ${M.map(x=>esc(x.n)+' '+Math.round(x.u/tm*100)+'%').join(', ')}">${M.map(x=>`<b style="flex:${x.u} 1 0;background:${x.c}" title="${esc(x.n)}: ${fmt(x.u)} un. (${(x.u/tm*100).toLocaleString('pt-BR',{maximumFractionDigits:1})}%)"></b>`).join('')}</div>
+  <ul class="tkG">${M.map(x=>`<li><span><i class="dot" style="background:${x.c}"></i>${esc(x.n)}</span><b class="num">${(x.u/tm*100).toLocaleString('pt-BR',{maximumFractionDigits:1})}%</b><small>${fmt(x.u)} un.</small></li>`).join('')}</ul>${ret?`<div class="legend">Retrabalho (${fmt(ret.u)} un.) fica fora da meta e tem meta própria.</div>`:''}`:'<div class="empty">Sem produção que conte para a meta.</div>'}</div>`;
+ return`<h3 class="coSec">Tipos de onda</h3><div class="tkG3">${top('u',tu,'un.','Top 3 em unidades','mais volume')}${top('o',to,R.length?'ondas':'','Top 3 em ondas','mais ondas concluídas')}${ctb}</div>`}
 function coletiva(){
  const target=$("#coBody");if(!mgPronto()){target.innerHTML=mgState&&/Não foi/.test(mgState)?'<div class="card"><div class="empty">'+esc(mgState)+'</div></div>':esqueleto();return}
  const data=mgData(),g=$("#gal").value,t=$("#turnoF").value,opmap=new Map(data.ops.map(o=>[o.m,o]));
@@ -1747,8 +1766,9 @@ function coletiva(){
   <table class="tp" style="margin-top:10px"><tr><th>Galpão</th><th>Unidades sem retrabalho</th><th>Meta</th><th>%</th></tr>${porGal.map(x=>`<tr><td>${esc(x.k)}</td><td>${fmt(x.q)}</td><td>${x.m&&!t?fmt(x.m):'—'}</td><td>${x.m&&!t?Math.round(x.q/x.m*100)+'%':'—'}</td></tr>`).join('')}</table></div>`;
  target.innerHTML=`<dl class="stats solo">`+mgK('Produção coletiva',fmt(total),'unidades concluídas')+mgK('Pessoas com bipagem',fmt(people),'no período')+mgK('Ondas concluídas',fmt(P.length),people?'média de '+(P.length/people).toLocaleString('pt-BR',{maximumFractionDigits:1})+' por pessoa':'compartilhadas pela equipe')+mgK('Procurando',fmt(W.filter(w=>w.st===1).length),fmt(W.filter(w=>w.st===1).reduce((a,w)=>a+w.qty,0))+' unidades')+mgK('Hora extra',tz.xMs?hh(tz.xMs):'—',fmt(tz.xO)+(tz.xO===1?' onda':' ondas')+' · '+fmt(tz.xQ)+' un.')+mgK('Meta coletiva',canCompare?fmt(configured):'—',t?'escolha todos os turnos':missing.length?'configure a meta dos galpões':'dias com operação')+mgK('Atingimento',canCompare?fmt(pct)+'%':'—',canCompare?'da meta coletiva':'sem comparação disponível')+`</dl>
  <div class="pfg"><div class="card"><h2>Produção da equipe ${single?'por hora':'por dia'} <small class="legend" style="margin:0">a barra verde é o pico</small></h2>${ch}</div>${meta}</div>
- ${trn}
- <div class="card" style="margin-top:12px"><h2>Total por tipo e tempo entre ondas</h2><div class="tw">${coTipos(W,P,people)}</div>
+ ${coTop(P)}
+ <h3 class="coSec">Turnos</h3>${trn}
+ <h3 class="coSec">Detalhe por tipo</h3><div class="card"><h2>Total por tipo e tempo entre ondas</h2><div class="tw">${coTipos(W,P,people)}</div>
  <details class="info"><summary>Como os números são calculados</summary>Somamos as unidades concluídas da equipe, sem ranking de pessoas. A meta é a soma da meta diária atual dos galpões nos dias com bipagem e no dia de hoje; como ela cobre o dia inteiro, a comparação só aparece com todos os turnos. Tempo por conjunto: da bipagem de um conjunto de ondas (bipadas no mesmo instante) até a seguinte do mesmo operador, sem contar o almoço e ignorando pausas acima de ${GAP()} min. A média por pessoa divide o total pelas ${fmt(people)} pessoas com bipagem. Faltas e horas extras não geram descontos automáticos.</details></div>
  ${missing.length?`<div class="legend">Galpões sem meta diária: ${missing.map(esc).join(', ')}. Cadastre em Config › Geral.</div>`:''}`;
 }

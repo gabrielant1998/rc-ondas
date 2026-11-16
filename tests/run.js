@@ -742,6 +742,13 @@ await T("97 Fim de semana: horário próprio de sábado por turno muda hora extr
  ok(r.ot[0]===false&&r.ot[1]===true,'12:30 de sábado vira hora extra: '+JSON.stringify(r.ot)+' antes '+antes);
  await p.fill('[data-fd="1"][data-w="s"][data-k="ini"]','');await p.fill('[data-fd="1"][data-w="s"][data-k="fim"]','');await p.press('[data-fd="1"][data-w="s"][data-k="fim"]','Tab');await p.waitForTimeout(200);
  ok((await p.evaluate(()=>!(S.cfg.fds[1]||{}).s)),'em branco volta ao horário da semana')});
+await T("98 Meta coletiva: top 3 de tipos por unidades e ondas e contribuição para a meta sem retrabalho",async()=>{
+ const st=base({waves:[WV('a','1','Itens Únicos',50,HR(9,0)),WV('b','2','Itens Únicos',30,HR(9,30)),WV('c','3','Vários artigos',60,HR(10,0)),WV('d','4','Retrabalho',100,HR(10,30)),WV('e','5','Pacote do mesmo',20,HR(11,0))]});
+ const p=await page(b,st);
+ const r=await p.evaluate(()=>{$("#gal").value="__all";$("#turnoF").value="";go("ind");document.querySelector('[data-gs="mc"]').click();const c=[...document.querySelectorAll('.tkG3 .tk')].map(x=>x.textContent.replace(/\s+/g,''));return c});
+ ok(/1ºRetrabalho100un/.test(r[0])&&/2ºItensÚnicos80un/.test(r[0])&&/3ºVáriosartigos60/.test(r[0]),'top unidades: '+r[0]);
+ ok(/1ºItensÚnicos2ondas/.test(r[1]),'top ondas: '+r[1]);
+ ok(/ItensÚnicos50%/.test(r[2])&&/Váriosartigos37,5%/.test(r[2])&&/Pacotedomesmo12,5%/.test(r[2])&&/Retrabalho\(100un\.\)ficafora/.test(r[2]),'contribuição: '+r[2])});
 await b.close();
 const w=Math.max(...R.map(r=>r[1].length));for(const r of R)console.log((r[0]==="PASS"?"✅":"❌")+" "+r[1].padEnd(w)+"  "+r[2]);
 console.log(`\n${R.filter(r=>r[0]==="PASS").length}/${R.length} passaram`)})();
