@@ -346,6 +346,7 @@ td .btn.d:hover,td .pill.off[data-adel]:hover{background:var(--r);color:#fff;bor
 .g2f{display:grid;grid-template-columns:1fr 1fr;gap:8px 10px}.g2f label{min-width:0}.g2f input,.g2f select{width:100%;box-sizing:border-box}
 .parBan{flex:1 0 100%;background:color-mix(in srgb,var(--o) 14%,var(--card));border:1px solid color-mix(in srgb,var(--o) 50%,var(--line));border-left:4px solid var(--o);border-radius:6px;padding:8px 12px;font-size:14px}.parBan b{color:var(--o);margin-right:6px}
 .tp.pl th,.tp.pl td{text-align:left}
+.fdsR{margin-top:6px}.fdsR>b{font-size:13px;font-weight:600}.fdsL{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;margin-top:2px}.fdsL label{font-size:12px;color:var(--mut);display:flex;flex-direction:column;gap:2px;margin:0}.fdsL input{width:100%;min-width:0;box-sizing:border-box;min-height:34px;padding:4px 6px}@media(max-width:1600px){.fdsL{grid-template-columns:repeat(2,minmax(0,1fr))}}
 details.info{margin-top:8px;font-size:13.5px;color:var(--mut)}details.info summary{cursor:pointer;color:var(--ink);font-weight:600;list-style:none;display:inline-flex;align-items:center;gap:6px}
 details.info summary:before{content:"?";width:16px;height:16px;border-radius:50%;border:1px solid var(--mut);display:inline-grid;place-items:center;font-size:10.5px;color:var(--mut)}
 details.info summary::-webkit-details-marker{display:none}details.info[open] summary{margin-bottom:4px}
@@ -733,7 +734,7 @@ async function pullReal(opt){
  GID={};GN={};gs.forEach(g=>{GID[g.nome]=g.id;GN[g.id]=g.nome});
  S.gals=gs.map(g=>g.nome);S.metasInd={};gs.forEach(g=>{if(g.meta_ind_ondas||g.meta_ind_qtd||g.meta_ind_ret)S.metasInd[g.nome]={o:g.meta_ind_ondas||0,q:g.meta_ind_qtd||0,r:g.meta_ind_ret||0}});
  ts.forEach(t=>{S.cfg.lim[t.nome]=t.limite;if(typeof t.multiplas_no_lancamento==="boolean")S.cfg.multi[t.nome]=t.multiplas_no_lancamento});
- const c=cf[0];if(c){S.cfg.turnos={1:{ini:c.turno1_ini,fim:c.turno1_fim},2:{ini:c.turno2_ini,fim:c.turno2_fim}};S.cfg.gap=Math.min(+c.intervalo_max_min||30,60);S.cfg.tol=c.tolerancia_min;S.cfg.metaMin=+c.meta_minima||0;S.cfg.and=c.ondas_em_andamento;S.cfg.alm={1:{ini:c.almoco1_ini,fim:c.almoco1_fim},2:{ini:c.almoco2_ini,fim:c.almoco2_fim}};S.cfg.pz=c.pausas||{}}
+ const c=cf[0];if(c){S.cfg.turnos={1:{ini:c.turno1_ini,fim:c.turno1_fim},2:{ini:c.turno2_ini,fim:c.turno2_fim}};S.cfg.gap=Math.min(+c.intervalo_max_min||30,60);S.cfg.tol=c.tolerancia_min;S.cfg.metaMin=+c.meta_minima||0;S.cfg.and=c.ondas_em_andamento;S.cfg.alm={1:{ini:c.almoco1_ini,fim:c.almoco1_fim},2:{ini:c.almoco2_ini,fim:c.almoco2_fim}};S.cfg.pz=c.pausas||{};S.cfg.fds=c.fds||{}}
  OPSALL={};os.forEach(o=>{OPSALL[o.id]=o});
  S.ops=os.filter(o=>!o.excluido_em).map(o=>({id:o.id,m:o.codigo,n:o.nome,t:o.turno,ini:o.inicio,fim:o.fim,al:{ini:o.almoco_ini,fim:o.almoco_fim},g:GN[o.galpao_id],criado:o.criado_em}));
  if(!S.gals.includes(S.gal))S.gal=S.gals[0];
@@ -789,6 +790,17 @@ async function rem(fn,msg){
  if(!online()){toast("Sem internet. Cadastros e alterações precisam de conexão.",5000);if(view==="cfg")cfgRender();return false}
  try{await fn();await pull();if(view==="cfg")cfgRender();renderAll();if(msg)toast(msg);return true}
  catch(e){toast(errMsg(e),6000);if(view==="cfg")cfgRender();return false}}
+function fdsBloco(t){const F=((S.cfg.fds||{})[t])||{},row=(k,nome)=>{const x=F[k]||{},a=`data-fd="${t}" data-w="${k}"`;return`<div class="fdsR"><b>${nome}</b><div class="fdsL"><label>Início (h)<input type="number" min="0" max="23" ${a} data-k="ini" value="${x.ini??''}" placeholder="—" aria-label="${nome}: início (hora)"></label><label>Fim (h)<input type="number" min="1" max="24" ${a} data-k="fim" value="${x.fim??''}" placeholder="—" aria-label="${nome}: fim (hora)"></label><label>Almoço<input type="time" ${a} data-k="ai" value="${m2hm(x.ai)}" aria-label="${nome}: início do almoço"></label><label>até<input type="time" ${a} data-k="af" value="${m2hm(x.af)}" aria-label="${nome}: fim do almoço"></label></div></div>`};
+ return`<div class="pzB fdsB"><div class="pzH">Fim de semana do ${t}º turno <small>em branco = igual à semana</small></div>${row('s','Sábado')}${row('d','Domingo')}</div>`}
+function fdsCampos(t,k){const g=c=>{const i=document.querySelector(`[data-fd="${t}"][data-w="${k}"][data-k="${c}"]`);return i?i.value:''},ini=g('ini'),fim=g('fim'),ai=hm2m(g('ai')),af=hm2m(g('af'));
+ if(ini===''&&fim==='')return{vazio:1};if(ini===''||fim==='')return null;const a=+ini,b=+fim;if(!(b>a)||a<0||b>24)return false;
+ if((ai==null)!==(af==null))return null;if(ai!=null&&!(af>ai&&ai>=a*60&&af<=b*60))return false;return{ini:a,fim:b,ai:ai??null,af:af??null}}
+async function fdsSalvar(t,k){const x=fdsCampos(t,k);if(x===null)return;if(x===false){toast("Confira o horário: o fim precisa ser depois do início e o almoço precisa ficar dentro do horário.",5000);return}
+ const F=JSON.parse(JSON.stringify(S.cfg.fds||{}));F[t]=F[t]||{};if(x.vazio)delete F[t][k];else F[t][k]=x;const nome=(k==='s'?'Sábado':'Domingo')+' do '+t+'º turno';
+ if(!ON){S.cfg.fds=F;save();renderAll();toast(x.vazio?nome+': usa o horário da semana':nome+': '+x.ini+'h às '+x.fim+'h');return}
+ if(!(me&&(me.adm||me.pC))){toast("Sem permissão para alterar a configuração.");return}
+ await rem(()=>mut(CFGP,"PATCH",{fds:F}),x.vazio?nome+": usa o horário da semana":nome+" salvo")}
+document.addEventListener("change",e=>{const d=e.target.dataset;if(d.fd===undefined)return;fdsSalvar(+d.fd,d.w)});
 function pzBloco(t){const L=pausasT(t),tn=S.cfg.turnos[t],al=(S.cfg.alm||{})[t],W=tn.fim>tn.ini?(tn.fim-tn.ini)*60:1,P=m=>Math.max(0,Math.min(100,(m-tn.ini*60)/W*100));
  return`<div class="pzB"><div class="pzH">Outras pausas do ${t}º turno <small>café, ginástica laboral…</small></div>`+L.map((p,i)=>`<div class="pzR"><input type="text" data-pz="${t}" data-i="${i}" data-k="n" value="${esc(p.n||'')}" maxlength="30" placeholder="Nome" aria-label="Nome da pausa"><input type="time" data-pz="${t}" data-i="${i}" data-k="i" value="${m2hm(p.i)}" aria-label="Início da pausa"><span>às</span><input type="time" data-pz="${t}" data-i="${i}" data-k="f" value="${m2hm(p.f)}" aria-label="Fim da pausa"><button type="button" class="lk pzX" data-pzx="${t}" data-i="${i}" aria-label="Remover pausa">Remover</button></div>`).join('')
  +`<button type="button" class="btn alt sm" data-pza="${t}">+ Adicionar pausa</button>`
@@ -928,10 +940,15 @@ let PAR=[];const parLista=()=>ON?PAR:(S.paradas=S.paradas||[]);
 function parDia(gal,d){return parLista().filter(p=>p.dia===d&&(!p.gal||!gal||p.gal===gal))}
 /* pausas programadas do turno (café, ginástica etc.), além do almoço */
 function pausasT(t){const z=((S.cfg&&S.cfg.pz)||{})[t===2?2:1];return Array.isArray(z)?z.filter(p=>p&&p.i!=null&&p.f>p.i):[]}
+function janelasDia(o,d){if(!o)return[];const f=fdsOf(o.t,d);if(!f)return janelas(o);const L=pausasT(o.t).map(p=>({ini:p.i,fim:p.f,n:p.n||'Pausa'}));if(f.ai!=null&&f.af>f.ai)L.unshift({ini:f.ai,fim:f.af,n:'Almoço',al:1});return L}
 function janelas(o){if(!o)return[];const al=almocoOf(o),L=pausasT(o.t).map(p=>({ini:p.i,fim:p.f,n:p.n||'Pausa'}));if(al)L.unshift({ini:al.ini,fim:al.fim,n:'Almoço',al:1});return L}
 /* quanto do intervalo [a,b] (ms) cai no almoço ou nas pausas programadas da pessoa */
-function almOv(o,a,b){if(!o||!(b>a))return 0;const J=janelas(o),d=new Date(a);d.setHours(0,0,0,0);let s=0;for(let k=0;k<2;k++){const z=d.getTime()+k*864e5,W=J.concat(parDia(o.g,dk(z)).map(p=>({ini:p.ini,fim:p.fim})));W.forEach(j=>{const x=z+j.ini*6e4,y=z+j.fim*6e4;s+=Math.max(0,Math.min(b,y)-Math.max(a,x))})}return Math.min(s,b-a)}
+function almOv(o,a,b){if(!o||!(b>a))return 0;const d=new Date(a);d.setHours(0,0,0,0);let s=0;for(let k=0;k<2;k++){const z=d.getTime()+k*864e5,W=janelasDia(o,dk(z)).concat(parDia(o.g,dk(z)).map(p=>({ini:p.ini,fim:p.fim})));W.forEach(j=>{const x=z+j.ini*6e4,y=z+j.fim*6e4;s+=Math.max(0,Math.min(b,y)-Math.max(a,x))})}return Math.min(s,b-a)}
+/* sábado e domingo podem ter horário próprio por turno (S.cfg.fds[t].s / .d) */
+function fdsOf(t,d){if(!d)return null;const w=new Date(d+'T12:00:00').getDay(),k=w===6?'s':w===0?'d':null;if(!k)return null;const f=((S.cfg&&S.cfg.fds)||{})[t===2?2:1];const x=f&&f[k];return x&&x.ini!=null&&x.fim!=null&&x.fim>x.ini?x:null}
+const turnoDia=(t,d)=>fdsOf(t,d)||S.cfg.turnos[t===2?2:1];
 function turnoOf(o,d){
+ if(o&&d&&typeof fdsOf==='function'){const f=fdsOf(o.t,d);if(f)return{ini:f.ini,fim:f.fim}}
  if(!o||o.ini==null||o.fim==null)return S.cfg.turnos[o&&o.t===2?2:1];
  /* o turno vale retroativamente: sempre o horário atual da pessoa, em todos os dias (horas extras, atrasos e históricos). As alterações ficam registradas em TH apenas para auditoria. */
  return{ini:o.ini,fim:o.fim};
@@ -1084,7 +1101,7 @@ function painel(){
   D=durs(L),md=wA(D),ot=P.filter(isOT),
   {a}=hourly(allF,g),a2=meias(allF,g),mx=Math.max(...a);
  $("#painel").classList.remove("pub");["#pRank","#pHeat","#pFun","#pDis","#pRad"].forEach(i=>$(i).classList.remove("hide"));
- const TF=$("#turnoF").value,TW=TF?S.cfg.turnos[TF]:{ini:Math.min(S.cfg.turnos[1].ini,S.cfg.turnos[2].ini),fim:Math.max(S.cfg.turnos[1].fim,S.cfg.turnos[2].fim)};
+ const TF=$("#turnoF").value,DD=$("#day").value||hoje(),TW=TF?turnoDia(+TF,DD):{ini:Math.min(turnoDia(1,DD).ini,turnoDia(2,DD).ini),fim:Math.max(turnoDia(1,DD).fim,turnoDia(2,DD).fim)};
  const nowF=new Date().getHours()+new Date().getMinutes()/60,isNow=$("#day").value===dk(Date.now());
  const hWin=Math.max(TW.fim-TW.ini,1),elapsed=isNow?Math.min(Math.max(nowF-TW.ini,0),hWin):hWin,remain=isNow?Math.max(TW.fim-Math.max(nowF,TW.ini),0):0;
  const metaT=g?(+MT()[g]||0):visG().reduce((s,k)=>s+(+MT()[k]||0),0);
@@ -1184,7 +1201,7 @@ function painelVivo(){const pub=ON&&!me,bx=$("#vivo");if(!bx)return;bx.classList
  if(!tb){$("#vivoC").innerHTML='<div class="empty">Ainda não há ondas bipadas neste dia.</div>';return}
  const [i0,i1]=win48(bip.map((v,i)=>v+con[i])),n=i1-i0+1,W=400,Ht=250,L=50,R=12,T=26,B=28,pw=W-L-R,ph=Ht-T-B;
  let a1=0,a2=0;const ab=[],ac=[];for(let k=0;k<48;k++){a1+=bip[k];a2+=con[k];ab.push(a1);ac.push(a2)}
- const TF=$("#turnoF").value,TW=TF?S.cfg.turnos[TF]:{ini:Math.min(S.cfg.turnos[1].ini,S.cfg.turnos[2].ini),fim:Math.max(S.cfg.turnos[1].fim,S.cfg.turnos[2].fim)},metaT=gs?(+MT()[gs]||0):visG().reduce((q,k)=>q+(+MT()[k]||0),0),
+ const TF=$("#turnoF").value,DD=$("#day").value||hoje(),TW=TF?turnoDia(+TF,DD):{ini:Math.min(turnoDia(1,DD).ini,turnoDia(2,DD).ini),fim:Math.max(turnoDia(1,DD).fim,turnoDia(2,DD).fim)},metaT=gs?(+MT()[gs]||0):visG().reduce((q,k)=>q+(+MT()[k]||0),0),
   exp=!(PF.ty.size||PF.ot)&&metaT&&TW.fim>TW.ini?k=>metaT*Math.min(Math.max((k/2+.5-TW.ini)/(TW.fim-TW.ini),0),1):null;
  $("#vivoRit").classList.toggle("hide",!exp);
  const mx=Math.max(1,ab[i1],exp?exp(i1):0),step=Math.pow(10,Math.floor(Math.log10(mx))),top=Math.ceil(mx/step)*step,y=v=>T+ph-v/top*ph,x=k=>L+(n>1?pw*(k-i0)/(n-1):pw/2);
@@ -1607,7 +1624,7 @@ function folhaHTML(o,data){
  /* linha do dia: ondas, almoço e pausas fora do almoço */
  const linha=(()=>{if(!single||!P.length)return'';const d0=new Date(data.days[0]+'T00:00:00').getTime(),T=P.map(w=>w.fin||w.ts).sort((a,b)=>a-b),tn=turnoOf(o,data.days[0]),h0=Math.min(tn.ini,new Date(T[0]).getHours()),h1=Math.max(tn.fim,new Date(T[T.length-1]).getHours()+1),W=560,H=64,X=t=>6+(t-d0-h0*36e5)/((h1-h0)*36e5)*(W-12),al=almocoOf(o),gap=GAP()*6e4;
   let g=`<svg viewBox="0 0 ${W} ${H}" class="fl-ln" role="img" aria-label="Linha do dia"><rect x="${X(d0+tn.ini*36e5)}" y="6" width="${X(d0+tn.fim*36e5)-X(d0+tn.ini*36e5)}" height="30" rx="3" fill="#eef3fd"/>`;
-  janelas(o).concat(parDia(o.g,data.days[0]).map(p=>({ini:p.ini,fim:p.fim,n:'parada'}))).forEach(j=>{const a=X(d0+j.ini*6e4),b=X(d0+j.fim*6e4);g+=`<rect x="${a}" y="6" width="${Math.max(b-a,2)}" height="30" fill="#dff2ee"/>`+(b-a>=24?`<text x="${(a+b)/2}" y="25" font-size="${b-a>=44?11:9}" text-anchor="middle" fill="#0b7f70">${esc(j.al?'almoço':j.n.toLowerCase())}</text>`:'')});
+  janelasDia(o,data.days[0]).concat(parDia(o.g,data.days[0]).map(p=>({ini:p.ini,fim:p.fim,n:'parada'}))).forEach(j=>{const a=X(d0+j.ini*6e4),b=X(d0+j.fim*6e4);g+=`<rect x="${a}" y="6" width="${Math.max(b-a,2)}" height="30" fill="#dff2ee"/>`+(b-a>=24?`<text x="${(a+b)/2}" y="25" font-size="${b-a>=44?11:9}" text-anchor="middle" fill="#0b7f70">${esc(j.al?'almoço':j.n.toLowerCase())}</text>`:'')});
   T.forEach((t,i)=>{if(i&&t-T[i-1]-almOv(o,T[i-1],t)>gap){const a=X(T[i-1]),b=X(t);g+=`<rect x="${a+3}" y="8" width="${Math.max(b-a-5,2)}" height="26" fill="none" stroke="#b85c00" stroke-dasharray="3 3" rx="2"/>`+(b-a>30?`<text x="${(a+b)/2}" y="25" font-size="10" text-anchor="middle" fill="#b85c00">${hh(t-T[i-1]-almOv(o,T[i-1],t))}</text>`:'')}});
   T.forEach(t=>{g+=`<rect x="${X(t)-1.5}" y="10" width="3" height="22" fill="#0f4bd0"/>`});
   for(let h=h0;h<=h1;h++)g+=`<text x="${X(d0+h*36e5)}" y="${H-12}" font-size="11" text-anchor="middle" fill="#55627a">${h}h</text>`;
@@ -1686,7 +1703,7 @@ function individual(){
   let g=`<svg class="ch" viewBox="0 0 ${W} ${H}" role="img" aria-label="Linha do dia de ${esc(o.n)}"><rect x="${X(d0+dia.t.ini*36e5)}" y="16" width="${X(d0+dia.t.fim*36e5)-X(d0+dia.t.ini*36e5)}" height="46" rx="4" fill="color-mix(in srgb,var(--g) 6%,var(--card))"/><text x="${X(d0+dia.t.ini*36e5)+4}" y="12">turno ${dia.t.ini}h–${dia.t.fim}h</text>`;
   if(h1>dia.t.fim)g+=`<rect x="${X(d0+dia.t.fim*36e5)}" y="16" width="${X(d0+h1*36e5)-X(d0+dia.t.fim*36e5)}" height="46" fill="color-mix(in srgb,var(--o) 14%,var(--card))"/><text x="${X(d0+h1*36e5)}" y="12" text-anchor="end" style="fill:var(--o)">hora extra</text>`;
   if(h0<dia.t.ini)g+=`<rect x="${X(d0+h0*36e5)}" y="16" width="${X(d0+dia.t.ini*36e5)-X(d0+h0*36e5)}" height="46" fill="color-mix(in srgb,var(--o) 14%,var(--card))"/>`;
-  janelas(o).concat(parDia(o.g,data.days[0]).map(p=>({ini:p.ini,fim:p.fim,n:'parada'}))).forEach(j=>{const a=X(d0+j.ini*6e4),b=X(d0+j.fim*6e4);g+=`<rect x="${a}" y="16" width="${Math.max(b-a,2)}" height="46" fill="color-mix(in srgb,var(--k) 16%,var(--card))"><title>${esc(j.n)} ${m2hm(j.ini)}–${m2hm(j.fim)}</title></rect>`+(b-a>=26?`<text x="${(a+b)/2}" y="43" text-anchor="middle" style="fill:var(--k);font-size:10.5px">${esc(j.al?'almoço':j.n.toLowerCase())}</text>`:'')});
+  janelasDia(o,data.days[0]).concat(parDia(o.g,data.days[0]).map(p=>({ini:p.ini,fim:p.fim,n:'parada'}))).forEach(j=>{const a=X(d0+j.ini*6e4),b=X(d0+j.fim*6e4);g+=`<rect x="${a}" y="16" width="${Math.max(b-a,2)}" height="46" fill="color-mix(in srgb,var(--k) 16%,var(--card))"><title>${esc(j.n)} ${m2hm(j.ini)}–${m2hm(j.fim)}</title></rect>`+(b-a>=26?`<text x="${(a+b)/2}" y="43" text-anchor="middle" style="fill:var(--k);font-size:10.5px">${esc(j.al?'almoço':j.n.toLowerCase())}</text>`:'')});
   T.forEach((x,i)=>{if(i&&x.t-T[i-1].t-almOv(o,T[i-1].t,x.t)>gap){const a=X(T[i-1].t),b=X(x.t);g+=`<rect x="${a+4}" y="18" width="${Math.max(b-a-6,2)}" height="42" fill="none" stroke="var(--o)" stroke-dasharray="3 3" rx="3"><title>Pausa de ${hh(x.t-T[i-1].t)}</title></rect>`+(b-a>34?`<text x="${(a+b)/2}" y="43" text-anchor="middle" style="fill:var(--o);font-size:10.5px">${hh(x.t-T[i-1].t)}</text>`:'')}});
   T.forEach(x=>{const ty=TY.find(z=>z[0]===x.w.ty)||TY[0],h=Math.max(x.w.qty/mq*42,4);g+=`<rect x="${X(x.t)-3}" y="${62-h}" width="6" height="${h}" rx="1.5" fill="${ty[1]}"><title>${new Date(x.t).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})} · ${esc(wnS(x.w)||'')} ${esc(x.w.ty)}: ${fmt(x.w.qty)} un.</title></rect>`});
   for(let h=h0;h<=h1;h++)g+=`<text x="${X(d0+h*36e5)}" y="${H-14}" text-anchor="middle">${h}h</text>`;
@@ -1744,7 +1761,7 @@ function cfgOp(){
   if(L)$("#storInfo").innerHTML+="<br>Dados antigos neste aparelho: "+fmt(L.waves.length)+" ondas e "+L.ops.length+" operadores"+(ja?", já enviados":"")+'. <button class="btn alt sm" id="impB" style="margin-top:6px">'+(ja?"Enviar de novo":"Enviar para o banco")+"</button>"}
  $("#lims").innerHTML=TY.map(([n])=>`<label>${n}<input type="number" min="1" data-lim="${n}" value="${S.cfg.lim[n]}"></label>`).join("");
  $("#multiL").innerHTML=TY.map(([n])=>`<label class="row"><input type="checkbox" data-multi="${esc(n)}" ${multiOnda(n)?"checked":""}${ON&&!(me&&me.adm)?" disabled":""}>${esc(n)}</label>`).join("");
- $("#turnos").innerHTML=[1,2].map(t=>`<label>Início do ${t}º turno (hora)<input type="number" min="0" max="23" data-tn="${t}" data-k="ini" value="${S.cfg.turnos[t].ini}"></label><label>Fim do ${t}º turno (hora)<input type="number" min="1" max="24" data-tn="${t}" data-k="fim" value="${S.cfg.turnos[t].fim}"></label><label>Almoço do ${t}º turno: início<input type="time" data-al="${t}" data-k="ini" value="${m2hm(((S.cfg.alm||{})[t]||{}).ini)}"></label><label>Almoço do ${t}º turno: fim<input type="time" data-al="${t}" data-k="fim" value="${m2hm(((S.cfg.alm||{})[t]||{}).fim)}"></label>${pzBloco(t)}`).join("");
+ $("#turnos").innerHTML=[1,2].map(t=>`<label>Início do ${t}º turno (hora)<input type="number" min="0" max="23" data-tn="${t}" data-k="ini" value="${S.cfg.turnos[t].ini}"></label><label>Fim do ${t}º turno (hora)<input type="number" min="1" max="24" data-tn="${t}" data-k="fim" value="${S.cfg.turnos[t].fim}"></label><label>Almoço do ${t}º turno: início<input type="time" data-al="${t}" data-k="ini" value="${m2hm(((S.cfg.alm||{})[t]||{}).ini)}"></label><label>Almoço do ${t}º turno: fim<input type="time" data-al="${t}" data-k="fim" value="${m2hm(((S.cfg.alm||{})[t]||{}).fim)}"></label>${fdsBloco(t)}${pzBloco(t)}`).join("");
  $("#and").checked=!!S.cfg.and;$("#gap").value=GAP();$("#tol").value=S.cfg.tol}
 function cfgUsers(){
  $("#nextCode").textContent="próximo: "+nextCode();

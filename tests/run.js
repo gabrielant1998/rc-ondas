@@ -731,6 +731,17 @@ await T("151 Leitor rápido: Enter não troca o operador por sugestão antiga",a
  await p.click('[data-ty="Vários artigos"]');await p.waitForTimeout(350);await typeRows(p,[[997001,5]]);await p.click('#save');await p.waitForTimeout(150);
  const w=(await st(p)).waves;ok(w.length===1&&w[0].op==='CL022'&&w[0].opn==='Isabella Teste','onda associada à pessoa errada');
 });
+await T("97 Fim de semana: horário próprio de sábado por turno muda hora extra e régua do Painel",async()=>{const D=864e5;let y=HR(0,0)-D;while(new Date(y).getDay()!==6)y-=D;const at=(h,m)=>y+h*36e5+m*6e4;
+ const st=base({waves:[WV('a','1','Itens Únicos',10,at(9,0)),WV('b','2','Itens Únicos',10,at(12,30))]});const p=await page(b,st);
+ const antes=await p.evaluate(y=>{const w=S.waves.find(x=>x.wn==='2'||x.id==='b')||S.waves[1];return isOT(w)},y);
+ await p.evaluate(()=>{go('cfg');document.querySelector('[data-c="cho"]').click()});await p.waitForTimeout(150);
+ await p.fill('[data-fd="1"][data-w="s"][data-k="ini"]','7');await p.fill('[data-fd="1"][data-w="s"][data-k="fim"]','12');await p.press('[data-fd="1"][data-w="s"][data-k="fim"]','Tab');await p.waitForTimeout(200);
+ const r=await p.evaluate(y=>{const d=dk(y),seg=dk(y+2*864e5);const w=S.waves.slice().sort((a,b)=>(a.fin||a.ts)-(b.fin||b.ts));return{fds:S.cfg.fds,ot:w.map(isOT),t:turnoOf(S.ops[0],d),seg:turnoOf(S.ops[0],seg),sem:S.cfg.turnos[1]}},y);
+ ok(r.fds[1]&&r.fds[1].s.ini===7&&r.fds[1].s.fim===12,'salvo: '+JSON.stringify(r.fds));
+ ok(r.t.ini===7&&r.t.fim===12,'turno do sábado: '+JSON.stringify(r.t));ok(r.seg.ini===r.sem.ini&&r.seg.fim===r.sem.fim,'segunda usa o da semana: '+JSON.stringify(r.seg));
+ ok(r.ot[0]===false&&r.ot[1]===true,'12:30 de sábado vira hora extra: '+JSON.stringify(r.ot)+' antes '+antes);
+ await p.fill('[data-fd="1"][data-w="s"][data-k="ini"]','');await p.fill('[data-fd="1"][data-w="s"][data-k="fim"]','');await p.press('[data-fd="1"][data-w="s"][data-k="fim"]','Tab');await p.waitForTimeout(200);
+ ok((await p.evaluate(()=>!(S.cfg.fds[1]||{}).s)),'em branco volta ao horário da semana')});
 await b.close();
 const w=Math.max(...R.map(r=>r[1].length));for(const r of R)console.log((r[0]==="PASS"?"✅":"❌")+" "+r[1].padEnd(w)+"  "+r[2]);
 console.log(`\n${R.filter(r=>r[0]==="PASS").length}/${R.length} passaram`)})();
