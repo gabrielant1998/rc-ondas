@@ -46,6 +46,7 @@ function fake(db){const cors={'access-control-allow-origin':'*','access-control-
    const tipos=group(w=>w.tipo,w=>({tipo:w.tipo,qtd:0,ondas:0})),gals=group(w=>w.galpao_id,w=>({nome:db.galpoes.find(g=>g.id===w.galpao_id).nome,qtd:0,ondas:0,pessoas:0}));
    return J(route,200,{total:selected.reduce((n,w)=>n+w.quantidade,0),ondas:selected.length,pessoas:new Set(selected.map(w=>w.operador_id)).size,extra_un:0,extra_ondas:0,dur_ms:0,dur_n:0,dur_tipos:[],horas:[],tipos,galpoes:gals})}
   if(t==='rpc/relatorio_agregado'){db.calls.agg=(db.calls.agg||0)+1;const M=new Map();db.ondas.filter(o=>escopo(o.galpao_id)&&o.status===0&&o.registrada_em>=body.p_ini&&o.registrada_em<body.p_fim).forEach(o=>{const d=new Date(Date.parse(o.concluida_em||o.registrada_em)-3*36e5).toISOString().slice(0,10),k=[d,o.galpao_id,o.operador_id,o.tipo].join('|'),r=M.get(k)||{dia:d,galpao_id:o.galpao_id,operador_id:o.operador_id,tipo:o.tipo,ondas:0,unidades:0};r.ondas++;r.unidades+=o.quantidade;M.set(k,r)});return J(route,200,[...M.values()])}
+  if(t==='rpc/ondas_removidas'){db.calls.rem=(db.calls.rem||0)+1;return J(route,200,(body.p_ids||[]).filter(i=>!db.ondas.some(x=>x.id===i)))}
   if(t==='rpc/registrar_ondas'){db.calls.rpc++;return J(route,200,body.lote.map(o=>{
     if(db.ondas.some(x=>x.id===o.id))return{id:o.id,resultado:'ja_existia',detalhe:null};
     if(db.ondas.some(x=>normWN(x.wn)===normWN(o.wn)))return{id:o.id,resultado:'wn_repetido',detalhe:'A onda '+o.wn+' já foi registrada'};
@@ -396,6 +397,14 @@ await T('S90 Configuração de várias ondas é compartilhada pelo servidor',asy
  ok(await outra.isVisible('#addRow'),'outro aparelho não recebeu ativação');await outra.click('#b3');await outra.click('[data-ty="Maiores/Pesados"]');await outra.waitForTimeout(400);
  ok(await outra.isHidden('#addRow'),'outro aparelho não recebeu desativação');
 });
+await T('S91 Onda excluída pelo gestor pode ser bipada de novo no aparelho da operação',async()=>{
+ const db=banco(),p=await page(b,db);await reg(p,'CL001','Pacote do mesmo',[[7101,10]]);await p.evaluate(()=>push());await p.waitForTimeout(500);
+ ok(db.ondas.some(x=>x.wn==='7101'),'primeira bipagem não chegou');
+ db.ondas=db.ondas.filter(x=>x.wn!=='7101');
+ await reg(p,'CL001','Pacote do mesmo',[[7101,12]]);await p.evaluate(()=>push());await p.waitForTimeout(500);
+ const r=await p.evaluate(()=>S.waves.filter(w=>w.wn==='7101').map(w=>w.qty));
+ ok(db.ondas.filter(x=>x.wn==='7101').length===1&&db.ondas.find(x=>x.wn==='7101').quantidade===12&&r.join()==='12','deveria registrar de novo: '+JSON.stringify({db:db.ondas.filter(x=>x.wn==='7101'),local:r,toast:''}));
+ await reg(p,'CL001','Pacote do mesmo',[[7101,5]]);ok(db.ondas.filter(x=>x.wn==='7101').length===1&&/já foi registrada/.test(await p.textContent('#rowsL')+await p.textContent('#toast')),'onda existente deveria continuar bloqueada')});
 await b.close();
 const w=Math.max(...R.map(r=>r[1].length));for(const r of R)console.log((r[0]==='PASS'?'✅':'❌')+' '+r[1].padEnd(w)+'  '+r[2]);
 console.log(`\n${R.filter(r=>r[0]==='PASS').length}/${R.length} passaram`)})();

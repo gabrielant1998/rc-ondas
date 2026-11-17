@@ -792,9 +792,17 @@ async function pullReal(opt){
    const M=new Map(S.waves.filter(w=>w.srv).map(w=>[w.id,w]));rows.forEach(x=>M.set(x.id,mapW(x)));(exc||[]).forEach(x=>M.delete(x.id));
    srv=[...M.values()].filter(w=>w.ts>=deMs).sort((a,b)=>a.ts-b.ts);SYNC.at=maxAt(rows)||SYNC.at}
   const ids=new Set(srv.map(w=>w.id));S.waves=srv.concat(mine.filter(w=>!ids.has(w.id)&&!(w.sync&&!w.err&&w.ts>=deMs)));cacheSalvar()}
- else{const corte=Date.now()-3*864e5;S.waves=mine.filter(w=>!w.sync||w.err||w.ts>corte)}
+ else{const corte=Date.now()-3*864e5;S.waves=mine.filter(w=>!w.sync||w.err||w.ts>corte);await limparExcluidas()}
  S.waves.forEach(atualizarIdentidadeOnda);
  save();authUI()}
+/* aparelho sem login: remove da cópia local as ondas que um gestor excluiu, liberando o número para bipar de novo */
+const UUIDRE=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+async function limparExcluidas(wns){
+ if(!ON||!online())return 0;
+ const c=S.waves.filter(w=>w.sync&&!w.err&&!w.srv&&UUIDRE.test(String(w.id))&&(!wns||wns.has(normWN(w.wn)))).slice(-500);if(!c.length)return 0;
+ try{const r=await api("/rest/v1/rpc/ondas_removidas",{method:"POST",body:{p_ids:c.map(w=>w.id)}});
+  const del=new Set((r||[]).map(x=>typeof x==="string"?x:Object.values(x||{})[0]));
+  if(del.size){S.waves=S.waves.filter(w=>!del.has(w.id));save()}return del.size}catch(e){return 0}}
 /* fila de envio: cada onda tem id próprio, então reenviar nunca duplica */
 async function push(){
  if(!ON||pushing||!online())return;
@@ -2346,7 +2354,11 @@ $("#rowsL").onkeydown=e=>{if(e.key!=="Enter")return;const d=e.target.dataset;
  if(d.wn!==undefined){e.preventDefault();const q=$('[data-q="'+d.wn+'"]');if(q)q.focus()}
  else if(d.q!==undefined){e.preventDefault();const n=$('[data-wn="'+(+d.q+1)+'"]');if(n)n.focus();else $("#save").focus()}};
 $("#rowsL").onclick=e=>{const i=e.target.dataset.rmrow;if(i!==undefined){rows.splice(+i,1);if(!rows.length)rows.push({wn:"",q:""});renderRows()}};
-$("#save").onclick=()=>{const o=findOp($("#opIn").value);
+let salvando=false;
+$("#save").onclick=async()=>{if(salvando)return;
+ const ent=new Set(rows.map(r=>normWN(r.wn)).filter(Boolean));
+ if(!isRT()&&!me&&S.waves.some(w=>w.sync&&!w.err&&!w.srv&&ent.has(normWN(w.wn)))){salvando=true;try{await limparExcluidas(ent)}finally{salvando=false}}
+ const o=findOp($("#opIn").value);
  if(!o||!mesmoOperador(o)){operadorSelecionado=null;toast("A pessoa selecionada mudou. Confira o nome e selecione novamente.",7000);goStep(1);return}
  if(!multiOnda()&&rows.filter(r=>String(r.wn||"").trim()||String(r.q||"").trim()).length>1){toast("Este tipo permite apenas uma onda por lançamento. Remova as linhas adicionais.",6000);return}
  const bad={},list=[];
