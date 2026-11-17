@@ -100,14 +100,14 @@ await T("16 Virada do dia: 23h59 e 00h01 caem em dias diferentes",async()=>{cons
  const p=await page(b,S);const today=await p.textContent('#kpis .num');ok(today.trim()==="22","hoje mostra "+today)});
 
 await T("17 Excluir usuário libera o código e mantém o histórico",async()=>{const S=base({waves:[{id:"a",wn:"1",op:"CL002",opn:"Bruno Lima",gal:"Galpão 1",ty:"Vários",qty:5,st:0,ts:Date.now(),fin:Date.now(),sync:1}]});
- const p=await page(b,S);p.on('dialog',d=>d.accept());await p.click('.tab[data-t="cfg"]');await p.click('[data-c="cus"]');await p.click('[data-udel="CL002"]');await p.waitForTimeout(150);
+ const p=await page(b,S);p.on('dialog',d=>d.accept());await p.click('.tab[data-t="cfg"]');await p.click('[data-c="cus"]');await p.fill('#uQ','Bruno');await p.click('[data-udel="CL002"]');await p.waitForTimeout(150);
  await p.fill('#uN','Diego Rocha');await p.click('#uB');await p.waitForTimeout(150);const s=await st(p);
  ok(s.ops.find(o=>o.n==="Diego Rocha").m==="CL002","código novo: "+s.ops.find(o=>o.n==="Diego Rocha").m);ok(s.waves.length===1&&s.waves[0].opn==="Bruno Lima","histórico mudou");
  await p.evaluate(()=>{go("ind");go("painel");go("op")});ok(p.errors.length===0,"erro JS: "+p.errors.join(";"));
  const name=await p.evaluate(()=>document.querySelector("#last").textContent);return name.includes("Bruno Lima")?"registro antigo ainda mostra Bruno Lima":"?"});
 
 await T("18 Código reutilizado não herda a produção do usuário excluído",async()=>{const S=base({waves:[{id:"a",wn:"1",op:"CL002",opn:"Bruno Lima",gal:"Galpão 1",ty:"Vários",qty:55,st:0,ts:Date.now(),fin:Date.now(),sync:1}]});
- const p=await page(b,S);p.on('dialog',d=>d.accept());await p.click('.tab[data-t="cfg"]');await p.click('[data-c="cus"]');await p.click('[data-udel="CL002"]');await p.waitForTimeout(100);
+ const p=await page(b,S);p.on('dialog',d=>d.accept());await p.click('.tab[data-t="cfg"]');await p.click('[data-c="cus"]');await p.fill('#uQ','Bruno');await p.click('[data-udel="CL002"]');await p.waitForTimeout(100);
  await p.fill('#uN','Diego Rocha');await p.click('#uB');await p.waitForTimeout(100);
  const r=await p.evaluate(()=>{go("ind");$("#iOp").value="CL002";individual();return document.querySelector("#iBody .kpi .num").textContent});
  const tot=await p.evaluate(()=>{go("painel");return document.querySelector("#kpis .num").textContent});
@@ -307,7 +307,7 @@ await T("73 Mini abas na lateral: aparecem sob a aba ativa e abrem de forma inde
  const p=await page(b,base(),{sidebarSubs:true});
  ok(!(await p.isVisible('#hsub')),'barra interna deveria sumir no computador');
  await p.evaluate(()=>go('his'));await p.waitForSelector('.ssub [data-v="pes"]');
- const n=await p.$$eval('.ssub button',a=>a.map(x=>x.textContent));ok(n.length===4&&n[0].includes('Evolução'),'abas laterais: '+n);
+ const n=await p.$$eval('.ssub button',a=>a.map(x=>x.textContent));ok(n.length===5&&n[0].includes('Evolução')&&n[4].includes('Ausências'),'abas laterais: '+n);
  await p.click('.ssub [data-v="pes"]');await p.waitForTimeout(200);ok(await p.$eval('.ssub [data-v="pes"]',e=>e.classList.contains('on')),'marca a aba ativa');
  ok(await p.$eval('#hsub [data-hs="pes"]',e=>e.classList.contains('on')),'a aba interna acompanha');
  await p.evaluate(()=>go('prs'));await p.waitForTimeout(200);ok((await p.$$('.ssub')).length===1&&(await p.$$eval('.ssub button',a=>a.length))===2,'só as abas da área ativa aparecem (Pendentes e Histórico)');
@@ -699,13 +699,16 @@ await T("94 Retrabalho fica fora das metas e tem meta individual própria",async
  ok(/sem 70 de retrabalho/.test(r.pl),'painel: '+r.pl);
  ok(/60 \/ 100/.test(r.rw)&&/70 \/ 50/.test(r.rw),'equipe: '+r.rw);
  ok(/90 de /.test(r.co)&&/retrabalho \(70\) fica fora/.test(r.co)&&/Galpão 19020045%/.test(r.co),'coletiva: '+r.co)});
-await T("95 Pausas programadas: Config adiciona e o intervalo do café não vira pausa",async()=>{const D=864e5,y=HR(0,0)-D,at=(h,m)=>y+h*36e5+m*6e4;
+await T("95 Café do galpão: Config salva e o intervalo do café não vira pausa",async()=>{const D=864e5,y=HR(0,0)-D,at=(h,m)=>y+h*36e5+m*6e4;
  const st=base({waves:[WV('a','1','Itens Únicos',10,at(9,10)),WV('b','2','Itens Únicos',10,at(9,50))]});
- const p=await page(b,st);await p.evaluate(()=>{go('cfg');document.querySelector('[data-c="cho"]').click()});await p.click('[data-pza="1"]');await p.waitForTimeout(150);
- await p.fill('[data-pz="1"][data-i="0"][data-k="i"]','09:20');await p.fill('[data-pz="1"][data-i="0"][data-k="f"]','09:35');await p.press('[data-pz="1"][data-i="0"][data-k="f"]','Tab');await p.waitForTimeout(200);
- const r=await p.evaluate(y=>{const d=dk(y);return{pz:S.cfg.pz,n:mgSplit(S.ops[0],d,S.waves).nMs/6e4}},y);
- ok(r.pz[1]&&r.pz[1][0].i===560&&r.pz[1][0].f===575,'pausa salva: '+JSON.stringify(r.pz));ok(r.n===25,'40 min menos 15 de café = 25: '+r.n);
- await p.click('[data-pzx="1"][data-i="0"]');await p.waitForTimeout(150);ok((await p.evaluate(()=>S.cfg.pz[1].length))===0,'remover')});
+ const p=await page(b,st);await p.evaluate(()=>{go('cfg');document.querySelector('[data-c="cho"]').click()});await p.waitForTimeout(150);
+ const f='#turnos form[data-hr="1"] ';await p.fill(f+'[data-hk="ci"]','09:20');await p.fill(f+'[data-hk="cf"]','09:35');await p.click(f+'[type="submit"]');await p.waitForTimeout(200);
+ const r=await p.evaluate(y=>{const d=dk(y);return{h:S.galH,n:mgSplit(S.ops[0],d,S.waves).nMs/6e4}},y);
+ ok(r.h['Galpão 1'][1].cafe.ini===560&&r.h['Galpão 1'][1].cafe.fim===575,'café salvo: '+JSON.stringify(r.h));ok(r.n===25,'40 min menos 15 de café = 25: '+r.n);
+ ok((await p.evaluate(()=>pausasT(1,'Galpão 2').length))===0,'café do Galpão 1 não vale para o Galpão 2');
+ await p.click(f+'[data-pzadd]');await p.fill(f+'[data-pzn="0"]','Ginástica');await p.fill(f+'[data-pzi="0"]','10:00');await p.fill(f+'[data-pzf="0"]','10:10');await p.click(f+'[type="submit"]');await p.waitForTimeout(200);
+ ok((await p.evaluate(()=>pausasT(1,'Galpão 1').map(x=>x.n).join()))==='Café,Ginástica','outra pausa');
+ await p.fill(f+'[data-hk="ci"]','');await p.fill(f+'[data-hk="cf"]','');await p.click(f+'[data-pzdel="0"]');await p.click(f+'[type="submit"]');await p.waitForTimeout(200);ok((await p.evaluate(()=>pausasT(1,'Galpão 1').length))===0,'remover')});
 await T("96 Paradas da operação: registro em Config, aviso no Painel e o tempo parado não vira pausa",async()=>{const D=864e5,y=HR(0,0)-D,at=(h,m)=>y+h*36e5+m*6e4;
  const st=base({waves:[WV('a','1','Itens Únicos',10,at(13,50)),WV('b','2','Itens Únicos',10,at(14,50))]});const p=await page(b,st);p.on('dialog',d=>d.accept());
  await p.evaluate(()=>{go('cfg');document.querySelector('[data-c="cho"]').click()});await p.waitForTimeout(150);
@@ -731,17 +734,16 @@ await T("151 Leitor rápido: Enter não troca o operador por sugestão antiga",a
  await p.click('[data-ty="Vários artigos"]');await p.waitForTimeout(350);await typeRows(p,[[997001,5]]);await p.click('#save');await p.waitForTimeout(150);
  const w=(await st(p)).waves;ok(w.length===1&&w[0].op==='CL022'&&w[0].opn==='Isabella Teste','onda associada à pessoa errada');
 });
-await T("97 Fim de semana: horário próprio de sábado por turno muda hora extra e régua do Painel",async()=>{const D=864e5;let y=HR(0,0)-D;while(new Date(y).getDay()!==6)y-=D;const at=(h,m)=>y+h*36e5+m*6e4;
+await T("97 Fim de semana: horário de sábado do galpão muda hora extra e só vale para ele",async()=>{const D=864e5;let y=HR(0,0)-D;while(new Date(y).getDay()!==6)y-=D;const at=(h,m)=>y+h*36e5+m*6e4;
  const st=base({waves:[WV('a','1','Itens Únicos',10,at(9,0)),WV('b','2','Itens Únicos',10,at(12,30))]});const p=await page(b,st);
- const antes=await p.evaluate(y=>{const w=S.waves.find(x=>x.wn==='2'||x.id==='b')||S.waves[1];return isOT(w)},y);
  await p.evaluate(()=>{go('cfg');document.querySelector('[data-c="cho"]').click()});await p.waitForTimeout(150);
- await p.fill('[data-fd="1"][data-w="s"][data-k="ini"]','7');await p.fill('[data-fd="1"][data-w="s"][data-k="fim"]','12');await p.press('[data-fd="1"][data-w="s"][data-k="fim"]','Tab');await p.waitForTimeout(200);
- const r=await p.evaluate(y=>{const d=dk(y),seg=dk(y+2*864e5);const w=S.waves.slice().sort((a,b)=>(a.fin||a.ts)-(b.fin||b.ts));return{fds:S.cfg.fds,ot:w.map(isOT),t:turnoOf(S.ops[0],d),seg:turnoOf(S.ops[0],seg),sem:S.cfg.turnos[1]}},y);
- ok(r.fds[1]&&r.fds[1].s.ini===7&&r.fds[1].s.fim===12,'salvo: '+JSON.stringify(r.fds));
+ const f='#turnos form[data-hr="1"] ';await p.fill(f+'[data-hk="si"]','07:00');await p.fill(f+'[data-hk="sf"]','12:00');await p.click(f+'[type="submit"]');await p.waitForTimeout(200);
+ const r=await p.evaluate(y=>{const d=dk(y),seg=dk(y+2*864e5);const w=S.waves.slice().sort((a,b)=>(a.fin||a.ts)-(b.fin||b.ts));const o3=S.ops.find(o=>o.g==='Galpão 2');return{h:S.galH,ot:w.map(isOT),t:turnoOf(S.ops[0],d),seg:turnoOf(S.ops[0],seg),g2:turnoOf({t:1,g:'Galpão 2'},d),sem:S.cfg.turnos[1]}},y);
+ ok(r.h['Galpão 1'][1].s.ini===7&&r.h['Galpão 1'][1].s.fim===12,'salvo: '+JSON.stringify(r.h));
  ok(r.t.ini===7&&r.t.fim===12,'turno do sábado: '+JSON.stringify(r.t));ok(r.seg.ini===r.sem.ini&&r.seg.fim===r.sem.fim,'segunda usa o da semana: '+JSON.stringify(r.seg));
- ok(r.ot[0]===false&&r.ot[1]===true,'12:30 de sábado vira hora extra: '+JSON.stringify(r.ot)+' antes '+antes);
- await p.fill('[data-fd="1"][data-w="s"][data-k="ini"]','');await p.fill('[data-fd="1"][data-w="s"][data-k="fim"]','');await p.press('[data-fd="1"][data-w="s"][data-k="fim"]','Tab');await p.waitForTimeout(200);
- ok((await p.evaluate(()=>!(S.cfg.fds[1]||{}).s)),'em branco volta ao horário da semana')});
+ ok(r.g2.fim===r.sem.fim,'Galpão 2 não muda: '+JSON.stringify(r.g2));ok(r.ot[0]===false&&r.ot[1]===true,'12:30 de sábado vira hora extra: '+JSON.stringify(r.ot));
+ await p.fill(f+'[data-hk="si"]','');await p.fill(f+'[data-hk="sf"]','');await p.click(f+'[type="submit"]');await p.waitForTimeout(200);
+ ok((await p.evaluate(()=>!S.galH['Galpão 1'][1].s)),'em branco volta ao horário da semana')});
 await T("98 Meta coletiva: top 3 de tipos por unidades e ondas e contribuição para a meta sem retrabalho",async()=>{
  const st=base({waves:[WV('a','1','Itens Únicos',50,HR(9,0)),WV('b','2','Itens Únicos',30,HR(9,30)),WV('c','3','Vários artigos',60,HR(10,0)),WV('d','4','Retrabalho',100,HR(10,30)),WV('e','5','Pacote do mesmo',20,HR(11,0))]});
  const p=await page(b,st);
