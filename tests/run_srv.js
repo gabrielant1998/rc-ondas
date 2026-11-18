@@ -433,7 +433,7 @@ await T('S93 Ausente: pessoa registra motivo e horário, volta, e o relatório m
  ok((db.config[0].motivos_ausencia||[]).join('|')==='Ajudando na Rua|Embalando|Inventário','motivos: '+JSON.stringify(db.config[0].motivos_ausencia));
  const p=await page(b,db);await p.click('.tab[data-t="op"]');await p.click('#sub [data-s="aus"]');await p.waitForTimeout(300);
  ok((await p.textContent('#ausMot')).includes('Inventário'),'motivo novo não chegou na operação');
- await p.fill('#ausP','Ana');await p.waitForTimeout(100);ok((await p.textContent('#ausWho')).includes('Ana Souza'),'não achou a pessoa');
+ await p.fill('#ausP','Ana');await p.waitForTimeout(100);ok(await p.locator('#ausSug [data-aussug]').count()>=1,'sem sugestões');await p.locator('#ausSug [data-aussug]').first().click();await p.waitForTimeout(100);ok((await p.textContent('#ausWho')).includes('Ana Souza'),'não achou a pessoa');ok(await p.locator('#ausSug [data-aussug]').count()===0,'sugestões não fecharam');
  await p.click('#ausF [type="submit"]');await p.waitForTimeout(200);ok(!(db.aus||[]).length,'registrou sem motivo');
  await p.click('[data-ausm="Ajudando na Rua"]');const h=await p.evaluate(()=>{const d=new Date(Date.now()-30*6e4);return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0')});
  if(h>await p.evaluate(()=>hmT(Date.now())))return;await p.fill('#ausI',h);await p.click('#ausF [type="submit"]');await p.waitForTimeout(600);

@@ -221,15 +221,16 @@ svg.ch{width:100%;height:auto;display:block}svg text{fill:var(--mut);font:600 13
 #types_b button .ti{color:var(--c);width:28px;height:28px}#types_b button.on .ti{color:#fff}
 .av{width:34px;height:34px;border-radius:50%;background:var(--bg);border:1px solid var(--line);display:inline-grid;place-items:center;font:700 14px/1 var(--fd);color:var(--ink);flex:none;letter-spacing:.02em}
 .who2{display:flex;gap:10px;align-items:center}.who2 small{color:var(--mut)}
-#opSug{display:grid;gap:6px;margin-top:8px}#opSug:empty{display:none}
-#opSug button.cracha{all:unset;box-sizing:border-box;display:flex;gap:12px;align-items:center;padding:10px 14px;border:1px solid var(--line);border-left:4px solid var(--line);border-radius:4px;background:var(--bg);cursor:pointer;color:var(--ink);width:100%}
-#opSug button.cracha:hover,#opSug button.cracha.on,#opSug button.cracha:focus-visible{border-color:var(--g);border-left-color:var(--g);background:var(--card)}
+#ausN:empty{display:none}
+#opSug,#ausSug{display:grid;gap:6px;margin-top:8px}#opSug:empty,#ausSug:empty{display:none}
+#opSug button.cracha,#ausSug button.cracha{all:unset;box-sizing:border-box;display:flex;gap:12px;align-items:center;padding:10px 14px;border:1px solid var(--line);border-left:4px solid var(--line);border-radius:4px;background:var(--bg);cursor:pointer;color:var(--ink);width:100%}
+#opSug button.cracha:hover,#opSug button.cracha.on,#opSug button.cracha:focus-visible,#ausSug button.cracha:hover,#ausSug button.cracha.on,#ausSug button.cracha:focus-visible{border-color:var(--g);border-left-color:var(--g);background:var(--card)}
 .cracha{display:flex;gap:12px;align-items:center;padding:12px 14px;border:1px solid var(--line);border-left:4px solid var(--g);border-radius:4px;background:var(--bg);animation:rowIn .25s ease both}
 .cracha .av{width:44px;height:44px;font-size:18px;background:var(--card)}
 .cracha b{display:block;font:600 17px/1.2 var(--fb)}.cracha small{color:var(--mut);font-size:13.5px}
-#opIn{font:600 20px var(--fd);min-height:54px;padding-left:48px;letter-spacing:.02em;
+#opIn,#ausP{font:600 20px var(--fd);min-height:54px;padding-left:48px;letter-spacing:.02em;
  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238792a6' stroke-width='2' stroke-linecap='round'%3E%3Cpath d='M4 6v12M8 6v12M11 6v12M15 6v12M18 6v12M20.5 6v12'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:12px center;background-size:26px}
-#opIn::placeholder{font:400 15px var(--fb);letter-spacing:0}
+#opIn::placeholder,#ausP::placeholder{font:400 15px var(--fb);letter-spacing:0}
 .hint{font-size:13px;color:var(--mut);font-weight:400}
 /* tipos de onda no painel */
 .stack{display:flex;height:14px;gap:2px;margin-bottom:16px}.stack i{display:block;min-width:3px;background:var(--c)}.stack.vazio{background:var(--line)}
@@ -534,8 +535,8 @@ body[data-v=cfg] #turnoF,body[data-v=cfg] #gal,body[data-v=cfg] #day{display:non
   <div id="aus" class="grid two hide">
   <div class="card"><h2>Registrar ausência</h2>
    <form id="ausF" class="f" novalidate>
-    <label>Seu nome<input id="ausP" list="opl" placeholder="Digite o nome ou o código" autocomplete="off"></label>
-    <div id="ausWho" aria-live="polite"></div>
+    <label>Operador<input id="ausP" placeholder="Digite o nome" autocomplete="off" role="combobox" aria-expanded="false" aria-controls="ausSug"></label>
+    <div id="ausWho" aria-live="polite"></div><div id="ausSug" role="listbox" aria-label="Operadores encontrados"></div>
     <fieldset class="ausM"><legend>Motivo</legend><div id="ausMot" class="ausChips"></div></fieldset>
     <div class="ausH"><label>Saída<input type="time" id="ausI"></label><label><span>Volta <small>(se já souber)</small></span><input type="time" id="ausV"></label></div>
     <button class="btn" type="submit" id="ausB">Registrar ausência</button>
@@ -1951,7 +1952,8 @@ const motivos=()=>(S.cfg&&Array.isArray(S.cfg.motA)&&S.cfg.motA.length)?S.cfg.mo
 let AUS=[],AUSM=null,AUS_AT=0;
 const hmT=t=>new Date(t).toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"});
 const durA=ms=>{const m=Math.max(0,Math.round(ms/6e4));return m<60?m+" min":Math.floor(m/60)+" h"+(m%60?" "+String(m%60).padStart(2,"0"):"")};
-function ausFind(v){const o=findOp(v);if(o)return o;const q=nrm(v);if(q.length<2)return null;const L=S.ops.filter(x=>nrm(x.n).includes(q)||nrm(x.m)===q);return L.length===1?L[0]:null}
+let ausSel=null,ausI=-1,ausL2=[];
+function ausFind(v){if(ausSel&&ausSel.m===String(v||"").trim()){const x=S.ops.find(o=>o===ausSel||(o.id&&o.id===ausSel.id));if(x)return x}const o=findOp(v);if(o)return o;const q=nrm(v);if(q.length<2)return null;const L=S.ops.filter(x=>nrm(x.n).includes(q)||nrm(x.m)===q);return L.length===1?L[0]:null}
 const ausMap=x=>({id:x.id,oid:x.operador_id,mot:x.motivo,ini:Date.parse(x.inicio),fim:x.fim?Date.parse(x.fim):null});
 async function ausCarregar(){if(!ON){AUS=(S.aus||[]).filter(a=>dk(a.ini)===hoje());return}
  if(!online())return;try{AUS=(await api("/rest/v1/rpc/ausencias_publicas",{method:"POST",body:{p_dia:hoje()}})).map(ausMap);AUS_AT=Date.now()}catch(e){}}
@@ -1959,7 +1961,11 @@ async function ausAbrir(){ausForm();ausLista();await ausCarregar();ausLista()}
 function ausForm(){const M=motivos();if(!M.includes(AUSM))AUSM=null;
  $("#ausMot").innerHTML=M.map(m=>`<button type="button" class="ausC" data-ausm="${esc(m)}" aria-pressed="${m===AUSM}">${esc(m)}</button>`).join("");
  if(!$("#ausI").value)$("#ausI").value=hmT(Date.now());ausWho()}
-function ausWho(){const o=ausFind($("#ausP").value);$("#ausWho").innerHTML=o?'<div class="cracha">'+av(o.n)+"<div><b>"+esc(o.n)+"</b><small>"+o.m+", "+o.t+"º turno"+(o.g?", "+esc(o.g):"")+"</small></div></div>":""}
+function ausSugest(){const q=nrm($("#ausP").value),box=$("#ausSug");ausI=-1;ausL2=[];
+ if(!q||ausSel){box.innerHTML="";$("#ausP").setAttribute("aria-expanded","false");return}
+ const all=opsBusca(q);ausL2=all.slice(0,8);box.innerHTML=opsCartoes(ausL2,all.length,"data-aussug");$("#ausP").setAttribute("aria-expanded",String(ausL2.length>0))}
+function ausEscolher(o){ausSel=o;$("#ausP").value=o.m;ausL2=[];ausI=-1;$("#ausSug").innerHTML="";$("#ausP").setAttribute("aria-expanded","false");ausWho();const b=$("#ausMot button");if(b&&!AUSM)b.focus({preventScroll:true})}
+function ausWho(){const o=ausSel||findOp($("#ausP").value);$("#ausWho").innerHTML=o?'<div class="cracha">'+av(o.n)+"<div><b>"+esc(o.n)+"</b><small>"+o.m+", "+o.t+"º turno"+(o.g?", "+esc(o.g):"")+"</small></div></div>":""}
 function ausLista(){const el=$("#ausL");if(!el)return;const now=Date.now(),L=AUS.slice().sort((a,b)=>(!!a.fim-!!b.fim)||(b.ini-a.ini)),fora=L.filter(a=>!a.fim||a.fim>now).length;
  $("#ausN").textContent=fora?fora+(fora===1?" fora agora":" fora agora"):"";
  el.innerHTML=L.length?`<table class="ausT"><tr><th>Pessoa</th><th>Motivo</th><th>Saída</th><th>Volta</th></tr>`+L.map(a=>{const o=OPSALL[a.oid],nm=o?o.nome:((S.ops.find(x=>x.id===a.oid)||{}).n||"—"),aberta=!a.fim;
@@ -1977,13 +1983,19 @@ async function ausSalvar(){const o=ausFind($("#ausP").value);if(!o){toast("Escol
  else{if(!online()){toast("Sem internet. A ausência precisa de conexão para ser registrada.",5000);return}
   const b=$("#ausB");b.disabled=true;try{await api("/rest/v1/rpc/registrar_ausencia",{method:"POST",body:{p_id:reg.id,p_operador:o.id,p_motivo:AUSM,p_inicio:new Date(ini).toISOString(),p_fim:fim?new Date(fim).toISOString():null}});AUS.push(reg)}
   catch(e){b.disabled=false;toast(errMsg(e),6000);return}b.disabled=false;ausCarregar().then(ausLista)}
- $("#ausP").value="";$("#ausV").value="";$("#ausI").value="";AUSM=null;ausForm();ausLista();toast(msg,5000)}
+ ausSel=null;$("#ausSug").innerHTML="";$("#ausP").value="";$("#ausV").value="";$("#ausI").value="";AUSM=null;ausForm();ausLista();toast(msg,5000)}
 async function ausVoltar(id){const a=AUS.find(x=>x.id===id);if(!a)return;const fim=Math.max(Date.now(),a.ini+6e4);
  if(!ON){const x=(S.aus||[]).find(z=>z.id===id);if(x)x.fim=fim;save();await ausCarregar();ausLista();toast("Volta registrada às "+hmT(fim));return}
  try{await api("/rest/v1/rpc/encerrar_ausencia",{method:"POST",body:{p_id:id,p_fim:new Date(fim).toISOString()}});a.fim=fim;ausLista();toast("Volta registrada às "+hmT(fim))}catch(e){toast(errMsg(e),6000)}}
 document.addEventListener("click",e=>{const m=e.target.closest&&e.target.closest("[data-ausm]");if(m){AUSM=m.dataset.ausm;ausForm();return}
  const v=e.target.closest&&e.target.closest("[data-ausv]");if(v){v.disabled=true;ausVoltar(v.dataset.ausv)}});
-document.addEventListener("input",e=>{if(e.target.id==="ausP")ausWho()});
+document.addEventListener("input",e=>{if(e.target.id!=="ausP")return;ausSel=null;const v=$("#ausP").value.trim(),o=findOp(v);
+ if(o&&o.m.toLowerCase()===v.toLowerCase()){ausEscolher(o);return}ausWho();ausSugest()});
+document.addEventListener("click",e=>{const b=e.target.closest&&e.target.closest("[data-aussug]");if(b){const o=ausL2.find(x=>x.m===b.dataset.aussug);if(o)ausEscolher(o)}});
+document.addEventListener("keydown",e=>{if(e.target.id!=="ausP")return;
+ if((e.key==="ArrowDown"||e.key==="ArrowUp")&&ausL2.length){e.preventDefault();ausI=(ausI+(e.key==="ArrowDown"?1:-1)+ausL2.length)%ausL2.length;$$("#ausSug [data-aussug]").forEach((b,i)=>b.classList.toggle("on",i===ausI));return}
+ if(e.key==="Enter"&&!ausSel){e.preventDefault();if(ausI>=0&&ausL2[ausI]){ausEscolher(ausL2[ausI]);return}if(ausL2.length===1){ausEscolher(ausL2[0]);return}if(ausL2.length>1)toast("Há mais de uma pessoa. Selecione o nome desejado.",5000);return}
+ if(e.key==="Escape"){$("#ausSug").innerHTML="";ausL2=[];ausI=-1}});
 document.addEventListener("submit",e=>{if(e.target.id==="ausF"){e.preventDefault();ausSalvar()}else if(e.target.id==="motF"){e.preventDefault();motAdd()}});
 /* motivos (Config) */
 function cfgMot(){const el=$("#motL");if(!el)return;const pode=!ON||(me&&(me.pC||me.adm));$("#motF").classList.toggle("hide",!pode);
@@ -2507,11 +2519,13 @@ function confirmarOperador(o){operadorSelecionado={id:o.id||null,m:o.m,n:o.n};tr
 function mesmoOperador(o){const a=operadorSelecionado;if(!a||!o)return false;
  if(ON&&(!a.id||!o.id))return false;
  return a.id?o.id===a.id:(o.m===a.m&&o.n===a.n)}
+function opsBusca(q){const ck=q.length>=2&&/^(cl\d*|\d+)$/.test(q),sc=o=>{const n=nrm(o.n),c=o.m.toLowerCase();if(n===q||(ck&&c===q))return-1;if(n.startsWith(q)||(ck&&c.startsWith(q)))return 0;if(n.split(/\s+/).some(w=>w.startsWith(q)))return 1;if(ck&&c.includes(q))return 2;return 9};
+ return S.ops.map(o=>[o,sc(o)]).filter(x=>x[1]<9).sort((a,b)=>a[1]-b[1]||a[0].n.localeCompare(b[0].n)).map(x=>x[0])}
+function opsCartoes(L,total,attr){return L.length?L.map(o=>`<button type="button" class="cracha" role="option" ${attr}="${esc(o.m)}">${av(o.n)}<div><b>${esc(o.n)}</b><small>${o.m}, ${o.t}º turno${o.g?", "+esc(o.g):""}</small></div></button>`).join("")+(total>8?`<div class="legend">Mais ${total-8} nomes. Continue digitando.</div>`:""):'<div class="legend">Nenhum operador encontrado.</div>'}
 function opSugest(){const q=nrm($("#opIn").value),box=$("#opSug");sugI=-1;sugL=[];
  if(!q){box.innerHTML="";$("#opIn").setAttribute("aria-expanded","false");return}
- const ck=q.length>=2&&/^(cl\d*|\d+)$/.test(q),sc=o=>{const n=nrm(o.n),c=o.m.toLowerCase();if(n===q||(ck&&c===q))return-1;if(n.startsWith(q)||(ck&&c.startsWith(q)))return 0;if(n.split(/\s+/).some(w=>w.startsWith(q)))return 1;if(ck&&c.includes(q))return 2;return 9};
- const all=S.ops.map(o=>[o,sc(o)]).filter(x=>x[1]<9).sort((a,b)=>a[1]-b[1]||a[0].n.localeCompare(b[0].n)).map(x=>x[0]);sugL=all.slice(0,8);
- box.innerHTML=sugL.length?sugL.map(o=>`<button type="button" class="cracha" role="option" data-sug="${esc(o.m)}">${av(o.n)}<div><b>${esc(o.n)}</b><small>${o.m}, ${o.t}º turno${o.g?", "+esc(o.g):""}</small></div></button>`).join("")+(all.length>8?`<div class="legend">Mais ${all.length-8} nomes. Continue digitando.</div>`:""):'<div class="legend">Nenhum operador encontrado.</div>';
+ const all=opsBusca(q);sugL=all.slice(0,8);
+ box.innerHTML=opsCartoes(sugL,all.length,"data-sug");
  $("#opIn").setAttribute("aria-expanded",String(sugL.length>0))}
 function opEscolher(code,esperado){const o=opOf(code);if(!o)return;
  if(esperado&&((esperado.id&&o.id!==esperado.id)||(!esperado.id&&o.n!==esperado.n))){opSugest();toast("O cadastro da pessoa mudou. Selecione novamente.",6000);return}
