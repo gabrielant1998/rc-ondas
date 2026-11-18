@@ -12,18 +12,20 @@ async function page(b,state,vp){const ctx=await b.newContext({viewport:vp||{widt
  await ctx.addInitScript(([s])=>{if(!sessionStorage.__seeded){sessionStorage.__seeded=1;localStorage.clear();if(s)localStorage.setItem("rcondas.v2",s)}},[state?JSON.stringify(state):null]);
  await p.route(/fonts\.(googleapis|gstatic)\.com/,r=>r.abort());await p.goto(FILE);await p.waitForTimeout(200);return p}
 const st=p=>p.evaluate(()=>JSON.parse(localStorage.getItem("rcondas.v2")));
-async function T(name,fn){if(process.env.ONLY&&!process.env.ONLY.split(",").some(k=>name.startsWith(k+" ")))return;const t0=Date.now();try{await fn();R.push(["PASS",name,Date.now()-t0])}catch(e){R.push(["FALHA",name,e.message.slice(0,400)])}}
-async function posto(p,nome,andar,at,extra){await p.click('#prsub [data-pr="dis"]');await p.fill('#pdDq',nome);await p.waitForTimeout(80);
- await p.locator('#pdDl [data-pded]').first().click();await p.check(`.pdEd input[name="pdA"][value="${andar}"]`);await p.check(`.pdEd input[name="pdX"][value="${at}"]`);
+async function T(name,fn){if(process.env.ONLY&&!process.env.ONLY.split(",").some(k=>name.startsWith(k+" ")))return;const t0=Date.now();try{await fn();R.push(["PASS",name,Date.now()-t0])}catch(e){R.push(["FALHA",name,e.message.slice(0,1500)])}}
+async function dis(p){await p.evaluate(()=>{go('ind');document.querySelector('#gsub [data-gs="pd"]').click()});await p.waitForTimeout(120)}
+async function posto(p,nome,andar,at,extra){await dis(p);await p.fill('#pdDq',nome);await p.waitForTimeout(80);
+ await p.locator('#pdDl [data-pded]').first().click();await p.check(`.pdEd input[name="pdA4"][value="${andar}-${at}"]`);
  if(extra)await extra();await p.click('.pdEd [type="submit"]');await p.waitForTimeout(120)}
-async function bipar(p,cod,wns){await p.click('#prsub [data-pr="bip"]');const cur=await p.inputValue('#pdP');if(cur!==cod){await p.fill('#pdP',cod);await p.waitForTimeout(80)}
+async function bipar(p,cod,wns){await p.click('.tab[data-t="prod"]');const cur=await p.inputValue('#pdP');if(cur!==cod){await p.fill('#pdP',cod);await p.waitForTimeout(80)}
  for(const w of wns){await p.fill('#pdW',String(w));await p.press('#pdW','Enter');await p.waitForTimeout(60)}}
 (async()=>{const b=await chromium.launch();const SHOT=process.env.SHOT;
 
 await T("P01 Abas: Operação virou Coleta e Produção aparece com Bipar e Distribuição",async()=>{const p=await page(b,base());
  const tabs=await p.$$eval('.tab[data-t]',x=>x.map(e=>e.textContent.trim()));ok(tabs.includes("Coleta")&&tabs.includes("Produção")&&!tabs.includes("Operação"),"abas: "+tabs);
- await p.click('.tab[data-t="prod"]');ok(await p.isVisible('#pdP'),'campo do operador');ok(await p.isVisible('#prDisB'),'distribuição sem gestores cadastrados');
- ok((await p.textContent('#ttl')).includes('Produção'),'título');ok(!p.errors.length,p.errors.join(';'))});
+ await p.click('.tab[data-t="prod"]');ok(await p.isVisible('#pdP'),'campo do operador');ok((await p.textContent('#ttl')).includes('Produção'),'título');ok(!(await p.$('#prsub'))&&!(await p.isVisible('#pdDisV')),'Produção deveria ser só bipagem');
+ await dis(p);ok(await p.isVisible('#pdDisV'),'pessoas da produção na Equipe');ok(!(await p.evaluate(()=>document.getElementById('gsPd').classList.contains('hide'))),'subaba escondida');
+ ok(!p.errors.length,p.errors.join(';'))});
 
 await T("P02 Sem posto: a pessoa não consegue bipar e vê o aviso",async()=>{const p=await page(b,base());await p.click('.tab[data-t="prod"]');
  await p.fill('#pdP','Ana');await p.waitForTimeout(80);await p.locator('#pdSug [data-pdsug]').first().click();await p.waitForTimeout(60);
@@ -51,9 +53,9 @@ await T("P05 Troca de posto preserva o histórico das ondas anteriores",async()=
  await posto(p,'Ana','mezanino','maquina');await bipar(p,'PR001',['101']);const s=await st(p);
  const a=s.prodB.find(x=>x.wn==='100'),c=s.prodB.find(x=>x.wn==='101');ok(a.andar==='terreo'&&a.at==='mesa','antiga mudou: '+JSON.stringify(a));ok(c.andar==='mezanino'&&c.at==='maquina','nova: '+JSON.stringify(c));
  ok(s.prodA.length===2&&s.prodA.filter(x=>!x.fim).length===1,'histórico de postos '+JSON.stringify(s.prodA));
- await p.click('#prsub [data-pr="dis"]');await p.fill('#pdDq','Ana');await p.locator('#pdDl [data-pded]').first().click();ok((await p.textContent('.pdHist')).includes('Térreo'),'histórico não aparece')});
+ await dis(p);await p.fill('#pdDq','Ana');await p.locator('#pdDl [data-pded]').first().click();ok((await p.textContent('.pdHist')).includes('Térreo'),'histórico não aparece')});
 
-await T("P06 Turnos: editar horários (digitados) e criar turno que passa da meia-noite",async()=>{const p=await page(b,base());await p.click('.tab[data-t="prod"]');await p.click('#prsub [data-pr="dis"]');
+await T("P06 Turnos: editar horários (digitados) e criar turno que passa da meia-noite",async()=>{const p=await page(b,base());await p.click('.tab[data-t="prod"]');await dis(p);
  const f='[data-pdt="1"]';await p.fill(f+' [name="s"]','15:00');await p.fill(f+' [name="ii"]','11:00');await p.fill(f+' [name="if"]','12:00');await p.click(f+' [type="submit"]');await p.waitForTimeout(80);
  let s=await st(p);ok(s.prodT[0].sai==='15:00'&&s.prodT[0].ii==='11:00','turno 1 '+JSON.stringify(s.prodT[0]));
  await p.fill(f+' [name="ii"]','16:00');await p.fill(f+' [name="if"]','17:00');await p.click(f+' [type="submit"]');await p.waitForTimeout(60);s=await st(p);ok(s.prodT[0].ii==='11:00','aceitou intervalo fora do turno');
@@ -71,28 +73,40 @@ await T("P07 Horário individual exige entrada e saída e fica salvo no posto",a
 await T("P08 Pessoas da Coleta não aparecem na Produção (nem na busca, nem na distribuição, nem pelo código)",async()=>{const p=await page(b,base());await p.click('.tab[data-t="prod"]');
  await p.fill('#pdP','Zé');await p.waitForTimeout(80);ok(!(await p.locator('#pdSug [data-pdsug]').count()),'apareceu pessoa da Coleta na busca');
  await p.fill('#pdP','CL001');await p.waitForTimeout(80);ok(!(await p.isVisible('#pdW')),'código da Coleta abriu a bipagem');
- await p.click('#prsub [data-pr="dis"]');const t=await p.textContent('#pdDl');ok(!t.includes('Coleta Um')&&!t.includes('Zé Coleta')&&t.includes('Ana Souza'),'distribuição: '+t);
+ await dis(p);const t=await p.textContent('#pdDl');ok(!t.includes('Coleta Um')&&!t.includes('Zé Coleta')&&t.includes('Ana Souza'),'distribuição: '+t);
  await p.click('.tab[data-t="op"]');await p.fill('#opIn','Ana');await p.waitForTimeout(80);ok(!(await p.locator('#opSug [data-sug]').count()),'pessoa da Produção apareceu na Coleta')});
 
-await T("P11 Cadastro da produção: cadastrar, código repetido recusado, editar e remover mantendo o histórico",async()=>{const p=await page(b,base({prodPes:[]}));await p.click('.tab[data-t="prod"]');await p.click('#prsub [data-pr="dis"]');
+await T("P11 Cadastro da produção: cadastrar, código repetido recusado, editar e remover mantendo o histórico",async()=>{const p=await page(b,base({prodPes:[]}));await p.click('.tab[data-t="prod"]');await dis(p);
  ok((await p.textContent('#pdDl')).includes('Nenhuma pessoa cadastrada'),'estado vazio');
  await p.click('#pdNovaB');ok((await p.inputValue('#pdNovaF [name="c"]'))==='PR001','código sugerido');await p.fill('#pdNovaF [name="n"]','Diego Ramos');await p.click('#pdNovaF [type="submit"]');await p.waitForTimeout(80);
+ ok(!((await st(p)).prodPes||[]).length,'cadastrou sem posto');ok((await p.$$('#pdNovaF input[name="pdA4"]')).length===4,'4 postos no cadastro');
+ await p.check('#pdNovaF input[name="pdA4"][value="mezanino-maquina"]');await p.click('#pdNovaF [type="submit"]');await p.waitForTimeout(80);
+ ok((await st(p)).prodA.some(a=>a.andar==='mezanino'&&a.at==='maquina'&&!a.fim),'posto do cadastro');
  let s=await st(p);ok(s.prodPes.length===1&&s.prodPes[0].m==='PR001'&&s.prodPes[0].n==='Diego Ramos','cadastro '+JSON.stringify(s.prodPes));ok(s.ops.length===2,'mexeu na Coleta');
- await p.click('#pdNovaB');await p.fill('#pdNovaF [name="n"]','Elisa');await p.fill('#pdNovaF [name="c"]','pr001');await p.click('#pdNovaF [type="submit"]');await p.waitForTimeout(80);
+ await p.click('#pdNovaB');await p.fill('#pdNovaF [name="n"]','Elisa');await p.check('#pdNovaF input[name="pdA4"][value="terreo-mesa"]');await p.fill('#pdNovaF [name="c"]','pr001');await p.click('#pdNovaF [type="submit"]');await p.waitForTimeout(80);
  s=await st(p);ok(s.prodPes.length===1,'aceitou código repetido');await p.fill('#pdNovaF [name="c"]','PR002');await p.click('#pdNovaF [type="submit"]');await p.waitForTimeout(80);s=await st(p);ok(s.prodPes.length===2,'segunda pessoa');
- await p.fill('#pdDq','Diego');await p.locator('#pdDl [data-pded]').first().click();await p.check('.pdEd input[name="pdA"][value="terreo"]');await p.check('.pdEd input[name="pdX"][value="mesa"]');await p.click('.pdEd [type="submit"]');await p.waitForTimeout(80);
+ await p.fill('#pdDq','Diego');await p.locator('#pdDl [data-pded]').first().click();await p.check('.pdEd input[name="pdA4"][value="terreo-mesa"]');await p.click('.pdEd [type="submit"]');await p.waitForTimeout(80);
  await p.locator('#pdDl [data-pded]').first().click();await p.fill('.pdEd [name="n"]','Diego R. Ramos');await p.click('.pdEd [data-pdcad]');await p.waitForTimeout(80);s=await st(p);ok(s.prodPes[0].n==='Diego R. Ramos','editar nome');
- await bipar(p,'PR001',['555']);await p.click('#prsub [data-pr="dis"]');await p.fill('#pdDq','Diego');if(!(await p.isVisible('.pdEd [data-pdrm]')))await p.locator('#pdDl [data-pded]').first().click();
+ await bipar(p,'PR001',['555']);await dis(p);await p.fill('#pdDq','Diego');if(!(await p.isVisible('.pdEd [data-pdrm]')))await p.locator('#pdDl [data-pded]').first().click();
  await p.click('.pdEd [data-pdrm]');await p.click('.pdEd [data-pdrm]');await p.waitForTimeout(80);s=await st(p);
- ok(s.prodPes.length===1&&!s.prodPes.some(x=>x.m==='PR001'),'não removeu');ok(s.prodB.length===1,'apagou bipagem');ok(s.prodA.every(a=>a.fim),'posto ficou aberto');
+ ok(s.prodPes.length===1&&!s.prodPes.some(x=>x.m==='PR001'),'não removeu');ok(s.prodB.length===1,'apagou bipagem');ok(s.prodA.filter(a=>!s.prodPes.some(x=>x.id===a.oid)).every(a=>a.fim),'posto ficou aberto');
  if(SHOT){await p.click('#pdNovaB');await p.fill('#pdNovaF [name="n"]','Fabiana Costa');await p.screenshot({path:SHOT+'/p_cad.png'})}});
 
 await T("P09 Gestor sem permissão de configuração não vê Distribuição",async()=>{const p=await page(b,base({ges:[{n:"Gil",u:"gil@x",g:"RC",adm:false,pC:false,pI:true,pR:true}]}));await p.click('.tab[data-t="prod"]');
- ok(!(await p.isVisible('#prDisB')),'distribuição visível sem login');ok(await p.isVisible('#pdP'),'bipar deveria continuar público')});
+ ok(!(await p.evaluate(()=>pdGestor())),'gestor sem permissão');ok(!(await p.$('#prod #pdDisV')),'distribuição dentro da Produção');ok(await p.isVisible('#pdP'),'bipar deveria continuar público')});
 
 await T("P10 Celular: sem rolagem horizontal na Produção",async()=>{const p=await page(b,base(),{width:390,height:844});await p.click('.tab[data-t="prod"]');
  await posto(p,'Ana','terreo','mesa');await bipar(p,'PR001',['123456789']);let w=await p.evaluate(()=>document.documentElement.scrollWidth);ok(w<=391,'bipar '+w);
  if(SHOT)await p.screenshot({path:SHOT+'/p_cel.png'});
- await p.click('#prsub [data-pr="dis"]');await p.locator('#pdDl [data-pded]').first().click();await p.click('#pdNovaB');w=await p.evaluate(()=>document.documentElement.scrollWidth);const ov=await p.evaluate(()=>[...document.querySelectorAll('#prod *')].filter(e=>e.getBoundingClientRect().right>392).slice(0,3).map(e=>{let o=[],x=e;for(let i=0;i<7&&x;i++,x=x.parentElement){const r=x.getBoundingClientRect();o.push(x.tagName+'.'+(x.className||'')+'['+(x.getAttribute('name')||x.getAttribute('type')||'')+'] '+Math.round(r.left)+'-'+Math.round(r.right))}return o.join(' < ')}).join(' || '));ok(w<=391,'distribuição '+w+' '+ov)});
+ await dis(p);await p.locator('#pdDl [data-pded]').first().click();await p.click('#pdNovaB');w=await p.evaluate(()=>document.documentElement.scrollWidth);const ov=await p.evaluate(()=>[...document.querySelectorAll('#pdDisV *')].filter(e=>e.getBoundingClientRect().right>392).slice(0,3).map(e=>{let o=[],x=e;for(let i=0;i<7&&x;i++,x=x.parentElement){const r=x.getBoundingClientRect();o.push(x.tagName+'.'+(x.className||'')+'['+(x.getAttribute('name')||x.getAttribute('type')||'')+'] '+Math.round(r.left)+'-'+Math.round(r.right))}return o.join(' < ')}).join(' || '));ok(w<=391,'distribuição '+w+' '+ov)});
+
+await T("P12 Equipe › Pessoas da produção: filtro Térreo Mesa, Térreo Máquina, Mezanino Mesa, Mezanino Máquina",async()=>{const p=await page(b,base());
+ await posto(p,'Ana','terreo','mesa');await posto(p,'Bruno','terreo','maquina');await posto(p,'Carla','mezanino','maquina');await p.fill('#pdDq','');await p.waitForTimeout(60);
+ const chips=await p.$$eval('#pdDf button',x=>x.map(e=>e.textContent.replace(/\s+/g,' ').trim()));
+ ok(JSON.stringify(chips)===JSON.stringify(["Todos 3","Térreo Mesa 1","Térreo Máquina 1","Mezanino Mesa 0","Mezanino Máquina 1","Sem posto 0"]),'chips '+chips);
+ await p.click('#pdDf [data-pdf="terreo-maquina"]');let t=await p.textContent('#pdDl');ok(t.includes('Bruno')&&!t.includes('Ana')&&!t.includes('Carla'),'filtro: '+t);
+ await p.click('#pdDf [data-pdf="mezanino-mesa"]');ok((await p.textContent('#pdDl')).includes('Ninguém neste filtro'),'vazio');
+ await p.click('#pdNovaB');ok(await p.isChecked('#pdNovaF input[value="mezanino-mesa"]'),'cadastro herda o filtro');
+ if(SHOT)await p.screenshot({path:SHOT+'/p_eq.png'});ok(!p.errors.length,p.errors.join(';'))});
 
 await b.close();let f=0;R.forEach(([s,n,i])=>{if(s!=="PASS")f++;console.log((s==="PASS"?"✅ ":"❌ ")+n+"  "+(s==="PASS"?"("+i+"ms)":i))});console.log("\n"+(R.length-f)+"/"+R.length+" passaram");process.exit(f?1:0)})();

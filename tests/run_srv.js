@@ -403,13 +403,13 @@ await T('S28 Zerar tempo grava no servidor e some da contagem',async()=>{const d
 
 await T('S31 Admin restringe abas de um gestor; gestor vê só as liberadas e não entra nas outras',async()=>{const db=banco();const p=await page(b,db);await login(p,'adm@x.com','senha1234');await p.click('.tab[data-t="cfg"]');await p.click('[data-c="cge"]');
  await p.click('#mL tr:has-text("g2@x.com") [data-mabas]');await p.waitForTimeout(300);
- for(const k of ['prod','prs','his','cfg'])await p.uncheck('#mAbas [data-abk="'+k+'"]');
+ for(const k of ['prs','his','cfg'])await p.uncheck('#mAbas [data-abk="'+k+'"]');
  await p.click('#mAbas [data-abs="salvar"]');await p.waitForTimeout(600);
  const g2=db.gestores.find(g=>g.email==='g2@x.com');ok(JSON.stringify(g2.abas)==='["painel","op","ind"]','abas gravadas: '+JSON.stringify(g2.abas));
  const p2=await page(b,db);await login(p2,'g2@x.com','senha1234');await p2.waitForTimeout(300);
  ok(await p2.isVisible('.tab[data-t="ind"]'),'Gestão deveria aparecer');
  ok(!(await p2.isVisible('.tab[data-t="his"]')),'Histórico não deveria aparecer');
- ok(!(await p2.isVisible('.tab[data-t="cfg"]')),'Config não deveria aparecer');ok(!(await p2.isVisible('.tab[data-t="prod"]')),'Produção não deveria aparecer');
+ ok(!(await p2.isVisible('.tab[data-t="cfg"]')),'Config não deveria aparecer');ok(await p2.isVisible('.tab[data-t="prod"]'),'Produção (bipagem) é pública e deveria aparecer');
  await p2.evaluate(()=>go('cfg'));await p2.waitForTimeout(300);
  ok(await p2.evaluate(()=>view)!=='cfg','entrou em Config sem permissão');
  await p.click('#mL tr:has-text("g2@x.com") [data-mabas]');await p.waitForTimeout(300);
@@ -484,15 +484,14 @@ await T('S94 Horário por galpão: só o galpão escolhido muda e quem seguia o 
 await T('S95 Produção: gestor define posto e turno, aparelho público bipa, presença só na primeira e repetida recusada',async()=>{const db=banco();
  db.ondas.push({id:'00000000-0000-4000-8000-00000000c001',wn:'8001',operador_id:'00000000-0000-4000-8000-0000000000b1',galpao_id:G1,tipo:'Vários artigos',quantidade:2,status:0,registrada_em:new Date().toISOString()});
  const pa=await page(b,db);await login(pa,'adm@x.com','senha1234');await pa.click('.tab[data-t="prod"]');await pa.waitForTimeout(300);
- ok(await pa.isVisible('#prDisB'),'admin deveria ver Distribuição');await pa.click('#prsub [data-pr="dis"]');await pa.waitForTimeout(150);
+ ok(!(await pa.$('#prsub')),'Produção deveria ser só bipagem');await pa.evaluate(()=>{go('ind');document.querySelector('#gsub [data-gs="pd"]').click()});await pa.waitForTimeout(400);ok(await pa.isVisible('#pdDisV'),'admin deveria ver Pessoas da produção na Equipe');
  await pa.fill('[data-pdt="1"] [name="s"]','15:00');await pa.click('[data-pdt="1"] [type="submit"]');await pa.waitForTimeout(400);ok(db.pt[0].saida==='15:00','turno não salvo: '+JSON.stringify(db.pt[0]));
  ok((await pa.textContent('#pdDl')).includes('Nenhuma pessoa cadastrada'),'pessoas da Coleta apareceram na Produção');
- await pa.click('#pdNovaB');await pa.fill('#pdNovaF [name="n"]','Ana Embalagem');await pa.click('#pdNovaF [type="submit"]');await pa.waitForTimeout(450);
+ await pa.click('#pdNovaB');await pa.fill('#pdNovaF [name="n"]','Ana Embalagem');await pa.check('#pdNovaF input[name="pdA4"][value="mezanino-maquina"]');await pa.click('#pdNovaF [type="submit"]');await pa.waitForTimeout(450);
  ok(db.ppes.length===1&&db.ppes[0].codigo==='PR001'&&db.ppes[0].galpao_id===G1,'cadastro: '+JSON.stringify(db.ppes));
- await pa.fill('#pdDq','Ana');await pa.locator('#pdDl [data-pded]').first().click();await pa.check('.pdEd input[name="pdA"][value="mezanino"]');await pa.check('.pdEd input[name="pdX"][value="maquina"]');
- await pa.click('.pdEd [type="submit"]');await pa.waitForTimeout(450);ok(db.pa.length===1&&db.pa[0].andar==='mezanino'&&db.pa[0].criado_por==='adm@x.com','posto: '+JSON.stringify(db.pa));
+ ok(db.pa.length===1&&db.pa[0].andar==='mezanino'&&db.pa[0].criado_por==='adm@x.com','posto: '+JSON.stringify(db.pa));
  ok((await pa.textContent('#pdDl')).includes('Mezanino'),'lista não atualizou');
- const p=await page(b,db);await p.click('.tab[data-t="prod"]');await p.waitForTimeout(300);ok(!(await p.isVisible('#prDisB')),'público vendo Distribuição');
+ const p=await page(b,db);await p.click('.tab[data-t="prod"]');await p.waitForTimeout(300);ok(!(await p.isVisible('#pdDisV'))&&!(await p.evaluate(()=>pdGestor())),'público vendo Distribuição');
  await p.fill('#pdP','CL001');await p.waitForTimeout(120);ok(!(await p.isVisible('#pdW')),'pessoa da Coleta abriu a bipagem na Produção');
  await p.fill('#pdP','PR001');await p.waitForTimeout(120);ok(await p.isVisible('#pdW'),'campo da onda');ok((await p.textContent('#pdWho')).includes('Mezanino'),'posto não aparece');
  for(const w of ['08001','9002','9002']){await p.fill('#pdW',w);await p.press('#pdW','Enter');await p.waitForTimeout(250)}

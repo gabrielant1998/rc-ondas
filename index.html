@@ -256,7 +256,7 @@ a[data-pick]{display:inline-block;padding:8px 0 2px;color:var(--gx);font-weight:
 .ins{display:grid;gap:10px;margin:0;padding:0;list-style:none;font-size:14.5px}.ins b{font-weight:600}
 .ins li,.ins div{padding-left:14px;position:relative}.ins li:before,.ins div:before{content:"";position:absolute;left:0;top:.55em;width:6px;height:6px;background:var(--g)}
 
-.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translate(-50%,40px);background:var(--ink);color:var(--card);padding:11px 18px;border-radius:4px;opacity:0;transition:.25s;z-index:20;font-weight:600;max-width:90vw;text-align:center}.toast.on{opacity:1;transform:translate(-50%,0)}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translate(-50%,40px);background:var(--ink);color:var(--card);padding:11px 18px;border-radius:4px;opacity:0;transition:.25s;z-index:20;pointer-events:none;font-weight:600;max-width:90vw;text-align:center}.toast.on{opacity:1;transform:translate(-50%,0)}
 .mask{position:fixed;inset:0;background:rgba(8,20,45,.6);display:grid;place-items:center;z-index:30;padding:16px}.mask .card{max-width:360px;width:100%}
 
 @media(max-width:760px){.app{grid-template-columns:1fr}
@@ -483,6 +483,9 @@ body[data-v=cfg] #turnoF,body[data-v=cfg] #gal,body[data-v=cfg] #day{display:non
 .pdSeg{display:flex;gap:6px;flex-wrap:wrap}.pdSeg label{display:flex;align-items:center;gap:6px;padding:8px 14px;border:1px solid var(--line);border-radius:4px;cursor:pointer;font-weight:500;background:var(--card)}
 .pdSeg label:has(input:checked){border-color:var(--a);background:color-mix(in srgb,var(--a) 12%,var(--card))}
 .pdSeg input{accent-color:var(--a)}
+.pdSeg4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr))}.pdSeg4 label{justify-content:flex-start;min-height:44px}
+.pdCn{display:inline-block;min-width:1.4em;margin-left:4px;padding:0 5px;border-radius:999px;background:color-mix(in srgb,var(--mut) 16%,transparent);font-size:12px;text-align:center}
+@media (max-width:760px){.pdSeg4{grid-template-columns:1fr 1fr}}
 .pdG{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:12px}
 .pdCad{margin-top:14px;padding-top:12px;border-top:1px solid var(--line)}.pdCad>b{display:block;font-size:13px;color:var(--mut);font-weight:500;margin-bottom:6px}
 #pdNova:empty{display:none}#pdNova .pdEd{margin:0 0 12px}
@@ -607,7 +610,6 @@ body[data-v=cfg] #turnoF,body[data-v=cfg] #gal,body[data-v=cfg] #day{display:non
 
 <!-- ======================= PRODUÇÃO (embalagem) ======================= -->
 <section id="prod" class="hide">
- <div class="sub" id="prsub"><button data-pr="bip" class="on">Bipar</button><button data-pr="dis" id="prDisB">Distribuição</button></div>
  <div id="pdBipV" class="grid two">
   <div class="card"><h2>Embalar ondas</h2>
    <div class="f">
@@ -623,22 +625,23 @@ body[data-v=cfg] #turnoF,body[data-v=cfg] #gal,body[data-v=cfg] #day{display:non
    <label class="hint" style="display:block;margin-bottom:8px">Pesquisar<input id="pdQ" type="search" placeholder="Número da onda ou nome" autocomplete="off"></label>
    <div class="tw" id="pdL"></div></div>
  </div>
- <div id="pdDisV" class="hide">
-  <div class="card"><h2>Distribuição das pessoas</h2>
-   <div class="pdTools"><input id="pdDq" type="search" placeholder="Pesquisar nome ou código" aria-label="Pesquisar pessoa" autocomplete="off"><div id="pdDf" class="pdChips" role="group" aria-label="Filtrar por posto"></div><button type="button" class="btn sm" id="pdNovaB">Cadastrar pessoa</button></div>
-   <div id="pdNova"></div>
-   <div id="pdDl"></div>
-   <div class="legend">As pessoas da produção têm cadastro próprio, separado da Coleta. Cada mudança de posto vale a partir do horário informado; as ondas já bipadas continuam com o andar, a atividade e o turno da época.</div></div>
-  <div class="card"><h2>Turnos da produção</h2><div id="pdTl"></div>
-   <div class="legend">Saída em branco = ainda não configurada; as horas trabalhadas só são calculadas com a saída preenchida. Saída menor que a entrada = turno que passa da meia-noite.</div></div>
- </div>
 </section>
 
 <!-- ======================= INDIVIDUAL ======================= -->
 <section id="ind" class="hide">
- <div class="sub" id="gsub"><button data-gs="mi" class="on">Produção individual</button><button data-gs="mc">Produção da equipe</button><button data-gs="chk">Presença</button></div>
+ <div class="sub" id="gsub"><button data-gs="mi" class="on">Produção individual</button><button data-gs="mc">Produção da equipe</button><button data-gs="chk">Presença</button><button data-gs="pd" id="gsPd">Pessoas da produção</button></div>
  <div class="ctl" style="margin-bottom:12px"><select id="iOp" aria-label="Operador"></select><select id="iPer" aria-label="Período"><option value="1">Dia selecionado</option><option value="7">Últimos 7 dias</option><option value="30">Últimos 30 dias</option><option value="90">Últimos 90 dias</option></select><button class="btn" id="iPrint" type="button">Imprimir folha</button></div>
  <div id="mgStatus" class="legend hide" role="status"></div><div id="iBody"></div><div id="coBody" class="hide"></div><div id="ckBody" class="hide"></div>
+ <div id="pdDisV" class="hide">
+  <div class="card"><h2>Pessoas da produção</h2>
+   <div class="pdTools"><input id="pdDq" type="search" placeholder="Pesquisar nome ou código" aria-label="Pesquisar pessoa" autocomplete="off"><div id="pdDf" class="pdChips" role="group" aria-label="Filtrar por posto (andar e atividade)"></div><button type="button" class="btn sm" id="pdNovaB">Cadastrar pessoa</button></div>
+   <div id="pdNova"></div>
+   <div id="pdDl"></div>
+   <div class="legend">As pessoas da produção têm cadastro próprio, separado da Coleta. Cada mudança de posto vale a partir do horário informado; as ondas já bipadas continuam com o andar, a atividade e o turno da época.</div></div>
+  <div class="card" style="margin-top:14px"><h2>Turnos da produção</h2><div id="pdTl"></div>
+   <div class="legend">Saída em branco = ainda não configurada; as horas trabalhadas só são calculadas com a saída preenchida. Saída menor que a entrada = turno que passa da meia-noite.</div></div>
+ </div>
+
 </section>
 
 <!-- ======================= PROCURANDO ======================= -->
@@ -2400,10 +2403,10 @@ function hisRender(){
 
 /* ===================== acesso ===================== */
 const needAuth=k=>ON?!me:S.ges.length>0&&!(me&&(k==="cfg"?me.pC:me.pI));
-const ABAS_T=[["painel","Painel"],["op","Coleta"],["prod","Produção"],["prs","Procurando"],["ind","Equipe"],["his","Relatórios"],["cfg","Config"]];let mAbasU=null;
+const ABAS_T=[["painel","Painel"],["op","Coleta"],["prs","Procurando"],["ind","Equipe"],["his","Relatórios"],["cfg","Config"]];let mAbasU=null;
 const isI=t=>t==="ind"||t==="his";
 /* aba só aparece se o perfil atual pode abri-la; o que não é acessível fica oculto */
-function podeVer(t){if(ON&&me&&!me.adm&&me.ab&&!me.ab.includes(t))return false;if(t==="op"||t==="prod"||t==="painel"||t==="prs")return true;if(ON)return !!me&&(isI(t)?!!me.pI:t==='cfg'?!!(me.pC||me.pI):!!me.pC);if(t==="painel")return true;return !needAuth(t)}
+function podeVer(t){if(t==="prod")return true;if(ON&&me&&!me.adm&&me.ab&&!me.ab.includes(t))return false;if(t==="op"||t==="prod"||t==="painel"||t==="prs")return true;if(ON)return !!me&&(isI(t)?!!me.pI:t==='cfg'?!!(me.pC||me.pI):!!me.pC);if(t==="painel")return true;return !needAuth(t)}
 function updTabs(){$$(".tab[data-t]").forEach(b=>{b.style.display=podeVer(b.dataset.t)?"":"none"});$$('#csub [data-c="cga"]').forEach(b=>{b.style.display=soMeta()?"none":""});$$('#fCard').forEach(c=>c.classList.toggle("hide",soMeta()));$$('#csub [data-c="cge"]').forEach(b=>{b.style.display=soMeta()?"none":""});$$('#csub [data-c="cma"]').forEach(b=>{b.style.display=(!ON||(me&&me.adm))?"":"none"});{const soHor=ON&&me&&!me.adm&&!me.pC;$$('#csub [data-c="cop"],#csub [data-c="cus"],#csub [data-c="cme"],#csub [data-c="cho"]').forEach(b=>{b.style.display=''});if(soHor)$$('#csub button').forEach(b=>{if(b.dataset.c!=='cho')b.style.display='none'})}if(!podeVer(view)){view="op";["painel","op","prs","ind","his","cfg"].forEach(s=>$("#"+s).classList.toggle("hide",s!=="op"));$$(".tab[data-t]").forEach(b=>b.classList.toggle("on",b.dataset.t==="op"))}}
 let hWho="";
 function authUI(){const w=me?me.n+"|"+(me.g||"")+"|"+(me.adm?1:0):"";if(w!==hWho){hWho=w;hKey="";HW=null;HPW=null}$("#who").textContent=me?"Gestor: "+me.n:"";const pub=ON&&!me;["#turnoF","#gal","#day"].forEach(i=>$(i).classList.toggle("hide",pub));if(pub){$("#turnoF").value="";$("#day").value=dk(Date.now())}$("#logtx").textContent=me?"Sair":"Entrar";updTabs()}
@@ -2414,7 +2417,7 @@ function go(t){if(ON&&me&&!me.adm&&me.ab&&!podeVer(t)){const f=ABAS_T.find(([k])
  view=t;document.body.dataset.v=t;if(t==="cfg"&&ON&&me&&!me.adm&&!me.pC)setTimeout(()=>{const b=$('#csub [data-c="cho"]');if(b)b.click()},0);["painel","op","prod","prs","ind","his","cfg"].forEach(s=>$("#"+s).classList.toggle("hide",s!==t));
  $$(".tab[data-t]").forEach(b=>b.classList.toggle("on",b.dataset.t===t));
  $("#ttl").textContent={painel:"Painel",op:"Coleta",prod:"Produção",ind:"Equipe",his:"Relatórios",prs:"Procurando",cfg:"Configurações"}[t];
- if(t==="cfg")cfgRender();if(t==="his")hisOpen();if(t==="prs"){procurando();psub(window.__ps||"bip")}if(t==="ind"){individual();loadManagement({cache:true})}if(t==="prod")pdAbrir();renderAll();
+ if(t==="cfg")cfgRender();if(t==="his")hisOpen();if(t==="prs"){procurando();psub(window.__ps||"bip")}if(t==="ind"){const gp=$("#gsPd");gp.classList.toggle("hide",!pdGestor());if(gsub==="pd"&&!pdGestor())$('#gsub [data-gs="mi"]').click();if(gsub==="pd")pdAbrirDis();else{individual();loadManagement({cache:true})}}if(t==="prod")pdAbrir();renderAll();
  if(t==="op"&&!$("#s1").classList.contains("hide"))setTimeout(()=>$("#opIn").focus({preventScroll:true}),60)}
 let pend=null;
 $("#logbtn").onclick=()=>{if(ON&&(me||sess)){sair();return}if(me){me=null;authUI();toast("Sessão encerrada");go("painel");return}$("#login").classList.remove("hide");$("#lU").focus()};
@@ -2558,7 +2561,7 @@ $("#csub").onclick=e=>{const c=e.target.dataset.c;if(!c)return;csub=c;$$("#csub 
 $("#iPrint").onclick=imprimirFolhas;$("#iOp").onchange=()=>{mgShown=100;individual()};$("#iPer").onchange=()=>{mgShown=100;individual();coletiva();loadManagement()};
 $("#iBody").addEventListener("click",e=>{if(e.target.id==="mgMore"){mgShown+=100;individual()}if(e.target.id==="mgTurnoSave")mgSalvarTurno();if(e.target.id==="presSalvar")presSalvar();if(e.target.id==="presBaixa")presBaixa();if(e.target.id==="presAtrSalvar")presAtrSalvar();if(e.target.dataset&&e.target.dataset.cancel)presCancelar(e.target.dataset.cancel)});
 const hojeSemana=()=>mondayOf(dk(Date.now()));
-$("#gsub").onclick=e=>{const x=e.target.dataset.gs;if(!x)return;gsub=x;$$("#gsub button").forEach(b=>b.classList.toggle("on",b===e.target));$("#iBody").classList.toggle("hide",x!=="mi");$("#coBody").classList.toggle("hide",x!=="mc");$("#ckBody").classList.toggle("hide",x!=="chk");$("#iOp").classList.toggle("hide",x!=="mi");$("#iPrint").classList.toggle("hide",x!=="mi");$("#iPer").classList.toggle("hide",x==="chk");if(x==="chk")ckEntrar();else if(x==="mc"){coletiva();loadManagement({cache:true})}else{individual();loadManagement({cache:true})}};
+$("#gsub").onclick=e=>{const x=e.target.dataset.gs;if(!x)return;gsub=x;$$("#gsub button").forEach(b=>b.classList.toggle("on",b===e.target));$("#iBody").classList.toggle("hide",x!=="mi");$("#coBody").classList.toggle("hide",x!=="mc");$("#ckBody").classList.toggle("hide",x!=="chk");$("#iOp").classList.toggle("hide",x!=="mi");$("#iPrint").classList.toggle("hide",x!=="mi");$("#iPer").classList.toggle("hide",x==="chk"||x==="pd");$("#pdDisV").classList.toggle("hide",x!=="pd");$("#iOp").classList.toggle("hide",x!=="mi");if(x==="pd"){$("#mgStatus").classList.add("hide");pdAbrirDis()}else if(x==="chk")ckEntrar();else if(x==="mc"){coletiva();loadManagement({cache:true})}else{individual();loadManagement({cache:true})}};
 
 document.addEventListener("click",e=>{const d=e.target.dataset,t=e.target;
  const tyB=t.closest&&t.closest("[data-ty]");if(tyB){const next=tyB.dataset.ty;
@@ -2774,7 +2777,7 @@ $("#inst").onclick=async()=>{if(dp){dp.prompt();await dp.userChoice;dp=null;retu
  toast("Chrome: menu ⋮ › Transmitir, salvar e compartilhar › Instalar página como app. Edge: menu ··· › Aplicativos › Instalar este site como um aplicativo.",9000)};
 
 /* ===================== Produção (embalagem): bipar, presença, distribuição e turnos ===================== */
-const PD_AND={terreo:"Térreo",mezanino:"Mezanino"},PD_AT={mesa:"Mesa",maquina:"Máquina"},PD_DIAS=["D","S","T","Q","Q","S","S"],PD_DIAS_N=["Domingo","Segunda","Terça","Quarta","Quinta","Sexta","Sábado"],PD_GAL="RC",PD_FILA="rcondas.prodFila";
+const PD_POS=[["terreo","mesa"],["terreo","maquina"],["mezanino","mesa"],["mezanino","maquina"]],PD_AND={terreo:"Térreo",mezanino:"Mezanino"},PD_AT={mesa:"Mesa",maquina:"Máquina"},PD_DIAS=["D","S","T","Q","Q","S","S"],PD_DIAS_N=["Domingo","Segunda","Terça","Quarta","Quinta","Sexta","Sábado"],PD_GAL="RC",PD_FILA="rcondas.prodFila";
 const PD_T0=()=>[{id:1,nome:"1º turno",ent:"06:00",sai:"",dias:[1,2,3,4,5,6],ii:"",if:"",ativo:true},{id:2,nome:"2º turno",ent:"09:00",sai:"",dias:[1,2,3,4,5,6],ii:"",if:"",ativo:true}];
 let PDT=null,PDA=[],PDH=[],PDB=[],PDLOC=[],PDPES=[],PDnova=false,PDsel=null,PDsI=-1,PDsL=[],PDsub="bip",PDed=null,PDf="todos",PD_AT0=0;
 const pdK=o=>o.id||o.m,pdOp=k=>pdOps().find(o=>pdK(o)===k),pdFind=v=>{v=String(v||"").trim().toLowerCase();const L=pdOps();return L.find(o=>o.m.toLowerCase()===v)||L.find(o=>o.n.toLowerCase()===v)},hh5=t=>t?String(t).slice(0,5):"";
@@ -2804,10 +2807,8 @@ async function pdCarregar(){
   PDT=t.map(pdTmap);PDA=p.map(pdAmap);PDB=b.map(x=>({id:x.id,wn:x.wn,oid:x.pessoa_id,andar:x.andar,at:x.atividade,tu:x.turno_id,em:Date.parse(x.bipada_em),col:!!x.coletado,st:"ok"}));
   if(pdGestor()){try{PDH=(await api("/rest/v1/prod_atribuicoes?select=*&order=inicio.desc&limit=3000")).map(pdAmap)}catch(e){PDH=[]}}else PDH=[];
   PD_AT0=Date.now()}catch(e){}}
-async function pdAbrir(){pdSubtab(PDsub);pdRender();await pdCarregar();pdRender();pdFilaEnviar()}
-function pdSubtab(k){if(k==="dis"&&!pdGestor())k="bip";PDsub=k;$$("#prsub [data-pr]").forEach(b=>b.classList.toggle("on",b.dataset.pr===k));
- $("#prDisB").classList.toggle("hide",!pdGestor());$("#pdBipV").classList.toggle("hide",k!=="bip");$("#pdDisV").classList.toggle("hide",k!=="dis");pdRender();
- if(k==="bip")setTimeout(()=>{const i=PDsel?$("#pdW"):$("#pdP");if(i&&view==="prod")i.focus({preventScroll:true})},60)}
+async function pdAbrir(){PDsub="bip";pdRender();setTimeout(()=>{const i=PDsel?$("#pdW"):$("#pdP");if(i&&view==="prod")i.focus({preventScroll:true})},60);await pdCarregar();pdRender();pdFilaEnviar()}
+async function pdAbrirDis(){PDsub="dis";pdRender();await pdCarregar();pdRender()}
 function pdRender(){if(PDsub==="dis"){pdDisLista();pdTurnosLista()}else{pdWho();pdLista()}}
 
 /* ---------- Bipar ---------- */
@@ -2870,18 +2871,23 @@ function pdLista(){const el=$("#pdL");if(!el)return;const by={};
 
 /* ---------- Distribuição ---------- */
 function pdDisLista(){const el=$("#pdDl");if(!el)return;const ops=pdOps(),now=Date.now(),post=o=>{const a=pdPosto(pdK(o),now);return a&&a.sit==="ativo"?a:null};
- const n={todos:ops.length,terreo:0,mezanino:0,sem:0};ops.forEach(o=>{const a=post(o);if(a)n[a.andar]++;else n.sem++});
- $("#pdDf").innerHTML=[["todos","Todos"],["terreo","Térreo"],["mezanino","Mezanino"],["sem","Sem posto"]].map(([k,t])=>`<button type="button" data-pdf="${k}" aria-pressed="${PDf===k}">${t} (${n[k]})</button>`).join("");
- const q=nrm($("#pdDq").value),L=ops.filter(o=>{const a=post(o);if(PDf==="sem"&&a)return false;if((PDf==="terreo"||PDf==="mezanino")&&(!a||a.andar!==PDf))return false;return!q||nrm(o.n).includes(q)||nrm(o.m).includes(q)}).sort((a,b)=>a.n.localeCompare(b.n));
+ const n={todos:ops.length,sem:0};PD_POS.forEach(([a,x])=>n[a+"-"+x]=0);ops.forEach(o=>{const a=post(o);if(a)n[a.andar+"-"+a.at]++;else n.sem++});
+ const bip={};PDB.forEach(b=>{bip[b.oid]=(bip[b.oid]||0)+1});
+ $("#pdDf").innerHTML=[["todos","Todos"]].concat(PD_POS.map(([a,x])=>[a+"-"+x,PD_AND[a]+" "+PD_AT[x]]),[["sem","Sem posto"]]).map(([k,t])=>`<button type="button" data-pdf="${k}" aria-pressed="${PDf===k}">${t} <span class="pdCn">${n[k]}</span></button>`).join("");
+ const q=nrm($("#pdDq").value),L=ops.filter(o=>{const a=post(o);if(PDf==="sem"&&a)return false;if(PDf!=="todos"&&PDf!=="sem"&&(!a||a.andar+"-"+a.at!==PDf))return false;return!q||nrm(o.n).includes(q)||nrm(o.m).includes(q)}).sort((a,b)=>a.n.localeCompare(b.n));
  pdNovaForm();
- el.innerHTML=L.length?L.map(o=>{const k=pdK(o),a=pdPosto(k,now),t=a?pdTurno(a.tu):null;
+ el.innerHTML=L.length?L.map(o=>{const k=pdK(o),a=pdPosto(k,now),t=a?pdTurno(a.tu):null,nb=bip[o.id||k]||0;
   return`<div class="pdRow"><div class="who2">${av(o.n)}<div>${esc(o.n)}<small>${o.m}</small></div></div>
-   <div class="pdPc">${a?(a.sit==="ativo"?`<span class="pdTag ${a.andar==="terreo"?"t":"m"}">${PD_AND[a.andar]}</span> <span class="pdTag">${PD_AT[a.at]}</span>`:'<span class="pdSt err">Inativo</span>'):'<span class="pdH">Sem posto</span>'}</div>
+   <div class="pdPc">${a?(a.sit==="ativo"?`<span class="pdTag ${a.andar==="terreo"?"t":"m"}">${PD_AND[a.andar]} ${PD_AT[a.at]}</span>`:'<span class="pdSt err">Inativo</span>'):'<span class="pdH">Sem posto</span>'}${nb?` <span class="pdH">${nb} ${nb===1?"onda":"ondas"} hoje</span>`:""}</div>
    <div class="pdH">${a?esc(t?t.nome:"Turno "+a.tu)+", "+esc(pdHorario(a))+(a.ent?" (individual)":"")+"<br>desde "+new Date(a.ini).toLocaleString("pt-BR",{day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"}):""}</div>
    <button type="button" class="btn alt sm" data-pded="${esc(k)}" aria-expanded="${PDed===k}">${PDed===k?"Fechar":a?"Alterar":"Definir posto"}</button></div>`+(PDed===k?pdEditor(o,a):"")}).join("")
-  :`<div class="empty">${ops.length?"Ninguém encontrado.":"Nenhuma pessoa cadastrada na produção. Toque em “Cadastrar pessoa”."}</div>`}
+  :`<div class="empty">${ops.length?"Ninguém neste filtro.":"Nenhuma pessoa cadastrada na produção. Toque em “Cadastrar pessoa”."}</div>`}
+const pdPosR=(name,cur)=>`<div class="pdSeg pdSeg4">${PD_POS.map(([a,x])=>`<label><input type="radio" name="${name}" value="${a}-${x}"${cur===a+"-"+x?" checked":""}>${PD_AND[a]} ${PD_AT[x]}</label>`).join("")}</div>`;
+const pdTurOpts=cur=>pdTurnos().filter(t=>t.ativo||t.id===cur).map(t=>`<option value="${t.id}"${cur===t.id?" selected":""}>${esc(t.nome)} (${t.ent}${t.sai?" às "+t.sai:""})</option>`).join("");
 function pdNovaForm(){const el=$("#pdNova");if(!el)return;$("#pdNovaB").classList.toggle("hide",PDnova);if(!PDnova){el.innerHTML="";return}if(el.querySelector("form"))return;
  el.innerHTML=`<form class="pdEd" id="pdNovaF" novalidate><div class="pdG"><label>Nome<input name="n" maxlength="80" autocomplete="off" required></label><label>Código do crachá<input name="c" value="${pdProxCod()}" maxlength="12" autocomplete="off" autocapitalize="characters" required></label></div>
+  <fieldset><legend>Posto</legend>${pdPosR("pdA4",PDf.includes("-")?PDf:"")}</fieldset>
+  <div class="pdG"><label>Turno<select name="pdT">${pdTurOpts(null)}</select></label></div>
   <div class="legend" style="margin:0 0 10px">Pessoa da produção (${esc(pdGalpao())}). O código é o que fica no crachá: letras e números, sem espaço.</div>
   <div class="ctl2"><button type="button" class="btn alt sm" data-pdnx="1">Cancelar</button><button type="submit" class="btn">Cadastrar</button></div></form>`}
 function pdCodOk(c){return /^[A-Z0-9]{2,12}$/.test(c)}
@@ -2889,11 +2895,16 @@ async function pdCadastrar(f,k){const nome=f.querySelector('[name="n"]').value.t
  if(nome.length<2){toast("Informe o nome da pessoa.");f.querySelector('[name="n"]').focus();return}
  if(!pdCodOk(cod)){toast("O código precisa ter de 2 a 12 letras ou números.",5000);f.querySelector('[name="c"]').focus();return}
  if(pdOps().some(o=>o.m===cod&&pdK(o)!==k)){toast("O código "+cod+" já está em uso na produção.",5000);return}
- const msg=(k?"Cadastro atualizado: ":"Pessoa cadastrada na produção: ")+nome+", "+cod;
+ const pr=k?null:f.querySelector('[name="pdA4"]:checked'),tu=k?0:+((f.querySelector('[name="pdT"]')||{}).value||0);
+ if(!k&&!pr){toast("Escolha o posto: Térreo ou Mezanino, Mesa ou Máquina.",5000);const r=f.querySelector('[name="pdA4"]');if(r)r.focus();return}
+ if(!k&&!tu){toast("Cadastre um turno primeiro.");return}
+ const [an,at]=pr?pr.value.split("-"):[];
+ const msg=(k?"Cadastro atualizado: ":"Pessoa cadastrada na produção: ")+nome+", "+cod+(pr?" ("+PD_AND[an]+" "+PD_AT[at]+")":"");
  if(ON){const b=f.querySelector('[type="submit"],[data-pdcad]');if(b)b.disabled=true;
-  try{await api("/rest/v1/rpc/prod_pessoa_salvar",{method:"POST",body:{p_id:k||null,p_codigo:cod,p_nome:nome,p_galpao:GID[pdGalpao()]||null}})}catch(e){if(b)b.disabled=false;toast(errMsg(e),7000);return}
-  if(!k)PDnova=false;await pdCarregar();pdRender();toast(msg,4000);return}
- const P=S.prodPes||(S.prodPes=[]);if(k){const o=P.find(x=>pdK(x)===k);if(o){o.n=nome;o.m=cod}}else{P.push({id:uid(),m:cod,n:nome,g:pdGalpao()});PDnova=false}
+  let id;try{id=await api("/rest/v1/rpc/prod_pessoa_salvar",{method:"POST",body:{p_id:k||null,p_codigo:cod,p_nome:nome,p_galpao:GID[pdGalpao()]||null}})}catch(e){if(b)b.disabled=false;toast(errMsg(e),7000);return}
+  let aviso="";if(!k&&id){try{await api("/rest/v1/rpc/prod_atribuir",{method:"POST",body:{p_pessoa:id,p_andar:an,p_atividade:at,p_turno:tu,p_entrada:null,p_saida:null,p_situacao:"ativo",p_desde:new Date().toISOString()}})}catch(e){aviso=" Não foi possível definir o posto: "+errMsg(e)}}
+  if(!k)PDnova=false;await pdCarregar();pdRender();toast(msg+aviso,aviso?8000:4000);return}
+ const P=S.prodPes||(S.prodPes=[]);if(k){const o=P.find(x=>pdK(x)===k);if(o){o.n=nome;o.m=cod}}else{const id=uid();P.push({id,m:cod,n:nome,g:pdGalpao()});(S.prodA||(S.prodA=[])).push({id:uid(),oid:id,andar:an,at,tu,ent:"",sai:"",sit:"ativo",ini:Date.now(),fim:null,por:me?me.u:"local"});PDnova=false}
  save();pdRender();toast(msg,4000)}
 async function pdRemover(k){const o=pdOp(k);if(!o)return;
  if(ON){try{await api("/rest/v1/rpc/prod_pessoa_excluir",{method:"POST",body:{p_id:o.id}})}catch(e){toast(errMsg(e),7000);return}PDed=null;if(PDsel&&pdK(PDsel)===k)PDsel=null;await pdCarregar();pdRender();toast(o.n+" removido(a) da produção. O histórico continua salvo.",5000);return}
@@ -2903,8 +2914,7 @@ function pdLocalDT(t){const d=new Date(t);d.setSeconds(0,0);return dk(d.getTime(
 function pdEditor(o,a){const k=pdK(o),T=pdTurnos().filter(t=>t.ativo||(a&&t.id===a.tu)),r=(n,v,lab,cur)=>`<label><input type="radio" name="${n}" value="${v}"${cur===v?" checked":""}>${lab}</label>`;
  const H=pdAtribs().filter(x=>x.oid===k).sort((x,y)=>y.ini-x.ini).slice(0,8),fd=t=>new Date(t).toLocaleString("pt-BR",{day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"});
  return`<form class="pdEd" data-pdform="${esc(k)}" novalidate>
-  <fieldset><legend>Andar</legend><div class="pdSeg">${r("pdA","terreo","Térreo",a&&a.andar)}${r("pdA","mezanino","Mezanino",a&&a.andar)}</div></fieldset>
-  <fieldset><legend>Atividade</legend><div class="pdSeg">${r("pdX","mesa","Mesa",a&&a.at)}${r("pdX","maquina","Máquina",a&&a.at)}</div></fieldset>
+  <fieldset><legend>Posto</legend>${pdPosR("pdA4",a?a.andar+"-"+a.at:"")}</fieldset>
   <div class="pdG"><label>Turno<select name="pdT">${T.map(t=>`<option value="${t.id}"${a&&a.tu===t.id?" selected":""}>${esc(t.nome)} (${t.ent}${t.sai?" às "+t.sai:""})</option>`).join("")}</select></label>
    <label>Entrada individual<input type="time" name="pdE" value="${a?a.ent:""}"></label><label>Saída individual<input type="time" name="pdS" value="${a?a.sai:""}"></label>
    <label>Situação<select name="pdSit"><option value="ativo"${!a||a.sit==="ativo"?" selected":""}>Ativo</option><option value="inativo"${a&&a.sit==="inativo"?" selected":""}>Inativo</option></select></label>
@@ -2916,7 +2926,7 @@ function pdEditor(o,a){const k=pdK(o),T=pdTurnos().filter(t=>t.ativo||(a&&t.id==
   ${H.length?`<ul class="pdHist" aria-label="Histórico de postos">${H.map(x=>{const t=pdTurno(x.tu);return`<li>${fd(x.ini)} até ${x.fim?fd(x.fim):"agora"}: ${PD_AND[x.andar]}, ${PD_AT[x.at]}, ${esc(t?t.nome:"Turno "+x.tu)}${x.sit!=="ativo"?" (inativo)":""}</li>`}).join("")}</ul>`:""}
  </form>`}
 async function pdAtribuir(f){const k=f.dataset.pdform,o=pdOp(k);if(!o)return;const g=n=>{const e=f.querySelector(`[name="${n}"]:checked`)||f.querySelector(`[name="${n}"]`);return e?e.value:""};
- const andar=f.querySelector('[name="pdA"]:checked'),at=f.querySelector('[name="pdX"]:checked');if(!andar){toast("Escolha o andar.");return}if(!at){toast("Escolha a atividade.");return}
+ const p4=f.querySelector('[name="pdA4"]:checked');if(!p4){toast("Escolha o posto.");return}const [av4,at4]=p4.value.split("-"),andar={value:av4},at={value:at4};
  const tu=+g("pdT"),ent=g("pdE"),sai=g("pdS"),sit=g("pdSit"),dv=g("pdD");if(!tu){toast("Cadastre um turno primeiro.");return}
  if(!!ent!==!!sai){toast("Informe entrada e saída do horário individual, ou deixe os dois em branco.",5000);return}
  const desde=dv?new Date(dv).getTime():Date.now();if(!isFinite(desde)){toast("Confira a data de início.");return}
@@ -2964,25 +2974,24 @@ document.addEventListener("keydown",e=>{const id=e.target.id;
   if(e.key==="Enter"){e.preventDefault();if(PDsel){$("#pdW").focus();return}if(PDsI>=0&&PDsL[PDsI]){pdEscolher(PDsL[PDsI]);return}if(PDsL.length===1){pdEscolher(PDsL[0]);return}if(PDsL.length>1)toast("Há mais de uma pessoa. Selecione o nome desejado.",5000);return}
   if(e.key==="Escape"){$("#pdSug").innerHTML="";PDsL=[];PDsI=-1}return}
  if(id==="pdW"&&e.key==="Enter"){e.preventDefault();pdBipar()}});
-document.addEventListener("click",e=>{const t=e.target.closest&&e.target.closest("[data-pdsug],[data-pr],[data-pdf],[data-pded],[data-pdtn],[data-pdtx],[data-pdnx],[data-pdcad],[data-pdrm],#pdNovaB,#pdTroca,#pdEnv");if(!t)return;
+document.addEventListener("click",e=>{const t=e.target.closest&&e.target.closest("[data-pdsug],[data-pdf],[data-pded],[data-pdtn],[data-pdtx],[data-pdnx],[data-pdcad],[data-pdrm],#pdNovaB,#pdTroca,#pdEnv");if(!t)return;
  if(t.id==="pdNovaB"){PDnova=true;pdNovaForm();const i=$('#pdNovaF [name="n"]');if(i)i.focus();return}
  if(t.dataset.pdnx){PDnova=false;pdNovaForm();$("#pdNovaB").focus();return}
  if(t.dataset.pdcad){pdCadastrar(t.closest("form"),t.dataset.pdcad);return}
  if(t.dataset.pdrm){const o=pdOp(t.dataset.pdrm);if(!o)return;if(t.dataset.ok!=="1"){t.dataset.ok="1";t.textContent="Confirmar remoção de "+o.n.split(" ")[0];setTimeout(()=>{if(t.isConnected){t.dataset.ok="";t.textContent="Remover da produção"}},5000);return}pdRemover(t.dataset.pdrm);return}
  if(t.dataset.pdsug){const o=PDsL.find(x=>x.m===t.dataset.pdsug);if(o)pdEscolher(o);return}
- if(t.dataset.pr){pdSubtab(t.dataset.pr);return}
  if(t.dataset.pdf){PDf=t.dataset.pdf;pdDisLista();return}
- if(t.dataset.pded){PDed=PDed===t.dataset.pded?null:t.dataset.pded;pdDisLista();const f=PDed&&document.querySelector(`[data-pdform="${CSS.escape(PDed)}"]`);if(f){const r=f.querySelector('input[name="pdA"]');f.scrollIntoView({block:"nearest"});if(r)r.focus({preventScroll:true})}return}
+ if(t.dataset.pded){PDed=PDed===t.dataset.pded?null:t.dataset.pded;pdDisLista();const f=PDed&&document.querySelector(`[data-pdform="${CSS.escape(PDed)}"]`);if(f){const r=f.querySelector('input[name="pdA4"]');f.scrollIntoView({block:"nearest"});if(r)r.focus({preventScroll:true})}return}
  if(t.dataset.pdtn){PDed="novoT";pdTurnosLista();const i=$('[data-pdt="novo"] [name="n"]');if(i)i.focus();return}
  if(t.dataset.pdtx){PDed=null;pdTurnosLista();return}
  if(t.id==="pdTroca"){pdTrocar();return}
  if(t.id==="pdEnv")pdBipar()});
 document.addEventListener("submit",e=>{const f=e.target;if(f.id==="pdNovaF"){e.preventDefault();pdCadastrar(f,null);return}if(f.dataset&&f.dataset.pdform){e.preventDefault();pdAtribuir(f)}else if(f.dataset&&f.dataset.pdt){e.preventDefault();pdTurnoSalvar(f)}});
 window.addEventListener("online",()=>{pdFilaEnviar()});
-setInterval(()=>{pdFilaEnviar();if(view==="prod"&&online()&&document.visibilityState==="visible"&&ON&&Date.now()-PD_AT0>55000&&PDed==null)pdCarregar().then(pdRender)},30000);
+setInterval(()=>{pdFilaEnviar();if((view==="prod"||(view==="ind"&&gsub==="pd"))&&online()&&document.visibilityState==="visible"&&ON&&Date.now()-PD_AT0>55000&&PDed==null)pdCarregar().then(pdRender)},30000);
 
 /* mini abas na lateral: espelham as abas internas de cada área */
-const SUBS={op:["sub","s"],prod:["prsub","pr"],ind:["gsub","gs"],prs:["psub","p"],his:["hsub","hs"],cfg:["csub","c"]};
+const SUBS={op:["sub","s"],ind:["gsub","gs"],prs:["psub","p"],his:["hsub","hs"],cfg:["csub","c"]};
 function sideSubs(){
  $$(".ssub").forEach(e=>e.remove());const k=SUBS[view];if(!k)return;const bar=document.getElementById(k[0]),tab=document.querySelector('nav.side .tab[data-t="'+view+'"]');if(!bar||!tab)return;
  const box=document.createElement("div");box.className="ssub";box.setAttribute("role","group");box.setAttribute("aria-label","Abas de "+tab.textContent.trim());
