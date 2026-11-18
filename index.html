@@ -295,7 +295,7 @@ a[data-pick]{display:inline-block;padding:8px 0 2px;color:var(--gx);font-weight:
 .ssub button:hover{color:#fff;background:rgba(255,255,255,.07)}
 .ssub button.on{color:#fff;background:rgba(255,255,255,.16);font-weight:700;box-shadow:inset 3px 0 0 #8fb4ff}
 .ssub button:focus-visible{outline:2px solid #8fb4ff;outline-offset:1px}
-@media(min-width:761px){#sub,#gsub,#psub,#hsub,#csub{display:none}}
+@media(min-width:761px){#sub,#prsub,#gsub,#psub,#hsub,#csub{display:none}}
 @media(max-width:760px){.ssub{display:none}}
 
 /* ===== modo compacto (computador) e limpeza visual ===== */
@@ -483,6 +483,13 @@ body[data-v=cfg] #turnoF,body[data-v=cfg] #gal,body[data-v=cfg] #day{display:non
 .pdSeg{display:flex;gap:6px;flex-wrap:wrap}.pdSeg label{display:flex;align-items:center;gap:6px;padding:8px 14px;border:1px solid var(--line);border-radius:4px;cursor:pointer;font-weight:500;background:var(--card)}
 .pdSeg label:has(input:checked){border-color:var(--a);background:color-mix(in srgb,var(--a) 12%,var(--card))}
 .pdSeg input{accent-color:var(--a)}
+.pdTop{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;margin-bottom:12px}.pdTop .ctl{margin:0}
+.pdTabs{display:inline-flex;gap:4px;flex-wrap:wrap}.pdTabs button{all:unset;cursor:pointer;padding:8px 14px;border:1px solid var(--line);border-radius:4px;font:600 13.5px var(--fb);color:var(--mut);background:var(--card)}
+.pdTabs button.on{background:var(--ink);color:var(--card);border-color:var(--ink)}.pdTabs button:focus-visible{outline:2px solid var(--a);outline-offset:2px}
+.pdChipsP{margin-bottom:12px}.pdKp .placar{margin-top:0}.pdGrid{margin-top:12px}.pdGrid .pdWide{grid-column:1/-1}
+@media(min-width:1200px){.pdGrid{grid-template-columns:repeat(2,minmax(0,1fr));grid-template-areas:none}}
+.pdCh{overflow-x:auto}.pdLeg{margin-top:6px}.pdLeg i.pdDash{width:16px;height:0;border-top:2px dashed var(--o);background:none;vertical-align:3px}
+.pdUn{display:flex;flex-direction:column;gap:3px}.pdUn small{color:var(--mut);font-size:12px}.pdMetaF{align-items:start}.pdMetaAc{grid-column:1/-1}
 .pdSeg4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr))}.pdSeg4 label{justify-content:flex-start;min-height:44px}
 .pdCn{display:inline-block;min-width:1.4em;margin-left:4px;padding:0 5px;border-radius:999px;background:color-mix(in srgb,var(--mut) 16%,transparent);font-size:12px;text-align:center}
 @media (max-width:760px){.pdSeg4{grid-template-columns:1fr 1fr}}
@@ -610,6 +617,8 @@ body[data-v=cfg] #turnoF,body[data-v=cfg] #gal,body[data-v=cfg] #day{display:non
 
 <!-- ======================= PRODUÇÃO (embalagem) ======================= -->
 <section id="prod" class="hide">
+ <div class="sub" id="prsub"><button data-pr="bip" class="on">Bipar</button><button data-pr="pn">Painel</button></div>
+ <div id="pdPnV" class="hide"></div>
  <div id="pdBipV" class="grid two">
   <div class="card"><h2>Embalar ondas</h2>
    <div class="f">
@@ -629,9 +638,13 @@ body[data-v=cfg] #turnoF,body[data-v=cfg] #gal,body[data-v=cfg] #day{display:non
 
 <!-- ======================= INDIVIDUAL ======================= -->
 <section id="ind" class="hide">
- <div class="sub" id="gsub"><button data-gs="mi" class="on">Produção individual</button><button data-gs="mc">Produção da equipe</button><button data-gs="chk">Presença</button><button data-gs="pd" id="gsPd">Pessoas da produção</button></div>
+ <div class="sub" id="gsub"><button data-gs="mi" class="on">Produção individual</button><button data-gs="mc">Produção da equipe</button><button data-gs="chk">Presença</button><button data-gs="pd" id="gsPd">Embalagem</button></div>
  <div class="ctl" style="margin-bottom:12px"><select id="iOp" aria-label="Operador"></select><select id="iPer" aria-label="Período"><option value="1">Dia selecionado</option><option value="7">Últimos 7 dias</option><option value="30">Últimos 30 dias</option><option value="90">Últimos 90 dias</option></select><button class="btn" id="iPrint" type="button">Imprimir folha</button></div>
  <div id="mgStatus" class="legend hide" role="status"></div><div id="iBody"></div><div id="coBody" class="hide"></div><div id="ckBody" class="hide"></div>
+ <div id="pdEqV" class="hide">
+ <div class="pdTop"><div class="pdTabs" id="pdEqSeg" role="group" aria-label="Visão da embalagem"><button type="button" data-pde="eq" class="on">Equipe</button><button type="button" data-pde="ind">Individual</button><button type="button" data-pde="pes">Pessoas e turnos</button></div>
+  <div class="ctl" id="pdEqCtl"><select id="pdPer" aria-label="Período da embalagem"><option value="1">Dia selecionado</option><option value="7">Últimos 7 dias</option><option value="30">Últimos 30 dias</option></select><select id="pdPs" aria-label="Pessoa" class="hide"></select></div></div>
+ <div id="pdDesV"></div>
  <div id="pdDisV" class="hide">
   <div class="card"><h2>Pessoas da produção</h2>
    <div class="pdTools"><input id="pdDq" type="search" placeholder="Pesquisar nome ou código" aria-label="Pesquisar pessoa" autocomplete="off"><div id="pdDf" class="pdChips" role="group" aria-label="Filtrar por posto (andar e atividade)"></div><button type="button" class="btn sm" id="pdNovaB">Cadastrar pessoa</button></div>
@@ -640,6 +653,7 @@ body[data-v=cfg] #turnoF,body[data-v=cfg] #gal,body[data-v=cfg] #day{display:non
    <div class="legend">As pessoas da produção têm cadastro próprio, separado da Coleta. Cada mudança de posto vale a partir do horário informado; as ondas já bipadas continuam com o andar, a atividade e o turno da época.</div></div>
   <div class="card" style="margin-top:14px"><h2>Turnos da produção</h2><div id="pdTl"></div>
    <div class="legend">Saída em branco = ainda não configurada; as horas trabalhadas só são calculadas com a saída preenchida. Saída menor que a entrada = turno que passa da meia-noite.</div></div>
+ </div>
  </div>
 
 </section>
@@ -2417,7 +2431,7 @@ function go(t){if(ON&&me&&!me.adm&&me.ab&&!podeVer(t)){const f=ABAS_T.find(([k])
  view=t;document.body.dataset.v=t;if(t==="cfg"&&ON&&me&&!me.adm&&!me.pC)setTimeout(()=>{const b=$('#csub [data-c="cho"]');if(b)b.click()},0);["painel","op","prod","prs","ind","his","cfg"].forEach(s=>$("#"+s).classList.toggle("hide",s!==t));
  $$(".tab[data-t]").forEach(b=>b.classList.toggle("on",b.dataset.t===t));
  $("#ttl").textContent={painel:"Painel",op:"Coleta",prod:"Produção",ind:"Equipe",his:"Relatórios",prs:"Procurando",cfg:"Configurações"}[t];
- if(t==="cfg")cfgRender();if(t==="his")hisOpen();if(t==="prs"){procurando();psub(window.__ps||"bip")}if(t==="ind"){const gp=$("#gsPd");gp.classList.toggle("hide",!pdGestor());if(gsub==="pd"&&!pdGestor())$('#gsub [data-gs="mi"]').click();if(gsub==="pd")pdAbrirDis();else{individual();loadManagement({cache:true})}}if(t==="prod")pdAbrir();renderAll();
+ if(t==="cfg")cfgRender();if(t==="his")hisOpen();if(t==="prs"){procurando();psub(window.__ps||"bip")}if(t==="ind"){if(gsub==="pd")pdAbrirDis();else{individual();loadManagement({cache:true})}}if(t==="prod")pdAbrir();renderAll();
  if(t==="op"&&!$("#s1").classList.contains("hide"))setTimeout(()=>$("#opIn").focus({preventScroll:true}),60)}
 let pend=null;
 $("#logbtn").onclick=()=>{if(ON&&(me||sess)){sair();return}if(me){me=null;authUI();toast("Sessão encerrada");go("painel");return}$("#login").classList.remove("hide");$("#lU").focus()};
@@ -2561,7 +2575,7 @@ $("#csub").onclick=e=>{const c=e.target.dataset.c;if(!c)return;csub=c;$$("#csub 
 $("#iPrint").onclick=imprimirFolhas;$("#iOp").onchange=()=>{mgShown=100;individual()};$("#iPer").onchange=()=>{mgShown=100;individual();coletiva();loadManagement()};
 $("#iBody").addEventListener("click",e=>{if(e.target.id==="mgMore"){mgShown+=100;individual()}if(e.target.id==="mgTurnoSave")mgSalvarTurno();if(e.target.id==="presSalvar")presSalvar();if(e.target.id==="presBaixa")presBaixa();if(e.target.id==="presAtrSalvar")presAtrSalvar();if(e.target.dataset&&e.target.dataset.cancel)presCancelar(e.target.dataset.cancel)});
 const hojeSemana=()=>mondayOf(dk(Date.now()));
-$("#gsub").onclick=e=>{const x=e.target.dataset.gs;if(!x)return;gsub=x;$$("#gsub button").forEach(b=>b.classList.toggle("on",b===e.target));$("#iBody").classList.toggle("hide",x!=="mi");$("#coBody").classList.toggle("hide",x!=="mc");$("#ckBody").classList.toggle("hide",x!=="chk");$("#iOp").classList.toggle("hide",x!=="mi");$("#iPrint").classList.toggle("hide",x!=="mi");$("#iPer").classList.toggle("hide",x==="chk"||x==="pd");$("#pdDisV").classList.toggle("hide",x!=="pd");$("#iOp").classList.toggle("hide",x!=="mi");if(x==="pd"){$("#mgStatus").classList.add("hide");pdAbrirDis()}else if(x==="chk")ckEntrar();else if(x==="mc"){coletiva();loadManagement({cache:true})}else{individual();loadManagement({cache:true})}};
+$("#gsub").onclick=e=>{const x=e.target.dataset.gs;if(!x)return;gsub=x;$$("#gsub button").forEach(b=>b.classList.toggle("on",b===e.target));$("#iBody").classList.toggle("hide",x!=="mi");$("#coBody").classList.toggle("hide",x!=="mc");$("#ckBody").classList.toggle("hide",x!=="chk");$("#iOp").classList.toggle("hide",x!=="mi");$("#iPrint").classList.toggle("hide",x!=="mi");$("#iPer").classList.toggle("hide",x==="chk"||x==="pd");$("#pdEqV").classList.toggle("hide",x!=="pd");$("#iOp").classList.toggle("hide",x!=="mi");if(x==="pd"){$("#mgStatus").classList.add("hide");pdAbrirDis()}else if(x==="chk")ckEntrar();else if(x==="mc"){coletiva();loadManagement({cache:true})}else{individual();loadManagement({cache:true})}};
 
 document.addEventListener("click",e=>{const d=e.target.dataset,t=e.target;
  const tyB=t.closest&&t.closest("[data-ty]");if(tyB){const next=tyB.dataset.ty;
@@ -2802,14 +2816,16 @@ function pdLocalB(){const W=new Set(S.waves.filter(w=>!w.err).map(w=>normWN(w.wn
 async function pdCarregar(){
  if(!ON){PDB=pdLocalB();return}
  if(!online())return;
- try{const [t,p,b,ps]=await Promise.all([api("/rest/v1/prod_turnos?select=*&order=id"),api("/rest/v1/rpc/prod_postos",{method:"POST",body:{}}),api("/rest/v1/rpc/prod_bipagens_dia",{method:"POST",body:{p_dia:hoje()}}),api("/rest/v1/prod_pessoas?select=id,codigo,nome,galpao_id&excluido_em=is.null&order=nome&limit=2000")]);
-  PDPES=ps.map(x=>({id:x.id,m:x.codigo,n:x.nome,g:GN[x.galpao_id]||""}));if(PDsel)PDsel=PDPES.find(o=>o.id===PDsel.id)||null;
+ try{const [t,p,b,ps,mt]=await Promise.all([api("/rest/v1/prod_turnos?select=*&order=id"),api("/rest/v1/rpc/prod_postos",{method:"POST",body:{}}),api("/rest/v1/rpc/prod_bipagens_dia",{method:"POST",body:{p_dia:hoje()}}),api("/rest/v1/prod_pessoas?select=id,codigo,nome,galpao_id&excluido_em=is.null&order=nome&limit=2000"),api("/rest/v1/prod_metas?select=galpao_id,atividade,por_hora,inicio,criado_por&order=inicio&limit=2000").catch(()=>null)]);
+  if(mt)PDM=mt.map(pdMmap);PDPES=ps.map(x=>({id:x.id,m:x.codigo,n:x.nome,g:GN[x.galpao_id]||""}));if(PDsel)PDsel=PDPES.find(o=>o.id===PDsel.id)||null;
   PDT=t.map(pdTmap);PDA=p.map(pdAmap);PDB=b.map(x=>({id:x.id,wn:x.wn,oid:x.pessoa_id,andar:x.andar,at:x.atividade,tu:x.turno_id,em:Date.parse(x.bipada_em),col:!!x.coletado,st:"ok"}));
   if(pdGestor()){try{PDH=(await api("/rest/v1/prod_atribuicoes?select=*&order=inicio.desc&limit=3000")).map(pdAmap)}catch(e){PDH=[]}}else PDH=[];
   PD_AT0=Date.now()}catch(e){}}
-async function pdAbrir(){PDsub="bip";pdRender();setTimeout(()=>{const i=PDsel?$("#pdW"):$("#pdP");if(i&&view==="prod")i.focus({preventScroll:true})},60);await pdCarregar();pdRender();pdFilaEnviar()}
-async function pdAbrirDis(){PDsub="dis";pdRender();await pdCarregar();pdRender()}
-function pdRender(){if(PDsub==="dis"){pdDisLista();pdTurnosLista()}else{pdWho();pdLista()}}
+function pdSubPr(k){PDpr=PDsub=k==="pn"?"pn":"bip";$$("#prsub [data-pr]").forEach(b=>b.classList.toggle("on",b.dataset.pr===PDpr));$("#pdBipV").classList.toggle("hide",PDpr!=="bip");$("#pdPnV").classList.toggle("hide",PDpr!=="pn");
+ if(PDpr==="bip")setTimeout(()=>{const i=PDsel?$("#pdW"):$("#pdP");if(i&&view==="prod")i.focus({preventScroll:true})},60);try{sideSubs()}catch(e){}}
+async function pdAbrir(){pdSubPr(PDpr);pdRender();await pdCarregar();pdRender();pdFilaEnviar()}
+async function pdAbrirDis(){PDsub="dis";PDD.t=0;pdRender();await pdCarregar();pdRender()}
+function pdRender(){if(PDsub==="dis")pdEqRender();else if(PDsub==="pn")pdPainel();else{pdWho();pdLista()}}
 
 /* ---------- Bipar ---------- */
 function pdSugest(){const q=nrm($("#pdP").value),box=$("#pdSug");PDsI=-1;PDsL=[];
@@ -2965,6 +2981,130 @@ async function pdTurnoSalvar(f){const v=n=>(f.querySelector(`[name="${n}"]`)||{}
  if(id==="novo")T.push(Object.assign({id:Math.max(0,...T.map(t=>t.id))+1},x));else Object.assign(T.find(t=>t.id===+id)||{},x);
  save();PDed=null;pdRender();toast(msg,4000)}
 
+/* ---------- Desempenho da embalagem: meta por hora (Mesa e Máquina), painel do dia, individual e equipe ----------
+   Hora trabalhada = cada hora do relógio em que a pessoa bipou pelo menos uma onda (a hora atual conta só o tempo já passado).
+   Meta individual = meta por hora da atividade × horas trabalhadas. Meta coletiva = soma das metas individuais. */
+let PDM=[],PDpr="bip",PDE="eq",PDfp="todos",PDps="",PDper="1",PDD={key:"",t:0,B:[],err:""},PDDl=false;
+const PD_PK=PD_POS.map(([a,x])=>a+"-"+x),pdPN=k=>{const [a,x]=String(k).split("-");return PD_AND[a]&&PD_AT[x]?PD_AND[a]+" "+PD_AT[x]:"—"};
+const nf1=v=>(Math.round((+v||0)*10)/10).toLocaleString("pt-BR",{maximumFractionDigits:1});
+const pdMmap=m=>({g:m.galpao_id,at:m.atividade,h:+m.por_hora,ini:m.inicio,por:m.criado_por||""});
+function pdMetas(){return ON?PDM:(S.prodMetas||(S.prodMetas=[]))}
+function pdGid(){return ON?(GID[pdGalpao()]||null):pdGalpao()}
+function pdMetaH(at,dia){const g=pdGid();let r=null;pdMetas().forEach(m=>{if(m.g===g&&m.at===at&&m.ini<=dia&&(!r||m.ini>r.ini))r=m});return r?+r.h:0}
+function pdNome(oid){const o=pdOps().find(x=>pdK(x)===oid)||(S.prodPesEx||[]).find(x=>pdK(x)===oid);return o?{nm:o.n,cod:o.m}:{nm:"Pessoa removida",cod:""}}
+const pdFiltroP=B=>PDfp==="todos"?B:B.filter(b=>b.andar+"-"+b.at===PDfp);
+function pdStats(B){const now=Date.now(),P=new Map(),H=new Map(),D=new Map(),Q=new Map(),vis=new Set(),fr=h=>Math.max(0,Math.min(1,(now-h)/36e5));
+ B.slice().sort((a,b)=>a.em-b.em).forEach(b=>{const h=Math.floor(b.em/36e5)*36e5,k=b.andar+"-"+b.at;
+  let p=P.get(b.oid);if(!p)P.set(b.oid,p={oid:b.oid,nm:b.nm,cod:b.cod,n:0,col:0,hrs:0,meta:0,dias:new Map(),pk:k,ult:0});p.n++;if(b.col)p.col++;p.pk=k;p.ult=b.em;
+  let x=H.get(h);if(!x)H.set(h,x={h,n:0,pes:new Set(),meta:0});x.n++;x.pes.add(b.oid);
+  let d=D.get(b.dia);if(!d)D.set(b.dia,d={dia:b.dia,n:0,pes:new Set(),meta:0});d.n++;d.pes.add(b.oid);
+  let q=Q.get(k);if(!q)Q.set(k,q={n:0,pes:new Set(),hrs:0,meta:0});q.n++;q.pes.add(b.oid);
+  let pd=p.dias.get(b.dia);if(!pd)p.dias.set(b.dia,pd={n:0,meta:0});pd.n++;
+  const sk=b.oid+"|"+h;if(!vis.has(sk)){vis.add(sk);const f=fr(h),m=pdMetaH(b.at,b.dia)*f;p.hrs+=f;p.meta+=m;pd.meta+=m;x.meta+=m;d.meta+=m;q.hrs+=f;q.meta+=m}});
+ const L=[...P.values()];return{n:B.length,col:B.filter(b=>b.col).length,meta:L.reduce((a,p)=>a+p.meta,0),hrs:L.reduce((a,p)=>a+p.hrs,0),P:L,H,D,Q}}
+const pdAbaixo=p=>{const hj=hoje(),F=p?[...p.dias].filter(([k,d])=>k<hj&&d.meta):[];return F.length?F.filter(([k,d])=>d.n<d.meta).length+" de "+F.length:"—"};
+const pdPct=(n,m)=>m?n/m*100:null,pdStC=pc=>pc>=100?"ok":pc>=80?"warn":"err";
+
+/* gráfico de barras com a meta em linha tracejada laranja */
+function pdBarras(it,o){o=o||{};const n=it.length;if(!n||!it.some(x=>x.v||x.m))return`<div class="empty">${o.vazio||"Sem ondas embaladas no período."}</div>`;
+ const bw=Math.max(o.rot?30:34,Math.min(72,880/n)),l=46,r=12,tp=22,bt=o.rot?70:30,Wd=Math.max(o.w||560,l+r+n*bw),H=o.h||(o.w>700?300:270);
+ const mx=nice(Math.max(1,...it.map(x=>Math.max(x.v,x.m||0)))*1.15),Y=v=>tp+(H-tp-bt)*(1-v/mx),X=i=>l+i*bw+bw/2;
+ let d="",on=false;it.forEach((x,i)=>{if(!x.m){on=false;return}d+=(on?"L":"M")+X(i).toFixed(1)+" "+Y(x.m).toFixed(1);on=true});
+ return`<div class="pdCh"><svg class="ch" viewBox="0 0 ${Wd} ${H}" style="min-width:${Math.round(Wd*.62)}px" role="img" aria-label="${esc(o.aria||"Ondas embaladas e meta")}">`
+  +[0,.5,1].map(f=>`<line x1="${l}" x2="${Wd-r}" y1="${Y(mx*f)}" y2="${Y(mx*f)}" stroke="var(--line)"/><text x="${l-6}" y="${Y(mx*f)+4}" text-anchor="end">${fmt(mx*f)}</text>`).join("")
+  +it.map((x,i)=>{const w=Math.min(bw*.6,42),bh=x.v?Math.max(Y(0)-Y(x.v),1):0,pc=pdPct(x.v,x.m);
+   return`<rect x="${(X(i)-w/2).toFixed(1)}" y="${Y(0)-bh}" width="${w.toFixed(1)}" height="${bh}" rx="3" fill="var(--g)"${x.part?' opacity=".5"':""}><title>${esc(x.tip||x.k)}: ${fmt(x.v)} ${x.v===1?"onda":"ondas"}${x.m?", meta "+nf1(x.m)+" ("+fmt(pc)+"%)":""}${x.part?", hora em andamento":""}</title></rect>`
+    +(x.v&&bw>=30?`<text x="${X(i)}" y="${Y(x.v)-6}" text-anchor="middle" style="fill:var(--ink)">${fmt(x.v)}</text>`:"")
+    +(o.rot?`<text transform="translate(${X(i)+4} ${H-bt+14}) rotate(-35)" text-anchor="end">${esc(x.k)}</text>`:`<text x="${X(i)}" y="${H-9}" text-anchor="middle">${esc(x.k)}</text>`)}).join("")
+  +(d?`<path d="${d}" fill="none" stroke="var(--o)" stroke-width="2" stroke-dasharray="6 4"/>`+it.map((x,i)=>x.m?`<circle cx="${X(i)}" cy="${Y(x.m)}" r="4" fill="var(--o)" stroke="var(--card)" stroke-width="2"><title>Meta: ${nf1(x.m)} ondas</title></circle>`:"").join(""):"")
+  +`</svg></div><div class="legend pdLeg"><span><i style="background:var(--g)"></i>Ondas embaladas</span><span><i class="pdDash"></i>${o.metaTxt||"Meta"}</span>${it.some(x=>x.part)?'<span><i style="background:var(--g);opacity:.5"></i>Hora em andamento</span>':""}</div>`}
+function pdHorasItens(st){const hs=[...st.H.keys()].sort((a,b)=>a-b);if(!hs.length)return[];const it=[],h0=Math.floor(Date.now()/36e5)*36e5;
+ for(let h=hs[0];h<=hs[hs.length-1];h+=36e5){const x=st.H.get(h)||{n:0,meta:0};it.push({k:String(new Date(h).getHours()).padStart(2,"0")+"h",tip:String(new Date(h).getHours()).padStart(2,"0")+"h",v:x.n,m:x.meta,part:h===h0})}return it}
+function pdDiasItens(st,dias){return dias.map(d=>{const x=st.D.get(d)||{n:0,meta:0},dt=new Date(d+"T12:00:00");return{k:dt.toLocaleDateString("pt-BR",{day:"2-digit",month:"2-digit"}),tip:dt.toLocaleDateString("pt-BR",{weekday:"short",day:"2-digit",month:"2-digit"}),v:x.n,m:x.meta}})}
+
+function pdPlacar(st,txt){const pc=pdPct(st.n,st.meta);
+ return`<div class="placar"><div><div class="num">${fmt(st.n)}</div><div class="un">${st.n===1?"onda embalada":"ondas embaladas"}${txt.sub?" "+txt.sub:""}</div></div><div class="regua"><div class="hd"><span>${st.meta?txt.meta+": "+fmt(st.meta)+" ondas":"Sem meta por hora cadastrada"}</span><b${pc!=null&&pc<100?' class="bad"':""}>${pc!=null?fmt(pc)+"% da meta":""}</b></div><div class="trk" style="--n:4"><b style="width:${pc!=null?Math.min(100,pc):0}%"></b></div></div></div>`}
+const pdK2=(t,v,s)=>`<div class="kpi"><dt>${t}</dt><dd class="num">${v}</dd><dd class="sm">${s||""}</dd></div>`;
+function pdChipsP(B){const n={todos:B.length};PD_PK.forEach(k=>n[k]=0);B.forEach(b=>{const k=b.andar+"-"+b.at;if(k in n)n[k]++});
+ return`<div class="pdChips pdChipsP" role="group" aria-label="Filtrar por posto">`+[["todos","Todos os postos"]].concat(PD_PK.map(k=>[k,pdPN(k)])).map(([k,t])=>`<button type="button" data-pdfp="${k}" aria-pressed="${PDfp===k}">${t} <span class="pdCn">${fmt(n[k])}</span></button>`).join("")+"</div>"}
+function pdPostosHtml(st,dia){return PD_PK.filter(k=>PDfp==="todos"||PDfp===k).map(k=>{const q=st.Q.get(k)||{n:0,pes:new Set(),hrs:0,meta:0},pc=pdPct(q.n,q.meta),mh=q.hrs?q.meta/q.hrs:pdMetaH(k.split("-")[1],dia);
+ return`<div class="gal"><div class="r"><b>${pdPN(k)}</b><span>${fmt(q.n)} <small>${q.n===1?"onda":"ondas"}</small></span></div><div class="bar" style="--c:${pc!=null&&pc>=100?"var(--k)":"var(--g)"}"><b style="width:${pc!=null?Math.min(100,pc):0}%"></b></div>
+  <div class="pdH" style="margin-top:5px">${q.pes.size} ${q.pes.size===1?"pessoa":"pessoas"}, ${nf1(q.hrs?q.n/q.hrs:0)} por pessoa por hora${mh?`, meta ${nf1(mh)}`+(pc!=null&&q.n?` (${fmt(pc)}%)`:""):", sem meta"}</div></div>`}).join("")}
+function pdPesTab(st,dias){const L=st.P.slice().sort((a,b)=>b.n-a.n||String(a.nm).localeCompare(String(b.nm),"pt-BR"));if(!L.length)return'<div class="empty">Ninguém bipou no período.</div>';
+ return`<div class="tw"><table class="pdT"><tr><th>Pessoa</th><th class="pdHm">Posto</th><th>Ondas</th><th class="pdHm">Horas</th><th>Por hora</th><th>Meta</th>${dias?'<th class="pdHm">Dias abaixo da meta</th>':""}</tr>`+L.map(p=>{const pc=pdPct(p.n,p.meta);
+  return`<tr><td><b>${esc(p.nm)}</b><br><small>${esc(p.cod||"")}</small></td><td class="pdHm">${pdPN(p.pk)}</td><td>${fmt(p.n)}</td><td class="pdHm">${nf1(p.hrs)}</td><td>${nf1(p.hrs?p.n/p.hrs:0)}${p.hrs&&p.meta?`<br><small>meta ${nf1(p.meta/p.hrs)}</small>`:""}</td><td>${pc==null?'<span class="note">sem meta</span>':`<span class="pdSt ${pdStC(pc)}">${fmt(pc)}%</span>`}</td>${dias?`<td class="pdHm">${pdAbaixo(p)}</td>`:""}</tr>`}).join("")+"</table></div>"}
+
+/* ---------- Produção › Painel (público, dia de hoje) ---------- */
+function pdHojeB(){return PDB.filter(b=>!b.st||b.st==="ok").map(b=>Object.assign({dia:hoje()},b,pdNome(b.oid)))}
+function pdPainel(){const el=$("#pdPnV");if(!el)return;const all=pdHojeB(),B=pdFiltroP(all),st=pdStats(B),now=Date.now(),hj=hoje();
+ const ult=B.filter(b=>b.em>now-36e5),ag=new Map();ult.forEach(b=>ag.set(b.oid,b.at));const mUlt=[...ag.values()].reduce((a,at)=>a+pdMetaH(at,hj),0);
+ const pub=ON&&!me,pcU=pdPct(ult.length,mUlt);
+ el.innerHTML=pdChipsP(all)+`<div class="pdKp">${pdPlacar(st,{sub:"hoje",meta:"Meta até agora"})}<dl class="stats">`
+  +pdK2("Última hora",fmt(ult.length),mUlt?`meta ${nf1(mUlt)} (${fmt(pcU)}%)`:"sem meta")
+  +pdK2("Pessoas embalando agora",fmt(ag.size),`${st.P.length} com bipagem hoje`)
+  +pdK2("Ondas por pessoa por hora",nf1(st.hrs?st.n/st.hrs:0),st.hrs&&st.meta?"meta "+nf1(st.meta/st.hrs):"sem meta")
+  +pdK2("Não coletadas",fmt(st.n-st.col),"sem registro na Coleta")+`</dl></div>
+  <div class="pgrid pdGrid"><div class="card pc"><h2>Ondas por hora</h2>${pdBarras(pdHorasItens(st),{vazio:"Nenhuma onda embalada hoje.",metaTxt:"Meta coletiva da hora",aria:"Ondas embaladas por hora e meta coletiva"})}</div>
+   <div class="card pc"><h2>Postos</h2>${pdPostosHtml(st,hj)}</div>
+   ${pub?"":`<div class="card pc pdWide"><h2>Pessoas <span class="pill">${st.P.length}</span></h2>${pdPesTab(st,false)}</div>`}</div>
+  <div class="legend">Atualiza sozinho a cada minuto. A meta coletiva soma a meta por hora de cada pessoa nas horas em que ela bipou.</div>`}
+
+/* ---------- Equipe › Embalagem: Individual e Equipe ---------- */
+function pdPerDias(){const n=+PDper||1,end=$("#day").value||hoje(),t=new Date(end+"T12:00:00").getTime(),a=[];for(let i=n-1;i>=0;i--)a.push(dk(t-i*864e5));return a}
+async function pdDesCarregar(ini,fim){
+ if(!ON)return pdDesLocal(ini,fim);
+ const r=await api("/rest/v1/rpc/prod_bipagens_periodo",{method:"POST",body:{p_ini:ini,p_fim:fim}});
+ return r.map(x=>({id:x.id,oid:x.pessoa_id,nm:x.nome,cod:x.codigo,andar:x.andar,at:x.atividade,tu:x.turno_id,dia:x.dia,em:Date.parse(x.bipada_em),col:!!x.coletado}))}
+function pdDesLocal(ini,fim){{const W=new Set(S.waves.filter(w=>!w.err).map(w=>normWN(w.wn)));return(S.prodB||[]).filter(b=>b.dia>=ini&&b.dia<=fim).map(b=>Object.assign({},b,pdNome(b.oid),{col:W.has(normWN(b.wn))}))}}
+function pdEqSeg(){const g=pdGestor();if(PDE==="pes"&&!g)PDE="eq";$$("#pdEqSeg [data-pde]").forEach(b=>{b.classList.toggle("on",b.dataset.pde===PDE);b.setAttribute("aria-pressed",b.dataset.pde===PDE)});
+ $('#pdEqSeg [data-pde="pes"]').classList.toggle("hide",!g);$("#pdDesV").classList.toggle("hide",PDE==="pes");$("#pdDisV").classList.toggle("hide",PDE!=="pes");$("#pdEqCtl").classList.toggle("hide",PDE==="pes");$("#pdPs").classList.toggle("hide",PDE!=="ind")}
+function pdDesempenho(){const el=$("#pdDesV");if(!el)return;const dias=pdPerDias(),ini=dias[0],fim=dias[dias.length-1],key=ini+"|"+fim,hj=fim>=hoje();
+ if(!ON)PDD={key,t:Date.now(),B:pdDesLocal(ini,fim),err:""};
+ else if((PDD.key!==key||(hj&&Date.now()-PDD.t>55000))&&!PDDl){PDDl=true;
+  pdDesCarregar(ini,fim).then(B=>{PDD={key,t:Date.now(),B,err:""}},e=>{PDD={key,t:Date.now(),B:[],err:errMsg(e)}}).then(()=>{PDDl=false;if(view==="ind"&&gsub==="pd"&&PDE!=="pes")pdDesempenho()})}
+ if(PDD.key!==key){el.innerHTML='<div class="skel" aria-label="Carregando"><i></i><i></i></div>';return}
+ if(PDD.err){el.innerHTML=`<div class="card"><div class="empty">Não foi possível carregar a embalagem do período: ${esc(PDD.err)}</div></div>`;return}
+ const single=dias.length===1,all=PDD.B,B=pdFiltroP(all),per=single?new Date(ini+"T12:00:00").toLocaleDateString("pt-BR"):new Date(ini+"T12:00:00").toLocaleDateString("pt-BR")+" a "+new Date(fim+"T12:00:00").toLocaleDateString("pt-BR");
+ const ps=$("#pdPs"),pes=new Map();pdOps().forEach(o=>pes.set(pdK(o),o.n));all.forEach(b=>{if(!pes.has(b.oid))pes.set(b.oid,b.nm)});
+ if(PDps&&!pes.has(PDps))PDps="";ps.innerHTML='<option value="">Todas as pessoas</option>'+[...pes].sort((a,b)=>String(a[1]).localeCompare(String(b[1]),"pt-BR")).map(([k,n])=>`<option value="${esc(k)}"${k===PDps?" selected":""}>${esc(n)}</option>`).join("");
+ const metaTxt=hj?"Meta até agora":"Meta do período";
+ if(PDE==="eq"){const st=pdStats(B);
+  el.innerHTML=pdChipsP(all)+`<div class="pdKp">${pdPlacar(st,{sub:single?"em "+per:"de "+per,meta:metaTxt})}<dl class="stats">`
+   +pdK2("Pessoas",fmt(st.P.length),"com bipagem no período")+pdK2("Horas trabalhadas",nf1(st.hrs),"soma das horas com bipagem")
+   +pdK2("Ondas por pessoa por hora",nf1(st.hrs?st.n/st.hrs:0),st.hrs&&st.meta?"meta "+nf1(st.meta/st.hrs):"sem meta")
+   +pdK2("Não coletadas",fmt(st.n-st.col),"sem registro na Coleta")+`</dl></div>
+   <div class="pgrid pdGrid"><div class="card pc pdWide"><h2>Produção da equipe ${single?"por hora":"por dia"}</h2>${pdBarras(single?pdHorasItens(st):pdDiasItens(st,dias),{w:960,metaTxt:"Meta coletiva",aria:"Ondas embaladas pela equipe e meta coletiva"})}</div>
+    <div class="card pc"><h2>Postos</h2>${pdPostosHtml(st,fim)}</div>${pdMetasHtml()}</div>`;return}
+ if(!PDps){const st=pdStats(B),L=st.P.slice().sort((a,b)=>b.n-a.n),it=L.map(p=>{const w=String(p.nm).trim().split(/\s+/);return{k:w[0]+(w[1]?" "+w[1][0]+".":""),tip:p.nm,v:p.n,m:p.meta}});
+  el.innerHTML=pdChipsP(all)+`<div class="pgrid pdGrid"><div class="card pc pdWide"><h2>Produção individual <small class="legend" style="margin:0">${per}</small></h2>${pdBarras(it,{w:960,rot:it.length>8,metaTxt:"Meta individual (meta por hora × horas trabalhadas)",aria:"Ondas embaladas por pessoa e meta individual"})}</div>
+   <div class="card pc pdWide"><h2>Pessoas <span class="pill">${L.length}</span></h2>${pdPesTab(st,!single)}</div></div>`;return}
+ const Bp=B.filter(b=>b.oid===PDps),st=pdStats(Bp),p=st.P[0],pc=pdPct(st.n,st.meta);
+ el.innerHTML=pdChipsP(all.filter(b=>b.oid===PDps))+`<div class="pdKp">${pdPlacar(st,{sub:(single?"em ":"de ")+per+" por "+esc(pes.get(PDps)||""),meta:hj?"Meta individual até agora":"Meta individual"})}<dl class="stats">`
+  +pdK2("Posto",p?pdPN(p.pk):"—",p?"última bipagem às "+hmT(p.ult):"sem bipagem")+pdK2("Horas trabalhadas",nf1(st.hrs),"horas com bipagem")
+  +pdK2("Ondas por hora",nf1(st.hrs?st.n/st.hrs:0),st.hrs&&st.meta?"meta "+nf1(st.meta/st.hrs)+(pc!=null?" ("+fmt(pc)+"%)":""):"sem meta")
+  +pdK2("Dias abaixo da meta",pdAbaixo(p),"dias encerrados do período")+`</dl></div>
+  <div class="card" style="margin-top:12px"><h2>Produção de ${esc(pes.get(PDps)||"")} ${single?"por hora":"por dia"}</h2>${pdBarras(single?pdHorasItens(st):pdDiasItens(st,dias),{w:960,metaTxt:"Meta individual",aria:"Ondas embaladas pela pessoa e meta individual"})}</div>`}
+function pdMetasHtml(){const hj=hoje(),c=at=>pdMetaH(at,hj),g=pdGid(),H=pdMetas().filter(m=>m.g===g).sort((a,b)=>a.ini<b.ini?1:a.ini>b.ini?-1:0).slice(0,6),fd=d=>new Date(d+"T12:00:00").toLocaleDateString("pt-BR");
+ return`<div class="card pc"><h2>Metas por hora</h2>`+(pdGestor()?`<form id="pdMetaF" class="pdG pdMetaF" novalidate>
+   <label>Mesa<span class="pdUn"><input type="text" name="mesa" maxlength="6" autocomplete="off" inputmode="decimal" value="${(c("mesa")?nf1(c("mesa")):"")}" placeholder="0"><small>ondas por hora, por pessoa</small></span></label>
+   <label>Máquina<span class="pdUn"><input type="text" name="maquina" maxlength="6" autocomplete="off" inputmode="decimal" value="${(c("maquina")?nf1(c("maquina")):"")}" placeholder="0"><small>ondas por hora, por pessoa</small></span></label>
+   <label>Vale a partir de<input type="date" name="ini" min="${hj}" value="${hj}"></label>
+   <div class="ctl2 pdMetaAc"><span></span><button type="submit" class="btn">Salvar metas</button></div></form>`
+  :`<div class="gal"><div class="r"><b>Mesa</b><span>${c("mesa")?nf1(c("mesa"))+" <small>por hora</small>":"<small>sem meta</small>"}</span></div></div><div class="gal"><div class="r"><b>Máquina</b><span>${c("maquina")?nf1(c("maquina"))+" <small>por hora</small>":"<small>sem meta</small>"}</span></div></div>`)
+  +(H.length?`<ul class="pdHist" aria-label="Histórico das metas">${H.map(m=>`<li>${PD_AT[m.at]}: ${nf1(m.h)} por hora, a partir de ${fd(m.ini)}</li>`).join("")}</ul>`:"")
+  +`<div class="legend">A meta de cada pessoa é a meta por hora da atividade (Mesa ou Máquina) vezes as horas em que ela bipou. A meta da equipe é a soma. Mudar a meta não altera os dias anteriores.</div></div>`}
+async function pdMetaSalvar(f){const ini=f.querySelector('[name="ini"]').value,hj=hoje(),M=[];
+ if(!ini||ini<hj){toast("A meta só pode valer a partir de hoje.",5000);return}
+ for(const at of ["mesa","maquina"]){const s=f.querySelector(`[name="${at}"]`).value.trim();if(!s)continue;const v=Math.round(parseFloat(s.replace(",","."))*10)/10;
+  if(!(v>0&&v<=1000)){toast("A meta de "+PD_AT[at]+" precisa ser maior que zero e no máximo 1000.",5000);f.querySelector(`[name="${at}"]`).focus();return}if(v!==pdMetaH(at,ini))M.push([at,v])}
+ if(!M.length){toast("Nenhuma meta alterada.");return}
+ const msg="Metas salvas a partir de "+new Date(ini+"T12:00:00").toLocaleDateString("pt-BR")+": "+M.map(([at,v])=>PD_AT[at]+" "+nf1(v)+" por hora").join(", ");
+ if(ON){const b=f.querySelector('[type="submit"]');b.disabled=true;
+  try{for(const [at,v] of M)await api("/rest/v1/rpc/prod_meta_salvar",{method:"POST",body:{p_galpao:GID[pdGalpao()]||null,p_atividade:at,p_por_hora:v,p_inicio:ini}})}catch(e){b.disabled=false;toast(errMsg(e),7000);return}
+  await pdCarregar();pdRender();toast(msg,5000);return}
+ const L=pdMetas(),g=pdGid();M.forEach(([at,v])=>{const x=L.find(m=>m.g===g&&m.at===at&&m.ini===ini);if(x)x.h=v;else L.push({g,at,h:v,ini,por:me?me.u:"local"})});save();pdRender();toast(msg,5000)}
+function pdEqRender(){pdEqSeg();if(PDE==="pes"){pdDisLista();pdTurnosLista()}else pdDesempenho()}
+
 /* ---------- eventos ---------- */
 document.addEventListener("input",e=>{const id=e.target.id;
  if(id==="pdP"){PDsel=null;const v=$("#pdP").value.trim(),o=pdFind(v);if(o&&o.m.toLowerCase()===v.toLowerCase()){pdEscolher(o);return}pdWho();pdSugest();return}
@@ -2974,24 +3114,28 @@ document.addEventListener("keydown",e=>{const id=e.target.id;
   if(e.key==="Enter"){e.preventDefault();if(PDsel){$("#pdW").focus();return}if(PDsI>=0&&PDsL[PDsI]){pdEscolher(PDsL[PDsI]);return}if(PDsL.length===1){pdEscolher(PDsL[0]);return}if(PDsL.length>1)toast("Há mais de uma pessoa. Selecione o nome desejado.",5000);return}
   if(e.key==="Escape"){$("#pdSug").innerHTML="";PDsL=[];PDsI=-1}return}
  if(id==="pdW"&&e.key==="Enter"){e.preventDefault();pdBipar()}});
-document.addEventListener("click",e=>{const t=e.target.closest&&e.target.closest("[data-pdsug],[data-pdf],[data-pded],[data-pdtn],[data-pdtx],[data-pdnx],[data-pdcad],[data-pdrm],#pdNovaB,#pdTroca,#pdEnv");if(!t)return;
+document.addEventListener("click",e=>{const t=e.target.closest&&e.target.closest("[data-pdsug],[data-pr],[data-pdfp],[data-pde],[data-pdf],[data-pded],[data-pdtn],[data-pdtx],[data-pdnx],[data-pdcad],[data-pdrm],#pdNovaB,#pdTroca,#pdEnv");if(!t)return;
  if(t.id==="pdNovaB"){PDnova=true;pdNovaForm();const i=$('#pdNovaF [name="n"]');if(i)i.focus();return}
  if(t.dataset.pdnx){PDnova=false;pdNovaForm();$("#pdNovaB").focus();return}
  if(t.dataset.pdcad){pdCadastrar(t.closest("form"),t.dataset.pdcad);return}
  if(t.dataset.pdrm){const o=pdOp(t.dataset.pdrm);if(!o)return;if(t.dataset.ok!=="1"){t.dataset.ok="1";t.textContent="Confirmar remoção de "+o.n.split(" ")[0];setTimeout(()=>{if(t.isConnected){t.dataset.ok="";t.textContent="Remover da produção"}},5000);return}pdRemover(t.dataset.pdrm);return}
  if(t.dataset.pdsug){const o=PDsL.find(x=>x.m===t.dataset.pdsug);if(o)pdEscolher(o);return}
+ if(t.dataset.pr){pdSubPr(t.dataset.pr);pdRender();return}
+ if(t.dataset.pdfp){PDfp=t.dataset.pdfp;pdRender();return}
+ if(t.dataset.pde){PDE=t.dataset.pde;PDed=null;pdEqRender();return}
  if(t.dataset.pdf){PDf=t.dataset.pdf;pdDisLista();return}
  if(t.dataset.pded){PDed=PDed===t.dataset.pded?null:t.dataset.pded;pdDisLista();const f=PDed&&document.querySelector(`[data-pdform="${CSS.escape(PDed)}"]`);if(f){const r=f.querySelector('input[name="pdA4"]');f.scrollIntoView({block:"nearest"});if(r)r.focus({preventScroll:true})}return}
  if(t.dataset.pdtn){PDed="novoT";pdTurnosLista();const i=$('[data-pdt="novo"] [name="n"]');if(i)i.focus();return}
  if(t.dataset.pdtx){PDed=null;pdTurnosLista();return}
  if(t.id==="pdTroca"){pdTrocar();return}
  if(t.id==="pdEnv")pdBipar()});
-document.addEventListener("submit",e=>{const f=e.target;if(f.id==="pdNovaF"){e.preventDefault();pdCadastrar(f,null);return}if(f.dataset&&f.dataset.pdform){e.preventDefault();pdAtribuir(f)}else if(f.dataset&&f.dataset.pdt){e.preventDefault();pdTurnoSalvar(f)}});
+document.addEventListener("submit",e=>{const f=e.target;if(f.id==="pdMetaF"){e.preventDefault();pdMetaSalvar(f);return}if(f.id==="pdNovaF"){e.preventDefault();pdCadastrar(f,null);return}if(f.dataset&&f.dataset.pdform){e.preventDefault();pdAtribuir(f)}else if(f.dataset&&f.dataset.pdt){e.preventDefault();pdTurnoSalvar(f)}});
 window.addEventListener("online",()=>{pdFilaEnviar()});
-setInterval(()=>{pdFilaEnviar();if((view==="prod"||(view==="ind"&&gsub==="pd"))&&online()&&document.visibilityState==="visible"&&ON&&Date.now()-PD_AT0>55000&&PDed==null)pdCarregar().then(pdRender)},30000);
+document.addEventListener("change",e=>{const id=e.target.id;if(id==="pdPer"){PDper=e.target.value;pdDesempenho()}else if(id==="pdPs"){PDps=e.target.value;pdDesempenho()}else if(id==="day"&&view==="ind"&&gsub==="pd"&&PDE!=="pes")pdDesempenho()});
+setInterval(()=>{pdFilaEnviar();if((view==="prod"||(view==="ind"&&gsub==="pd"))&&online()&&document.visibilityState==="visible"&&Date.now()-PD_AT0>55000&&PDed==null){if(ON)pdCarregar().then(pdRender);else{if(!ON)PDB=pdLocalB();PD_AT0=Date.now();if(PDsub!=="bip")pdRender()}}},30000);
 
 /* mini abas na lateral: espelham as abas internas de cada área */
-const SUBS={op:["sub","s"],ind:["gsub","gs"],prs:["psub","p"],his:["hsub","hs"],cfg:["csub","c"]};
+const SUBS={op:["sub","s"],prod:["prsub","pr"],ind:["gsub","gs"],prs:["psub","p"],his:["hsub","hs"],cfg:["csub","c"]};
 function sideSubs(){
  $$(".ssub").forEach(e=>e.remove());const k=SUBS[view];if(!k)return;const bar=document.getElementById(k[0]),tab=document.querySelector('nav.side .tab[data-t="'+view+'"]');if(!bar||!tab)return;
  const box=document.createElement("div");box.className="ssub";box.setAttribute("role","group");box.setAttribute("aria-label","Abas de "+tab.textContent.trim());

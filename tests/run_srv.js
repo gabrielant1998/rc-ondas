@@ -64,6 +64,12 @@ function fake(db){const cors={'access-control-allow-origin':'*','access-control-
   if(t==='rpc/prod_pessoa_excluir'){const x=db.ppes.find(z=>z.id===body.p_id);if(!g||!x||!(g.admin||(g.pode_config&&g.galpao_id===x.galpao_id)))return J(route,403,{code:'42501',message:'Sem permissão'});x.excluido_em=new Date().toISOString();db.pa.forEach(a=>{if(a.pessoa_id===x.id&&!a.fim)a.fim=x.excluido_em});return J(route,200,'ok')}
   if(t==='rpc/prod_postos')return J(route,200,db.pa.filter(a=>!a.fim));
   if(t==='prod_atribuicoes'&&m==='GET'){if(!g)return J(route,200,[]);return J(route,200,db.pa.filter(a=>{const o=db.ppes.find(x=>x.id===a.pessoa_id);return o&&escopo(o.galpao_id)}))}
+  if(t==='prod_metas'&&m==='GET')return J(route,200,(db.pm||[]).slice().sort((x,y)=>x.inicio<y.inicio?-1:1));
+  if(t==='rpc/prod_meta_salvar'){if(!g||!(g.admin||(g.pode_config&&g.galpao_id===body.p_galpao)))return J(route,403,{code:'42501',message:'Sem permissão para alterar as metas da produção'});
+   const hj=new Date(Date.now()-3*36e5).toISOString().slice(0,10);if(body.p_inicio<hj)return J(route,400,{code:'22023',message:'A meta só pode valer a partir de hoje; os dias anteriores ficam com a meta da época'});
+   db.pm=db.pm||[];const x=db.pm.find(z=>z.galpao_id===body.p_galpao&&z.atividade===body.p_atividade&&z.inicio===body.p_inicio);if(x)x.por_hora=body.p_por_hora;else db.pm.push({galpao_id:body.p_galpao,atividade:body.p_atividade,por_hora:body.p_por_hora,inicio:body.p_inicio,criado_por:email});return J(route,200,1)}
+  if(t==='rpc/prod_bipagens_periodo'){if(!g)return J(route,403,{code:'42501',message:'Entre como gestor para ver o desempenho'});db.calls.per=(db.calls.per||0)+1;
+   return J(route,200,db.pb.filter(x=>x.dia>=body.p_ini&&x.dia<=body.p_fim).map(x=>{const o=db.ppes.find(z=>z.id===x.pessoa_id)||{};return Object.assign({},x,{nome:o.nome,codigo:o.codigo,coletado:db.ondas.some(w=>nW(w.wn)===nW(x.wn))})}).filter(x=>{const o=db.ppes.find(z=>z.id===x.pessoa_id);return o&&escopo(o.galpao_id)}))}
   if(t==='rpc/prod_bipagens_dia')return J(route,200,db.pb.filter(x=>x.dia===body.p_dia).map(x=>Object.assign({},x,{coletado:db.ondas.some(w=>nW(w.wn)===nW(x.wn))})));
   if(t==='rpc/prod_turno_salvar'){if(!g||!(g.admin||g.pode_config))return J(route,403,{code:'42501',message:'Sem permissão para alterar turnos'});
    const x={nome:body.p_nome,entrada:body.p_entrada,saida:body.p_saida,dias:body.p_dias,int_ini:body.p_int_ini,int_fim:body.p_int_fim,ativo:body.p_ativo};
@@ -484,7 +490,7 @@ await T('S94 Horário por galpão: só o galpão escolhido muda e quem seguia o 
 await T('S95 Produção: gestor define posto e turno, aparelho público bipa, presença só na primeira e repetida recusada',async()=>{const db=banco();
  db.ondas.push({id:'00000000-0000-4000-8000-00000000c001',wn:'8001',operador_id:'00000000-0000-4000-8000-0000000000b1',galpao_id:G1,tipo:'Vários artigos',quantidade:2,status:0,registrada_em:new Date().toISOString()});
  const pa=await page(b,db);await login(pa,'adm@x.com','senha1234');await pa.click('.tab[data-t="prod"]');await pa.waitForTimeout(300);
- ok(!(await pa.$('#prsub')),'Produção deveria ser só bipagem');await pa.evaluate(()=>{go('ind');document.querySelector('#gsub [data-gs="pd"]').click()});await pa.waitForTimeout(400);ok(await pa.isVisible('#pdDisV'),'admin deveria ver Pessoas da produção na Equipe');
+ await pa.evaluate(()=>{go('ind');document.querySelector('#gsub [data-gs="pd"]').click();document.querySelector('#pdEqSeg [data-pde="pes"]').click()});await pa.waitForTimeout(400);ok(await pa.isVisible('#pdDisV'),'admin deveria ver Pessoas da produção na Equipe');
  await pa.fill('[data-pdt="1"] [name="s"]','15:00');await pa.click('[data-pdt="1"] [type="submit"]');await pa.waitForTimeout(400);ok(db.pt[0].saida==='15:00','turno não salvo: '+JSON.stringify(db.pt[0]));
  ok((await pa.textContent('#pdDl')).includes('Nenhuma pessoa cadastrada'),'pessoas da Coleta apareceram na Produção');
  await pa.click('#pdNovaB');await pa.fill('#pdNovaF [name="n"]','Ana Embalagem');await pa.check('#pdNovaF input[name="pdA4"][value="mezanino-maquina"]');await pa.click('#pdNovaF [type="submit"]');await pa.waitForTimeout(450);
@@ -509,6 +515,20 @@ await T('S96 Produção sem internet: a onda fica pendente no aparelho e é envi
  db.down=false;await p.evaluate(()=>pdFilaEnviar());await p.waitForTimeout(400);await p.evaluate(()=>pdFilaEnviar());await p.waitForTimeout(300);
  ok(db.pb.length===1,'bipagens depois de voltar: '+db.pb.length);ok((await p.textContent('#pdL')).includes('Não coletada'),'status depois do envio');
  ok(await p.evaluate(()=>!localStorage.getItem('rcondas.prodFila')),'fila não esvaziou')});
+
+await T('S97 Produção: admin grava metas por hora, painel público mostra a meta e o desempenho do período vem do servidor',async()=>{const db=banco();
+ db.ppes=[{id:'00000000-0000-4000-8000-0000000c0001',codigo:'PR001',nome:'Ana Embalagem',galpao_id:G1,excluido_em:null}];db.pa=[{id:'a1',pessoa_id:'00000000-0000-4000-8000-0000000c0001',andar:'terreo',atividade:'mesa',turno_id:1,entrada:null,saida:null,situacao:'ativo',inicio:new Date(Date.now()-36e5*5).toISOString(),fim:null,criado_por:'adm@x.com'}];
+ const p=await page(b,db);await p.click('.tab[data-t="prod"]');await p.waitForTimeout(300);await p.fill('#pdP','PR001');await p.waitForTimeout(120);
+ for(const w of ['5001','5002']){await p.fill('#pdW',w);await p.press('#pdW','Enter');await p.waitForTimeout(250)}ok(db.pb.length===2,'bipagens '+db.pb.length);
+ const neg=await p.evaluate(async()=>{try{await api("/rest/v1/rpc/prod_bipagens_periodo",{method:"POST",body:{p_ini:hoje(),p_fim:hoje()}});return 200}catch(e){return e.status||0}});ok(neg===403,'público leu o desempenho: '+neg);
+ const pa=await page(b,db);await login(pa,'adm@x.com','senha1234');await pa.evaluate(()=>{go('ind');document.querySelector('#gsub [data-gs="pd"]').click();document.querySelector('#pdEqSeg [data-pde="eq"]').click()});await pa.waitForTimeout(600);
+ ok(db.calls.per>=1,'não buscou o período no servidor');ok((await pa.textContent('#pdDesV')).includes('Sem meta por hora'),'meta antes');
+ await pa.fill('#pdMetaF [name="mesa"]','12');await pa.click('#pdMetaF [type="submit"]');await pa.waitForTimeout(600);
+ ok(db.pm.length===1&&db.pm[0].atividade==='mesa'&&db.pm[0].por_hora===12&&db.pm[0].galpao_id===G1,'meta gravada '+JSON.stringify(db.pm));
+ await pa.waitForTimeout(200);ok((await pa.textContent('#pdDesV')).includes('% da meta'),'equipe sem a meta');
+ await pa.evaluate(()=>{document.querySelector('#pdEqSeg [data-pde="ind"]').click()});await pa.waitForTimeout(300);ok((await pa.textContent('#pdDesV')).includes('Ana Embalagem'),'individual');
+ await p.evaluate(()=>{pdSubPr('pn');PD_AT0=0});await p.evaluate(()=>pdCarregar().then(pdRender));await p.waitForTimeout(400);const t=await p.textContent('#pdPnV');
+ ok(t.includes('% da meta')&&t.includes('Ondas por hora'),'painel público '+t.slice(0,150));ok(!t.includes('Ana Embalagem'),'painel público mostra nomes')});
 
 await b.close();
 const w=Math.max(...R.map(r=>r[1].length));for(const r of R)console.log((r[0]==='PASS'?'✅':'❌')+' '+r[1].padEnd(w)+'  '+r[2]);
