@@ -110,27 +110,24 @@ await T("P12 Equipe › Pessoas da produção: filtro Térreo Mesa, Térreo Máq
  await p.click('#pdNovaB');ok(await p.isChecked('#pdNovaF input[value="mezanino-mesa"]'),'cadastro herda o filtro');
  if(SHOT)await p.screenshot({path:SHOT+'/p_eq.png'});ok(!p.errors.length,p.errors.join(';'))});
 
-await T("P13 Metas por hora (Mesa e Máquina), Equipe e Individual com meta, Painel público do dia",async()=>{const p=await page(b,base());
+await T("P13 Metas por hora (Mesa e Máquina), Equipe e Individual com meta; Produção sem painel",async()=>{const p=await page(b,base());
  await posto(p,'Ana','terreo','mesa');await posto(p,'Bruno','terreo','maquina');await bipar(p,'PR001',['201','202','203']);await bipar(p,'PR002',['301','302']);
- await emb(p,'eq');ok(await p.isVisible('#pdMetaF'),'form de metas');ok((await p.textContent('#pdDesV')).includes('Sem meta por hora cadastrada'),'sem meta');
- await p.fill('#pdMetaF [name="mesa"]','10');await p.fill('#pdMetaF [name="maquina"]','20,5');await p.click('#pdMetaF [type="submit"]');await p.waitForTimeout(120);
- let s=await st(p);ok(s.prodMetas.length===2&&s.prodMetas.find(m=>m.at==='maquina').h===20.5&&s.prodMetas[0].ini===HJ,'metas '+JSON.stringify(s.prodMetas));
+ await emb(p,'eq');ok(await p.isVisible('#pdMetaF')&&(await p.textContent('#pdDesV')).includes('Metas diárias'),'form de metas');ok((await p.textContent('#pdDesV')).includes('Sem meta por hora cadastrada'),'sem meta');
+ await p.fill('#pdMetaF [name="mesa"]','80');await p.fill('#pdMetaF [name="maquina"]','164');await p.fill('#pdMetaF [name="hd"]','8');ok((await p.textContent('[data-pdmh="maquina"]')).includes('20,5'),'prévia por hora');await p.click('#pdMetaF [type="submit"]');await p.waitForTimeout(120);
+ let s=await st(p);ok(s.prodMetas.length===2&&s.prodMetas.find(m=>m.at==='maquina').h===20.5&&s.prodMetas.find(m=>m.at==='maquina').d===164&&s.prodMetas[0].ini===HJ,'metas '+JSON.stringify(s.prodMetas));
  let t=await p.textContent('#pdDesV');ok(t.includes('5ondas embaladas')||t.replace(/\s/g,'').includes('5ondasembaladas'),'placar '+t.slice(0,120));ok(t.includes('Meta até agora')&&t.includes('% da meta'),'meta no placar');
- await p.fill('#pdMetaF [name="ini"]',await p.evaluate(()=>dk(Date.now()-864e5)));await p.fill('#pdMetaF [name="mesa"]','12');await p.click('#pdMetaF [type="submit"]');await p.waitForTimeout(100);s=await st(p);ok(s.prodMetas.length===2&&s.prodMetas.find(m=>m.at==='mesa').h===10,'aceitou meta retroativa');
+ await p.fill('#pdMetaF [name="ini"]',await p.evaluate(()=>dk(Date.now()-864e5)));await p.fill('#pdMetaF [name="mesa"]','12');await p.click('#pdMetaF [type="submit"]');await p.waitForTimeout(100);s=await st(p);ok(s.prodMetas.length===2&&s.prodMetas.find(m=>m.at==='mesa').d===80,'aceitou meta retroativa');
  const calc=await p.evaluate(()=>{const h=Math.floor(Date.now()/36e5)*36e5-2*36e5,B=[{oid:'x',nm:'X',andar:'terreo',at:'mesa',em:h+60000,dia:hoje()},{oid:'x',nm:'X',andar:'terreo',at:'mesa',em:h+120000,dia:hoje()},{oid:'y',nm:'Y',andar:'terreo',at:'maquina',em:h+36e5+5000,dia:hoje()}];const r=pdStats(B);return[r.meta,r.hrs,r.n]});
  ok(Math.abs(calc[0]-30.5)<1e-9&&calc[1]===2&&calc[2]===3,'cálculo da meta '+calc);
  await emb(p,'ind');t=await p.textContent('#pdDesV');ok(t.includes('Ana Souza')&&t.includes('Bruno Lima')&&t.includes('Produção individual'),'individual '+t.slice(0,200));ok((await p.$$('#pdDesV svg rect')).length===2,'barras por pessoa');
  await p.selectOption('#pdPs',{label:'Ana Souza'});await p.waitForTimeout(100);t=await p.textContent('#pdDesV');ok(t.includes('Produção de Ana Souza')&&t.includes('Terreo Mesa'.replace('Terreo','Térreo')),'pessoa '+t.slice(0,200));
  if(SHOT)await p.screenshot({path:SHOT+'/p_ind.png',fullPage:true});
  await p.selectOption('#pdPs','');await emb(p,'eq');if(SHOT)await p.screenshot({path:SHOT+'/p_equipe.png',fullPage:true});
- await p.click('.tab[data-t="prod"]');await p.evaluate(()=>pdSubPr('pn'));await p.evaluate(()=>pdRender());await p.waitForTimeout(100);t=await p.textContent('#pdPnV');
- ok(t.includes('Ondas por hora')&&t.includes('Postos')&&t.includes('Última hora'),'painel '+t.slice(0,200));
- await p.click('#pdPnV [data-pdfp="terreo-maquina"]');ok((await p.textContent('#pdPnV .placar .num')).trim()==='2','filtro do painel');
- if(SHOT)await p.screenshot({path:SHOT+'/p_painel.png',fullPage:true});ok(!p.errors.length,p.errors.join(';'))});
+ await p.click('.tab[data-t="prod"]');ok(!(await p.$('#prsub'))&&!(await p.$('#pdPnV'))&&await p.isVisible('#pdP'),'Produção deveria ter só a bipagem');
+ ok(!p.errors.length,p.errors.join(';'))});
 
-await T("P14 Celular: painel e embalagem sem rolagem horizontal",async()=>{const p=await page(b,base(),{width:390,height:844});
- await posto(p,'Ana','terreo','mesa');await bipar(p,'PR001',['201','202']);await p.evaluate(()=>pdSubPr('pn'));await p.evaluate(()=>pdRender());await p.waitForTimeout(80);
- let w=await p.evaluate(()=>document.documentElement.scrollWidth);ok(w<=391,'painel '+w);if(SHOT)await p.screenshot({path:SHOT+'/p_painel_cel.png',fullPage:true});
+await T("P14 Celular: embalagem sem rolagem horizontal",async()=>{const p=await page(b,base(),{width:390,height:844});
+ await posto(p,'Ana','terreo','mesa');await bipar(p,'PR001',['201','202']);let w;
  for(const v of ['eq','ind']){await emb(p,v);w=await p.evaluate(()=>document.documentElement.scrollWidth);ok(w<=391,v+' '+w)}ok(!p.errors.length,p.errors.join(';'))});
 
 await b.close();let f=0;R.forEach(([s,n,i])=>{if(s!=="PASS")f++;console.log((s==="PASS"?"✅ ":"❌ ")+n+"  "+(s==="PASS"?"("+i+"ms)":i))});console.log("\n"+(R.length-f)+"/"+R.length+" passaram");process.exit(f?1:0)})();
