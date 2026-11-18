@@ -264,6 +264,8 @@ a[data-pick]{display:inline-block;padding:8px 0 2px;color:var(--gx);font-weight:
  .brand,.side .sp,.side .who,#theme,.nav-long{display:none}
  .nav-short{display:inline}
  .tab{flex-direction:column;gap:3px;font-size:11.5px;padding:6px 8px;min-height:32px;white-space:nowrap}
+ nav.side .tab{flex:0 1 auto;min-width:0;padding:6px 3px;font-size:10.5px}
+ nav.side #logbtn,nav.side #inst{font-size:0;gap:0;padding:6px 4px}
  main{padding:14px 14px 96px}header.top h1{font-size:28px}
  .placar{grid-template-columns:1fr;gap:12px;padding:12px 16px}.placar .num{font-size:46px}
  .card{padding:14px}.sub{gap:18px}
@@ -446,6 +448,54 @@ body[data-v=cfg] #turnoF,body[data-v=cfg] #gal,body[data-v=cfg] #day{display:non
 .fl-i .r h4{color:#0f4bd0}.fl-i .m h4{color:#b85c00}.fl-i .p h4{color:#0b7f70}
 .fl-f{display:flex;justify-content:space-between;align-items:center;font-size:9pt;color:#55627a;border-top:1px solid #d3d9e3;padding-top:3mm}
 .fl-f strong{color:#0d2a5e;font-size:11pt}
+/* Produção (embalagem) */
+#pdSug{display:grid;gap:6px;margin-top:8px}#pdSug:empty{display:none}
+#pdSug button.cracha{all:unset;box-sizing:border-box;display:flex;gap:12px;align-items:center;padding:10px 14px;border:1px solid var(--line);border-left:4px solid var(--line);border-radius:4px;background:var(--bg);cursor:pointer;color:var(--ink);width:100%}
+#pdSug button.cracha:hover,#pdSug button.cracha.on,#pdSug button.cracha:focus-visible{border-color:var(--g);border-left-color:var(--g);background:var(--card)}
+#pdP,#pdW{font:600 20px var(--fd);min-height:54px;padding-left:48px;letter-spacing:.02em;
+ background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238792a6' stroke-width='2' stroke-linecap='round'%3E%3Cpath d='M4 6v12M8 6v12M11 6v12M15 6v12M18 6v12M20.5 6v12'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:12px center;background-size:26px}
+#pdP::placeholder,#pdW::placeholder{font:400 15px var(--fb);letter-spacing:0}
+.pdPosto{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.pdTag{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:999px;border:1px solid var(--line);font-size:13px;color:var(--ink);background:var(--card);white-space:nowrap}
+.pdTag.t{border-color:color-mix(in srgb,var(--a) 45%,var(--line))}
+.pdTag.m{border-color:color-mix(in srgb,var(--g) 50%,var(--line))}
+.pdSem{margin-top:8px;padding:10px 12px;border-radius:4px;border:1px solid color-mix(in srgb,var(--r) 45%,var(--line));color:var(--ink);font-size:14px}
+.pdMsg:empty{display:none}
+.pdMsg{margin-top:12px;padding:14px 16px;border-radius:4px;border:1px solid var(--line);border-left:6px solid var(--mut);background:var(--bg);animation:rowIn .2s ease both}
+.pdMsg b{display:block;font:700 22px/1.15 var(--fd);letter-spacing:.01em}.pdMsg small{display:block;color:var(--mut);font-size:14px;margin-top:3px}
+.pdMsg.ok{border-left-color:var(--k)}.pdMsg.warn{border-left-color:var(--o)}.pdMsg.err{border-left-color:var(--r)}.pdMsg.pend{border-left-color:var(--a)}
+.pdSt{display:inline-block;padding:2px 8px;border-radius:999px;font-size:12.5px;font-weight:600;border:1px solid var(--line);white-space:nowrap}
+.pdSt.ok{color:var(--k);border-color:color-mix(in srgb,var(--k) 45%,var(--line))}
+.pdSt.warn{color:var(--ox);border-color:color-mix(in srgb,var(--o) 50%,var(--line))}
+.pdSt.err{color:var(--rx);border-color:color-mix(in srgb,var(--r) 45%,var(--line))}
+.pdSt.pend{color:var(--a);border-color:color-mix(in srgb,var(--a) 45%,var(--line))}
+.pdT{width:100%;border-collapse:collapse}.pdT th{text-align:left;font-size:12.5px;color:var(--mut);font-weight:500;padding:6px 8px;border-bottom:1px solid var(--line)}
+.pdT td{padding:8px;border-bottom:1px solid var(--line);vertical-align:middle;font-size:14px}.pdT td.wn{font:600 15px var(--fd);letter-spacing:.02em}
+.pdTools{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:12px}.pdTools input{flex:1 1 220px;min-width:0}
+.pdChips{display:flex;gap:6px;flex-wrap:wrap}
+.pdChips button{all:unset;cursor:pointer;padding:6px 12px;border-radius:999px;border:1px solid var(--line);font-size:13.5px;color:var(--mut)}
+.pdChips button[aria-pressed="true"]{color:var(--ink);border-color:var(--a);background:color-mix(in srgb,var(--a) 10%,transparent)}
+.pdChips button:focus-visible{outline:2px solid var(--a);outline-offset:2px}
+.pdRow{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1.2fr) minmax(0,1fr) auto;gap:12px;align-items:center;padding:10px 4px;border-bottom:1px solid var(--line)}
+.pdRow .who2 small{display:block}.pdRow .pdH{font-size:13.5px;color:var(--mut)}
+.pdEd{padding:14px;margin:4px 0 10px;border:1px solid var(--line);border-left:4px solid var(--a);border-radius:4px;background:var(--bg)}
+.pdEd fieldset{border:0;padding:0;margin:0 0 12px}.pdEd legend{font-size:13px;color:var(--mut);margin-bottom:6px;padding:0}
+.pdSeg{display:flex;gap:6px;flex-wrap:wrap}.pdSeg label{display:flex;align-items:center;gap:6px;padding:8px 14px;border:1px solid var(--line);border-radius:4px;cursor:pointer;font-weight:500;background:var(--card)}
+.pdSeg label:has(input:checked){border-color:var(--a);background:color-mix(in srgb,var(--a) 12%,var(--card))}
+.pdSeg input{accent-color:var(--a)}
+.pdG{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:12px}
+.pdHist{margin-top:12px;font-size:13.5px;color:var(--mut)}.pdHist li{margin:3px 0}
+.pdTF{display:grid;grid-template-columns:minmax(110px,1.2fr) repeat(2,minmax(96px,.8fr)) minmax(190px,1.4fr);gap:10px;align-items:end;padding:12px 0;border-bottom:1px solid var(--line)}
+.pdTF .pdDias{display:flex;gap:4px;flex-wrap:wrap}.pdTF .pdDias label{display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;border:1px solid var(--line);border-radius:4px;cursor:pointer;font-size:13px;font-weight:600}
+.pdTF .pdDias label:has(input:checked){border-color:var(--a);background:color-mix(in srgb,var(--a) 12%,var(--card))}
+.pdTF .pdDias label{position:relative}.pdTF .pdDias input{position:absolute;inset:0;width:100%;height:100%;margin:0;opacity:0;pointer-events:none}
+.pdTF .pdDias label:has(input:focus-visible){outline:2px solid var(--a);outline-offset:1px}
+.pdTF>*,.pdG>*{min-width:0}.pdTF input:not([type=checkbox]),.pdG input,.pdG select{width:100%;min-width:0;box-sizing:border-box}
+.pdTF .pdInt{display:flex;gap:6px;align-items:center}.pdTF .pdInt input{min-width:0;flex:1}
+.pdTF .pdAc{grid-column:1/-1;display:flex;gap:12px;align-items:center;justify-content:flex-end;flex-wrap:wrap}
+.pdTF .pdAc .chk{display:flex;gap:6px;align-items:center;margin-right:auto;font-size:14px}
+@media (max-width:760px){.pdRow{grid-template-columns:1fr auto}.pdRow .pdPc,.pdRow .pdH{grid-column:1/2}.pdTF{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}.pdTF>label:first-child,.pdTF .pdDiasW,.pdTF>label:nth-child(4){grid-column:1/-1}
+ .pdT .pdHm{display:none}}
 </style>
 </head>
 <body>
@@ -458,7 +508,8 @@ body[data-v=cfg] #turnoF,body[data-v=cfg] #gal,body[data-v=cfg] #day{display:non
 <nav class="side" aria-label="Principal">
  <div class="brand"><i><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 9c3-4 5 4 10 0s7 4 10 0M2 16c3-4 5 4 10 0s7 4 10 0"/></svg></i><span>RC Ondas<small>Gestão de produção</small></span></div>
  <button class="tab on" data-t="painel"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20V11M10 20V5M16 20v-6M2 20h20"/></svg>Painel</button>
- <button class="tab" data-t="op"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13 2 4 14h7l-1 8 9-12h-7z"/></svg>Operação</button>
+ <button class="tab" data-t="op"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13 2 4 14h7l-1 8 9-12h-7z"/></svg>Coleta</button>
+ <button class="tab" data-t="prod"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 8 12 3 3 8v8l9 5 9-5zM3 8l9 5 9-5M12 13v8"/></svg>Produção</button>
  <button class="tab" data-t="prs"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6"/><path d="m20 20-4.2-4.2"/></svg>Procurando</button>
  <button class="tab" data-t="ind"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3.5"/><path d="M5 21c0-4 3.5-6 7-6s7 2 7 6"/></svg><span class="nav-long">Equipe</span><span class="nav-short">Equipe</span></button>
  <button class="tab" data-t="his"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19V5M4 19h16"/><path d="M8 15l3-4 3 2 5-6"/></svg>Relatórios</button>
@@ -552,6 +603,34 @@ body[data-v=cfg] #turnoF,body[data-v=cfg] #gal,body[data-v=cfg] #day{display:non
  </div>
 </section>
 
+<!-- ======================= PRODUÇÃO (embalagem) ======================= -->
+<section id="prod" class="hide">
+ <div class="sub" id="prsub"><button data-pr="bip" class="on">Bipar</button><button data-pr="dis" id="prDisB">Distribuição</button></div>
+ <div id="pdBipV" class="grid two">
+  <div class="card"><h2>Embalar ondas</h2>
+   <div class="f">
+    <label>Operador<input id="pdP" placeholder="Digite o nome" autocomplete="off" role="combobox" aria-expanded="false" aria-controls="pdSug"></label>
+    <div id="pdWho" aria-live="polite"></div><div id="pdSug" role="listbox" aria-label="Operadores encontrados"></div>
+    <div id="pdWb" class="hide"><label>Onda<input id="pdW" placeholder="Bipe a onda" autocomplete="off" autocapitalize="characters" enterkeyhint="send"></label>
+     <div class="ctl2"><button type="button" class="btn alt sm" id="pdTroca">Trocar pessoa</button><button type="button" class="btn" id="pdEnv">Registrar onda</button></div></div>
+    <div id="pdMsg" class="pdMsg" role="status" aria-live="polite"></div>
+   </div>
+   <div class="legend">Bipe uma onda por vez. A primeira bipagem do dia registra a presença da pessoa. Ondas sem registro na Coleta ficam como “Não coletada”.</div>
+  </div>
+  <div class="card"><h2>Bipagens de hoje <span class="pill" id="pdN"></span></h2>
+   <label class="hint" style="display:block;margin-bottom:8px">Pesquisar<input id="pdQ" type="search" placeholder="Número da onda ou nome" autocomplete="off"></label>
+   <div class="tw" id="pdL"></div></div>
+ </div>
+ <div id="pdDisV" class="hide">
+  <div class="card"><h2>Distribuição das pessoas</h2>
+   <div class="pdTools"><input id="pdDq" type="search" placeholder="Pesquisar nome ou código" aria-label="Pesquisar pessoa" autocomplete="off"><div id="pdDf" class="pdChips" role="group" aria-label="Filtrar por posto"></div></div>
+   <div id="pdDl"></div>
+   <div class="legend">Cada mudança vale a partir do horário informado. As ondas já bipadas continuam com o andar, a atividade e o turno da época.</div></div>
+  <div class="card"><h2>Turnos da produção</h2><div id="pdTl"></div>
+   <div class="legend">Saída em branco = ainda não configurada; as horas trabalhadas só são calculadas com a saída preenchida. Saída menor que a entrada = turno que passa da meia-noite.</div></div>
+ </div>
+</section>
+
 <!-- ======================= INDIVIDUAL ======================= -->
 <section id="ind" class="hide">
  <div class="sub" id="gsub"><button data-gs="mi" class="on">Produção individual</button><button data-gs="mc">Produção da equipe</button><button data-gs="chk">Presença</button></div>
@@ -601,7 +680,7 @@ body[data-v=cfg] #turnoF,body[data-v=cfg] #gal,body[data-v=cfg] #day{display:non
   <div class="card" style="grid-column:1/-1"><h2>Horários do galpão</h2><div id="turnos"></div><div class="legend">Cada galpão tem o seu horário. Bipagens fora do expediente contam como hora extra. Café, almoço e outras pausas não contam como pausa, atraso nem hora extra. Sábado e domingo em branco seguem o horário de segunda a sexta. O almoço de cada pessoa pode ser ajustado na Presença.</div></div>
   <div class="card" id="motCard"><h2>Motivos de ausência</h2><div id="motL" class="ausChips"></div>
    <form id="motF" class="motF"><input id="motN" maxlength="40" placeholder="Novo motivo" aria-label="Novo motivo de ausência" autocomplete="off"><button class="btn sm" type="submit">Adicionar</button></form>
-   <div class="legend">Aparecem na mini aba Ausente da Operação e no relatório de Ausências. Remover um motivo não apaga as ausências já registradas.</div></div>
+   <div class="legend">Aparecem na mini aba Ausente da Coleta e no relatório de Ausências. Remover um motivo não apaga as ausências já registradas.</div></div>
   <div class="card" id="tempoCard"><h2>Tempo das ondas e hora extra</h2><div class="f">
    <label>Intervalo máximo entre ondas do mesmo operador para contar como tempo de onda (min, até 60)<input type="number" id="gap" min="1" max="60"></label>
    <label>Tolerância de hora extra (min)<input type="number" id="tol" min="0" max="120"></label></div>
@@ -2318,10 +2397,10 @@ function hisRender(){
 
 /* ===================== acesso ===================== */
 const needAuth=k=>ON?!me:S.ges.length>0&&!(me&&(k==="cfg"?me.pC:me.pI));
-const ABAS_T=[["painel","Painel"],["op","Operação"],["prs","Procurando"],["ind","Equipe"],["his","Relatórios"],["cfg","Config"]];let mAbasU=null;
+const ABAS_T=[["painel","Painel"],["op","Coleta"],["prod","Produção"],["prs","Procurando"],["ind","Equipe"],["his","Relatórios"],["cfg","Config"]];let mAbasU=null;
 const isI=t=>t==="ind"||t==="his";
 /* aba só aparece se o perfil atual pode abri-la; o que não é acessível fica oculto */
-function podeVer(t){if(ON&&me&&!me.adm&&me.ab&&!me.ab.includes(t))return false;if(t==="op"||t==="painel"||t==="prs")return true;if(ON)return !!me&&(isI(t)?!!me.pI:t==='cfg'?!!(me.pC||me.pI):!!me.pC);if(t==="painel")return true;return !needAuth(t)}
+function podeVer(t){if(ON&&me&&!me.adm&&me.ab&&!me.ab.includes(t))return false;if(t==="op"||t==="prod"||t==="painel"||t==="prs")return true;if(ON)return !!me&&(isI(t)?!!me.pI:t==='cfg'?!!(me.pC||me.pI):!!me.pC);if(t==="painel")return true;return !needAuth(t)}
 function updTabs(){$$(".tab[data-t]").forEach(b=>{b.style.display=podeVer(b.dataset.t)?"":"none"});$$('#csub [data-c="cga"]').forEach(b=>{b.style.display=soMeta()?"none":""});$$('#fCard').forEach(c=>c.classList.toggle("hide",soMeta()));$$('#csub [data-c="cge"]').forEach(b=>{b.style.display=soMeta()?"none":""});$$('#csub [data-c="cma"]').forEach(b=>{b.style.display=(!ON||(me&&me.adm))?"":"none"});{const soHor=ON&&me&&!me.adm&&!me.pC;$$('#csub [data-c="cop"],#csub [data-c="cus"],#csub [data-c="cme"],#csub [data-c="cho"]').forEach(b=>{b.style.display=''});if(soHor)$$('#csub button').forEach(b=>{if(b.dataset.c!=='cho')b.style.display='none'})}if(!podeVer(view)){view="op";["painel","op","prs","ind","his","cfg"].forEach(s=>$("#"+s).classList.toggle("hide",s!=="op"));$$(".tab[data-t]").forEach(b=>b.classList.toggle("on",b.dataset.t==="op"))}}
 let hWho="";
 function authUI(){const w=me?me.n+"|"+(me.g||"")+"|"+(me.adm?1:0):"";if(w!==hWho){hWho=w;hKey="";HW=null;HPW=null}$("#who").textContent=me?"Gestor: "+me.n:"";const pub=ON&&!me;["#turnoF","#gal","#day"].forEach(i=>$(i).classList.toggle("hide",pub));if(pub){$("#turnoF").value="";$("#day").value=dk(Date.now())}$("#logtx").textContent=me?"Sair":"Entrar";updTabs()}
@@ -2329,10 +2408,10 @@ function go(t){if(ON&&me&&!me.adm&&me.ab&&!podeVer(t)){const f=ABAS_T.find(([k])
  updTabs();
  if((t==="cfg"||isI(t))&&needAuth(t)){$("#login").classList.remove("hide");$("#lU").focus();pend=t;return}
  if(ON&&me&&((t==="cfg"&&!me.pC&&!me.pI)||(isI(t)&&!me.pI))){toast("Seu acesso não inclui esta área.");return}
- view=t;document.body.dataset.v=t;if(t==="cfg"&&ON&&me&&!me.adm&&!me.pC)setTimeout(()=>{const b=$('#csub [data-c="cho"]');if(b)b.click()},0);["painel","op","prs","ind","his","cfg"].forEach(s=>$("#"+s).classList.toggle("hide",s!==t));
+ view=t;document.body.dataset.v=t;if(t==="cfg"&&ON&&me&&!me.adm&&!me.pC)setTimeout(()=>{const b=$('#csub [data-c="cho"]');if(b)b.click()},0);["painel","op","prod","prs","ind","his","cfg"].forEach(s=>$("#"+s).classList.toggle("hide",s!==t));
  $$(".tab[data-t]").forEach(b=>b.classList.toggle("on",b.dataset.t===t));
- $("#ttl").textContent={painel:"Painel",op:"Operação",ind:"Equipe",his:"Relatórios",prs:"Procurando",cfg:"Configurações"}[t];
- if(t==="cfg")cfgRender();if(t==="his")hisOpen();if(t==="prs"){procurando();psub(window.__ps||"bip")}if(t==="ind"){individual();loadManagement({cache:true})}renderAll();
+ $("#ttl").textContent={painel:"Painel",op:"Coleta",prod:"Produção",ind:"Equipe",his:"Relatórios",prs:"Procurando",cfg:"Configurações"}[t];
+ if(t==="cfg")cfgRender();if(t==="his")hisOpen();if(t==="prs"){procurando();psub(window.__ps||"bip")}if(t==="ind"){individual();loadManagement({cache:true})}if(t==="prod")pdAbrir();renderAll();
  if(t==="op"&&!$("#s1").classList.contains("hide"))setTimeout(()=>$("#opIn").focus({preventScroll:true}),60)}
 let pend=null;
 $("#logbtn").onclick=()=>{if(ON&&(me||sess)){sair();return}if(me){me=null;authUI();toast("Sessão encerrada");go("painel");return}$("#login").classList.remove("hide");$("#lU").focus()};
@@ -2691,8 +2770,186 @@ if(matchMedia("(display-mode:standalone)").matches||navigator.standalone)$("#ins
 $("#inst").onclick=async()=>{if(dp){dp.prompt();await dp.userChoice;dp=null;return}
  toast("Chrome: menu ⋮ › Transmitir, salvar e compartilhar › Instalar página como app. Edge: menu ··· › Aplicativos › Instalar este site como um aplicativo.",9000)};
 
+/* ===================== Produção (embalagem): bipar, presença, distribuição e turnos ===================== */
+const PD_AND={terreo:"Térreo",mezanino:"Mezanino"},PD_AT={mesa:"Mesa",maquina:"Máquina"},PD_DIAS=["D","S","T","Q","Q","S","S"],PD_DIAS_N=["Domingo","Segunda","Terça","Quarta","Quinta","Sexta","Sábado"],PD_GAL="RC",PD_FILA="rcondas.prodFila";
+const PD_T0=()=>[{id:1,nome:"1º turno",ent:"06:00",sai:"",dias:[1,2,3,4,5,6],ii:"",if:"",ativo:true},{id:2,nome:"2º turno",ent:"09:00",sai:"",dias:[1,2,3,4,5,6],ii:"",if:"",ativo:true}];
+let PDT=null,PDA=[],PDH=[],PDB=[],PDLOC=[],PDsel=null,PDsI=-1,PDsL=[],PDsub="bip",PDed=null,PDf="todos",PD_AT0=0;
+const pdK=o=>o.id||o.m,pdOp=k=>S.ops.find(o=>pdK(o)===k),hh5=t=>t?String(t).slice(0,5):"";
+const pdTmap=t=>({id:t.id,nome:t.nome,ent:hh5(t.entrada),sai:hh5(t.saida),dias:t.dias||[],ii:hh5(t.int_ini),if:hh5(t.int_fim),ativo:t.ativo!==false});
+const pdAmap=x=>({id:x.id||null,oid:x.operador_id,andar:x.andar,at:x.atividade,tu:x.turno_id,ent:hh5(x.entrada),sai:hh5(x.saida),sit:x.situacao||"ativo",ini:Date.parse(x.inicio),fim:x.fim?Date.parse(x.fim):null,por:x.criado_por||""});
+function pdGestor(){return ON?!!(me&&(me.adm||me.pC)):(!S.ges.length||!!(me&&(me.adm||me.pC)))}
+function pdTurnos(){return ON?(PDT||[]):(S.prodT||(S.prodT=PD_T0()))}
+function pdAtribs(){return ON?(pdGestor()&&PDH.length?PDH:PDA):(S.prodA||(S.prodA=[]))}
+function pdPosto(k,t){t=t||Date.now();return pdAtribs().filter(a=>a.oid===k&&a.ini<=t&&(!a.fim||a.fim>t)).sort((a,b)=>b.ini-a.ini)[0]||null}
+function pdTurno(id){return pdTurnos().find(t=>t.id===id)||null}
+function pdHorario(a){const t=pdTurno(a.tu)||{};const e=a.ent||t.ent||"",s=a.sai||t.sai||"";return e?(s?e+" às "+s:"a partir de "+e):"—"}
+function pdOps(){const L=S.ops.filter(o=>o.g===PD_GAL);return L.length?L:S.ops}
+const m2=v=>{const m=hm2m(v);return m==null?null:m};
+/* dia operacional: em turno que passa da meia-noite, a madrugada pertence ao dia de entrada */
+function pdDia(ts,a){const t=pdTurno(a.tu)||{},e=m2(a.ent||t.ent),s=m2(a.sai||t.sai),d=new Date(ts),m=d.getHours()*60+d.getMinutes();
+ if(e!=null&&s!=null&&s<=e&&m<s)return dk(ts-864e5);return dk(ts)}
+
+function pdLocalB(){const W=new Set(S.waves.filter(w=>!w.err).map(w=>normWN(w.wn)));return(S.prodB||[]).filter(b=>b.dia===hoje()).map(b=>Object.assign({},b,{st:"ok",col:W.has(normWN(b.wn))}))}
+async function pdCarregar(){
+ if(!ON){PDB=pdLocalB();return}
+ if(!online())return;
+ try{const [t,p,b]=await Promise.all([api("/rest/v1/prod_turnos?select=*&order=id"),api("/rest/v1/rpc/prod_postos",{method:"POST",body:{}}),api("/rest/v1/rpc/prod_bipagens_dia",{method:"POST",body:{p_dia:hoje()}})]);
+  PDT=t.map(pdTmap);PDA=p.map(pdAmap);PDB=b.map(x=>({id:x.id,wn:x.wn,oid:x.operador_id,andar:x.andar,at:x.atividade,tu:x.turno_id,em:Date.parse(x.bipada_em),col:!!x.coletado,st:"ok"}));
+  if(pdGestor()){try{PDH=(await api("/rest/v1/prod_atribuicoes?select=*&order=inicio.desc&limit=3000")).map(pdAmap)}catch(e){PDH=[]}}else PDH=[];
+  PD_AT0=Date.now()}catch(e){}}
+async function pdAbrir(){pdSubtab(PDsub);pdRender();await pdCarregar();pdRender();pdFilaEnviar()}
+function pdSubtab(k){if(k==="dis"&&!pdGestor())k="bip";PDsub=k;$$("#prsub [data-pr]").forEach(b=>b.classList.toggle("on",b.dataset.pr===k));
+ $("#prDisB").classList.toggle("hide",!pdGestor());$("#pdBipV").classList.toggle("hide",k!=="bip");$("#pdDisV").classList.toggle("hide",k!=="dis");pdRender();
+ if(k==="bip")setTimeout(()=>{const i=PDsel?$("#pdW"):$("#pdP");if(i&&view==="prod")i.focus({preventScroll:true})},60)}
+function pdRender(){if(PDsub==="dis"){pdDisLista();pdTurnosLista()}else{pdWho();pdLista()}}
+
+/* ---------- Bipar ---------- */
+function pdSugest(){const q=nrm($("#pdP").value),box=$("#pdSug");PDsI=-1;PDsL=[];
+ if(!q||PDsel){box.innerHTML="";$("#pdP").setAttribute("aria-expanded","false");return}
+ const all=opsBusca(q).filter(o=>pdOps().includes(o));PDsL=all.slice(0,8);box.innerHTML=opsCartoes(PDsL,all.length,"data-pdsug");$("#pdP").setAttribute("aria-expanded",String(PDsL.length>0))}
+function pdEscolher(o){PDsel=o;$("#pdP").value=o.m;PDsL=[];PDsI=-1;$("#pdSug").innerHTML="";$("#pdP").setAttribute("aria-expanded","false");$("#pdMsg").innerHTML="";$("#pdMsg").className="pdMsg";pdWho();
+ if(!$("#pdWb").classList.contains("hide"))setTimeout(()=>$("#pdW").focus({preventScroll:true}),30)}
+function pdTrocar(){PDsel=null;$("#pdP").value="";$("#pdW").value="";$("#pdMsg").innerHTML="";pdWho();pdSugest();$("#pdP").focus()}
+function pdPostoTags(a){const t=pdTurno(a.tu);return`<span class="pdTag ${a.andar==="terreo"?"t":"m"}">${PD_AND[a.andar]}</span><span class="pdTag">${PD_AT[a.at]}</span><span class="pdTag">${esc(t?t.nome:"Turno "+a.tu)}, ${esc(pdHorario(a))}</span>`}
+function pdWho(){const o=PDsel,box=$("#pdWho");if(!box)return;if(!o){box.innerHTML="";$("#pdWb").classList.add("hide");return}
+ const a=pdPosto(pdK(o)),ok=a&&a.sit==="ativo";
+ box.innerHTML='<div class="cracha">'+av(o.n)+"<div><b>"+esc(o.n)+"</b><small>"+o.m+(o.g?", "+esc(o.g):"")+"</small>"+(ok?'<div class="pdPosto">'+pdPostoTags(a)+"</div>":"")+"</div></div>"+
+  (ok?"":`<div class="pdSem">${a?"Esta pessoa está inativa na produção.":"Esta pessoa ainda não tem posto na produção."} Fale com o gestor para definir andar e atividade.</div>`);
+ $("#pdWb").classList.toggle("hide",!ok)}
+function pdMsg(cls,tit,sub){const m=$("#pdMsg");m.className="pdMsg "+cls;m.innerHTML="<b>"+esc(tit)+"</b>"+(sub?"<small>"+esc(sub)+"</small>":"")}
+function pdFila(){try{return JSON.parse(localStorage.getItem(PD_FILA)||"[]")}catch(e){return[]}}
+function pdFilaSet(L){try{L.length?localStorage.setItem(PD_FILA,JSON.stringify(L)):localStorage.removeItem(PD_FILA)}catch(e){}}
+function pdAplicar(x,r){x.andar=r.andar||x.andar;x.at=r.atividade||x.at;x.col=r.coletado;x.det=r.detalhe||"";
+ x.st=r.resultado==="ok"||r.resultado==="ja_existia"?"ok":r.resultado==="wn_repetido"?"rep":r.resultado==="sem_posto"?"sem":"rec";x.pres=!!r.presenca_nova}
+function pdAvisar(x){const o=pdOp(x.oid),nm=o?o.n:"";
+ if(x.st==="ok")pdMsg(x.col?"ok":"warn","Onda "+x.wn+" registrada · "+(x.col?"Coletada":"Não coletada"),(x.col?"":"Sem registro na Coleta. ")+PD_AND[x.andar]+", "+PD_AT[x.at]+(x.pres?". Presença de "+nm+" registrada às "+hmT(x.em):""));
+ else if(x.st==="rep")pdMsg("err","Onda "+x.wn+" já embalada",x.det||"Esta onda já foi bipada nesta atividade.");
+ else if(x.st==="pend")pdMsg("pend","Onda "+x.wn+" guardada neste aparelho","Sem internet. Ela será enviada assim que a conexão voltar.");
+ else pdMsg("err","Onda "+x.wn+" não registrada",x.det||"Tente de novo.")}
+async function pdEnviar(L,avisar){
+ try{const r=await api("/rest/v1/rpc/registrar_embalagens",{method:"POST",body:{lote:L.map(x=>({id:x.id,wn:x.wn,operador_id:x.oid,bipada_em:new Date(x.em).toISOString()}))}});
+  (r||[]).forEach(res=>{const x=L.find(z=>z.id===res.id);if(x)pdAplicar(x,res)});
+  const ids=new Set(L.filter(x=>x.st!=="pend").map(x=>x.id));pdFilaSet(pdFila().filter(f=>!ids.has(f.id)));
+  L.forEach(x=>{if(x.st==="ok"&&!PDB.some(b=>b.id===x.id))PDB.unshift({...x})})}
+ catch(e){if(!e.status||e.status>=500||e.status===408||e.status===429){L.forEach(x=>{x.st="pend"});const F=pdFila();L.forEach(x=>{if(!F.some(f=>f.id===x.id))F.push({id:x.id,wn:x.wn,oid:x.oid,em:x.em,andar:x.andar,at:x.at})});pdFilaSet(F)}
+  else L.forEach(x=>{x.st="rec";x.det=errMsg(e)})}
+ if(avisar&&L.length)pdAvisar(L[L.length-1]);pdLista()}
+let pdEnvBusy=false;
+async function pdFilaEnviar(){if(!ON||pdEnvBusy||!online())return;const F=pdFila();if(!F.length)return;pdEnvBusy=true;
+ try{const L=F.slice(0,200).map(f=>{const x=PDLOC.find(z=>z.id===f.id)||Object.assign({st:"pend"},f);if(!PDLOC.includes(x))PDLOC.push(x);return x});await pdEnviar(L,false)}finally{pdEnvBusy=false}}
+async function pdBipar(){const o=PDsel;if(!o){toast("Escolha a pessoa primeiro.");$("#pdP").focus();return}
+ const wn=String($("#pdW").value||"").replace(/\s+/g,"").replace(/~/g,"");if(!wn){$("#pdW").focus();return}
+ if(wn.length>40){pdMsg("err","Número da onda muito longo","Confira a leitura e bipe de novo.");return}
+ $("#pdW").value="";const k=pdK(o),em=Date.now(),a=pdPosto(k,em);
+ if(!a||a.sit!=="ativo"){pdWho();pdMsg("err",o.n+" sem posto na produção","Fale com o gestor para definir andar e atividade.");return}
+ const x={id:uid(),wn,oid:k,em,andar:a.andar,at:a.at,tu:a.tu,st:"env"};
+ if(!ON){const n=normWN(wn);S.prodB=S.prodB||[];S.prodP=S.prodP||{};
+  if(S.prodB.some(b=>normWN(b.wn)===n&&b.at===a.at)){x.st="rep";x.det="A onda "+wn+" já foi embalada na "+PD_AT[a.at]}
+  else{x.col=S.waves.some(w=>normWN(w.wn)===n&&!w.err);x.dia=pdDia(em,a);x.st="ok";const pk=k+"|"+x.dia;if(!S.prodP[pk]){S.prodP[pk]={em,id:x.id,tu:a.tu,andar:a.andar,at:a.at};x.pres=true}
+   S.prodB.push({id:x.id,wn,oid:k,em,andar:a.andar,at:a.at,tu:a.tu,dia:x.dia});save();PDB=pdLocalB()}
+  PDLOC.unshift(x);pdAvisar(x);pdLista();$("#pdW").focus();return}
+ PDLOC.unshift(x);pdLista();
+ if(!online()){x.st="pend";const F=pdFila();F.push({id:x.id,wn,oid:k,em,andar:a.andar,at:a.at});pdFilaSet(F);pdAvisar(x);pdLista();$("#pdW").focus();return}
+ pdMsg("pend","Enviando onda "+wn+"…","");await pdEnviar([x],true);$("#pdW").focus()}
+function pdLista(){const el=$("#pdL");if(!el)return;const by={};
+ PDB.forEach(b=>{by[b.id]=Object.assign({st:"ok"},b)});PDLOC.forEach(x=>{if(x.st!=="ok"||!by[x.id])by[x.id]=Object.assign({},by[x.id]||{},x)});
+ const q=nrm($("#pdQ")?$("#pdQ").value:""),all=Object.values(by).sort((a,b)=>b.em-a.em),L=all.filter(x=>{if(!q)return true;const o=pdOp(x.oid);return nrm(x.wn).includes(q)||(o&&(nrm(o.n).includes(q)||nrm(o.m)===q))});
+ const okN=all.filter(x=>x.st==="ok").length,pend=all.filter(x=>x.st==="pend").length;
+ $("#pdN").textContent=okN?okN+(okN===1?" onda":" ondas")+(pend?", "+pend+" pendente"+(pend>1?"s":""):""):(pend?pend+" pendente"+(pend>1?"s":""):"");
+ const st=x=>x.st==="ok"?(x.col?'<span class="pdSt ok">Coletada</span>':'<span class="pdSt warn">Não coletada</span>'):x.st==="pend"||x.st==="env"?'<span class="pdSt pend">'+(x.st==="env"?"Enviando":"Pendente")+"</span>":x.st==="rep"?'<span class="pdSt err">Já embalada</span>':'<span class="pdSt err">Não registrada</span>';
+ el.innerHTML=L.length?`<table class="pdT"><tr><th>Hora</th><th>Onda</th><th>Pessoa</th><th class="pdHm">Posto</th><th>Status</th></tr>`+L.slice(0,150).map(x=>{const o=pdOp(x.oid),nm=o?o.n:((OPSALL[x.oid]||{}).nome||"—");
+  return`<tr><td>${hmT(x.em)}</td><td class="wn">${esc(x.wn)}</td><td>${esc(nm)}</td><td class="pdHm">${x.andar?PD_AND[x.andar]+", "+PD_AT[x.at]:"—"}</td><td>${st(x)}</td></tr>`}).join("")+"</table>"+(L.length>150?`<div class="legend">Mostrando as 150 mais recentes de ${L.length}.</div>`:"")
+  :`<div class="empty">${q?"Nenhuma bipagem encontrada.":"Nenhuma onda bipada hoje."}</div>`}
+
+/* ---------- Distribuição ---------- */
+function pdDisLista(){const el=$("#pdDl");if(!el)return;const ops=pdOps(),now=Date.now(),post=o=>{const a=pdPosto(pdK(o),now);return a&&a.sit==="ativo"?a:null};
+ const n={todos:ops.length,terreo:0,mezanino:0,sem:0};ops.forEach(o=>{const a=post(o);if(a)n[a.andar]++;else n.sem++});
+ $("#pdDf").innerHTML=[["todos","Todos"],["terreo","Térreo"],["mezanino","Mezanino"],["sem","Sem posto"]].map(([k,t])=>`<button type="button" data-pdf="${k}" aria-pressed="${PDf===k}">${t} (${n[k]})</button>`).join("");
+ const q=nrm($("#pdDq").value),L=ops.filter(o=>{const a=post(o);if(PDf==="sem"&&a)return false;if((PDf==="terreo"||PDf==="mezanino")&&(!a||a.andar!==PDf))return false;return!q||nrm(o.n).includes(q)||nrm(o.m).includes(q)}).sort((a,b)=>a.n.localeCompare(b.n));
+ el.innerHTML=L.length?L.map(o=>{const k=pdK(o),a=pdPosto(k,now),t=a?pdTurno(a.tu):null;
+  return`<div class="pdRow"><div class="who2">${av(o.n)}<div>${esc(o.n)}<small>${o.m}</small></div></div>
+   <div class="pdPc">${a?(a.sit==="ativo"?`<span class="pdTag ${a.andar==="terreo"?"t":"m"}">${PD_AND[a.andar]}</span> <span class="pdTag">${PD_AT[a.at]}</span>`:'<span class="pdSt err">Inativo</span>'):'<span class="pdH">Sem posto</span>'}</div>
+   <div class="pdH">${a?esc(t?t.nome:"Turno "+a.tu)+", "+esc(pdHorario(a))+(a.ent?" (individual)":"")+"<br>desde "+new Date(a.ini).toLocaleString("pt-BR",{day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"}):""}</div>
+   <button type="button" class="btn alt sm" data-pded="${esc(k)}" aria-expanded="${PDed===k}">${PDed===k?"Fechar":a?"Alterar":"Definir posto"}</button></div>`+(PDed===k?pdEditor(o,a):"")}).join("")
+  :'<div class="empty">Ninguém encontrado.</div>'}
+function pdLocalDT(t){const d=new Date(t);d.setSeconds(0,0);return dk(d.getTime())+"T"+String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0")}
+function pdEditor(o,a){const k=pdK(o),T=pdTurnos().filter(t=>t.ativo||(a&&t.id===a.tu)),r=(n,v,lab,cur)=>`<label><input type="radio" name="${n}" value="${v}"${cur===v?" checked":""}>${lab}</label>`;
+ const H=pdAtribs().filter(x=>x.oid===k).sort((x,y)=>y.ini-x.ini).slice(0,8),fd=t=>new Date(t).toLocaleString("pt-BR",{day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"});
+ return`<form class="pdEd" data-pdform="${esc(k)}" novalidate>
+  <fieldset><legend>Andar</legend><div class="pdSeg">${r("pdA","terreo","Térreo",a&&a.andar)}${r("pdA","mezanino","Mezanino",a&&a.andar)}</div></fieldset>
+  <fieldset><legend>Atividade</legend><div class="pdSeg">${r("pdX","mesa","Mesa",a&&a.at)}${r("pdX","maquina","Máquina",a&&a.at)}</div></fieldset>
+  <div class="pdG"><label>Turno<select name="pdT">${T.map(t=>`<option value="${t.id}"${a&&a.tu===t.id?" selected":""}>${esc(t.nome)} (${t.ent}${t.sai?" às "+t.sai:""})</option>`).join("")}</select></label>
+   <label>Entrada individual<input type="time" name="pdE" value="${a?a.ent:""}"></label><label>Saída individual<input type="time" name="pdS" value="${a?a.sai:""}"></label>
+   <label>Situação<select name="pdSit"><option value="ativo"${!a||a.sit==="ativo"?" selected":""}>Ativo</option><option value="inativo"${a&&a.sit==="inativo"?" selected":""}>Inativo</option></select></label>
+   <label>Vale a partir de<input type="datetime-local" name="pdD" value="${pdLocalDT(Date.now())}"></label></div>
+  <div class="legend" style="margin:0 0 10px">Horário individual em branco = usa o horário do turno. Ele continua valendo nos dias seguintes até ser alterado.</div>
+  <div class="ctl2"><button type="button" class="btn alt sm" data-pded="${esc(k)}">Cancelar</button><button type="submit" class="btn">Salvar posto de ${esc(o.n.split(" ")[0])}</button></div>
+  ${H.length?`<ul class="pdHist" aria-label="Histórico de postos">${H.map(x=>{const t=pdTurno(x.tu);return`<li>${fd(x.ini)} até ${x.fim?fd(x.fim):"agora"}: ${PD_AND[x.andar]}, ${PD_AT[x.at]}, ${esc(t?t.nome:"Turno "+x.tu)}${x.sit!=="ativo"?" (inativo)":""}</li>`}).join("")}</ul>`:""}
+ </form>`}
+async function pdAtribuir(f){const k=f.dataset.pdform,o=pdOp(k);if(!o)return;const g=n=>{const e=f.querySelector(`[name="${n}"]:checked`)||f.querySelector(`[name="${n}"]`);return e?e.value:""};
+ const andar=f.querySelector('[name="pdA"]:checked'),at=f.querySelector('[name="pdX"]:checked');if(!andar){toast("Escolha o andar.");return}if(!at){toast("Escolha a atividade.");return}
+ const tu=+g("pdT"),ent=g("pdE"),sai=g("pdS"),sit=g("pdSit"),dv=g("pdD");if(!tu){toast("Cadastre um turno primeiro.");return}
+ if(!!ent!==!!sai){toast("Informe entrada e saída do horário individual, ou deixe os dois em branco.",5000);return}
+ const desde=dv?new Date(dv).getTime():Date.now();if(!isFinite(desde)){toast("Confira a data de início.");return}
+ if(desde<Date.now()-2*864e5){toast("A data de início pode ser no máximo 2 dias atrás.",5000);return}
+ const msg="Posto de "+o.n+": "+PD_AND[andar.value]+", "+PD_AT[at.value];
+ if(ON){const b=f.querySelector('[type="submit"]');b.disabled=true;
+  try{await api("/rest/v1/rpc/prod_atribuir",{method:"POST",body:{p_operador:o.id,p_andar:andar.value,p_atividade:at.value,p_turno:tu,p_entrada:ent||null,p_saida:sai||null,p_situacao:sit,p_desde:new Date(desde).toISOString()}})}
+  catch(e){b.disabled=false;toast(errMsg(e),7000);return}
+  PDed=null;await pdCarregar();pdRender();pdWho();toast(msg,4000);return}
+ const A=S.prodA||(S.prodA=[]),cur=A.find(x=>x.oid===k&&!x.fim);
+ if(cur){if(desde<=cur.ini){if((S.prodB||[]).some(b=>b.oid===k&&b.em>=cur.ini)){toast("Já existem bipagens neste posto. A mudança precisa começar depois de "+new Date(cur.ini).toLocaleString("pt-BR",{day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"})+".",6000);return}A.splice(A.indexOf(cur),1)}else cur.fim=desde}
+ A.push({id:uid(),oid:k,andar:andar.value,at:at.value,tu,ent,sai,sit,ini:desde,fim:null,por:me?me.u:"local"});save();PDed=null;pdRender();pdWho();toast(msg,4000)}
+
+/* ---------- Turnos ---------- */
+function pdTurnosLista(){const el=$("#pdTl");if(!el)return;const T=pdTurnos().slice();if(PDed==="novoT")T.push({id:"novo",nome:"",ent:"",sai:"",dias:[1,2,3,4,5,6],ii:"",if:"",ativo:true});
+ el.innerHTML=T.map(t=>`<form class="pdTF" data-pdt="${t.id}" novalidate>
+   <label>Nome<input name="n" value="${esc(t.nome)}" maxlength="40" required></label>
+   <label>Entrada<input type="time" name="e" value="${t.ent}" required></label>
+   <label>Saída<input type="time" name="s" value="${t.sai}"></label>
+   <label>Intervalo<span class="pdInt"><input type="time" name="ii" value="${t.ii}" aria-label="Início do intervalo"><span>às</span><input type="time" name="if" value="${t.if}" aria-label="Fim do intervalo"></span></label>
+   <div class="pdDiasW"><span class="hint">Dias</span><div class="pdDias">${PD_DIAS.map((d,i)=>`<label title="${PD_DIAS_N[i]}"><input type="checkbox" name="d" value="${i}"${t.dias.includes(i)?" checked":""} aria-label="${PD_DIAS_N[i]}">${d}</label>`).join("")}</div></div>
+   <div class="pdAc"><label class="chk"><input type="checkbox" name="a"${t.ativo?" checked":""}> Turno ativo</label>${t.id==="novo"?'<button type="button" class="btn alt sm" data-pdtx="1">Cancelar</button>':""}<button type="submit" class="btn sm">${t.id==="novo"?"Criar turno":"Salvar "+esc(t.nome)}</button></div>
+  </form>`).join("")+(PDed==="novoT"?"":'<div class="ctl2" style="margin-top:10px"><span></span><button type="button" class="btn alt sm" data-pdtn="1">+ Novo turno</button></div>')}
+async function pdTurnoSalvar(f){const v=n=>(f.querySelector(`[name="${n}"]`)||{}).value||"",id=f.dataset.pdt,nome=v("n").trim(),ent=v("e"),sai=v("s"),ii=v("ii"),fi=v("if"),dias=[...f.querySelectorAll('[name="d"]:checked')].map(c=>+c.value),ativo=f.querySelector('[name="a"]').checked;
+ if(!nome){toast("Informe o nome do turno.");return}if(!ent){toast("Informe o horário de entrada.");return}if(!dias.length){toast("Escolha pelo menos um dia.");return}
+ if(!!ii!==!!fi){toast("Informe início e fim do intervalo, ou deixe os dois em branco.",5000);return}
+ const e=hm2m(ent),s=sai?hm2m(sai):null,a=ii?hm2m(ii):null,b=fi?hm2m(fi):null;
+ if(a!=null&&!(b>a)){toast("O fim do intervalo precisa ser depois do início.",5000);return}
+ if(a!=null&&s!=null&&s>e&&!(a>=e&&b<=s)){toast("O intervalo precisa ficar dentro do horário do turno.",5000);return}
+ const msg=(id==="novo"?"Turno criado: ":"Turno salvo: ")+nome+", "+ent+(sai?" às "+sai:"");
+ if(ON){const bt=f.querySelector('[type="submit"]');bt.disabled=true;
+  try{await api("/rest/v1/rpc/prod_turno_salvar",{method:"POST",body:{p_id:id==="novo"?null:+id,p_nome:nome,p_entrada:ent,p_saida:sai||null,p_dias:dias,p_int_ini:ii||null,p_int_fim:fi||null,p_ativo:ativo}})}
+  catch(er){bt.disabled=false;toast(errMsg(er),7000);return}
+  PDed=null;await pdCarregar();pdRender();toast(msg,4000);return}
+ const T=S.prodT||(S.prodT=PD_T0()),x={nome,ent,sai,dias,ii,if:fi,ativo};
+ if(id==="novo")T.push(Object.assign({id:Math.max(0,...T.map(t=>t.id))+1},x));else Object.assign(T.find(t=>t.id===+id)||{},x);
+ save();PDed=null;pdRender();toast(msg,4000)}
+
+/* ---------- eventos ---------- */
+document.addEventListener("input",e=>{const id=e.target.id;
+ if(id==="pdP"){PDsel=null;const v=$("#pdP").value.trim(),o=findOp(v);if(o&&o.m.toLowerCase()===v.toLowerCase()&&pdOps().includes(o)){pdEscolher(o);return}pdWho();pdSugest();return}
+ if(id==="pdQ")pdLista();if(id==="pdDq")pdDisLista()});
+document.addEventListener("keydown",e=>{const id=e.target.id;
+ if(id==="pdP"){if((e.key==="ArrowDown"||e.key==="ArrowUp")&&PDsL.length){e.preventDefault();PDsI=(PDsI+(e.key==="ArrowDown"?1:-1)+PDsL.length)%PDsL.length;$$("#pdSug [data-pdsug]").forEach((b,i)=>b.classList.toggle("on",i===PDsI));return}
+  if(e.key==="Enter"){e.preventDefault();if(PDsel){$("#pdW").focus();return}if(PDsI>=0&&PDsL[PDsI]){pdEscolher(PDsL[PDsI]);return}if(PDsL.length===1){pdEscolher(PDsL[0]);return}if(PDsL.length>1)toast("Há mais de uma pessoa. Selecione o nome desejado.",5000);return}
+  if(e.key==="Escape"){$("#pdSug").innerHTML="";PDsL=[];PDsI=-1}return}
+ if(id==="pdW"&&e.key==="Enter"){e.preventDefault();pdBipar()}});
+document.addEventListener("click",e=>{const t=e.target.closest&&e.target.closest("[data-pdsug],[data-pr],[data-pdf],[data-pded],[data-pdtn],[data-pdtx],#pdTroca,#pdEnv");if(!t)return;
+ if(t.dataset.pdsug){const o=PDsL.find(x=>x.m===t.dataset.pdsug);if(o)pdEscolher(o);return}
+ if(t.dataset.pr){pdSubtab(t.dataset.pr);return}
+ if(t.dataset.pdf){PDf=t.dataset.pdf;pdDisLista();return}
+ if(t.dataset.pded){PDed=PDed===t.dataset.pded?null:t.dataset.pded;pdDisLista();const f=PDed&&document.querySelector(`[data-pdform="${CSS.escape(PDed)}"]`);if(f){const r=f.querySelector('input[name="pdA"]');f.scrollIntoView({block:"nearest"});if(r)r.focus({preventScroll:true})}return}
+ if(t.dataset.pdtn){PDed="novoT";pdTurnosLista();const i=$('[data-pdt="novo"] [name="n"]');if(i)i.focus();return}
+ if(t.dataset.pdtx){PDed=null;pdTurnosLista();return}
+ if(t.id==="pdTroca"){pdTrocar();return}
+ if(t.id==="pdEnv")pdBipar()});
+document.addEventListener("submit",e=>{const f=e.target;if(f.dataset&&f.dataset.pdform){e.preventDefault();pdAtribuir(f)}else if(f.dataset&&f.dataset.pdt){e.preventDefault();pdTurnoSalvar(f)}});
+window.addEventListener("online",()=>{pdFilaEnviar()});
+setInterval(()=>{pdFilaEnviar();if(view==="prod"&&online()&&document.visibilityState==="visible"&&ON&&Date.now()-PD_AT0>55000&&PDed==null)pdCarregar().then(pdRender)},30000);
+
 /* mini abas na lateral: espelham as abas internas de cada área */
-const SUBS={op:["sub","s"],ind:["gsub","gs"],prs:["psub","p"],his:["hsub","hs"],cfg:["csub","c"]};
+const SUBS={op:["sub","s"],prod:["prsub","pr"],ind:["gsub","gs"],prs:["psub","p"],his:["hsub","hs"],cfg:["csub","c"]};
 function sideSubs(){
  $$(".ssub").forEach(e=>e.remove());const k=SUBS[view];if(!k)return;const bar=document.getElementById(k[0]),tab=document.querySelector('nav.side .tab[data-t="'+view+'"]');if(!bar||!tab)return;
  const box=document.createElement("div");box.className="ssub";box.setAttribute("role","group");box.setAttribute("aria-label","Abas de "+tab.textContent.trim());

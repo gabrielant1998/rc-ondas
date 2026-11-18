@@ -53,6 +53,29 @@ function fake(db){const cors={'access-control-allow-origin':'*','access-control-
    return J(route,200,{total:selected.reduce((n,w)=>n+w.quantidade,0),ondas:selected.length,pessoas:new Set(selected.map(w=>w.operador_id)).size,extra_un:0,extra_ondas:0,dur_ms:0,dur_n:0,dur_tipos:[],horas:[],tipos,galpoes:gals})}
   if(t==='rpc/relatorio_agregado'){db.calls.agg=(db.calls.agg||0)+1;const M=new Map();db.ondas.filter(o=>escopo(o.galpao_id)&&o.status===0&&o.registrada_em>=body.p_ini&&o.registrada_em<body.p_fim).forEach(o=>{const d=new Date(Date.parse(o.concluida_em||o.registrada_em)-3*36e5).toISOString().slice(0,10),k=[d,o.galpao_id,o.operador_id,o.tipo].join('|'),r=M.get(k)||{dia:d,galpao_id:o.galpao_id,operador_id:o.operador_id,tipo:o.tipo,ondas:0,unidades:0};r.ondas++;r.unidades+=o.quantidade;M.set(k,r)});return J(route,200,[...M.values()])}
   if(t==='rpc/ondas_publicas'){db.calls.pub=(db.calls.pub||0)+1;return J(route,200,db.ondas.filter(w=>{const d=new Date(Date.parse(w.registrada_em)-3*36e5).toISOString().slice(0,10);return d===body.p_dia}))}
+  /* Produção (embalagem) */
+  const nW=w=>{w=String(w||'').replace(/\s+/g,'');return /^\d+$/.test(w)?w.replace(/^0+(?=\d)/,''):w.toUpperCase()};
+  db.pt=db.pt||[{id:1,nome:'1º turno',entrada:'06:00:00',saida:null,dias:[1,2,3,4,5,6],int_ini:null,int_fim:null,ativo:true},{id:2,nome:'2º turno',entrada:'09:00:00',saida:null,dias:[1,2,3,4,5,6],int_ini:null,int_fim:null,ativo:true}];db.pa=db.pa||[];db.pb=db.pb||[];db.pp=db.pp||[];
+  if(t==='prod_turnos'&&m==='GET')return J(route,200,db.pt);
+  if(t==='rpc/prod_postos')return J(route,200,db.pa.filter(a=>!a.fim));
+  if(t==='prod_atribuicoes'&&m==='GET'){if(!g)return J(route,200,[]);return J(route,200,db.pa.filter(a=>{const o=db.operadores.find(x=>x.id===a.operador_id);return o&&escopo(o.galpao_id)}))}
+  if(t==='rpc/prod_bipagens_dia')return J(route,200,db.pb.filter(x=>x.dia===body.p_dia).map(x=>Object.assign({},x,{coletado:db.ondas.some(w=>nW(w.wn)===nW(x.wn))})));
+  if(t==='rpc/prod_turno_salvar'){if(!g||!(g.admin||g.pode_config))return J(route,403,{code:'42501',message:'Sem permissão para alterar turnos'});
+   const x={nome:body.p_nome,entrada:body.p_entrada,saida:body.p_saida,dias:body.p_dias,int_ini:body.p_int_ini,int_fim:body.p_int_fim,ativo:body.p_ativo};
+   if(body.p_id==null){const id=Math.max(...db.pt.map(t=>t.id))+1;db.pt.push(Object.assign({id},x));return J(route,200,id)}Object.assign(db.pt.find(t=>t.id===body.p_id),x);return J(route,200,body.p_id)}
+  if(t==='rpc/prod_atribuir'){const o=db.operadores.find(x=>x.id===body.p_operador&&!x.excluido_em);
+   if(!g||!o||!(g.admin||(g.pode_config&&g.galpao_id===o.galpao_id)))return J(route,403,{code:'42501',message:'Sem permissão para distribuir esta pessoa'});
+   const cur=db.pa.find(a=>a.operador_id===o.id&&!a.fim);if(cur)cur.fim=body.p_desde;const id='a'+(db.seq++);
+   db.pa.push({id,operador_id:o.id,andar:body.p_andar,atividade:body.p_atividade,turno_id:body.p_turno,entrada:body.p_entrada,saida:body.p_saida,situacao:body.p_situacao,inicio:body.p_desde,fim:null,criado_por:email});return J(route,200,id)}
+  if(t==='rpc/registrar_embalagens'){db.calls.emb=(db.calls.emb||0)+1;return J(route,200,(body.lote||[]).map(x=>{const r={id:x.id,resultado:'ok',detalhe:null,coletado:null,presenca_nova:false,andar:null,atividade:null};
+    const o=db.operadores.find(z=>z.id===x.operador_id&&!z.excluido_em);if(!o)return Object.assign(r,{resultado:'recusada',detalhe:'Pessoa não encontrada'});
+    const a=db.pa.find(z=>z.operador_id===o.id&&!z.fim);if(!a||a.situacao!=='ativo')return Object.assign(r,{resultado:'sem_posto',detalhe:o.nome+' ainda não tem posto na produção. Fale com o gestor.'});
+    r.andar=a.andar;r.atividade=a.atividade;r.coletado=db.ondas.some(w=>nW(w.wn)===nW(x.wn));
+    if(db.pb.some(z=>z.id===x.id))return Object.assign(r,{resultado:'ja_existia'});
+    if(db.pb.some(z=>nW(z.wn)===nW(x.wn)&&z.atividade===a.atividade))return Object.assign(r,{resultado:'wn_repetido',detalhe:'A onda '+x.wn+' já foi embalada na '+(a.atividade==='maquina'?'Máquina':'Mesa')});
+    const dia=new Date(Date.parse(x.bipada_em)-3*36e5).toISOString().slice(0,10);
+    db.pb.push({id:x.id,wn:x.wn,operador_id:o.id,andar:a.andar,atividade:a.atividade,turno_id:a.turno_id,bipada_em:x.bipada_em,dia});
+    if(!db.pp.some(z=>z.operador_id===o.id&&z.dia===dia)){db.pp.push({operador_id:o.id,dia,primeira_id:x.id});r.presenca_nova=true}return r}))}
   if(t==='rpc/ausencias_publicas'){return J(route,200,(db.aus||[]).filter(a=>new Date(Date.parse(a.inicio)-3*36e5).toISOString().slice(0,10)===body.p_dia))}
   if(t==='rpc/registrar_ausencia'){const op=db.operadores.find(o=>o.id===body.p_operador&&!o.excluido_em);if(!op)return J(route,400,{code:'23503',message:'Pessoa não encontrada'});
    const ms=db.config[0].motivos_ausencia||['Ajudando na Rua','Embalando'];if(!ms.includes(body.p_motivo))return J(route,400,{code:'23514',message:'Motivo de ausência inválido'});
@@ -375,13 +398,13 @@ await T('S28 Zerar tempo grava no servidor e some da contagem',async()=>{const d
 
 await T('S31 Admin restringe abas de um gestor; gestor vê só as liberadas e não entra nas outras',async()=>{const db=banco();const p=await page(b,db);await login(p,'adm@x.com','senha1234');await p.click('.tab[data-t="cfg"]');await p.click('[data-c="cge"]');
  await p.click('#mL tr:has-text("g2@x.com") [data-mabas]');await p.waitForTimeout(300);
- for(const k of ['prs','his','cfg'])await p.uncheck('#mAbas [data-abk="'+k+'"]');
+ for(const k of ['prod','prs','his','cfg'])await p.uncheck('#mAbas [data-abk="'+k+'"]');
  await p.click('#mAbas [data-abs="salvar"]');await p.waitForTimeout(600);
  const g2=db.gestores.find(g=>g.email==='g2@x.com');ok(JSON.stringify(g2.abas)==='["painel","op","ind"]','abas gravadas: '+JSON.stringify(g2.abas));
  const p2=await page(b,db);await login(p2,'g2@x.com','senha1234');await p2.waitForTimeout(300);
  ok(await p2.isVisible('.tab[data-t="ind"]'),'Gestão deveria aparecer');
  ok(!(await p2.isVisible('.tab[data-t="his"]')),'Histórico não deveria aparecer');
- ok(!(await p2.isVisible('.tab[data-t="cfg"]')),'Config não deveria aparecer');
+ ok(!(await p2.isVisible('.tab[data-t="cfg"]')),'Config não deveria aparecer');ok(!(await p2.isVisible('.tab[data-t="prod"]')),'Produção não deveria aparecer');
  await p2.evaluate(()=>go('cfg'));await p2.waitForTimeout(300);
  ok(await p2.evaluate(()=>view)!=='cfg','entrou em Config sem permissão');
  await p.click('#mL tr:has-text("g2@x.com") [data-mabas]');await p.waitForTimeout(300);
@@ -453,6 +476,32 @@ await T('S94 Horário por galpão: só o galpão escolhido muda e quem seguia o 
  ok(db.operadores[1].fim===22&&db.operadores[2].fim===21&&db.operadores[0].fim===16,'pessoas: '+JSON.stringify(db.operadores.map(o=>[o.nome,o.inicio,o.fim])));
  const j=await p.evaluate(()=>{const o=S.ops.find(x=>x.m==='CL002');return{tb:turnoBase(2,'Galpão 2'),g1:turnoBase(2,'Galpão 1'),pz:pausasT(2,'Galpão 2').map(x=>x.n),al:almocoOf(o)}});
  ok(j.tb.fim===22&&j.g1.fim===23&&j.pz.join()==='Café'&&j.al&&j.al.ini===1200,'cálculo: '+JSON.stringify(j));ok(p.errors.length===0,p.errors.join(';'))});
+await T('S95 Produção: gestor define posto e turno, aparelho público bipa, presença só na primeira e repetida recusada',async()=>{const db=banco();
+ db.ondas.push({id:'00000000-0000-4000-8000-00000000c001',wn:'8001',operador_id:'00000000-0000-4000-8000-0000000000b1',galpao_id:G1,tipo:'Vários artigos',quantidade:2,status:0,registrada_em:new Date().toISOString()});
+ const pa=await page(b,db);await login(pa,'adm@x.com','senha1234');await pa.click('.tab[data-t="prod"]');await pa.waitForTimeout(300);
+ ok(await pa.isVisible('#prDisB'),'admin deveria ver Distribuição');await pa.click('#prsub [data-pr="dis"]');await pa.waitForTimeout(150);
+ await pa.fill('[data-pdt="1"] [name="s"]','15:00');await pa.click('[data-pdt="1"] [type="submit"]');await pa.waitForTimeout(400);ok(db.pt[0].saida==='15:00','turno não salvo: '+JSON.stringify(db.pt[0]));
+ await pa.fill('#pdDq','Ana');await pa.locator('#pdDl [data-pded]').first().click();await pa.check('.pdEd input[name="pdA"][value="mezanino"]');await pa.check('.pdEd input[name="pdX"][value="maquina"]');
+ await pa.click('.pdEd [type="submit"]');await pa.waitForTimeout(450);ok(db.pa.length===1&&db.pa[0].andar==='mezanino'&&db.pa[0].criado_por==='adm@x.com','posto: '+JSON.stringify(db.pa));
+ ok((await pa.textContent('#pdDl')).includes('Mezanino'),'lista não atualizou');
+ const p=await page(b,db);await p.click('.tab[data-t="prod"]');await p.waitForTimeout(300);ok(!(await p.isVisible('#prDisB')),'público vendo Distribuição');
+ await p.fill('#pdP','CL001');await p.waitForTimeout(120);ok(await p.isVisible('#pdW'),'campo da onda');ok((await p.textContent('#pdWho')).includes('Mezanino'),'posto não aparece');
+ for(const w of ['08001','9002','9002']){await p.fill('#pdW',w);await p.press('#pdW','Enter');await p.waitForTimeout(250)}
+ ok(db.pb.length===2,'bipagens: '+db.pb.length);ok(db.pp.length===1,'presenças: '+db.pp.length);ok((await p.textContent('#pdMsg')).includes('já embalada'),'sem aviso de repetida');
+ const L=await p.textContent('#pdL');ok(L.includes('Coletada')&&L.includes('Não coletada'),'status: '+L);
+ const pg=await page(b,db);await login(pg,'g2@x.com','senha1234');const r=await pg.evaluate(async()=>{try{await api("/rest/v1/rpc/prod_atribuir",{method:"POST",body:{p_operador:"00000000-0000-4000-8000-0000000000b1",p_andar:"terreo",p_atividade:"mesa",p_turno:1,p_entrada:null,p_saida:null,p_situacao:"ativo",p_desde:new Date().toISOString()}});return"passou"}catch(e){return e.status}});
+ ok(r===403,'gestor de outro galpão conseguiu distribuir: '+r);ok(db.pa.length===1,'posto alterado por gestor sem permissão')});
+
+await T('S96 Produção sem internet: a onda fica pendente no aparelho e é enviada quando a conexão volta, sem duplicar',async()=>{const db=banco();
+ db.pa=[{id:'a1',operador_id:'00000000-0000-4000-8000-0000000000b1',andar:'terreo',atividade:'mesa',turno_id:1,entrada:null,saida:null,situacao:'ativo',inicio:new Date(Date.now()-36e5).toISOString(),fim:null}];
+ const p=await page(b,db);await p.click('.tab[data-t="prod"]');await p.waitForTimeout(300);await p.fill('#pdP','CL001');await p.waitForTimeout(120);
+ db.down=true;await p.fill('#pdW','7777');await p.press('#pdW','Enter');await p.waitForTimeout(300);
+ ok((await p.textContent('#pdL')).includes('Pendente'),'não ficou pendente');ok(db.pb.length===0,'gravou com servidor fora');
+ const fila=await p.evaluate(()=>JSON.parse(localStorage.getItem('rcondas.prodFila')||'[]').length);ok(fila===1,'fila '+fila);
+ db.down=false;await p.evaluate(()=>pdFilaEnviar());await p.waitForTimeout(400);await p.evaluate(()=>pdFilaEnviar());await p.waitForTimeout(300);
+ ok(db.pb.length===1,'bipagens depois de voltar: '+db.pb.length);ok((await p.textContent('#pdL')).includes('Não coletada'),'status depois do envio');
+ ok(await p.evaluate(()=>!localStorage.getItem('rcondas.prodFila')),'fila não esvaziou')});
+
 await b.close();
 const w=Math.max(...R.map(r=>r[1].length));for(const r of R)console.log((r[0]==='PASS'?'✅':'❌')+' '+r[1].padEnd(w)+'  '+r[2]);
 console.log(`\n${R.filter(r=>r[0]==='PASS').length}/${R.length} passaram`)})();
