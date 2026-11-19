@@ -756,7 +756,7 @@ await T("99 Produção individual: gráfico de produtividade com meta individual
  const p=await page(b,st);
  const r=await p.evaluate(()=>{MT()['Galpão 1']=400;$("#gal").value="Galpão 1";$("#turnoF").value="";go('ind');const tabs=[...document.querySelectorAll('#gsub button')].map(x=>x.textContent);individual();document.querySelector('[data-ivw="graf"]').click();
   const rows=[...document.querySelectorAll('.pgt tr')].map(t=>[...t.children].map(c=>c.textContent.trim()).join('|'));return{n:S.ops.filter(o=>o.g==='Galpão 1').length,tabs,rows,bars:document.querySelectorAll('.pgv rect').length,lines:document.querySelectorAll('.pgv path').length}});
- ok(r.tabs[0]==='Produção individual'&&r.tabs[1]==='Produção da equipe','abas: '+r.tabs);
+ ok(r.tabs[0]==='Produção coleta'&&r.tabs.length===3,'abas: '+r.tabs);
  ok(r.bars===r.n&&r.lines===1,'barras e linhas: '+JSON.stringify(r));
  ok(/^1º\|Ana Souza\|120\|100\|120%\|30%$/.test(r.rows[1]),'Ana: '+r.rows[1]);ok(/^2º\|Bruno Lima\|80\|100\|80%\|20%$/.test(r.rows[2]),'Bruno: '+r.rows[2]);
  const r2=await p.evaluate(()=>{const s=document.querySelector('#pgOrd');s.value='alfa';s.dispatchEvent(new Event('change',{bubbles:true}));return[...document.querySelectorAll('.pgt tr')].slice(1,-1).map(t=>t.children[1].textContent.trim())});

@@ -484,6 +484,7 @@ body[data-v=cfg] #turnoF,body[data-v=cfg] #gal,body[data-v=cfg] #day{display:non
 .pdSeg label:has(input:checked){border-color:var(--a);background:color-mix(in srgb,var(--a) 12%,var(--card))}
 .pdSeg input{accent-color:var(--a)}
 .pdTop{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;margin-bottom:12px}.pdTop .ctl{margin:0}
+#coBody[data-cv="eq"] [data-cov="tu"],#coBody[data-cv="tu"] [data-cov="eq"]{display:none}
 .pdTabs{display:inline-flex;gap:4px;flex-wrap:wrap}.pdTabs button{all:unset;cursor:pointer;padding:8px 14px;border:1px solid var(--line);border-radius:4px;font:600 13.5px var(--fb);color:var(--mut);background:var(--card)}
 .pdTabs button.on{background:var(--ink);color:var(--card);border-color:var(--ink)}.pdTabs button:focus-visible{outline:2px solid var(--a);outline-offset:2px}
 .pdChipsP{margin-bottom:12px}.pdKp .placar{margin-top:0}.pdGrid{margin-top:12px}.pdGrid .pdWide{grid-column:1/-1}
@@ -636,9 +637,10 @@ body[data-v=cfg] #turnoF,body[data-v=cfg] #gal,body[data-v=cfg] #day{display:non
 
 <!-- ======================= INDIVIDUAL ======================= -->
 <section id="ind" class="hide">
- <div class="sub" id="gsub"><button data-gs="mi" class="on">Produção individual</button><button data-gs="mc">Produção da equipe</button><button data-gs="chk">Presença</button><button data-gs="pd" id="gsPd">Embalagem</button></div>
+ <div class="sub" id="gsub"><button data-gs="co" class="on">Produção coleta</button><button data-gs="chk">Presença</button><button data-gs="pd" id="gsPd">Embalagem</button></div>
+ <div class="pdTabs" id="coSeg" role="group" aria-label="Ver a produção da coleta" style="margin-bottom:12px"><button type="button" data-gs="mc" data-cv="eq">Equipe</button><button type="button" data-gs="mc" data-cv="tu">Por turno</button><button type="button" data-gs="mi" class="on">Individual</button></div>
  <div class="ctl" style="margin-bottom:12px"><select id="iOp" aria-label="Operador"></select><select id="iPer" aria-label="Período"><option value="1">Dia selecionado</option><option value="7">Últimos 7 dias</option><option value="30">Últimos 30 dias</option><option value="90">Últimos 90 dias</option></select><button class="btn" id="iPrint" type="button">Imprimir folha</button></div>
- <div id="mgStatus" class="legend hide" role="status"></div><div id="iBody"></div><div id="coBody" class="hide"></div><div id="ckBody" class="hide"></div>
+ <div id="mgStatus" class="legend hide" role="status"></div><div id="iBody"></div><div id="coBody" class="hide" data-cv="eq"></div><div id="ckBody" class="hide"></div>
  <div id="pdEqV" class="hide">
  <div class="pdTop"><div class="pdTabs" id="pdEqSeg" role="group" aria-label="Visão da embalagem"><button type="button" data-pde="eq" class="on">Equipe</button><button type="button" data-pde="ind">Individual</button><button type="button" data-pde="pes">Pessoas e turnos</button></div>
   <div class="ctl" id="pdEqCtl"><select id="pdPer" aria-label="Período da embalagem"><option value="1">Dia selecionado</option><option value="7">Últimos 7 dias</option><option value="30">Últimos 30 dias</option></select><select id="pdPs" aria-label="Pessoa" class="hide"></select></div></div>
@@ -1711,7 +1713,7 @@ $("#ckBody").addEventListener("click",e=>{const b=e.target.closest("[data-ck]");
  const c=e.target.closest(".wkc");if(c)wkAbrir(c.dataset.m,c.dataset.d)});
 $("#ckBody").addEventListener("input",e=>{if(e.target.id!=="wkQ")return;WKQ=e.target.value;checking();const i=$("#wkQ");if(i){i.focus();i.setSelectionRange(i.value.length,i.value.length)}});
 /* abre a pessoa no dia escolhido na aba Meta individual */
-async function wkAbrir(m,d){$("#day").value=d;$("#iPer").value="1";$('#gsub [data-gs="mi"]').click();await loadManagement();$("#iOp").value=m;individual()}
+async function wkAbrir(m,d){$("#day").value=d;$("#iPer").value="1";gsSel("mi");await loadManagement();$("#iOp").value=m;individual()}
 const PHX_CAMPO={saida:'horário da saída',cancelado_em:'cancelamento',observacao:'observação',data_ini:'data inicial',data_fim:'data final',horario_ini:'horário inicial',horario_fim:'horário final',tipo:'tipo',inicio:'início do turno',fim:'término do turno'};
 /* histórico de presença da pessoa (registros, baixas e alterações de turno) */
 function mgHistPresenca(o){
@@ -1969,19 +1971,23 @@ function coletiva(){
  const tRows=[1,2].filter(x=>!t||String(x)===t).map(x=>{const os=data.ops.filter(o=>o.t===x&&(g==='__all'||o.g===g)&&(!o.excluido||data.waves.some(w=>w.op===o.m)));
   const per=os.map(o=>{const sp=mgSoma(data.days.map(d=>mgSplit(o,d,data.byOpDay.get(d+'|'+o.m)||[])));return{o,sp,ativo:sp.nO+sp.xO>0}}),z=mgSoma(per.map(q=>q.sp));
   return{x,cad:os.length,at:per.filter(q=>q.ativo).length,xp:per.filter(q=>q.sp.xO>0).length,z}}),tz=mgSoma(tRows.map(r=>r.z));
+ const tot2=P.reduce((s2,w)=>s2+w.qty,0),tPr=[1,2].filter(x=>!t||String(x)===t).map(x=>({n:x+'º turno',h:turnoBase(x,g!=='__all'?g:null),Q:P.filter(w=>(opmap.get(w.op)||{}).t===x)}));
+ if(!t){const Q=P.filter(w=>![1,2].includes((opmap.get(w.op)||{}).t));if(Q.length)tPr.push({n:'Sem turno no cadastro',Q})}
+ const prt=`<div class="card" id="coPorTurno"><h2>Produção por turno <small class="legend" style="margin:0">${t?t+'º turno':'todos os turnos'}${g==='__all'?'':', '+esc(g)}</small></h2>`+(P.length?tPr.map(r=>{const u=r.Q.reduce((s2,w)=>s2+w.qty,0),pe=new Set(r.Q.map(w=>w.op)).size,pc=tot2?u/tot2*100:0;
+  return`<div class="gal"><div class="r"><b>${r.n}${r.h?` <small style="font-weight:400;color:var(--mut)">${r.h.ini}h às ${r.h.fim}h</small>`:''}</b><span>${fmt(u)} <small>unidades</small></span></div><div class="bar"><b style="width:${pc}%"></b></div><div class="legend" style="margin-top:4px">${fmt(r.Q.length)} ${r.Q.length===1?'onda':'ondas'}, ${fmt(pe)} ${pe===1?'pessoa':'pessoas'}${pe?', média de '+fmt(u/pe)+' unidades por pessoa':''}${tot2&&tPr.length>1?', '+Math.round(pc)+'% do total':''}</div></div>`}).join(''):'<div class="empty">Sem produção no período.</div>')+`</div>`;
  const trn=`<div class="card" id="coTurnos" style="margin-top:12px"><h2>Turnos e hora extra da equipe <small class="legend" style="margin:0">${t?t+'º turno':'todos os turnos'}${g==='__all'?'':' · '+esc(g)}</small></h2><div class="tw"><table class="tp"><tr><th>Turno</th><th>Pessoas com produção</th><th>Cadastradas</th><th>Horário normal</th><th>Hora extra</th><th>Unidades na hora extra</th><th>Pessoas com hora extra</th></tr>`
   +tRows.map(r=>`<tr><td><b>${r.x}º turno</b><br><small>${turnoBase(r.x,g!=='__all'?g:null).ini}h às ${turnoBase(r.x,g!=='__all'?g:null).fim}h</small></td><td>${fmt(r.at)}</td><td>${fmt(r.cad)}</td><td>${mgOT(r.z.nO,r.z.nMs)}</td><td>${mgOT(r.z.xO,r.z.xMs)}</td><td>${fmt(r.z.xQ)}${r.z.nQ+r.z.xQ?` <small>(${Math.round(r.z.xQ/(r.z.nQ+r.z.xQ)*100)}%)</small>`:''}</td><td>${fmt(r.xp)}</td></tr>`).join('')
   +(tRows.length>1?`<tr class="tot"><td><b>Total</b></td><td><b>${fmt(tRows.reduce((a,r)=>a+r.at,0))}</b></td><td><b>${fmt(tRows.reduce((a,r)=>a+r.cad,0))}</b></td><td>${mgOT(tz.nO,tz.nMs)}</td><td>${mgOT(tz.xO,tz.xMs)}</td><td><b>${fmt(tz.xQ)}</b></td><td><b>${fmt(tRows.reduce((a,r)=>a+r.xp,0))}</b></td></tr>`:'')
   +`</table></div><div class="legend">Turno do cadastro de cada pessoa. Tempo somado entre bipagens dentro e fora do turno (com a tolerância), sem o almoço e sem pausas acima de ${GAP()} min.</div></div>`;
  const meta=`<div class="card" id="coMeta"><h2>Meta coletiva</h2>${canCompare?`<div class="cobig"><b class="num">${fmt(pct)}%</b><span>${fmt(totM)} de ${fmt(configured)} unidades · ${totM>=configured?'passou '+fmt(totM-configured):'faltam '+fmt(configured-totM)}${total>totM?' · retrabalho ('+fmt(total-totM)+') fica fora':''}</span></div><div class="bar cob"><b style="width:${Math.min(pct,100)}%;--c:${pct>=100?'var(--k)':'var(--g)'}"></b></div>`:`<div class="empty" style="padding:10px 0">${t?'A meta cadastrada vale para o dia inteiro. Escolha "Todos os turnos" no topo para comparar.':missing.length?'Cadastre a meta diária dos galpões em Config › Geral.':'Sem dias com operação no período.'}</div>`}
   <table class="tp" style="margin-top:10px"><tr><th>Galpão</th><th>Unidades sem retrabalho</th><th>Meta</th><th>%</th></tr>${porGal.map(x=>`<tr><td>${esc(x.k)}</td><td>${fmt(x.q)}</td><td>${x.m&&!t?fmt(x.m):'—'}</td><td>${x.m&&!t?Math.round(x.q/x.m*100)+'%':'—'}</td></tr>`).join('')}</table></div>`;
- target.innerHTML=`<dl class="stats solo">`+mgK('Produção coletiva',fmt(total),'unidades concluídas')+mgK('Pessoas com bipagem',fmt(people),'no período')+mgK('Ondas concluídas',fmt(P.length),people?'média de '+(P.length/people).toLocaleString('pt-BR',{maximumFractionDigits:1})+' por pessoa':'compartilhadas pela equipe')+mgK('Procurando',fmt(W.filter(w=>w.st===1).length),fmt(W.filter(w=>w.st===1).reduce((a,w)=>a+w.qty,0))+' unidades')+mgK('Hora extra',tz.xMs?hh(tz.xMs):'—',fmt(tz.xO)+(tz.xO===1?' onda':' ondas')+' · '+fmt(tz.xQ)+' un.')+mgK('Meta coletiva',canCompare?fmt(configured):'—',t?'escolha todos os turnos':missing.length?'configure a meta dos galpões':'dias com operação')+mgK('Atingimento',canCompare?fmt(pct)+'%':'—',canCompare?'da meta coletiva':'sem comparação disponível')+`</dl>
+ target.innerHTML=`<div data-cov="eq"><dl class="stats solo">`+mgK('Produção coletiva',fmt(total),'unidades concluídas')+mgK('Pessoas com bipagem',fmt(people),'no período')+mgK('Ondas concluídas',fmt(P.length),people?'média de '+(P.length/people).toLocaleString('pt-BR',{maximumFractionDigits:1})+' por pessoa':'compartilhadas pela equipe')+mgK('Procurando',fmt(W.filter(w=>w.st===1).length),fmt(W.filter(w=>w.st===1).reduce((a,w)=>a+w.qty,0))+' unidades')+mgK('Hora extra',tz.xMs?hh(tz.xMs):'—',fmt(tz.xO)+(tz.xO===1?' onda':' ondas')+' · '+fmt(tz.xQ)+' un.')+mgK('Meta coletiva',canCompare?fmt(configured):'—',t?'escolha todos os turnos':missing.length?'configure a meta dos galpões':'dias com operação')+mgK('Atingimento',canCompare?fmt(pct)+'%':'—',canCompare?'da meta coletiva':'sem comparação disponível')+`</dl>
  <div class="pfg"><div class="card"><h2>Produção da equipe ${single?'por hora':'por dia'} <small class="legend" style="margin:0">a barra verde é o pico</small></h2>${ch}</div>${meta}</div>
- ${coTop(P)}
- <h3 class="coSec">Turnos</h3>${trn}
- <h3 class="coSec">Detalhe por tipo</h3><div class="card"><h2>Total por tipo e tempo entre ondas</h2><div class="tw">${coTipos(W,P,people)}</div>
+ ${coTop(P)}</div>
+ <div data-cov="tu">${prt}${trn}</div>
+ <div data-cov="eq"><h3 class="coSec">Detalhe por tipo</h3><div class="card"><h2>Total por tipo e tempo entre ondas</h2><div class="tw">${coTipos(W,P,people)}</div>
  <details class="info"><summary>Como os números são calculados</summary>Somamos as unidades concluídas da equipe, sem ranking de pessoas. A meta é a soma da meta diária atual dos galpões nos dias com bipagem e no dia de hoje; como ela cobre o dia inteiro, a comparação só aparece com todos os turnos. Tempo por conjunto: da bipagem de um conjunto de ondas (bipadas no mesmo instante) até a seguinte do mesmo operador, sem contar o almoço e ignorando pausas acima de ${GAP()} min. A média por pessoa divide o total pelas ${fmt(people)} pessoas com bipagem. Faltas e horas extras não geram descontos automáticos.</details></div>
- ${missing.length?`<div class="legend">Galpões sem meta diária: ${missing.map(esc).join(', ')}. Cadastre em Config › Geral.</div>`:''}`;
+ ${missing.length?`<div class="legend">Galpões sem meta diária: ${missing.map(esc).join(', ')}. Cadastre em Config › Geral.</div>`:''}</div>`;
 }
 
 
@@ -2573,7 +2579,14 @@ $("#csub").onclick=e=>{const c=e.target.dataset.c;if(!c)return;csub=c;$$("#csub 
 $("#iPrint").onclick=imprimirFolhas;$("#iOp").onchange=()=>{mgShown=100;individual()};$("#iPer").onchange=()=>{mgShown=100;individual();coletiva();loadManagement()};
 $("#iBody").addEventListener("click",e=>{if(e.target.id==="mgMore"){mgShown+=100;individual()}if(e.target.id==="mgTurnoSave")mgSalvarTurno();if(e.target.id==="presSalvar")presSalvar();if(e.target.id==="presBaixa")presBaixa();if(e.target.id==="presAtrSalvar")presAtrSalvar();if(e.target.dataset&&e.target.dataset.cancel)presCancelar(e.target.dataset.cancel)});
 const hojeSemana=()=>mondayOf(dk(Date.now()));
-$("#gsub").onclick=e=>{const x=e.target.dataset.gs;if(!x)return;gsub=x;$$("#gsub button").forEach(b=>b.classList.toggle("on",b===e.target));$("#iBody").classList.toggle("hide",x!=="mi");$("#coBody").classList.toggle("hide",x!=="mc");$("#ckBody").classList.toggle("hide",x!=="chk");$("#iOp").classList.toggle("hide",x!=="mi");$("#iPrint").classList.toggle("hide",x!=="mi");$("#iPer").classList.toggle("hide",x==="chk"||x==="pd");$("#pdEqV").classList.toggle("hide",x!=="pd");$("#iOp").classList.toggle("hide",x!=="mi");if(x==="pd"){$("#mgStatus").classList.add("hide");pdAbrirDis()}else if(x==="chk")ckEntrar();else if(x==="mc"){coletiva();loadManagement({cache:true})}else{individual();loadManagement({cache:true})}};
+let COV="in";
+function gsSel(x,cv){if(x==="co"){x=COV==="in"?"mi":"mc";cv=COV}if(x==="mi")COV="in";else if(x==="mc")COV=cv||(COV==="in"?"eq":COV);gsub=x;
+ $$("#gsub button").forEach(b=>b.classList.toggle("on",b.dataset.gs===x||(b.dataset.gs==="co"&&(x==="mi"||x==="mc"))));
+ $$("#coSeg button").forEach(b=>{const on=(x==="mi"&&b.dataset.gs==="mi")||(x==="mc"&&b.dataset.cv===COV);b.classList.toggle("on",on);b.setAttribute("aria-pressed",on)});
+ $("#coSeg").classList.toggle("hide",x!=="mi"&&x!=="mc");$("#coBody").dataset.cv=COV==="tu"?"tu":"eq";try{sideSubs()}catch(e){}
+$("#iBody").classList.toggle("hide",x!=="mi");$("#coBody").classList.toggle("hide",x!=="mc");$("#ckBody").classList.toggle("hide",x!=="chk");$("#iOp").classList.toggle("hide",x!=="mi");$("#iPrint").classList.toggle("hide",x!=="mi");$("#iPer").classList.toggle("hide",x==="chk"||x==="pd");$("#pdEqV").classList.toggle("hide",x!=="pd");$("#iOp").classList.toggle("hide",x!=="mi");if(x==="pd"){$("#mgStatus").classList.add("hide");pdAbrirDis()}else if(x==="chk")ckEntrar();else if(x==="mc"){coletiva();loadManagement({cache:true})}else{individual();loadManagement({cache:true})}}
+$("#gsub").onclick=e=>{const b=e.target.closest("[data-gs]");if(b)gsSel(b.dataset.gs)};
+$("#coSeg").onclick=e=>{const b=e.target.closest("[data-gs]");if(b)gsSel(b.dataset.gs,b.dataset.cv)};
 
 document.addEventListener("click",e=>{const d=e.target.dataset,t=e.target;
  const tyB=t.closest&&t.closest("[data-ty]");if(tyB){const next=tyB.dataset.ty;

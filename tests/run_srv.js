@@ -369,10 +369,10 @@ await T('S30 Lista de presença: marcar tira o nome da lista e preenche a semana
  ok(!(await p.$('#ckBody .esq')),'ficou preso no carregamento');
  ok(await p.$eval('#ckBody .wkc[data-m="CL002"][data-d="'+HJ+'"]',e=>e.textContent.includes('Presente')),'semana não mostra Presente');
  await p.click('#ckBody [data-ckv="chk"]');await p.waitForTimeout(700);
- await p.evaluate(()=>document.querySelector('#gsub [data-gs="mi"]').click());await p.waitForTimeout(800);
+ await p.evaluate(()=>document.querySelector('#coSeg [data-gs="mi"]').click());await p.waitForTimeout(800);
  ok(!(await p.$('#iBody .esq')),'Meta individual ficou presa no carregamento depois da Lista de presença');
  ok((await p.textContent('#iBody')).replace(/\s+/g,' ').length>40,'Meta individual vazia');
- await p.evaluate(()=>document.querySelector('#gsub [data-gs="mc"]').click());await p.waitForTimeout(800);
+ await p.evaluate(()=>document.querySelector('#coSeg [data-gs="mc"]').click());await p.waitForTimeout(800);
  ok(!(await p.$('#coBody .esq')),'Meta coletiva ficou presa no carregamento');
  await p.evaluate(()=>document.querySelector('#gsub [data-gs="chk"]').click());await p.waitForTimeout(700);
  await p.click('#ckBody [data-ckun]');await p.waitForTimeout(500);
