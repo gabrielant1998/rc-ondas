@@ -491,6 +491,15 @@ body[data-v=cfg] #turnoF,body[data-v=cfg] #gal,body[data-v=cfg] #day{display:non
 @media(min-width:1200px){.pdGrid{grid-template-columns:repeat(2,minmax(0,1fr));grid-template-areas:none}}
 .pdCh{overflow-x:auto}.pdLeg{margin-top:6px}.pdLeg i.pdDash{width:16px;height:0;border-top:2px dashed var(--o);background:none;vertical-align:3px}
 .pdUn{display:flex;flex-direction:column;gap:3px}.pdUn small{color:var(--mut);font-size:12px}.pdMetaF{align-items:start}.pdMetaAc{grid-column:1/-1}
+.pnVk{margin-bottom:12px}.pnMain{margin-bottom:12px}.pnVLeg .ln{display:inline-block;width:16px;height:3px;border-radius:2px;vertical-align:3px}
+.pnVG{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;align-items:start}@media(max-width:1000px){.pnVG{grid-template-columns:minmax(0,1fr)}}
+.pnCh2{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px}.pnCh2 h2{margin:0}.pnCh2 select{width:auto;min-height:36px;font-size:14px;padding:4px 30px 4px 10px;max-width:100%}
+.pnSel{display:flex;gap:6px;flex-wrap:wrap;min-width:0}.pnSel select{max-width:220px}
+.pnRosca,.pnRadar{max-width:360px;margin:0 auto}.pnRadar{max-width:520px}.pnRk6 .num{font-size:22px}.pnRosca svg,.pnRadar svg{width:100%;height:auto;display:block}.pnRosca text{font-weight:700}
+.pnLeg2{margin-top:10px}.pnLr{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:10px;align-items:center;padding:7px 0;border-bottom:1px solid var(--line);font-size:14px}
+.pnLr .sq{width:12px;height:12px;border-radius:3px;display:inline-block}.pnLr small{display:block;color:var(--mut);font-size:12.5px}.pnLr em{font-style:normal;font-weight:700;text-align:right;color:var(--ink)}.pnLr em small{display:inline;font-weight:400}
+.pnLg{font-size:12.5px;color:var(--mut);margin:10px 0 0;font-weight:700}
+.pnRk6{grid-template-columns:repeat(auto-fit,minmax(130px,1fr));margin-top:8px}
 .pnGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px;align-items:start}@media(max-width:1000px){.pnGrid{grid-template-columns:minmax(0,1fr)}}
 .pnH{display:flex;align-items:center;gap:8px;font:700 19px var(--fd);margin:0 0 10px}.pnDot{width:10px;height:10px;border-radius:2px;display:inline-block}
 .pnLen{margin-top:8px;font-size:14px;color:var(--ink)}.pnDir{margin:10px 0 4px;font-weight:600}.pdSt4{grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
@@ -3303,13 +3312,110 @@ function pnRender(){const seg=$("#pnSeg");if(!seg)return;const ok=pnPode(),v=pnV
  if(PNE.key!==d){el.innerHTML='<div class="skel" aria-label="Carregando"><i></i><i></i></div>';return}
  if(PNE.err){el.innerHTML=`<div class="card"><div class="empty">Não foi possível carregar a Embalagem: ${esc(PNE.err)}</div></div>`;return}
  const D=pnColDados(),E=pnEmbDados(d),fl=pnRanking(E,d)+`<div class="card pnFlux" style="margin-top:12px"><h2>Fila entre Coleta e Embalagem</h2>${pnFluxo(D,E)}</div>`;
- el.innerHTML=v==="duo"?`<div class="pnGrid"><section class="pnSide" aria-label="Coleta"><h2 class="pnH"><i class="pnDot" style="background:var(--g)"></i>Coleta</h2>${pnColHtml(D)}</section><section class="pnSide" aria-label="Embalagem"><h2 class="pnH"><i class="pnDot" style="background:var(--k)"></i>Embalagem</h2>${pnEmbHtml(E)}</section></div>${fl}`
-  :`<section class="pnSide" aria-label="Embalagem"><h2 class="pnH"><i class="pnDot" style="background:var(--k)"></i>Embalagem</h2>${pnEmbHtml(E)}</section>${fl}`}
+ const V=v==="duo"?pnVisDados(D,E):null;PNVD=V?{V,D,E}:null;
+ el.innerHTML=v==="duo"?`<div id="pnVis">${pnVisHtml(V,D,E)}</div><div class="pnGrid" style="margin-top:18px"><section class="pnSide" aria-label="Coleta"><h2 class="pnH"><i class="pnDot" style="background:var(--g)"></i>Coleta</h2>${pnColHtml(D)}</section><section class="pnSide" aria-label="Embalagem"><h2 class="pnH"><i class="pnDot" style="background:var(--k)"></i>Embalagem</h2>${pnEmbHtml(E)}</section></div>${fl}`
+  :`<section class="pnSide" aria-label="Embalagem"><h2 class="pnH"><i class="pnDot" style="background:var(--k)"></i>Embalagem</h2>${pnEmbHtml(E)}</section>${fl}`;if(V){pnRadarFill();pnPresCarregar(d)}}
 /* gargalo da Coleta no painel antigo (no lugar do funil, tempo × unidades e mix) */
 function pnGargaloCol(){const el=$("#pGarB");if(!el)return;const D=pnColDados(),pp=pnItens(D.M,true),PR=S.waves.filter(w=>w.st===1&&inView(w)&&(!D.g||w.gal===D.g)),now=Date.now(),old=PR.length?Math.max(...PR.map(w=>now-w.ts))/6e4:0;
  el.innerHTML=`<dl class="stats pdSt4">`+pdK2("Unidades por pessoa por hora",nf1(pp.length?D.tot/Math.max(1,pp.reduce((a,x)=>a+x.p,0)):0),"média do dia")+pdK2("Procurando",fmt(PR.length),PR.length?"a mais antiga há "+(old>=60?Math.floor(old/60)+" h "+Math.round(old%60)+" min":Math.round(old)+" min"):"nenhuma parada")+`</dl>`
   +pdBarras(pp,{w:520,dec:1,serie:"Unidades por pessoa",un:["unidade","unidades"],vazio:"Nenhuma onda concluída no período.",aria:"Unidades por pessoa por hora"})+pnLenta(pp,"unidades")
   +`<div class="legend">Horas com menos unidades por pessoa mostram onde a equipe desacelerou.</div>`}
+
+/* ---------- Painel geral: Coleta + Embalagem (gráfico combinado, rosca com pizza e radar individual) ---------- */
+var PNRM="c",PNRS="",PNRP="",PNVD=null,PNPM={key:"",rows:null,ld:false};
+try{PNRM=localStorage.getItem("rcondas.pnrm")||"c"}catch(e){}
+var PN_SET=[["col","Coleta","var(--g)"],["mezanino-mesa","Mesa / Mezanino","#0b8f7e"],["mezanino-maquina","Máquina / Mezanino","#d18a00"],["terreo-mesa","Mesa / Térreo","#6a55d8"],["terreo-maquina","Máquina / Térreo","#d4537e"]];
+function pnSetN(k){const s=PN_SET.find(x=>x[0]===k);return s?s[1]:"—"}
+function pnTurnoMin(v){if(v==null||v==="")return null;if(typeof v==="number")return v*60;const s=String(v);return s.includes(":")?hm2m(s.slice(0,5)):+s*60}
+function pnPont(p){if(!isFinite(p.ini))return{ini:null,at:null};let hh=null;
+ if(p.set==="col"){const T=S.cfg&&S.cfg.turnos&&S.cfg.turnos[p.t];hh=T?pnTurnoMin(T.ini):null}
+ else{const a=pdPosto(p.oid,p.ini);if(a){const h=a.ent||pdTHor(pdTurno(a.tu),p.ini)[0];hh=h?hm2m(h):null}}
+ if(hh==null||isNaN(hh))return{ini:p.ini,at:null};const d=new Date(p.ini);return{ini:p.ini,at:d.getHours()*60+d.getMinutes()-hh}}
+function pnPontScore(x){if(!x||x.at==null)return null;const tol=+(S.cfg&&S.cfg.tol)||15;return x.at<=tol?100:Math.max(0,100-(x.at-tol)*2)}
+function pnVisDados(D,E){const UM=E.UM,H=new Map(),hx=h=>{let x=H.get(h);if(!x)H.set(h,x={c:0,e:0,p:new Set()});return x},eu=b=>b.q?b.q:(UM.get(normWN(b.wn||""))||0);
+ D.P0.forEach(w=>{const x=hx(Math.floor((w.fin||w.ts)/36e5)*36e5);x.c+=+w.qty||0;x.p.add("c:"+w.op)});
+ E.B.forEach(b=>{const x=hx(Math.floor(b.em/36e5)*36e5);x.e+=eu(b);x.p.add("e:"+b.oid)});
+ const P=new Map(),stP=new Map(E.st.P.map(p=>[p.oid,p]));
+ D.P0.forEach(w=>{const k="c:"+w.op;let p=P.get(k);if(!p){const o=opOf(w.op);P.set(k,p={k,set:"col",nm:o?o.n:(w.opn||w.op),g:w.gal,t:o?o.t:null,u:0,n:0,hs:new Set(),ini:Infinity})}
+  p.u+=+w.qty||0;p.n++;p.hs.add(Math.floor((w.fin||w.ts)/36e5));p.ini=Math.min(p.ini,w.ts)});
+ E.B.slice().sort((a,b)=>a.em-b.em).forEach(b=>{const k="e:"+b.oid;let p=P.get(k);if(!p){const s=stP.get(b.oid),o=pdOp(b.oid);P.set(k,p={k,oid:b.oid,set:"",nm:(s&&s.nm)||b.nm||(o?o.n:"—"),u:0,n:0,hs:new Set(),ini:Infinity})}
+  p.set=b.andar+"-"+b.at;p.u+=eu(b);p.n+=b.q||1;p.hs.add(Math.floor(b.em/36e5));p.ini=Math.min(p.ini,b.em)});
+ P.forEach(p=>{p.h=p.hs.size;if(p.set==="col"){const m=+((MI()[p.g]||{}).q)||0;p.meta=m;p.pc=m?p.u/m*100:null}else{const s=stP.get(p.oid);p.meta=s?s.meta:0;p.pc=s&&s.meta?s.n/s.meta*100:null}p.pt=pnPont(p)});
+ const L=[...P.values()],sec=PN_SET.map(([k,nm,c])=>{const G=L.filter(p=>p.set===k),hit=G.filter(p=>p.pc!=null&&p.pc>=100).length,sem=G.filter(p=>p.pc==null).length;
+  if(k==="col")return{k,nm,c,u:D.tot,n:D.P0.length,pc:D.pc,falta:D.metaT&&!D.TF?Math.max(0,D.metaT-D.totM):null,fu:"un.",hit,tot:G.length,sem};
+  const q=E.st.Q.get(k)||{n:0,meta:0},u=E.B.filter(b=>b.andar+"-"+b.at===k).reduce((a,b)=>a+eu(b),0);
+  return{k,nm,c,u,n:q.n,pc:q.meta?q.n/q.meta*100:null,falta:q.meta?Math.max(0,q.meta-q.n):null,fu:"ondas",hit,tot:G.length,sem}});
+ return{H,P:L,sec}}
+function pnComboSvg(Hm){const hs=[...Hm.keys()].sort((a,b)=>a-b);if(!hs.length)return'<div class="empty">Nenhuma produção da Coleta ou da Embalagem neste dia.</div>';
+ const it=[],h0=Math.floor(Date.now()/36e5)*36e5;for(let h=hs[0];h<=hs[hs.length-1];h+=36e5){const x=Hm.get(h)||{c:0,e:0,p:new Set()};it.push({h,c:x.c,e:x.e,p:x.p.size,part:h===h0})}
+ const n=it.length,Wd=980,Ht=310,l=56,r=46,tp=26,bt=32,bw=(Wd-l-r)/n,mx=nice(Math.max(1,...it.map(x=>Math.max(x.c,x.e)))*1.12),mp=Math.max(4,Math.ceil(Math.max(1,...it.map(x=>x.p))*1.15/4)*4),
+  Y=v=>tp+(Ht-tp-bt)*(1-v/mx),Yp=v=>tp+(Ht-tp-bt)*(1-v/mp),X=i=>l+i*bw+bw/2,w=Math.max(4,Math.min(20,bw*.3)),step=Math.ceil(n/12),lbl=bw>=64;
+ let s=`<div class="pdCh"><svg class="ch" viewBox="0 0 ${Wd} ${Ht}" style="min-width:600px" role="img" aria-label="Unidades da Coleta e da Embalagem por hora, com a linha de pessoas que marcaram">`;
+ [0,.25,.5,.75,1].forEach(f=>{s+=`<line x1="${l}" x2="${Wd-r}" y1="${Y(mx*f)}" y2="${Y(mx*f)}" stroke="var(--line)"${f?' stroke-dasharray="2 4"':""}/><text x="${l-8}" y="${Y(mx*f)+4}" text-anchor="end">${fmt(mx*f)}</text><text x="${Wd-r+8}" y="${Yp(mp*f)+4}" style="fill:var(--o)">${fmt(mp*f)}</text>`});
+ it.forEach((x,i)=>{const hc=x.c?Math.max(1.5,Y(0)-Y(x.c)):0,he=x.e?Math.max(1.5,Y(0)-Y(x.e)):0,op=x.part?' opacity=".55"':"",hr=pnHr(x.h);
+  s+=`<g><title>${hr}${x.part?" (em andamento)":""}: Coleta ${fmt(x.c)} un., Embalagem ${fmt(x.e)} un., ${x.p} ${x.p===1?"pessoa":"pessoas"}</title><rect x="${X(i)-bw/2}" y="${tp}" width="${bw}" height="${Ht-tp-bt}" fill="transparent"/>`
+   +`<rect x="${(X(i)-w-1.5).toFixed(1)}" y="${(Y(0)-hc).toFixed(1)}" width="${w.toFixed(1)}" height="${hc.toFixed(1)}" rx="3" fill="var(--g)"${op}/><rect x="${(X(i)+1.5).toFixed(1)}" y="${(Y(0)-he).toFixed(1)}" width="${w.toFixed(1)}" height="${he.toFixed(1)}" rx="3" fill="var(--k)"${op}/>`
+   +(lbl&&x.c?`<text x="${(X(i)-w/2-1.5).toFixed(1)}" y="${(Y(x.c)-5).toFixed(1)}" text-anchor="middle" style="font-size:11px;fill:var(--ink)">${fmt(x.c)}</text>`:"")+(lbl&&x.e?`<text x="${(X(i)+w/2+1.5).toFixed(1)}" y="${(Y(x.e)-5).toFixed(1)}" text-anchor="middle" style="font-size:11px;fill:var(--ink)">${fmt(x.e)}</text>`:"")
+   +(i%step===0?`<text x="${X(i)}" y="${Ht-10}" text-anchor="middle">${hr}</text>`:"")+`</g>`});
+ s+=`<path d="${it.map((x,i)=>(i?"L":"M")+X(i).toFixed(1)+" "+Yp(x.p).toFixed(1)).join("")}" fill="none" stroke="var(--o)" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round" pointer-events="none"/>`
+  +it.map((x,i)=>`<circle cx="${X(i).toFixed(1)}" cy="${Yp(x.p).toFixed(1)}" r="4.5" fill="var(--o)" stroke="var(--card)" stroke-width="2" pointer-events="none"/>`).join("")+`</svg></div>`;
+ return s+`<div class="legend pdLeg pnVLeg"><span><i style="background:var(--g)"></i>Coleta (unidades, eixo da esquerda)</span><span><i style="background:var(--k)"></i>Embalagem (unidades, eixo da esquerda)</span><span><i class="ln" style="background:var(--o)"></i>Pessoas que marcaram (eixo da direita)</span></div>`}
+function pnArc(cx,cy,r0,r1,a0,a1){if(a1-a0>=Math.PI*2-1e-4)a1=a0+Math.PI*2-1e-4;const p=(r,a)=>[(cx+r*Math.sin(a)).toFixed(2),(cy-r*Math.cos(a)).toFixed(2)],lg=a1-a0>Math.PI?1:0,A=p(r1,a0),B=p(r1,a1);
+ if(r0<=0)return`M${cx} ${cy}L${A[0]} ${A[1]}A${r1} ${r1} 0 ${lg} 1 ${B[0]} ${B[1]}Z`;const C=p(r0,a1),Dd=p(r0,a0);return`M${A[0]} ${A[1]}A${r1} ${r1} 0 ${lg} 1 ${B[0]} ${B[1]}L${C[0]} ${C[1]}A${r0} ${r0} 0 ${lg} 0 ${Dd[0]} ${Dd[1]}Z`}
+const PN_LBL='style="fill:#fff;font-size:12px;paint-order:stroke;stroke:rgba(10,20,40,.55);stroke-width:3px;stroke-linejoin:round"';
+function pnRoscaHtml(V){const M=PNRM,sec=V.sec,tot=sec.reduce((a,s)=>a+s.u,0),cu=sec[0].u,eu=tot-cu;
+ if(!tot&&M==="c")return'<div class="empty">Nenhuma unidade da Coleta ou da Embalagem neste dia.</div>';
+ const cx=160,cy=160,R1=150,R0=104,RP=90,g=0.025,lab=(s,i)=>M==="c"?(tot?fmt(s.u/tot*100)+"%":""):M==="m"?(s.pc==null?"—":fmt(s.pc)+"%"):M==="p"?(s.tot-s.sem?s.hit+"/"+(s.tot-s.sem):"—"):(s.falta==null?"—":fmt(s.falta));
+ let s=`<div class="pnRosca"><svg viewBox="0 0 320 320" role="img" aria-label="Rosca por setor com pizza da Coleta e da Embalagem no centro">`,a=0;
+ if(M==="c"){sec.forEach(x=>{if(!x.u)return;const da=x.u/tot*Math.PI*2,a0=a+g/2,a1=a+da-g/2;s+=`<path d="${pnArc(cx,cy,R0,R1,a0,Math.max(a0+.001,a1))}" fill="${x.c}"><title>${x.nm}: ${fmt(x.u)} un. (${fmt(x.u/tot*100)}%)</title></path>`;
+   if(da>.32){const m=a+da/2;s+=`<text x="${(cx+(R0+R1)/2*Math.sin(m)).toFixed(1)}" y="${(cy-(R0+R1)/2*Math.cos(m)+4).toFixed(1)}" text-anchor="middle" ${PN_LBL}>${lab(x)}</text>`}a+=da})}
+ else{const da=Math.PI*2/sec.length;sec.forEach((x,i)=>{const a0=i*da+g/2,a1=(i+1)*da-g/2,f=M==="p"?(x.tot-x.sem?x.hit/(x.tot-x.sem):0):Math.min(1,(x.pc||0)/100),t=M==="m"?`${x.nm}: ${x.pc==null?"sem meta":fmt(x.pc)+"% da meta"}`:M==="p"?(x.tot-x.sem?`${x.nm}: ${x.hit} de ${x.tot-x.sem} ${x.tot-x.sem===1?"pessoa bateu":"pessoas bateram"} a meta`:`${x.nm}: sem meta`):`${x.nm}: ${x.falta==null?"sem meta":"faltam "+fmt(x.falta)+" "+x.fu}`;
+   s+=`<path d="${pnArc(cx,cy,R0,R1,a0,a1)}" fill="${x.c}" opacity=".22"><title>${t}</title></path>`+(f>0?`<path d="${pnArc(cx,cy,R0,R1,a0,a0+(a1-a0)*f)}" fill="${x.c}"><title>${t}</title></path>`:"");
+   const m=(a0+a1)/2;s+=`<text x="${(cx+(R0+R1)/2*Math.sin(m)).toFixed(1)}" y="${(cy-(R0+R1)/2*Math.cos(m)+4).toFixed(1)}" text-anchor="middle" ${PN_LBL}>${lab(x)}</text>`})}
+ if(tot){const pc=cu/tot,ac=pc*Math.PI*2,pie=[["Coleta",cu,"var(--gx)",0,ac],["Embalagem",eu,"var(--k)",ac,Math.PI*2]];
+  pie.forEach(([nm,v,c,a0,a1])=>{if(!v)return;s+=`<path d="${pnArc(cx,cy,0,RP,a0,a1)}" fill="${c}" stroke="var(--card)" stroke-width="2"><title>${nm}: ${fmt(v)} un. (${fmt(v/tot*100)}%)</title></path>`;
+   const m=(a0+a1)/2,r=a1-a0>=Math.PI*2-1e-3?0:RP*.52,x=cx+r*Math.sin(m),y=cy-r*Math.cos(m);s+=`<text x="${x.toFixed(1)}" y="${(y-10).toFixed(1)}" text-anchor="middle" ${PN_LBL}>${nm}</text><text x="${x.toFixed(1)}" y="${(y+6).toFixed(1)}" text-anchor="middle" ${PN_LBL} font-size="15">${fmt(v)}</text><text x="${x.toFixed(1)}" y="${(y+21).toFixed(1)}" text-anchor="middle" ${PN_LBL}>un. · ${fmt(v/tot*100)}%</text>`})}
+ else s+=`<circle cx="${cx}" cy="${cy}" r="${RP}" fill="var(--line)"/><text x="${cx}" y="${cy+4}" text-anchor="middle">Sem unidades</text>`;
+ s+=`</svg></div>`;
+ const val=x=>M==="c"?fmt(x.u)+" un.":M==="m"?(x.pc==null?"sem meta":fmt(x.pc)+"% da meta"):M==="p"?(!x.tot?"ninguém":x.tot-x.sem?x.hit+" de "+(x.tot-x.sem)+(x.sem?` <small>(${x.sem} sem meta)</small>`:""):"sem meta"):(x.falta==null?"sem meta":x.falta?"faltam "+fmt(x.falta)+" "+x.fu:"meta batida");
+ const row=x=>`<div class="pnLr"><i class="sq" style="background:${x.c}"></i><span><b>${x.nm}</b><small>${x.k==="col"?fmt(x.n)+(x.n===1?" onda":" ondas")+" · "+nf1(x.n?x.u/x.n:0)+" un. por onda":fmt(x.n)+(x.n===1?" onda ou embalagem":" ondas e embalagens")}</small></span><em>${val(x)}</em></div>`;
+ return s+`<div class="pnLeg2">${row(sec[0])}<div class="pnLg">Embalagem · ${fmt(eu)} un.</div>${sec.slice(1).map(row).join("")}</div>`
+  +`<div class="legend">${M==="c"?"Fatia = parte de cada setor no total de unidades do dia.":M==="m"?"Cada fatia cheia é 100% da meta do setor até agora. Coleta em unidades; postos da embalagem em ondas (meta por hora vezes as horas trabalhadas).":M==="p"?"Pessoas que já bateram a meta individual do dia, em cada setor. A meta da Coleta vem de Configurações, Metas; a da Embalagem, das metas por hora.":"Quanto falta para a meta do setor até agora: Coleta em unidades, postos da embalagem em ondas."} Embalagem lançada só por quantidade conta 1 unidade por embalagem.</div>`}
+function pnPresCarregar(d){if(PNPM.key===d&&(PNPM.rows||PNPM.ld))return;
+ if(!ON){const ini=dk(Date.parse(d+"T12:00:00")-29*864e5),R=new Map(),cd=new Set(),ed=new Set();
+  S.waves.filter(w=>!w.err&&dk(w.ts)>=ini&&dk(w.ts)<=d).forEach(w=>{const k="c:"+w.op;if(!R.has(k))R.set(k,new Set());R.get(k).add(dk(w.ts));cd.add(dk(w.ts))});
+  (S.prodB||[]).filter(b=>b.dia>=ini&&b.dia<=d).forEach(b=>{const k="e:"+b.oid;if(!R.has(k))R.set(k,new Set());R.get(k).add(b.dia);ed.add(b.dia)});
+  PNPM={key:d,ld:false,rows:new Map([...R].map(([k,s])=>[k,{dias:s.size,op:k[0]==="c"?cd.size:ed.size}]))};pnRadarFill();return}
+ PNPM={key:d,rows:null,ld:true};
+ api("/rest/v1/rpc/painel_presenca_mes",{method:"POST",body:{p_fim:d}}).then(r=>{PNPM={key:d,ld:false,rows:new Map(r.map(x=>{const o=OPSALL[x.pessoa_id];return[x.setor==="coleta"?"c:"+(o?(o.excluido_em?o.codigo+"~"+o.id.slice(0,6):o.codigo):x.pessoa_id):"e:"+x.pessoa_id,{dias:x.dias,op:x.dias_op}]}))}},
+  ()=>{PNPM={key:d,ld:false,rows:new Map()}}).then(()=>{if(view==="painel")pnRadarFill()})}
+function pnRadarFill(){const box=$("#pnRadB"),sel=$("#pnRp");if(!box||!sel||!PNVD)return;const V=PNVD.V,L=V.P.filter(p=>!PNRS||p.set===PNRS).sort((a,b)=>String(a.nm).localeCompare(String(b.nm),"pt-BR"));
+ if(!L.length){sel.innerHTML='<option value="">Ninguém</option>';box.innerHTML='<div class="empty">Ninguém registrou produção neste setor no dia.</div>';return}
+ if(!L.some(p=>p.k===PNRP))PNRP=L.slice().sort((a,b)=>b.u-a.u)[0].k;
+ sel.innerHTML=L.map(p=>`<option value="${esc(p.k)}"${p.k===PNRP?" selected":""}>${esc(p.nm)}${PNRS?"":" · "+esc(pnSetN(p.set))}</option>`).join("");
+ const p=L.find(x=>x.k===PNRP),G=V.P.filter(x=>x.set===p.set),PM=PNPM.rows,pres=x=>{const r=PM&&PM.get(x.k);return r&&r.op?r.dias/r.op*100:null};
+ const ax=[["Unidades/hora",x=>x.h?x.u/x.h:0,"max"],["% da meta",x=>x.pc==null?0:Math.min(x.pc,120)/1.2,"pct"],[p.set==="col"?"Ondas":"Ondas e embalagens",x=>x.n,"max"],["Horas ativas",x=>x.h,"max"],["Pontualidade",x=>pnPontScore(x.pt)||0,"pct"],["Presença 30 dias",x=>pres(x)||0,"pct"]];
+ const nv=(a,x)=>{const v=a[1](x);if(a[2]==="pct")return Math.max(0,Math.min(100,v));const m=Math.max(...G.map(a[1]),0);return m?v/m*100:0},pv=ax.map(a=>nv(a,p)),av=ax.map(a=>G.reduce((s,x)=>s+nv(a,x),0)/G.length);
+ const cx=240,cy=160,R=112,n=ax.length,pt=(i,v)=>{const a=i/n*Math.PI*2;return[cx+R*v/100*Math.sin(a),cy-R*v/100*Math.cos(a)]},poly=V2=>V2.map((v,i)=>pt(i,v).map(z=>z.toFixed(1)).join(",")).join(" ");
+ let s=`<div class="pnRadar"><svg viewBox="0 0 480 320" role="img" aria-label="Radar de ${esc(p.nm)} comparado com a média do setor">`;
+ [25,50,75,100].forEach(r=>{s+=`<polygon points="${poly(ax.map(()=>r))}" fill="none" stroke="var(--line)"/>`});
+ ax.forEach((a,i)=>{const e=pt(i,100),t=pt(i,118),an=Math.abs(t[0]-cx)<8?"middle":t[0]>cx?"start":"end";s+=`<line x1="${cx}" y1="${cy}" x2="${e[0].toFixed(1)}" y2="${e[1].toFixed(1)}" stroke="var(--line)"/><text x="${t[0].toFixed(1)}" y="${(t[1]+4).toFixed(1)}" text-anchor="${an}" style="font-size:12px">${a[0]}</text>`});
+ s+=`<polygon points="${poly(av)}" fill="none" stroke="var(--mut)" stroke-width="2" stroke-dasharray="5 4"/><polygon points="${poly(pv)}" fill="var(--g)" fill-opacity=".2" stroke="var(--g)" stroke-width="2.5" stroke-linejoin="round"/>`
+  +pv.map((v,i)=>{const q=pt(i,v);return`<circle cx="${q[0].toFixed(1)}" cy="${q[1].toFixed(1)}" r="4.5" fill="var(--g)" stroke="var(--card)" stroke-width="2"><title>${ax[i][0]}: ${fmt(v)} de 100</title></circle>`}).join("")+`</svg></div>`;
+ const pr=PM&&PM.get(p.k),pt0=p.pt,hm=pt0.ini?new Date(pt0.ini).toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"}):"—";
+ const raw=[[ax[0][0],nf1(p.h?p.u/p.h:0)+" un./h",fmt(p.u)+" un. no dia"],[ax[1][0],p.pc==null?"sem meta":fmt(p.pc)+"%",p.meta?"meta "+fmt(p.meta)+(p.set==="col"?" un.":" ondas"):""],[ax[2][0],fmt(p.n),p.set==="col"?nf1(p.n?p.u/p.n:0)+" un. por onda":fmt(p.u)+" un."],[ax[3][0],fmt(p.h)+(p.h===1?" hora":" horas"),"com registro"],
+  [ax[4][0],hm,pt0.at==null?"sem horário de entrada":pt0.at<=0?"no horário":pt0.at+" min depois da entrada"],[ax[5][0],pr?pr.dias+" de "+pr.op+" dias":PNPM.ld?"carregando…":"—",pr?"dias com operação no setor":""]];
+ box.innerHTML=s+`<div class="legend pdLeg"><span><i style="background:var(--g)"></i>${esc(p.nm)} · ${esc(pnSetN(p.set))}</span><span><i class="pdDash" style="border-color:var(--mut)"></i>Média do setor (${G.length} ${G.length===1?"pessoa":"pessoas"})</span></div>`
+  +`<dl class="stats solo pnRk6">${raw.map(r=>pdK2(r[0],r[1],r[2])).join("")}</dl><div class="legend">No radar, 100 é a melhor pessoa do mesmo setor no dia (meta, pontualidade e presença já vêm em porcentagem). A pontualidade usa o primeiro registro do dia contra a entrada do turno, com a tolerância de Configurações.</div>`}
+function pnVisHtml(V,D,E){const sec=V.sec,cu=sec[0].u,eu=sec.slice(1).reduce((a,s)=>a+s.u,0),pes=V.P.length,fc=sec[0].falta,fe=sec.slice(1).reduce((a,s)=>a+(s.falta||0),0),temE=sec.slice(1).some(s=>s.falta!=null);
+ const opt=(v,t)=>`<option value="${v}"${PNRM===v?" selected":""}>${t}</option>`,opS=(v,t)=>`<option value="${v}"${PNRS===v?" selected":""}>${t}</option>`;
+ return`<dl class="stats solo pnVk">${pdK2("Coleta",fmt(cu)+" un.",fmt(sec[0].n)+(sec[0].n===1?" onda concluída":" ondas concluídas"))+pdK2("Embalagem",fmt(eu)+" un.",fmt(E.st.n)+" ondas e embalagens")+pdK2("Pessoas que marcaram",fmt(pes),"na Coleta ou na Embalagem")
+  +pdK2("Falta para a meta",fc!=null?fmt(fc)+" un.":"—",temE?"Coleta · Embalagem: "+fmt(fe)+(fe===1?" onda":" ondas"):"Coleta")}</dl>`
+  +`<div class="card pnMain"><h2>Coleta e Embalagem por hora</h2>${pnComboSvg(V.H)}</div>`
+  +`<div class="pnVG"><div class="card"><div class="pnCh2"><h2>Por setor</h2><select id="pnRm" aria-label="O que a rosca mostra">${opt("c","Contribuição no total")+opt("m","% da meta atingida")+opt("p","Quem bateu a meta")+opt("f","Falta para a meta")}</select></div><div id="pnRoscaB">${pnRoscaHtml(V)}</div></div>`
+  +`<div class="card"><div class="pnCh2"><h2>Individual</h2><span class="pnSel"><select id="pnRs" aria-label="Setor">${opS("","Todos os setores")+PN_SET.map(s=>opS(s[0],s[1])).join("")}</select><select id="pnRp" aria-label="Pessoa"></select></span></div><div id="pnRadB"></div></div></div>`}
+document.addEventListener("change",e=>{const id=e.target.id;if(id==="pnRm"){PNRM=e.target.value;try{localStorage.setItem("rcondas.pnrm",PNRM)}catch(x){}if(PNVD)$("#pnRoscaB").innerHTML=pnRoscaHtml(PNVD.V)}
+ else if(id==="pnRs"){PNRS=e.target.value;PNRP="";pnRadarFill()}else if(id==="pnRp"){PNRP=e.target.value;pnRadarFill()}});
 
 window.__pnOk=true;
 /* ---------- eventos ---------- */

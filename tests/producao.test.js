@@ -197,4 +197,17 @@ await T("P18 Ausência da embalagem: registra, volta, motivos próprios e aba de
  ok((await st(p)).cfg.motP.includes('Atestado'),'novo motivo');ok(!((await st(p)).cfg.motA||[]).includes('Atestado'),'misturou com motivos da Coleta');
  if(SHOT){await p.click('.tab[data-t="prod"]');await p.click('.ssub button:has-text("Ausente")');await p.screenshot({path:SHOT+'/p_aus.png'})}ok(!p.errors.length,p.errors.join(';'))});
 
+await T("P19 Painel geral: barras Coleta e Embalagem com linha de pessoas, rosca com pizza e radar individual",async()=>{
+ const now=Date.now(),t0=now-3*36e5,W=[0,1,2,3,4,5].map(i=>({id:"w"+i,wn:"W"+i,op:i%2?"CL001":"CL009",gal:"RC",ty:"Vários",qty:10+i,st:0,ts:t0+i*9e5,fin:t0+i*9e5+6e4}));
+ const p=await page(b,base({waves:W,metasInd:{RC:{q:30}}}));await posto(p,'Ana','terreo','mesa');await bipar(p,'PR001',['W0','W1']);
+ await p.evaluate(()=>go('painel'));await p.waitForTimeout(400);ok(await p.isVisible('#pnVis'),'bloco geral');
+ const k=await p.textContent('#pnVis .pnVk');ok(k.includes('75 un.')&&k.includes('21 un.'),'cartões '+k);
+ ok(await p.$$eval('#pnVis .pnMain svg rect[fill="var(--g)"]',x=>x.length)>=1&&await p.$$eval('#pnVis .pnMain svg rect[fill="var(--k)"]',x=>x.length)>=1,'barras das duas áreas');ok(await p.$('#pnVis .pnMain svg path[stroke="var(--o)"]'),'linha de pessoas');
+ ok((await p.textContent('#pnRoscaB')).includes('Coleta')&&(await p.textContent('#pnRoscaB')).includes('Mesa / Térreo'),'rosca com setores');ok((await p.textContent('#pnRoscaB')).includes('un. por onda'),'unidades por onda da coleta');
+ for(const m of ['m','p','f']){await p.selectOption('#pnRm',m);await p.waitForTimeout(60)}{const r=await p.textContent('#pnRoscaB');ok(/faltam|meta batida|sem meta/.test(r)&&r.includes('Quanto falta'),'filtro falta '+r.slice(0,200))}
+ const ops=await p.$$eval('#pnRp option',x=>x.map(o=>o.textContent));ok(ops.length===3&&ops.some(o=>o.includes('Ana Souza')),'pessoas do radar '+ops);
+ await p.selectOption('#pnRs','terreo-mesa');await p.waitForTimeout(80);ok((await p.$$eval('#pnRp option',x=>x.length))===1&&(await p.textContent('#pnRadB')).includes('Presença 30 dias'),'radar por setor');
+ ok(await p.$('#pnRadB svg polygon[stroke="var(--g)"]'),'polígono da pessoa');
+ if(SHOT)await (await p.$('#pnVis')).screenshot({path:SHOT+'/p_painel.png'});ok(!p.errors.length,p.errors.join(';'))});
+
 await b.close();let f=0;R.forEach(([s,n,i])=>{if(s!=="PASS")f++;console.log((s==="PASS"?"✅ ":"❌ ")+n+"  "+(s==="PASS"?"("+i+"ms)":i))});console.log("\n"+(R.length-f)+"/"+R.length+" passaram");process.exit(f?1:0)})();
