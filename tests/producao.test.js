@@ -142,6 +142,9 @@ await T("P15 Painel: Coleta e Embalagem lado a lado, só uma delas, fila entre a
  ok((await p.$$('#pnDuo .pnSide')).length===2,'dois lados');
  ok((await p.$$('#pnDuo .pnRk')).length===2,'ranking Mesa e Máquina');const rk=(await p.textContent('#pnDuo .pnRkC')).replace(/\s+/g,' ');
  ok(/Mesa 1 pessoa/.test(rk)&&/1ºAna Souza/.test(rk)&&/3 ondas/.test(rk)&&/Máquina 0 pessoas/.test(rk)&&/Ninguém embalou na Máquina/.test(rk),'ranking '+rk.slice(0,260));
+ ok(/300unidades embaladas|300 unidades embaladas/.test(t.replace(/\s+/g,' '))&&t.includes('Unidades por hora')&&t.includes('Unidades por pessoa por hora')&&/300 unidades \(3 ondas\)/.test(rk),'unidades por hora e por pessoa na Embalagem: '+rk.slice(0,200));
+ await p.click('#pnDuo [data-pnu="o"]');await p.waitForTimeout(100);t=(await p.textContent('#pnDuo')).replace(/\s+/g,' ');ok(t.includes('Ondas por hora')&&t.includes('Ondas por pessoa por hora')&&await p.evaluate(()=>localStorage.getItem('rcondas.pnu')==='o'),'alterna para ondas');
+ await p.click('#pnDuo [data-pnu="u"]');await p.waitForTimeout(100);
  await p.click('#pnSeg [data-pnv="col"]');ok(await p.isVisible('#pnColW')&&!(await p.isVisible('#pnDuo')),'só Coleta');ok(await p.isVisible('#pGar'),'gargalo da Coleta');
  ok(!(await p.evaluate(()=>document.getElementById('pnDet').open)),'detalhes antigos recolhidos');ok((await p.$$('#pnDet #chF')).length===1,'funil guardado nos detalhes');
  await p.click('#pnSeg [data-pnv="emb"]');await p.waitForTimeout(150);t=(await p.textContent('#pnDuo')).replace(/\s+/g,' ');ok(await p.isVisible('#pnDuo')&&(await p.$$('#pnDuo .pnSide')).length===1&&t.includes('Postos'),'só Embalagem');

@@ -490,7 +490,7 @@ await T('S94 Horário por galpão: só o galpão escolhido muda e quem seguia o 
 await T('S95 Produção: gestor define posto e turno, aparelho público bipa, presença só na primeira e repetida recusada',async()=>{const db=banco();
  db.ondas.push({id:'00000000-0000-4000-8000-00000000c001',wn:'8001',operador_id:'00000000-0000-4000-8000-0000000000b1',galpao_id:G1,tipo:'Vários artigos',quantidade:2,status:0,registrada_em:new Date().toISOString()});
  const pa=await page(b,db);await login(pa,'adm@x.com','senha1234');await pa.click('.tab[data-t="prod"]');await pa.waitForTimeout(300);
- await pa.evaluate(()=>{go('cfg');document.querySelector('#csub [data-c="cpd"]').click();document.getElementById('cpdTu').open=true});await pa.waitForTimeout(400);ok(await pa.isVisible('#cpd'),'admin deveria ver o cadastro da embalagem na Config');
+ await pa.evaluate(()=>{go('cfg');document.querySelector('#csub [data-c="cpd"]').click();document.getElementById('cpdTu').open=true});await pa.waitForTimeout(400);ok(await pa.isVisible('#cpd'),'admin deveria ver o cadastro da embalagem na Config');ok((await pa.$$('#pdNovaF [name="pdT"] option[value]:not([value=""])')).length>0,'turnos no cadastro da embalagem');
  await pa.fill('[data-pdt="1"] [name="s"]','15:00');await pa.click('[data-pdt="1"] [type="submit"]');await pa.waitForTimeout(400);ok(db.pt[0].saida==='15:00','turno não salvo: '+JSON.stringify(db.pt[0]));
  ok((await pa.textContent('#pdDl')).includes('Nenhuma pessoa cadastrada'),'pessoas da Coleta apareceram na Produção');
  await pa.fill('#pdNovaF [name="n"]','Ana Embalagem');await pa.check('#pdNovaF input[name="pdAn"][value="mezanino"]');await pa.check('#pdNovaF input[name="pdAt"][value="maquina"]');await pa.click('#pdNovaF [type="submit"]');await pa.waitForTimeout(450);

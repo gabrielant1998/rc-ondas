@@ -485,7 +485,7 @@ body[data-v=cfg] #turnoF,body[data-v=cfg] #gal,body[data-v=cfg] #day{display:non
 .pdSeg input{accent-color:var(--a)}
 .pdTop{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;margin-bottom:12px}.pdTop .ctl{margin:0}
 #coBody[data-cv="eq"] [data-cov="tu"],#coBody[data-cv="tu"] [data-cov="eq"]{display:none}
-.pdTabs{display:inline-flex;gap:4px;flex-wrap:wrap}.pdTabs button{all:unset;cursor:pointer;padding:8px 14px;border:1px solid var(--line);border-radius:4px;font:600 13.5px var(--fb);color:var(--mut);background:var(--card)}
+.pnTog{margin-bottom:10px}.pdTabs{display:inline-flex;gap:4px;flex-wrap:wrap}.pdTabs button{all:unset;cursor:pointer;padding:8px 14px;border:1px solid var(--line);border-radius:4px;font:600 13.5px var(--fb);color:var(--mut);background:var(--card)}
 .pdTabs button.on{background:var(--ink);color:var(--card);border-color:var(--ink)}.pdTabs button:focus-visible{outline:2px solid var(--a);outline-offset:2px}
 .pdChipsP{margin-bottom:12px}.pdKp .placar{margin-top:0}.pdGrid{margin-top:12px}.pdGrid .pdWide{grid-column:1/-1}
 @media(min-width:1200px){.pdGrid{grid-template-columns:repeat(2,minmax(0,1fr));grid-template-areas:none}}
@@ -2945,10 +2945,11 @@ function pdPosLer(f){const a=f.querySelector('[name="pdAn"]:checked'),x=f.queryS
  if(!x){toast("Escolha a atividade: Mesa ou Máquina.",5000);const r=f.querySelector('[name="pdAt"]');if(r)r.focus();return null}
  return[a.value,x.value]}
 const pdTurOpts=cur=>pdTurnos().filter(t=>t.ativo||t.id===cur).map(t=>`<option value="${t.id}"${cur===t.id?" selected":""}>${esc(t.nome)} (${t.ent}${t.sai?" às "+t.sai:""})</option>`).join("");
-function pdNovaForm(){const el=$("#pdNova");if(!el)return;if(el.querySelector("form")&&!PDreset)return;PDreset=false;
+function pdNovaTurnos(){const sel=document.querySelector('#pdNovaF [name="pdT"]');if(!sel)return;const cur=sel.value,h=pdTurOpts(null)||'<option value="">Cadastre um turno em "Turnos da embalagem"</option>';if(sel.dataset.h===h)return;sel.dataset.h=h;sel.innerHTML=h;if(cur&&[...sel.options].some(o=>o.value===cur))sel.value=cur}
+function pdNovaForm(){const el=$("#pdNova");if(!el)return;if(el.querySelector("form")&&!PDreset){pdNovaTurnos();return}PDreset=false;
  el.innerHTML=`<form class="pdNf" id="pdNovaF" novalidate><div class="pdG"><label>Nome<input name="n" maxlength="80" autocomplete="off" required></label><label>Código do crachá<input name="c" value="${pdProxCod()}" maxlength="12" autocomplete="off" autocapitalize="characters" required></label></div>
   ${pdPosR(PDf.includes("-")?PDf:"")}
-  <div class="pdG"><label>Turno<select name="pdT">${pdTurOpts(null)}</select></label></div>
+  <div class="pdG"><label>Turno<select name="pdT">${pdTurOpts(null)||'<option value="">Cadastre um turno em "Turnos da embalagem"</option>'}</select></label></div>
   <div class="legend" style="margin:0 0 10px">Pessoa da produção (${esc(pdGalpao())}). O código é o que fica no crachá: letras e números, sem espaço.</div>
   <div class="ctl2"><span></span><button type="submit" class="btn">Cadastrar</button></div></form>`}
 function pdCodOk(c){return /^[A-Z0-9]{2,12}$/.test(c)}
@@ -3162,18 +3163,30 @@ function pnColHtml(D){const it=pnItens(D.M,false),pp=pnItens(D.M,true);
   +`<div class="card" style="margin-top:12px"><h2>Unidades por pessoa por hora <span class="pill">${D.pes} ${D.pes===1?"pessoa":"pessoas"}</span></h2>${pdBarras(pp,{w:520,dec:1,serie:"Unidades por pessoa",un:["unidade","unidades"],vazio:"Nenhuma onda concluída no período.",aria:"Unidades por pessoa por hora"})}${pnLenta(pp,"unidades")}</div>`}
 /* Embalagem do dia (B = bipagens do dia anterior e de hoje, só as do dia entram nos números) */
 function pnEmbDados(d){const TF=$("#turnoF").value,g=$("#gal").value==="__all"?null:$("#gal").value,B=PNE.B.filter(b=>b.dia===d&&(!TF||String(b.tu)===TF)),st=pdStats(B),M=new Map();
- st.H.forEach((x,h)=>M.set(h,{n:x.n,pes:x.pes,m:x.meta}));return{B,st,M,TF,fora:g&&g!==pdGalpao()}}
+ st.H.forEach((x,h)=>M.set(h,{n:x.n,pes:x.pes,m:x.meta}));
+ const UM=pnUnMap(),MU=new Map();let un=0,sem=0;B.forEach(b=>{const k=normWN(b.wn||""),u=UM.get(k)||0,h=Math.floor(b.em/36e5)*36e5;if(!UM.has(k))sem++;un+=u;let x=MU.get(h);if(!x)MU.set(h,x={n:0,pes:new Set(),m:0});x.n+=u;x.pes.add(b.oid)});
+ return{B,st,M,TF,UM,MU,un,sem,fora:g&&g!==pdGalpao()}}
+/* unidades de cada onda embalada = unidades da onda concluída na Coleta (mesmo número da onda) */
+function pnUnMap(){const m=new Map();S.waves.forEach(w=>{if(w.st===0&&!w.err){const k=normWN(w.wn);if(!m.has(k))m.set(k,+w.qty||0)}});return m}
+function pnUM(){try{return localStorage.getItem("rcondas.pnu")==="o"?"o":"u"}catch(e){return"u"}}
+function pnTog(){const m=pnUM();return`<div class="pdTabs pnTog" role="group" aria-label="Medida da Embalagem"><button type="button" data-pnu="u" class="${m==="u"?"on":""}" aria-pressed="${m==="u"}">Unidades</button><button type="button" data-pnu="o" class="${m==="o"?"on":""}" aria-pressed="${m==="o"}">Ondas</button></div>`}
 function pnEmbHtml(E){const st=E.st,pc=pdPct(st.n,st.meta),hit=pnItens(E.M,false),pp=pnItens(E.M,true);
- return(E.fora?`<div class="legend">A Embalagem existe só no galpão ${esc(pdGalpao())}; os números abaixo são dele.</div>`:"")
+ if(pnUM()==="u"){const ui=pnItens(E.MU,false),up=pnItens(E.MU,true);
+  return pnTog()+(E.fora?`<div class="legend">A Embalagem existe só no galpão ${esc(pdGalpao())}; os números abaixo são dele.</div>`:"")
+  +pnPlacar(E.un,E.un===1?"unidade embalada":"unidades embaladas",E.sem?fmt(E.sem)+(E.sem===1?" onda embalada sem registro na Coleta, sem unidades":" ondas embaladas sem registro na Coleta, sem unidades"):"Unidades das ondas embaladas, conforme a Coleta",null)
+  +`<div class="card" style="margin-top:12px"><h2>Unidades por hora</h2>${pdBarras(ui,{w:520,serie:"Unidades embaladas",un:["unidade","unidades"],vazio:"Nenhuma onda embalada neste dia.",aria:"Unidades embaladas por hora"})}</div>`
+  +`<div class="card" style="margin-top:12px"><h2>Unidades por pessoa por hora <span class="pill">${st.P.length} ${st.P.length===1?"pessoa":"pessoas"}</span></h2>${pdBarras(up,{w:520,dec:1,serie:"Unidades por pessoa",un:["unidade","unidades"],vazio:"Nenhuma onda embalada neste dia.",aria:"Unidades embaladas por pessoa por hora"})}${pnLenta(up,"unidades")}</div>`
+  +`<div class="card" style="margin-top:12px"><h2>Postos</h2>${pdPostosHtml(st,$("#day").value||hoje())}</div>`}
+ return pnTog()+(E.fora?`<div class="legend">A Embalagem existe só no galpão ${esc(pdGalpao())}; os números abaixo são dele.</div>`:"")
   +pnPlacar(st.n,st.n===1?"onda embalada":"ondas embaladas",st.meta?"Meta da Embalagem até agora: "+fmt(st.meta)+" ondas":"Sem meta por hora cadastrada",pc)
   +`<div class="card" style="margin-top:12px"><h2>Ondas por hora</h2>${pdBarras(hit,{w:520,serie:"Ondas embaladas",metaTxt:"Meta coletiva da hora",vazio:"Nenhuma onda embalada neste dia.",aria:"Ondas embaladas por hora e meta"})}</div>`
   +`<div class="card" style="margin-top:12px"><h2>Ondas por pessoa por hora <span class="pill">${st.P.length} ${st.P.length===1?"pessoa":"pessoas"}</span></h2>${pdBarras(pp,{w:520,dec:1,metaTxt:"Meta por pessoa",serie:"Ondas por pessoa",vazio:"Nenhuma onda embalada neste dia.",aria:"Ondas embaladas por pessoa por hora e meta"})}${pnLenta(pp,"ondas")}</div>`
   +`<div class="card" style="margin-top:12px"><h2>Postos</h2>${pdPostosHtml(st,$("#day").value||hoje())}</div>`}
 /* Ranking da Embalagem: Mesa e Máquina separadas (só gestor logado) */
-function pnRanking(E,d){const col=at=>{const B=E.B.filter(b=>b.at===at),st=pdStats(B),L=st.P.slice().sort((a,b)=>b.n-a.n||String(a.nm).localeCompare(String(b.nm),"pt-BR")),mx=Math.max(1,...L.map(p=>p.n));
+function pnRanking(E,d){const un=pnUM()==="u",col=at=>{const B=E.B.filter(b=>b.at===at),st=pdStats(B),U=new Map();B.forEach(b=>U.set(b.oid,(U.get(b.oid)||0)+(E.UM.get(normWN(b.wn||""))||0)));st.P.forEach(p=>{p.u=U.get(p.oid)||0});const V=p=>un?p.u:p.n,L=st.P.slice().sort((a,b)=>V(b)-V(a)||String(a.nm).localeCompare(String(b.nm),"pt-BR")),mx=Math.max(1,...L.map(V));
   return`<div class="pnRk"><h3>${PD_AT[at]} <span class="pill">${L.length} ${L.length===1?"pessoa":"pessoas"}</span></h3>`+(L.length?`<ol class="pnRkL">`+L.slice(0,10).map((p,i)=>{const pc=pdPct(p.n,p.meta);
-   return`<li><span class="pnRkN">${i+1}º</span><div class="pnRkW"><div class="pnRkT"><b>${esc(p.nm)}</b> <span class="pdTag ${p.pk.startsWith("terreo")?"t":"m"}">${PD_AND[p.pk.split("-")[0]]}</span></div><div class="bar" style="--c:${pc!=null&&pc>=100?"var(--k)":"var(--g)"}"><b style="width:${p.n/mx*100}%"></b></div><div class="pdH">${fmt(p.n)} ${p.n===1?"onda":"ondas"}, ${nf1(p.hrs?p.n/p.hrs:0)} por hora${p.hrs&&p.meta?", meta "+nf1(p.meta/p.hrs):""}</div></div>${pc==null?'<span class="note">sem meta</span>':`<span class="pdSt ${pdStC(pc)}">${fmt(pc)}%</span>`}</li>`}).join("")+"</ol>"+(L.length>10?`<div class="legend">Mostrando as 10 primeiras de ${L.length}.</div>`:""):'<div class="empty">Ninguém embalou na '+PD_AT[at]+' neste dia.</div>')+"</div>"};
- return`<div class="card pnRkC" style="margin-top:12px"><h2>Ranking da Embalagem <small class="legend" style="margin:0">ondas embaladas no dia</small></h2><div class="pnRkG">${col("mesa")}${col("maquina")}</div><div class="legend">A porcentagem compara as ondas da pessoa com a meta dela (meta por hora vezes as horas em que bipou). Quem trocou de posto no dia aparece na atividade em que bipou.</div></div>`}
+   return`<li><span class="pnRkN">${i+1}º</span><div class="pnRkW"><div class="pnRkT"><b>${esc(p.nm)}</b> <span class="pdTag ${p.pk.startsWith("terreo")?"t":"m"}">${PD_AND[p.pk.split("-")[0]]}</span></div><div class="bar" style="--c:${!un&&pc!=null&&pc>=100?"var(--k)":"var(--g)"}"><b style="width:${V(p)/mx*100}%"></b></div><div class="pdH">${un?fmt(p.u)+(p.u===1?" unidade":" unidades")+" ("+fmt(p.n)+(p.n===1?" onda":" ondas")+"), "+nf1(p.hrs?p.u/p.hrs:0)+" por hora":fmt(p.n)+(p.n===1?" onda":" ondas")+", "+nf1(p.hrs?p.n/p.hrs:0)+" por hora"+(p.hrs&&p.meta?", meta "+nf1(p.meta/p.hrs):"")}</div></div>${un?"":pc==null?'<span class="note">sem meta</span>':`<span class="pdSt ${pdStC(pc)}">${fmt(pc)}%</span>`}</li>`}).join("")+"</ol>"+(L.length>10?`<div class="legend">Mostrando as 10 primeiras de ${L.length}.</div>`:""):'<div class="empty">Ninguém embalou na '+PD_AT[at]+' neste dia.</div>')+"</div>"};
+ return`<div class="card pnRkC" style="margin-top:12px"><h2>Ranking da Embalagem <small class="legend" style="margin:0">${un?"unidades embaladas no dia":"ondas embaladas no dia"}</small></h2><div class="pnRkG">${col("mesa")}${col("maquina")}</div><div class="legend">${un?"As unidades de cada onda vêm da Coleta. A meta da Embalagem é em ondas: para ver a % da meta, escolha Ondas no alto da Embalagem.":"A porcentagem compara as ondas da pessoa com a meta dela (meta por hora vezes as horas em que bipou)."} Quem trocou de posto no dia aparece na atividade em que bipou.</div></div>`}
 /* Fila entre Coleta e Embalagem: ondas coletadas no dia que ainda não foram embaladas */
 function pnFluxo(D,E){const now=Date.now(),d=$("#day").value||hoje(),isNow=d===hoje(),first=new Map();
  PNE.B.slice().sort((a,b)=>a.em-b.em).forEach(b=>{const k=normWN(b.wn||"");if(k&&!first.has(k))first.set(k,b.em)});
@@ -3219,10 +3232,11 @@ document.addEventListener("keydown",e=>{const id=e.target.id;
   if(e.key==="Enter"){e.preventDefault();if(PDsel){$("#pdW").focus();return}if(PDsI>=0&&PDsL[PDsI]){pdEscolher(PDsL[PDsI]);return}if(PDsL.length===1){pdEscolher(PDsL[0]);return}if(PDsL.length>1)toast("Há mais de uma pessoa. Selecione o nome desejado.",5000);return}
   if(e.key==="Escape"){$("#pdSug").innerHTML="";PDsL=[];PDsI=-1}return}
  if(id==="pdW"&&e.key==="Enter"){e.preventDefault();pdBipar()}});
-document.addEventListener("click",e=>{const t=e.target.closest&&e.target.closest("[data-pdsug],[data-pnv],[data-pdfp],[data-pde],[data-pdf],[data-pded],[data-pdtn],[data-pdtx],[data-pdnx],[data-pdcad],[data-pdrm],#pdNovaB,#pdTroca,#pdEnv");if(!t)return;
+document.addEventListener("click",e=>{const t=e.target.closest&&e.target.closest("[data-pdsug],[data-pnv],[data-pnu],[data-pdfp],[data-pde],[data-pdf],[data-pded],[data-pdtn],[data-pdtx],[data-pdnx],[data-pdcad],[data-pdrm],#pdNovaB,#pdTroca,#pdEnv");if(!t)return;
  if(t.dataset.pdcad){pdCadastrar(t.closest("form"),t.dataset.pdcad);return}
  if(t.dataset.pdrm){const o=pdOp(t.dataset.pdrm);if(!o)return;if(t.dataset.ok!=="1"){t.dataset.ok="1";t.textContent="Confirmar remoção de "+o.n.split(" ")[0];setTimeout(()=>{if(t.isConnected){t.dataset.ok="";t.textContent="Remover da produção"}},5000);return}pdRemover(t.dataset.pdrm);return}
  if(t.dataset.pdsug){const o=PDsL.find(x=>x.m===t.dataset.pdsug);if(o)pdEscolher(o);return}
+ if(t.dataset.pnu){try{localStorage.setItem("rcondas.pnu",t.dataset.pnu)}catch(e){}pnRender();return}
  if(t.dataset.pnv){PNV=t.dataset.pnv;try{localStorage.setItem("rcondas.pnv",PNV)}catch(e){}pnRender();return}
  if(t.dataset.pdfp){PDfp=t.dataset.pdfp;pdRender();return}
  if(t.dataset.pde){PDE=t.dataset.pde;PDed=null;pdEqRender();return}
