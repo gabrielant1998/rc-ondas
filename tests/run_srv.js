@@ -490,10 +490,10 @@ await T('S94 Horário por galpão: só o galpão escolhido muda e quem seguia o 
 await T('S95 Produção: gestor define posto e turno, aparelho público bipa, presença só na primeira e repetida recusada',async()=>{const db=banco();
  db.ondas.push({id:'00000000-0000-4000-8000-00000000c001',wn:'8001',operador_id:'00000000-0000-4000-8000-0000000000b1',galpao_id:G1,tipo:'Vários artigos',quantidade:2,status:0,registrada_em:new Date().toISOString()});
  const pa=await page(b,db);await login(pa,'adm@x.com','senha1234');await pa.click('.tab[data-t="prod"]');await pa.waitForTimeout(300);
- await pa.evaluate(()=>{go('ind');document.querySelector('#gsub [data-gs="pd"]').click();document.querySelector('#pdEqSeg [data-pde="pes"]').click()});await pa.waitForTimeout(400);ok(await pa.isVisible('#pdDisV'),'admin deveria ver Pessoas da produção na Equipe');
+ await pa.evaluate(()=>{go('cfg');document.querySelector('#csub [data-c="cpd"]').click();document.getElementById('cpdTu').open=true});await pa.waitForTimeout(400);ok(await pa.isVisible('#cpd'),'admin deveria ver o cadastro da embalagem na Config');
  await pa.fill('[data-pdt="1"] [name="s"]','15:00');await pa.click('[data-pdt="1"] [type="submit"]');await pa.waitForTimeout(400);ok(db.pt[0].saida==='15:00','turno não salvo: '+JSON.stringify(db.pt[0]));
  ok((await pa.textContent('#pdDl')).includes('Nenhuma pessoa cadastrada'),'pessoas da Coleta apareceram na Produção');
- await pa.click('#pdNovaB');await pa.fill('#pdNovaF [name="n"]','Ana Embalagem');await pa.check('#pdNovaF input[name="pdA4"][value="mezanino-maquina"]');await pa.click('#pdNovaF [type="submit"]');await pa.waitForTimeout(450);
+ await pa.fill('#pdNovaF [name="n"]','Ana Embalagem');await pa.check('#pdNovaF input[name="pdA4"][value="mezanino-maquina"]');await pa.click('#pdNovaF [type="submit"]');await pa.waitForTimeout(450);
  ok(db.ppes.length===1&&db.ppes[0].codigo==='PR001'&&db.ppes[0].galpao_id===G1,'cadastro: '+JSON.stringify(db.ppes));
  ok(db.pa.length===1&&db.pa[0].andar==='mezanino'&&db.pa[0].criado_por==='adm@x.com','posto: '+JSON.stringify(db.pa));
  ok((await pa.textContent('#pdDl')).includes('Mezanino'),'lista não atualizou');
@@ -522,12 +522,12 @@ await T('S97 Produção: admin grava metas por hora e o desempenho do período v
  for(const w of ['5001','5002']){await p.fill('#pdW',w);await p.press('#pdW','Enter');await p.waitForTimeout(250)}ok(db.pb.length===2,'bipagens '+db.pb.length);
  const neg=await p.evaluate(async()=>{try{await api("/rest/v1/rpc/prod_bipagens_periodo",{method:"POST",body:{p_ini:hoje(),p_fim:hoje()}});return 200}catch(e){return e.status||0}});ok(neg===403,'público leu o desempenho: '+neg);
  await p.evaluate(()=>go('painel'));await p.waitForTimeout(500);ok(!(await p.isVisible('#pnSeg'))&&!(await p.isVisible('#pnDuo')),'público vendo o painel da Embalagem');
- const pa=await page(b,db);await login(pa,'adm@x.com','senha1234');await pa.evaluate(()=>{go('ind');document.querySelector('#gsub [data-gs="pd"]').click();document.querySelector('#pdEqSeg [data-pde="eq"]').click()});await pa.waitForTimeout(600);
- ok(db.calls.per>=1,'não buscou o período no servidor');ok((await pa.textContent('#pdDesV')).includes('Sem meta por hora'),'meta antes');
+ const pa=await page(b,db);await login(pa,'adm@x.com','senha1234');await pa.evaluate(()=>{go('cfg');document.querySelector('#csub [data-c="cpd"]').click()});await pa.waitForTimeout(600);
+ ok((await pa.textContent('#pdMt')).includes('Metas diárias'),'metas na Config');
  await pa.fill('#pdMetaF [name="mesa"]','96');await pa.click('#pdMetaF [type="submit"]');await pa.waitForTimeout(600);
  ok(db.pm.length===1&&db.pm[0].atividade==='mesa'&&db.pm[0].por_dia===96&&db.pm[0].horas_dia===8&&db.pm[0].por_hora===12&&db.pm[0].galpao_id===G1,'meta gravada '+JSON.stringify(db.pm));
- await pa.waitForTimeout(200);ok((await pa.textContent('#pdDesV')).includes('% da meta'),'equipe sem a meta');
- await pa.evaluate(()=>{document.querySelector('#pdEqSeg [data-pde="ind"]').click()});await pa.waitForTimeout(300);ok((await pa.textContent('#pdDesV')).includes('Ana Embalagem'),'individual');
+ await pa.waitForTimeout(200);
+ await pa.evaluate(()=>{go('ind');document.querySelector('#gsub [data-gs="pd"]').click()});await pa.waitForTimeout(600);ok(db.calls.per>=1,'não buscou o período no servidor');ok((await pa.textContent('#pdDesV')).includes('Ana Embalagem'),'individual');
  await pa.evaluate(()=>go('painel'));await pa.waitForTimeout(700);ok(await pa.isVisible('#pnSeg')&&await pa.isVisible('#pnDuo'),'admin deveria ver Coleta e Embalagem no Painel');ok((await pa.textContent('#pnDuo')).includes('Fila entre Coleta e Embalagem'),'fila no painel do admin');
 });
 

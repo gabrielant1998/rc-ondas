@@ -505,8 +505,11 @@ body[data-v=cfg] #turnoF,body[data-v=cfg] #gal,body[data-v=cfg] #day{display:non
 @media (max-width:760px){.pdSeg4{grid-template-columns:1fr 1fr}}
 .pdG{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:12px}
 .pdCad{margin-top:14px;padding-top:12px;border-top:1px solid var(--line)}.pdCad>b{display:block;font-size:13px;color:var(--mut);font-weight:500;margin-bottom:6px}
-#pdNova:empty{display:none}#pdNova .pdEd{margin:0 0 12px}
+.pdNf fieldset{border:0;padding:0;margin:0 0 12px}.pdNf legend{font-size:13px;color:var(--mut);margin-bottom:6px;padding:0}.pdNf .pdG{margin-bottom:12px}
 .pdHist{margin-top:12px;font-size:13.5px;color:var(--mut)}.pdHist li{margin:3px 0}
+.cpdG{display:grid;grid-template-columns:minmax(300px,1fr) minmax(0,1.35fr);gap:14px;align-items:start}.cpdC{display:grid;gap:14px;min-width:0}.cpdC>.card{margin:0}
+#cpd .pdRow{grid-template-columns:minmax(0,1fr) auto;gap:4px 12px;padding:10px 4px}#cpd .pdRow .who2{grid-column:1;grid-row:1}#cpd .pdRow>.btn{grid-column:2;grid-row:1}#cpd .pdRow .pdPc,#cpd .pdRow .pdH{grid-column:1/-1}#cpd .pdRow .pdH:empty{display:none}.pdNf .pdSeg4{grid-template-columns:1fr 1fr}#cpd #pdDl{max-height:640px;overflow:auto}
+@media (max-width:900px){.cpdG{grid-template-columns:minmax(0,1fr)}#cpd #pdDl{max-height:none}}
 .pdTF{display:grid;grid-template-columns:minmax(110px,1.2fr) repeat(2,minmax(96px,.8fr)) minmax(190px,1.4fr);gap:10px;align-items:end;padding:12px 0;border-bottom:1px solid var(--line)}
 .pdTF .pdDias{display:flex;gap:4px;flex-wrap:wrap}.pdTF .pdDias label{display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;border:1px solid var(--line);border-radius:4px;cursor:pointer;font-size:13px;font-weight:600}
 .pdTF .pdDias label:has(input:checked){border-color:var(--a);background:color-mix(in srgb,var(--a) 12%,var(--card))}
@@ -658,18 +661,9 @@ body[data-v=cfg] #turnoF,body[data-v=cfg] #gal,body[data-v=cfg] #day{display:non
  <div class="ctl" style="margin-bottom:12px"><select id="iOp" aria-label="Operador"></select><select id="iPer" aria-label="Período"><option value="1">Dia selecionado</option><option value="7">Últimos 7 dias</option><option value="30">Últimos 30 dias</option><option value="90">Últimos 90 dias</option></select><button class="btn" id="iPrint" type="button">Imprimir folha</button></div>
  <div id="mgStatus" class="legend hide" role="status"></div><div id="iBody"></div><div id="coBody" class="hide" data-cv="eq"></div><div id="ckBody" class="hide"></div>
  <div id="pdEqV" class="hide">
- <div class="pdTop"><div class="pdTabs" id="pdEqSeg" role="group" aria-label="Visão da embalagem"><button type="button" data-pde="eq" class="on">Equipe</button><button type="button" data-pde="ind">Individual</button><button type="button" data-pde="pes">Pessoas e turnos</button></div>
-  <div class="ctl" id="pdEqCtl"><select id="pdPer" aria-label="Período da embalagem"><option value="1">Dia selecionado</option><option value="7">Últimos 7 dias</option><option value="30">Últimos 30 dias</option></select><select id="pdPs" aria-label="Pessoa" class="hide"></select></div></div>
+ <div class="pdTop"><span></span>
+  <div class="ctl" id="pdEqCtl"><select id="pdPer" aria-label="Período da embalagem"><option value="1">Dia selecionado</option><option value="7">Últimos 7 dias</option><option value="30">Últimos 30 dias</option></select><select id="pdPs" aria-label="Pessoa"></select></div></div>
  <div id="pdDesV"></div>
- <div id="pdDisV" class="hide">
-  <div class="card"><h2>Pessoas da produção</h2>
-   <div class="pdTools"><input id="pdDq" type="search" placeholder="Pesquisar nome ou código" aria-label="Pesquisar pessoa" autocomplete="off"><div id="pdDf" class="pdChips" role="group" aria-label="Filtrar por posto (andar e atividade)"></div><button type="button" class="btn sm" id="pdNovaB">Cadastrar pessoa</button></div>
-   <div id="pdNova"></div>
-   <div id="pdDl"></div>
-   <div class="legend">As pessoas da produção têm cadastro próprio, separado da Coleta. Cada mudança de posto vale a partir do horário informado; as ondas já bipadas continuam com o andar, a atividade e o turno da época.</div></div>
-  <div class="card" style="margin-top:14px"><h2>Turnos da produção</h2><div id="pdTl"></div>
-   <div class="legend">Saída em branco = ainda não configurada; as horas trabalhadas só são calculadas com a saída preenchida. Saída menor que a entrada = turno que passa da meia-noite.</div></div>
- </div>
  </div>
 
 </section>
@@ -697,7 +691,7 @@ body[data-v=cfg] #turnoF,body[data-v=cfg] #gal,body[data-v=cfg] #day{display:non
 
 <!-- ======================= CONFIG ======================= -->
 <section id="cfg" class="hide">
- <div class="sub" id="csub"><button data-c="cop" class="on">Geral</button><button data-c="cho">Horários e paradas</button><button data-c="cus">Pessoas</button><button data-c="cme" data-merge="1">Metas</button><button data-c="cga">Galpões</button><button data-c="cge" data-merge="1">Gestores</button><button data-c="cma">Manutenção</button></div>
+ <div class="sub" id="csub"><button data-c="cop" class="on">Geral</button><button data-c="cho">Horários e paradas</button><button data-c="cus">Pessoas coleta</button><button data-c="cpd" id="csPd">Pessoas embalagem</button><button data-c="cme" data-merge="1">Metas</button><button data-c="cga">Galpões</button><button data-c="cge" data-merge="1">Gestores</button><button data-c="cma">Manutenção</button></div>
 
  <div id="cop" class="grid two">
   <div class="card"><h2>Limite por onda</h2><div class="f" id="lims"></div>
@@ -732,6 +726,22 @@ body[data-v=cfg] #turnoF,body[data-v=cfg] #gal,body[data-v=cfg] #day{display:non
    <button class="btn" id="uB">Criar usuário</button></div>
    <div class="legend">Usuários de operação não usam senha. O código segue a sequência CL001 e um código excluído volta a ficar disponível.</div></div>
   <div class="card"><h2>Usuários <span id="uCnt"></span></h2><div class="uBusca"><input id="uQ" type="search" placeholder="Pesquisar por nome ou código" aria-label="Pesquisar usuários" autocomplete="off"></div><div class="tw" id="uL"></div></div>
+ </div>
+
+
+ <div id="cpd" class="hide">
+  <div class="cpdG">
+   <div class="cpdC">
+    <div class="card"><h2>Cadastrar pessoa da embalagem</h2><div id="pdNova"></div></div>
+    <div id="pdMt"></div>
+   </div>
+   <div class="card"><h2>Pessoas da embalagem <span id="pdCnt" class="pill"></span></h2>
+    <div class="pdTools"><input id="pdDq" type="search" placeholder="Pesquisar nome ou código" aria-label="Pesquisar pessoa" autocomplete="off"><div id="pdDf" class="pdChips" role="group" aria-label="Filtrar por posto (andar e atividade)"></div></div>
+    <div id="pdDl"></div>
+    <div class="legend">O cadastro de quem embala é separado do cadastro da Coleta. Cada mudança de posto vale a partir do horário informado; as ondas já bipadas continuam com o andar, a atividade e o turno da época.</div></div>
+  </div>
+  <details class="card pnDet" id="cpdTu"><summary>Turnos da embalagem</summary><div id="pdTl"></div>
+   <div class="legend">Saída em branco = ainda não configurada; as horas trabalhadas só são calculadas com a saída preenchida. Saída menor que a entrada = turno que passa da meia-noite.</div></details>
  </div>
 
  <div id="cme" class="grid two">
@@ -2442,7 +2452,7 @@ const ABAS_T=[["painel","Painel"],["op","Coleta"],["prs","Procurando"],["ind","E
 const isI=t=>t==="ind"||t==="his";
 /* aba só aparece se o perfil atual pode abri-la; o que não é acessível fica oculto */
 function podeVer(t){if(t==="prod")return true;if(ON&&me&&!me.adm&&me.ab&&!me.ab.includes(t))return false;if(t==="op"||t==="prod"||t==="painel"||t==="prs")return true;if(ON)return !!me&&(isI(t)?!!me.pI:t==='cfg'?!!(me.pC||me.pI):!!me.pC);if(t==="painel")return true;return !needAuth(t)}
-function updTabs(){$$(".tab[data-t]").forEach(b=>{b.style.display=podeVer(b.dataset.t)?"":"none"});$$('#csub [data-c="cga"]').forEach(b=>{b.style.display=soMeta()?"none":""});$$('#fCard').forEach(c=>c.classList.toggle("hide",soMeta()));$$('#csub [data-c="cge"]').forEach(b=>{b.style.display=soMeta()?"none":""});$$('#csub [data-c="cma"]').forEach(b=>{b.style.display=(!ON||(me&&me.adm))?"":"none"});{const soHor=ON&&me&&!me.adm&&!me.pC;$$('#csub [data-c="cop"],#csub [data-c="cus"],#csub [data-c="cme"],#csub [data-c="cho"]').forEach(b=>{b.style.display=''});if(soHor)$$('#csub button').forEach(b=>{if(b.dataset.c!=='cho')b.style.display='none'})}if(!podeVer(view)){view="op";["painel","op","prs","ind","his","cfg"].forEach(s=>$("#"+s).classList.toggle("hide",s!=="op"));$$(".tab[data-t]").forEach(b=>b.classList.toggle("on",b.dataset.t==="op"))}}
+function updTabs(){$$(".tab[data-t]").forEach(b=>{b.style.display=podeVer(b.dataset.t)?"":"none"});$$('#csub [data-c="cga"]').forEach(b=>{b.style.display=soMeta()?"none":""});$$('#fCard').forEach(c=>c.classList.toggle("hide",soMeta()));$$('#csub [data-c="cpd"]').forEach(b=>{let g=false;try{g=pdGestor()}catch(e){}b.style.display=g?"":"none"});$$('#csub [data-c="cge"]').forEach(b=>{b.style.display=soMeta()?"none":""});$$('#csub [data-c="cma"]').forEach(b=>{b.style.display=(!ON||(me&&me.adm))?"":"none"});{const soHor=ON&&me&&!me.adm&&!me.pC;$$('#csub [data-c="cop"],#csub [data-c="cus"],#csub [data-c="cme"],#csub [data-c="cho"]').forEach(b=>{b.style.display=''});if(soHor)$$('#csub button').forEach(b=>{if(b.dataset.c!=='cho')b.style.display='none'})}if(!podeVer(view)){view="op";["painel","op","prs","ind","his","cfg"].forEach(s=>$("#"+s).classList.toggle("hide",s!=="op"));$$(".tab[data-t]").forEach(b=>b.classList.toggle("on",b.dataset.t==="op"))}}
 let hWho="";
 function authUI(){const w=me?me.n+"|"+(me.g||"")+"|"+(me.adm?1:0):"";if(w!==hWho){hWho=w;hKey="";HW=null;HPW=null}$("#who").textContent=me?"Gestor: "+me.n:"";const pub=ON&&!me;["#turnoF","#gal","#day"].forEach(i=>$(i).classList.toggle("hide",pub));if(pub){$("#turnoF").value="";$("#day").value=dk(Date.now())}$("#logtx").textContent=me?"Sair":"Entrar";updTabs()}
 function go(t){if(ON&&me&&!me.adm&&me.ab&&!podeVer(t)){const f=ABAS_T.find(([k])=>podeVer(k));if(f)t=f[0]}setTimeout(()=>{try{sideSubs()}catch(e){}},0);
@@ -2592,7 +2602,7 @@ document.addEventListener("click",e=>{const t=e.target;if(t.id==="prAdd"){const 
 function psub(k){window.__ps=k;$$("#psub button").forEach(b=>b.classList.toggle("on",b.dataset.p===(k==="sku"?"bip":k)));[["bip","pBip"],["sku","pSku"],["his","pHis"]].forEach(([a,id])=>$("#"+id).classList.toggle("hide",k==="his"?a!=="his":a==="his"));setTimeout(()=>{if(view!=="prs")return;const f=k==="bip"?$("#prBip"):k==="sku"?$("#prQ"):null;if(f)f.focus({preventScroll:true})},60)}
 $("#psub").onclick=e=>{const k=e.target.dataset.p;if(k)psub(k)};
 $("#sub").onclick=e=>{const s=e.target.dataset.s;if(!s)return;$$("#sub button").forEach(b=>b.classList.toggle("on",b===e.target));["reg","ctl","ace","aus"].forEach(x=>$("#"+x).classList.toggle("hide",x!==s));tick();if(s==="ace")aceLista();if(s==="aus")ausAbrir()};
-$("#csub").onclick=e=>{const c=e.target.dataset.c;if(!c)return;csub=c;$$("#csub button").forEach(b=>b.classList.toggle("on",b===e.target));{const G={cop:["cop","cme"],cme:["cop","cme"],cus:["cus","cge"],cge:["cus","cge"]}[c]||[c],gv=x=>x!=="cge"||!soMeta();["cop","cho","cus","cme","cga","cge","cma"].forEach(x=>$("#"+x).classList.toggle("hide",!(G.includes(x)&&gv(x))));$$("#csub button").forEach(b=>b.classList.toggle("on",b.dataset.c===({cme:"cop",cge:"cus"}[c]||c)))}if(c==="cus"&&ON&&me&&me.adm)pull().then(()=>cfgGes()).catch(()=>{});if(c==="cge"&&ON&&me&&me.adm)pull().then(()=>cfgGes()).catch(()=>{});if(c==="cma")cfgMan();if(c==="cho")cfgParadas()};
+$("#csub").onclick=e=>{const c=e.target.dataset.c;if(!c)return;csub=c;$$("#csub button").forEach(b=>b.classList.toggle("on",b===e.target));{const G={cop:["cop","cme"],cme:["cop","cme"],cus:["cus","cge"],cge:["cus","cge"]}[c]||[c],gv=x=>x!=="cge"||!soMeta();["cop","cho","cus","cpd","cme","cga","cge","cma"].forEach(x=>$("#"+x).classList.toggle("hide",!(G.includes(x)&&gv(x))));$$("#csub button").forEach(b=>b.classList.toggle("on",b.dataset.c===({cme:"cop",cge:"cus"}[c]||c)))}if(c==="cus"&&ON&&me&&me.adm)pull().then(()=>cfgGes()).catch(()=>{});if(c==="cge"&&ON&&me&&me.adm)pull().then(()=>cfgGes()).catch(()=>{});if(c==="cma")cfgMan();if(c==="cho")cfgParadas();if(c==="cpd")pdAbrirDis()};
 $("#iPrint").onclick=imprimirFolhas;$("#iOp").onchange=()=>{mgShown=100;individual()};$("#iPer").onchange=()=>{mgShown=100;individual();coletiva();loadManagement()};
 $("#iBody").addEventListener("click",e=>{if(e.target.id==="mgMore"){mgShown+=100;individual()}if(e.target.id==="mgTurnoSave")mgSalvarTurno();if(e.target.id==="presSalvar")presSalvar();if(e.target.id==="presBaixa")presBaixa();if(e.target.id==="presAtrSalvar")presAtrSalvar();if(e.target.dataset&&e.target.dataset.cancel)presCancelar(e.target.dataset.cancel)});
 const hojeSemana=()=>mondayOf(dk(Date.now()));
@@ -2821,7 +2831,7 @@ $("#inst").onclick=async()=>{if(dp){dp.prompt();await dp.userChoice;dp=null;retu
 /* ===================== Produção (embalagem): bipar, presença, distribuição e turnos ===================== */
 const PD_POS=[["terreo","mesa"],["terreo","maquina"],["mezanino","mesa"],["mezanino","maquina"]],PD_AND={terreo:"Térreo",mezanino:"Mezanino"},PD_AT={mesa:"Mesa",maquina:"Máquina"},PD_DIAS=["D","S","T","Q","Q","S","S"],PD_DIAS_N=["Domingo","Segunda","Terça","Quarta","Quinta","Sexta","Sábado"],PD_GAL="RC",PD_FILA="rcondas.prodFila";
 const PD_T0=()=>[{id:1,nome:"1º turno",ent:"06:00",sai:"",dias:[1,2,3,4,5,6],ii:"",if:"",ativo:true},{id:2,nome:"2º turno",ent:"09:00",sai:"",dias:[1,2,3,4,5,6],ii:"",if:"",ativo:true}];
-let PDT=null,PDA=[],PDH=[],PDB=[],PDLOC=[],PDPES=[],PDnova=false,PDsel=null,PDsI=-1,PDsL=[],PDsub="bip",PDed=null,PDf="todos",PD_AT0=0;
+let PDT=null,PDA=[],PDH=[],PDB=[],PDLOC=[],PDPES=[],PDnova=false,PDreset=false,PDsel=null,PDsI=-1,PDsL=[],PDsub="bip",PDed=null,PDf="todos",PD_AT0=0;
 const pdK=o=>o.id||o.m,pdOp=k=>pdOps().find(o=>pdK(o)===k),pdFind=v=>{v=String(v||"").trim().toLowerCase();const L=pdOps();return L.find(o=>o.m.toLowerCase()===v)||L.find(o=>o.n.toLowerCase()===v)},hh5=t=>t?String(t).slice(0,5):"";
 const pdTmap=t=>({id:t.id,nome:t.nome,ent:hh5(t.entrada),sai:hh5(t.saida),dias:t.dias||[],ii:hh5(t.int_ini),if:hh5(t.int_fim),ativo:t.ativo!==false});
 const pdAmap=x=>({id:x.id||null,oid:x.pessoa_id,andar:x.andar,at:x.atividade,tu:x.turno_id,ent:hh5(x.entrada),sai:hh5(x.saida),sit:x.situacao||"ativo",ini:Date.parse(x.inicio),fim:x.fim?Date.parse(x.fim):null,por:x.criado_por||""});
@@ -2853,7 +2863,8 @@ function pdSubPr(){PDpr=PDsub="bip";
  if(PDpr==="bip")setTimeout(()=>{const i=PDsel?$("#pdW"):$("#pdP");if(i&&view==="prod")i.focus({preventScroll:true})},60)}
 async function pdAbrir(){pdSubPr(PDpr);pdRender();await pdCarregar();pdRender();pdFilaEnviar()}
 async function pdAbrirDis(){PDsub="dis";PDD.t=0;pdRender();await pdCarregar();pdRender()}
-function pdRender(){if(PDsub==="dis")pdEqRender();else{pdWho();pdLista()}}
+function pdCfgRender(){pdDisLista();pdTurnosLista();const m=$("#pdMt");if(m&&!(document.activeElement&&m.contains(document.activeElement)&&document.activeElement.matches("input,select")))m.innerHTML=pdMetasHtml()}
+function pdRender(){if(view==="cfg"){if(csub==="cpd")pdCfgRender();return}if(PDsub==="dis")pdEqRender();else{pdWho();pdLista()}}
 
 /* ---------- Bipar ---------- */
 function pdSugest(){const q=nrm($("#pdP").value),box=$("#pdSug");PDsI=-1;PDsL=[];
@@ -2919,21 +2930,21 @@ function pdDisLista(){const el=$("#pdDl");if(!el)return;const ops=pdOps(),now=Da
  const bip={};PDB.forEach(b=>{bip[b.oid]=(bip[b.oid]||0)+1});
  $("#pdDf").innerHTML=[["todos","Todos"]].concat(PD_POS.map(([a,x])=>[a+"-"+x,PD_AND[a]+" "+PD_AT[x]]),[["sem","Sem posto"]]).map(([k,t])=>`<button type="button" data-pdf="${k}" aria-pressed="${PDf===k}">${t} <span class="pdCn">${n[k]}</span></button>`).join("");
  const q=nrm($("#pdDq").value),L=ops.filter(o=>{const a=post(o);if(PDf==="sem"&&a)return false;if(PDf!=="todos"&&PDf!=="sem"&&(!a||a.andar+"-"+a.at!==PDf))return false;return!q||nrm(o.n).includes(q)||nrm(o.m).includes(q)}).sort((a,b)=>a.n.localeCompare(b.n));
- pdNovaForm();
+ pdNovaForm();{const c=$("#pdCnt");if(c)c.textContent=ops.length}
  el.innerHTML=L.length?L.map(o=>{const k=pdK(o),a=pdPosto(k,now),t=a?pdTurno(a.tu):null,nb=bip[o.id||k]||0;
   return`<div class="pdRow"><div class="who2">${av(o.n)}<div>${esc(o.n)}<small>${o.m}</small></div></div>
    <div class="pdPc">${a?(a.sit==="ativo"?`<span class="pdTag ${a.andar==="terreo"?"t":"m"}">${PD_AND[a.andar]} ${PD_AT[a.at]}</span>`:'<span class="pdSt err">Inativo</span>'):'<span class="pdH">Sem posto</span>'}${nb?` <span class="pdH">${nb} ${nb===1?"onda":"ondas"} hoje</span>`:""}</div>
    <div class="pdH">${a?esc(t?t.nome:"Turno "+a.tu)+", "+esc(pdHorario(a))+(a.ent?" (individual)":"")+"<br>desde "+new Date(a.ini).toLocaleString("pt-BR",{day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"}):""}</div>
    <button type="button" class="btn alt sm" data-pded="${esc(k)}" aria-expanded="${PDed===k}">${PDed===k?"Fechar":a?"Alterar":"Definir posto"}</button></div>`+(PDed===k?pdEditor(o,a):"")}).join("")
-  :`<div class="empty">${ops.length?"Ninguém neste filtro.":"Nenhuma pessoa cadastrada na produção. Toque em “Cadastrar pessoa”."}</div>`}
+  :`<div class="empty">${ops.length?"Ninguém neste filtro.":"Nenhuma pessoa cadastrada na embalagem. Use o formulário ao lado."}</div>`}
 const pdPosR=(name,cur)=>`<div class="pdSeg pdSeg4">${PD_POS.map(([a,x])=>`<label><input type="radio" name="${name}" value="${a}-${x}"${cur===a+"-"+x?" checked":""}>${PD_AND[a]} ${PD_AT[x]}</label>`).join("")}</div>`;
 const pdTurOpts=cur=>pdTurnos().filter(t=>t.ativo||t.id===cur).map(t=>`<option value="${t.id}"${cur===t.id?" selected":""}>${esc(t.nome)} (${t.ent}${t.sai?" às "+t.sai:""})</option>`).join("");
-function pdNovaForm(){const el=$("#pdNova");if(!el)return;$("#pdNovaB").classList.toggle("hide",PDnova);if(!PDnova){el.innerHTML="";return}if(el.querySelector("form"))return;
- el.innerHTML=`<form class="pdEd" id="pdNovaF" novalidate><div class="pdG"><label>Nome<input name="n" maxlength="80" autocomplete="off" required></label><label>Código do crachá<input name="c" value="${pdProxCod()}" maxlength="12" autocomplete="off" autocapitalize="characters" required></label></div>
+function pdNovaForm(){const el=$("#pdNova");if(!el)return;if(el.querySelector("form")&&!PDreset)return;PDreset=false;
+ el.innerHTML=`<form class="pdNf" id="pdNovaF" novalidate><div class="pdG"><label>Nome<input name="n" maxlength="80" autocomplete="off" required></label><label>Código do crachá<input name="c" value="${pdProxCod()}" maxlength="12" autocomplete="off" autocapitalize="characters" required></label></div>
   <fieldset><legend>Posto</legend>${pdPosR("pdA4",PDf.includes("-")?PDf:"")}</fieldset>
   <div class="pdG"><label>Turno<select name="pdT">${pdTurOpts(null)}</select></label></div>
   <div class="legend" style="margin:0 0 10px">Pessoa da produção (${esc(pdGalpao())}). O código é o que fica no crachá: letras e números, sem espaço.</div>
-  <div class="ctl2"><button type="button" class="btn alt sm" data-pdnx="1">Cancelar</button><button type="submit" class="btn">Cadastrar</button></div></form>`}
+  <div class="ctl2"><span></span><button type="submit" class="btn">Cadastrar</button></div></form>`}
 function pdCodOk(c){return /^[A-Z0-9]{2,12}$/.test(c)}
 async function pdCadastrar(f,k){const nome=f.querySelector('[name="n"]').value.trim().replace(/\s+/g," "),cod=f.querySelector('[name="c"]').value.replace(/\s+/g,"").toUpperCase();
  if(nome.length<2){toast("Informe o nome da pessoa.");f.querySelector('[name="n"]').focus();return}
@@ -2947,8 +2958,8 @@ async function pdCadastrar(f,k){const nome=f.querySelector('[name="n"]').value.t
  if(ON){const b=f.querySelector('[type="submit"],[data-pdcad]');if(b)b.disabled=true;
   let id;try{id=await api("/rest/v1/rpc/prod_pessoa_salvar",{method:"POST",body:{p_id:k||null,p_codigo:cod,p_nome:nome,p_galpao:GID[pdGalpao()]||null}})}catch(e){if(b)b.disabled=false;toast(errMsg(e),7000);return}
   let aviso="";if(!k&&id){try{await api("/rest/v1/rpc/prod_atribuir",{method:"POST",body:{p_pessoa:id,p_andar:an,p_atividade:at,p_turno:tu,p_entrada:null,p_saida:null,p_situacao:"ativo",p_desde:new Date().toISOString()}})}catch(e){aviso=" Não foi possível definir o posto: "+errMsg(e)}}
-  if(!k)PDnova=false;await pdCarregar();pdRender();toast(msg+aviso,aviso?8000:4000);return}
- const P=S.prodPes||(S.prodPes=[]);if(k){const o=P.find(x=>pdK(x)===k);if(o){o.n=nome;o.m=cod}}else{const id=uid();P.push({id,m:cod,n:nome,g:pdGalpao()});(S.prodA||(S.prodA=[])).push({id:uid(),oid:id,andar:an,at,tu,ent:"",sai:"",sit:"ativo",ini:Date.now(),fim:null,por:me?me.u:"local"});PDnova=false}
+  if(!k)PDreset=true;await pdCarregar();pdRender();toast(msg+aviso,aviso?8000:4000);return}
+ const P=S.prodPes||(S.prodPes=[]);if(k){const o=P.find(x=>pdK(x)===k);if(o){o.n=nome;o.m=cod}}else{const id=uid();P.push({id,m:cod,n:nome,g:pdGalpao()});(S.prodA||(S.prodA=[])).push({id:uid(),oid:id,andar:an,at,tu,ent:"",sai:"",sit:"ativo",ini:Date.now(),fim:null,por:me?me.u:"local"});PDreset=true}
  save();pdRender();toast(msg,4000)}
 async function pdRemover(k){const o=pdOp(k);if(!o)return;
  if(ON){try{await api("/rest/v1/rpc/prod_pessoa_excluir",{method:"POST",body:{p_id:o.id}})}catch(e){toast(errMsg(e),7000);return}PDed=null;if(PDsel&&pdK(PDsel)===k)PDsel=null;await pdCarregar();pdRender();toast(o.n+" removido(a) da produção. O histórico continua salvo.",5000);return}
@@ -3012,7 +3023,7 @@ async function pdTurnoSalvar(f){const v=n=>(f.querySelector(`[name="${n}"]`)||{}
 /* ---------- Desempenho da embalagem: meta por hora (Mesa e Máquina), painel do dia, individual e equipe ----------
    Hora trabalhada = cada hora do relógio em que a pessoa bipou pelo menos uma onda (a hora atual conta só o tempo já passado).
    Meta individual = meta por hora da atividade × horas trabalhadas. Meta coletiva = soma das metas individuais. */
-let PDM=[],PDpr="bip",PDE="eq",PDfp="todos",PDps="",PDper="1",PDD={key:"",t:0,B:[],err:""},PDDl=false;
+let PDM=[],PDpr="bip",PDE="ind",PDfp="todos",PDps="",PDper="1",PDD={key:"",t:0,B:[],err:""},PDDl=false;
 const PD_PK=PD_POS.map(([a,x])=>a+"-"+x),pdPN=k=>{const [a,x]=String(k).split("-");return PD_AND[a]&&PD_AT[x]?PD_AND[a]+" "+PD_AT[x]:"—"};
 const nf1=v=>(Math.round((+v||0)*10)/10).toLocaleString("pt-BR",{maximumFractionDigits:1});
 const pdMmap=m=>({g:m.galpao_id,at:m.atividade,h:+m.por_hora,d:m.por_dia==null?null:+m.por_dia,hd:m.horas_dia==null?null:+m.horas_dia,ini:m.inicio,por:m.criado_por||""});
@@ -3070,12 +3081,11 @@ async function pdDesCarregar(ini,fim){
  const r=await api("/rest/v1/rpc/prod_bipagens_periodo",{method:"POST",body:{p_ini:ini,p_fim:fim}});
  return r.map(x=>({id:x.id,oid:x.pessoa_id,nm:x.nome,cod:x.codigo,andar:x.andar,at:x.atividade,tu:x.turno_id,dia:x.dia,em:Date.parse(x.bipada_em),col:!!x.coletado,wn:x.wn_norm||x.wn||""}))}
 function pdDesLocal(ini,fim){{const W=new Set(S.waves.filter(w=>!w.err).map(w=>normWN(w.wn)));return(S.prodB||[]).filter(b=>b.dia>=ini&&b.dia<=fim).map(b=>Object.assign({},b,pdNome(b.oid),{col:W.has(normWN(b.wn))}))}}
-function pdEqSeg(){const g=pdGestor();if(PDE==="pes"&&!g)PDE="eq";$$("#pdEqSeg [data-pde]").forEach(b=>{b.classList.toggle("on",b.dataset.pde===PDE);b.setAttribute("aria-pressed",b.dataset.pde===PDE)});
- $('#pdEqSeg [data-pde="pes"]').classList.toggle("hide",!g);$("#pdDesV").classList.toggle("hide",PDE==="pes");$("#pdDisV").classList.toggle("hide",PDE!=="pes");$("#pdEqCtl").classList.toggle("hide",PDE==="pes");$("#pdPs").classList.toggle("hide",PDE!=="ind")}
+function pdEqSeg(){PDE="ind";$("#pdPs").classList.remove("hide")}
 function pdDesempenho(){const el=$("#pdDesV");if(!el)return;const dias=pdPerDias(),ini=dias[0],fim=dias[dias.length-1],key=ini+"|"+fim,hj=fim>=hoje();
  if(!ON)PDD={key,t:Date.now(),B:pdDesLocal(ini,fim),err:""};
  else if((PDD.key!==key||(hj&&Date.now()-PDD.t>55000))&&!PDDl){PDDl=true;
-  pdDesCarregar(ini,fim).then(B=>{PDD={key,t:Date.now(),B,err:""}},e=>{PDD={key,t:Date.now(),B:[],err:errMsg(e)}}).then(()=>{PDDl=false;if(view==="ind"&&gsub==="pd"&&PDE!=="pes")pdDesempenho()})}
+  pdDesCarregar(ini,fim).then(B=>{PDD={key,t:Date.now(),B,err:""}},e=>{PDD={key,t:Date.now(),B:[],err:errMsg(e)}}).then(()=>{PDDl=false;if(view==="ind"&&gsub==="pd")pdDesempenho()})}
  if(PDD.key!==key){el.innerHTML='<div class="skel" aria-label="Carregando"><i></i><i></i></div>';return}
  if(PDD.err){el.innerHTML=`<div class="card"><div class="empty">Não foi possível carregar a embalagem do período: ${esc(PDD.err)}</div></div>`;return}
  const single=dias.length===1,all=PDD.B,B=pdFiltroP(all),per=single?new Date(ini+"T12:00:00").toLocaleDateString("pt-BR"):new Date(ini+"T12:00:00").toLocaleDateString("pt-BR")+" a "+new Date(fim+"T12:00:00").toLocaleDateString("pt-BR");
@@ -3121,7 +3131,7 @@ async function pdMetaSalvar(f){const ini=f.querySelector('[name="ini"]').value,h
   try{for(const [at,v] of M)await api("/rest/v1/rpc/prod_meta_salvar",{method:"POST",body:{p_galpao:GID[pdGalpao()]||null,p_atividade:at,p_por_dia:v,p_horas_dia:hd,p_inicio:ini}})}catch(e){b.disabled=false;toast(errMsg(e),7000);return}
   await pdCarregar();pdRender();toast(msg,5000);return}
  const L=pdMetas(),g=pdGid();M.forEach(([at,v])=>{const x={g,at,d:v,hd,h:Math.round(v/hd*1000)/1000,ini,por:me?me.u:"local"},o=L.find(m=>m.g===g&&m.at===at&&m.ini===ini);if(o)Object.assign(o,x);else L.push(x)});save();pdRender();toast(msg,5000)}
-function pdEqRender(){pdEqSeg();if(PDE==="pes"){pdDisLista();pdTurnosLista()}else pdDesempenho()}
+function pdEqRender(){pdEqSeg();pdDesempenho()}
 
 /* ---------- Painel: Coleta e Embalagem juntas (só quantidade por hora e por pessoa; metas separadas) ---------- */
 var PNV="duo",PNE={key:"",t:0,B:[],err:""},PNEl=false;
@@ -3204,15 +3214,13 @@ document.addEventListener("keydown",e=>{const id=e.target.id;
   if(e.key==="Escape"){$("#pdSug").innerHTML="";PDsL=[];PDsI=-1}return}
  if(id==="pdW"&&e.key==="Enter"){e.preventDefault();pdBipar()}});
 document.addEventListener("click",e=>{const t=e.target.closest&&e.target.closest("[data-pdsug],[data-pnv],[data-pdfp],[data-pde],[data-pdf],[data-pded],[data-pdtn],[data-pdtx],[data-pdnx],[data-pdcad],[data-pdrm],#pdNovaB,#pdTroca,#pdEnv");if(!t)return;
- if(t.id==="pdNovaB"){PDnova=true;pdNovaForm();const i=$('#pdNovaF [name="n"]');if(i)i.focus();return}
- if(t.dataset.pdnx){PDnova=false;pdNovaForm();$("#pdNovaB").focus();return}
  if(t.dataset.pdcad){pdCadastrar(t.closest("form"),t.dataset.pdcad);return}
  if(t.dataset.pdrm){const o=pdOp(t.dataset.pdrm);if(!o)return;if(t.dataset.ok!=="1"){t.dataset.ok="1";t.textContent="Confirmar remoção de "+o.n.split(" ")[0];setTimeout(()=>{if(t.isConnected){t.dataset.ok="";t.textContent="Remover da produção"}},5000);return}pdRemover(t.dataset.pdrm);return}
  if(t.dataset.pdsug){const o=PDsL.find(x=>x.m===t.dataset.pdsug);if(o)pdEscolher(o);return}
  if(t.dataset.pnv){PNV=t.dataset.pnv;try{localStorage.setItem("rcondas.pnv",PNV)}catch(e){}pnRender();return}
  if(t.dataset.pdfp){PDfp=t.dataset.pdfp;pdRender();return}
  if(t.dataset.pde){PDE=t.dataset.pde;PDed=null;pdEqRender();return}
- if(t.dataset.pdf){PDf=t.dataset.pdf;pdDisLista();return}
+ if(t.dataset.pdf){PDf=t.dataset.pdf;pdDisLista();const r=document.querySelector('#pdNovaF input[name="pdA4"][value="'+PDf+'"]');if(r)r.checked=true;return}
  if(t.dataset.pded){PDed=PDed===t.dataset.pded?null:t.dataset.pded;pdDisLista();const f=PDed&&document.querySelector(`[data-pdform="${CSS.escape(PDed)}"]`);if(f){const r=f.querySelector('input[name="pdA4"]');f.scrollIntoView({block:"nearest"});if(r)r.focus({preventScroll:true})}return}
  if(t.dataset.pdtn){PDed="novoT";pdTurnosLista();const i=$('[data-pdt="novo"] [name="n"]');if(i)i.focus();return}
  if(t.dataset.pdtx){PDed=null;pdTurnosLista();return}
@@ -3221,7 +3229,7 @@ document.addEventListener("click",e=>{const t=e.target.closest&&e.target.closest
 document.addEventListener("submit",e=>{const f=e.target;if(f.id==="pdMetaF"){e.preventDefault();pdMetaSalvar(f);return}if(f.id==="pdNovaF"){e.preventDefault();pdCadastrar(f,null);return}if(f.dataset&&f.dataset.pdform){e.preventDefault();pdAtribuir(f)}else if(f.dataset&&f.dataset.pdt){e.preventDefault();pdTurnoSalvar(f)}});
 window.addEventListener("online",()=>{pdFilaEnviar()});
 document.addEventListener("input",e=>{const f=e.target.closest&&e.target.closest("#pdMetaF");if(f)pdMetaPrev(f)});
-document.addEventListener("change",e=>{const id=e.target.id;if(id==="pdPer"){PDper=e.target.value;pdDesempenho()}else if(id==="pdPs"){PDps=e.target.value;pdDesempenho()}else if(id==="day"&&view==="ind"&&gsub==="pd"&&PDE!=="pes")pdDesempenho()});
+document.addEventListener("change",e=>{const id=e.target.id;if(id==="pdPer"){PDper=e.target.value;pdDesempenho()}else if(id==="pdPs"){PDps=e.target.value;pdDesempenho()}else if(id==="day"&&view==="ind"&&gsub==="pd")pdDesempenho()});
 setInterval(()=>{pdFilaEnviar();if((view==="prod"||(view==="ind"&&gsub==="pd"))&&online()&&document.visibilityState==="visible"&&Date.now()-PD_AT0>55000&&PDed==null){if(ON)pdCarregar().then(pdRender);else{if(!ON)PDB=pdLocalB();PD_AT0=Date.now();if(PDsub!=="bip")pdRender()}}},30000);
 
 /* mini abas na lateral: espelham as abas internas de cada área */
