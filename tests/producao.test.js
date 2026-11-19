@@ -175,10 +175,26 @@ await T("P17 Só a quantidade: lança quantas embalagens a pessoa fez, com confi
  await p.fill('#pdQn','40');await p.click('#pdQb');await p.click('#pdQok');await p.waitForTimeout(150);s=await st(p);const q=(s.prodB||[]).find(b=>b.q);
  ok(q&&q.q===40&&q.oid==='p1'&&q.andar==='terreo'&&q.at==='mesa'&&q.dia===HJ,'lançamento '+JSON.stringify(q));
  ok((await p.textContent('#pdMsg')).includes('40 embalagens registradas'),'mensagem '+await p.textContent('#pdMsg'));ok((await p.textContent('#pdL')).includes('40 embalagens')&&(await p.textContent('#pdL')).includes('Quantidade'),'lista de hoje');
- ok((await p.textContent('#pdN')).includes('42'),'total de hoje '+await p.textContent('#pdN'));
+ ok((await p.textContent('#pdN')).includes('2 ondas')&&(await p.textContent('#pdN')).includes('40 embalagens'),'total de hoje '+await p.textContent('#pdN'));
  const t=await p.evaluate(()=>{const r=pdStats(pdLocalB().map(b=>Object.assign({},b,{nm:'x',dia:b.dia||hoje()})));return[r.n,r.P[0].n,r.col]});ok(t[0]===42&&t[1]===42,'contas '+t);
  await emb(p,'ind');await p.waitForTimeout(150);ok((await p.textContent('#pdDesV')).includes('42'),'individual com a quantidade');
  await p.evaluate(()=>go('painel'));await p.waitForTimeout(500);const pt=(await p.textContent('#pnDuo')).replace(/\s+/g,' ');ok(pt.includes('40 embalagens lançadas só por quantidade'),'painel avisa sem unidades '+pt.slice(0,300));
  if(SHOT){await p.click('.tab[data-t="prod"]');await p.click('#pdMode [data-pdq="q"]');await p.fill('#pdQn','15');await p.click('#pdQb');await p.screenshot({path:SHOT+'/p_qtd.png'})}ok(!p.errors.length,p.errors.join(';'))});
+
+await T("P18 Ausência da embalagem: registra, volta, motivos próprios e aba de gestão",async()=>{const p=await page(b,base());
+ await p.click('.tab[data-t="prod"]');await p.waitForTimeout(150);ok((await p.$$eval('.ssub button',x=>x.map(e=>e.textContent))).includes('Ausente'),'mini aba na lateral');await p.click('.ssub button:has-text("Ausente")');ok(await p.isVisible('#paF')&&!(await p.isVisible('#pdP')),'formulário de ausência');
+ const mots=await p.$$eval('#paMot .ausC',x=>x.map(e=>e.textContent));ok(mots.includes('Reunião')&&!mots.includes('Embalando'),'motivos próprios '+mots);
+ await p.click('#paB');ok(await p.evaluate(()=>!(S.prodAus||[]).length),'registrou sem escolher');
+ await p.fill('#paP','PR001');await p.waitForTimeout(120);if(await p.isVisible('#paSug [data-pasug]'))await p.locator('#paSug [data-pasug]').first().click();
+ await p.click('#paMot [data-pam="Reunião"]');await p.click('#paB');await p.waitForTimeout(150);
+ let s=await st(p);ok((s.prodAus||[]).length===1&&s.prodAus[0].oid==='p1'&&s.prodAus[0].mot==='Reunião'&&!s.prodAus[0].fim,'ausência '+JSON.stringify(s.prodAus));
+ ok((await p.textContent('#paL')).includes('Ana Souza')&&(await p.textContent('#paN')).includes('1 fora'),'lista');ok(!(s.aus||[]).length,'não misturou com a Coleta');
+ await p.fill('#paP','PR001');await p.waitForTimeout(120);if(await p.isVisible('#paSug [data-pasug]'))await p.locator('#paSug [data-pasug]').first().click();await p.click('#paMot [data-pam="Treinamento"]');await p.click('#paB');
+ ok((await st(p)).prodAus.length===1,'duplicou ausência aberta');
+ await p.click('#paL [data-pav]');await p.waitForTimeout(150);s=await st(p);ok(s.prodAus[0].fim>s.prodAus[0].ini,'volta');
+ await p.evaluate(()=>{go('his');HS='paus';hsShow()});await p.waitForTimeout(200);const h=await p.textContent('#hPaus');ok(h.includes('Ana Souza')&&h.includes('Reunião'),'relatório de gestão');
+ await p.evaluate(()=>{go('cfg');document.querySelector('#csub [data-c="cpd"]').click()});await p.fill('#paMotN','Atestado');await p.press('#paMotN','Enter');await p.waitForTimeout(100);
+ ok((await st(p)).cfg.motP.includes('Atestado'),'novo motivo');ok(!((await st(p)).cfg.motA||[]).includes('Atestado'),'misturou com motivos da Coleta');
+ if(SHOT){await p.click('.tab[data-t="prod"]');await p.click('.ssub button:has-text("Ausente")');await p.screenshot({path:SHOT+'/p_aus.png'})}ok(!p.errors.length,p.errors.join(';'))});
 
 await b.close();let f=0;R.forEach(([s,n,i])=>{if(s!=="PASS")f++;console.log((s==="PASS"?"✅ ":"❌ ")+n+"  "+(s==="PASS"?"("+i+"ms)":i))});console.log("\n"+(R.length-f)+"/"+R.length+" passaram");process.exit(f?1:0)})();

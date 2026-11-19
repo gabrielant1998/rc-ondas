@@ -307,7 +307,7 @@ await T("73 Mini abas na lateral: aparecem sob a aba ativa e abrem de forma inde
  const p=await page(b,base(),{sidebarSubs:true});
  ok(!(await p.isVisible('#hsub')),'barra interna deveria sumir no computador');
  await p.evaluate(()=>go('his'));await p.waitForSelector('.ssub [data-v="pes"]');
- const n=await p.$$eval('.ssub button',a=>a.map(x=>x.textContent));ok(n.length===5&&n[0].includes('Evolução')&&n[4].includes('Ausências'),'abas laterais: '+n);
+ const n=await p.$$eval('.ssub button',a=>a.map(x=>x.textContent));ok(n.length===6&&n[0].includes('Evolução')&&n[4].includes('Ausências')&&n[5].includes('embalagem'),'abas laterais: '+n);
  await p.click('.ssub [data-v="pes"]');await p.waitForTimeout(200);ok(await p.$eval('.ssub [data-v="pes"]',e=>e.classList.contains('on')),'marca a aba ativa');
  ok(await p.$eval('#hsub [data-hs="pes"]',e=>e.classList.contains('on')),'a aba interna acompanha');
  await p.evaluate(()=>go('prs'));await p.waitForTimeout(200);ok((await p.$$('.ssub')).length===1&&(await p.$$eval('.ssub button',a=>a.length))===2,'só as abas da área ativa aparecem (Pendentes e Histórico)');

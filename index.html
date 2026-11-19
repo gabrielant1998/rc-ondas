@@ -295,7 +295,7 @@ a[data-pick]{display:inline-block;padding:8px 0 2px;color:var(--gx);font-weight:
 .ssub button:hover{color:#fff;background:rgba(255,255,255,.07)}
 .ssub button.on{color:#fff;background:rgba(255,255,255,.16);font-weight:700;box-shadow:inset 3px 0 0 #8fb4ff}
 .ssub button:focus-visible{outline:2px solid #8fb4ff;outline-offset:1px}
-@media(min-width:761px){#sub,#gsub,#psub,#hsub,#csub{display:none}}
+@media(min-width:761px){#sub,#gsub,#psub,#hsub,#csub,#pasub{display:none}}
 @media(max-width:760px){.ssub{display:none}}
 
 /* ===== modo compacto (computador) e limpeza visual ===== */
@@ -342,7 +342,7 @@ td .btn.d:hover,td .pill.off[data-adel]:hover{background:var(--r);color:#fff;bor
 .ausC[aria-pressed="true"]{background:var(--g);border-color:var(--g);color:#fff}.ausC.on{cursor:default;min-height:36px;padding:4px 6px 4px 12px}.ausC.on button{width:28px;height:28px;border:0;border-radius:50%;background:none;color:var(--mut);font-size:18px;cursor:pointer}.ausC.on button:hover{color:var(--r)}
 .ausH{display:grid;grid-template-columns:1fr 1fr;gap:12px}.ausH small{font-weight:400;color:var(--mut)}
 .ausT tr.ab td{background:color-mix(in srgb,var(--o) 9%,transparent)}.ausTag{display:inline-block;padding:2px 9px;border-radius:999px;background:color-mix(in srgb,var(--g) 12%,transparent);font-size:13px;font-weight:600;white-space:nowrap}
-.motF{display:flex;gap:8px;margin-top:12px}.motF input{flex:1;min-height:42px;margin:0}
+.motF{display:flex;gap:8px;margin-top:12px}.motF .btn{flex:none}.motF input{flex:1;min-width:0;min-height:42px;margin:0}
 .ausR tr.z td{color:var(--mut)}.ausR small{color:var(--mut)}.ausBar{display:block;height:5px;border-radius:3px;background:color-mix(in srgb,var(--line) 60%,transparent);margin-top:5px;max-width:220px}.ausBar i{display:block;height:100%;border-radius:3px;background:var(--g)}
 .ausRc{margin-bottom:12px;align-items:flex-end}.ausRc label{display:flex;flex-direction:column;font-size:12.5px;color:var(--mut);gap:3px}
 .pzH{font-size:13.5px;font-weight:600}.pzH small{font-weight:400;color:var(--mut)}
@@ -639,6 +639,19 @@ body[data-v=cfg] #turnoF,body[data-v=cfg] #gal,body[data-v=cfg] #day{display:non
 
 <!-- ======================= PRODUÇÃO (embalagem) ======================= -->
 <section id="prod" class="hide">
+ <div class="sub" id="pasub"><button data-pa="bip" class="on">Embalar ondas</button><button data-pa="aus">Ausente</button></div>
+ <div id="paV" class="grid two hide">
+  <div class="card"><h2>Registrar ausência</h2>
+   <form id="paF" class="f" novalidate>
+    <label>Pessoa da embalagem<input id="paP" placeholder="Digite o nome" autocomplete="off" role="combobox" aria-expanded="false" aria-controls="paSug"></label>
+    <div id="paWho" aria-live="polite"></div><div id="paSug" role="listbox" aria-label="Pessoas encontradas"></div>
+    <fieldset class="ausM"><legend>Motivo</legend><div id="paMot" class="ausChips"></div></fieldset>
+    <div class="ausH"><label>Saída<input type="time" id="paI"></label><label><span>Volta <small>(se já souber)</small></span><input type="time" id="paV2"></label></div>
+    <button class="btn" type="submit" id="paB">Registrar ausência</button>
+   </form>
+   <div class="legend">Use quando a pessoa sair do posto da embalagem. Na volta, toque em “Voltei” na lista ao lado. Este registro é só do pessoal da embalagem e não mistura com a Coleta.</div></div>
+  <div class="card"><h2>Ausentes hoje <span class="pill" id="paN"></span></h2><div class="tw" id="paL"></div></div>
+ </div>
  <div id="pdBipV" class="grid two">
   <div class="card"><h2>Embalar ondas</h2>
    <div class="f">
@@ -692,9 +705,9 @@ body[data-v=cfg] #turnoF,body[data-v=cfg] #gal,body[data-v=cfg] #day{display:non
 
 <!-- ======================= HISTÓRICO ======================= -->
 <section id="his" class="hide">
- <div class="sub" id="hsub"><button data-hs="evo" class="on">Evolução e previsão</button><button data-hs="tipo">Tipos de onda</button><button data-hs="pro">Procurando</button><button data-hs="pes">Pessoas e ondas</button><button data-hs="aus">Ausências</button><button data-hs="trn" class="hide" id="hsTrn">Alterações de turno</button></div>
+ <div class="sub" id="hsub"><button data-hs="evo" class="on">Evolução e previsão</button><button data-hs="tipo">Tipos de onda</button><button data-hs="pro">Procurando</button><button data-hs="pes">Pessoas e ondas</button><button data-hs="aus">Ausências</button><button data-hs="paus">Ausências da embalagem</button><button data-hs="trn" class="hide" id="hsTrn">Alterações de turno</button></div>
  <div class="ctl" style="margin-bottom:12px"><select id="hVis" aria-label="Visão"><option value="dia">Por dia</option><option value="hora">Por hora</option><option value="mes">Por mês</option></select><select id="hPer" aria-label="Período"></select><select id="hMet" aria-label="Métrica"><option value="u">Unidades</option><option value="o">Ondas</option><option value="t">Tempo médio ponderado por conjunto</option></select><select id="hGal" aria-label="Galpão"></select><select id="hOp" aria-label="Operador"><option value="">Todos os operadores</option></select></div>
- <div id="hStatus" class="legend hide" role="status"></div><div id="hBody"></div><div id="hTurno"></div><div id="hAus" class="hide"></div>
+ <div id="hStatus" class="legend hide" role="status"></div><div id="hBody"></div><div id="hTurno"></div><div id="hAus" class="hide"></div><div id="hPaus" class="hide"></div>
 </section>
 
 <!-- ======================= CONFIG ======================= -->
@@ -748,6 +761,9 @@ body[data-v=cfg] #turnoF,body[data-v=cfg] #gal,body[data-v=cfg] #day{display:non
     <div id="pdDl"></div>
     <div class="legend">O cadastro de quem embala é separado do cadastro da Coleta. Cada mudança de posto vale a partir do horário informado; as ondas já bipadas continuam com o andar, a atividade e o turno da época.</div></div>
   </div>
+  <div class="card" id="paMotCard"><h2>Motivos de ausência da embalagem</h2><div id="paMotL" class="ausChips"></div>
+   <form id="paMotF" class="motF"><input id="paMotN" maxlength="40" placeholder="Novo motivo" aria-label="Novo motivo de ausência da embalagem" autocomplete="off"><button class="btn sm" type="submit">Adicionar</button></form>
+   <div class="legend">Aparecem na mini aba Ausente da Produção. São separados dos motivos da Coleta. Remover um motivo não apaga as ausências já registradas.</div></div>
   <details class="card pnDet" id="cpdTu"><summary>Turnos da embalagem</summary><div id="pdTl"></div>
    <div class="legend">Saída em branco = ainda não configurada; as horas trabalhadas só são calculadas com a saída preenchida. Saída menor que a entrada = turno que passa da meia-noite. Sábado e domingo: preencha só se o horário for diferente da semana, e marque S e D nos dias do turno.</div></details>
  </div>
@@ -935,7 +951,7 @@ async function pullReal(opt){
  GID={};GN={};gs.forEach(g=>{GID[g.nome]=g.id;GN[g.id]=g.nome});
  S.gals=gs.map(g=>g.nome);S.galH={};gs.forEach(g=>{if(g.horarios&&typeof g.horarios==="object"&&Object.keys(g.horarios).length)S.galH[g.nome]=g.horarios});S.metasInd={};gs.forEach(g=>{if(g.meta_ind_ondas||g.meta_ind_qtd||g.meta_ind_ret)S.metasInd[g.nome]={o:g.meta_ind_ondas||0,q:g.meta_ind_qtd||0,r:g.meta_ind_ret||0}});
  ts.forEach(t=>{S.cfg.lim[t.nome]=t.limite;if(typeof t.multiplas_no_lancamento==="boolean")S.cfg.multi[t.nome]=t.multiplas_no_lancamento});
- const c=cf[0];if(c){S.cfg.turnos={1:{ini:c.turno1_ini,fim:c.turno1_fim},2:{ini:c.turno2_ini,fim:c.turno2_fim}};S.cfg.gap=Math.min(+c.intervalo_max_min||30,60);S.cfg.tol=c.tolerancia_min;S.cfg.metaMin=+c.meta_minima||0;S.cfg.and=c.ondas_em_andamento;S.cfg.alm={1:{ini:c.almoco1_ini,fim:c.almoco1_fim},2:{ini:c.almoco2_ini,fim:c.almoco2_fim}};S.cfg.pz=c.pausas||{};S.cfg.fds=c.fds||{};if(Array.isArray(c.motivos_ausencia)&&c.motivos_ausencia.length)S.cfg.motA=c.motivos_ausencia}
+ const c=cf[0];if(c){S.cfg.turnos={1:{ini:c.turno1_ini,fim:c.turno1_fim},2:{ini:c.turno2_ini,fim:c.turno2_fim}};S.cfg.gap=Math.min(+c.intervalo_max_min||30,60);S.cfg.tol=c.tolerancia_min;S.cfg.metaMin=+c.meta_minima||0;S.cfg.and=c.ondas_em_andamento;S.cfg.alm={1:{ini:c.almoco1_ini,fim:c.almoco1_fim},2:{ini:c.almoco2_ini,fim:c.almoco2_fim}};S.cfg.pz=c.pausas||{};S.cfg.fds=c.fds||{};if(Array.isArray(c.motivos_ausencia)&&c.motivos_ausencia.length)S.cfg.motA=c.motivos_ausencia;if(Array.isArray(c.motivos_ausencia_prod)&&c.motivos_ausencia_prod.length)S.cfg.motP=c.motivos_ausencia_prod}
  OPSALL={};os.forEach(o=>{OPSALL[o.id]=o});
  S.ops=os.filter(o=>!o.excluido_em).map(o=>({id:o.id,m:o.codigo,n:o.nome,t:o.turno,ini:o.inicio,fim:o.fim,al:{ini:o.almoco_ini,fim:o.almoco_fim},g:GN[o.galpao_id],criado:o.criado_em}));
  if(!S.gals.includes(S.gal))S.gal=S.gals[0];
@@ -2310,7 +2326,7 @@ const HOPEN=new Set(),HPQ={};let HPBY={},HUQ="",HUR="";
 const hDT=t=>new Date(t).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
 const hST=['Concluída','Procurando','Difícil acesso'];
 let HS="evo";
-function hsShow(){if(HS==="trn"&&$("#hsTrn").classList.contains("hide"))HS="evo";$$("#hsub button").forEach(b=>b.classList.toggle("on",b.dataset.hs===HS));$$("#hBody [data-hs]").forEach(d=>d.classList.toggle("hide",d.dataset.hs!==HS));$("#hTurno").classList.toggle("hide",HS!=="trn");$("#hAus").classList.toggle("hide",HS!=="aus");$("#hBody").classList.toggle("hide",HS==="aus");document.querySelector("#his > .ctl").classList.toggle("hide",HS==="aus");if(HS==="aus")ausRel()}
+function hsShow(){if(HS==="trn"&&$("#hsTrn").classList.contains("hide"))HS="evo";$$("#hsub button").forEach(b=>b.classList.toggle("on",b.dataset.hs===HS));$$("#hBody [data-hs]").forEach(d=>d.classList.toggle("hide",d.dataset.hs!==HS));$("#hTurno").classList.toggle("hide",HS!=="trn");$("#hAus").classList.toggle("hide",HS!=="aus");$("#hPaus").classList.toggle("hide",HS!=="paus");$("#hBody").classList.toggle("hide",HS==="aus"||HS==="paus");document.querySelector("#his > .ctl").classList.toggle("hide",HS==="aus"||HS==="paus");if(HS==="aus")ausRel();else if(HS==="paus")pausRel()}
 /* tempo de procurando conta só o horário comercial (6h às 20h) dos dias em que houve operação */
 const HC_INI=6,HC_FIM=20;let OPD={k:'',s:new Set()};
 function opDias(){const k=S.waves.length+'|'+(MGW?MGW.length:0)+'|'+(HW?HW.length:0);if(OPD.k===k)return OPD.s;
@@ -2905,10 +2921,10 @@ async function pdCarregar(){
   PD_AT0=Date.now()}catch(e){}}
 function pdSubPr(){PDpr=PDsub="bip";
  if(PDpr==="bip")setTimeout(()=>{const i=PDsel?$("#pdW"):$("#pdP");if(i&&view==="prod")i.focus({preventScroll:true})},60)}
-async function pdAbrir(){pdSubPr(PDpr);pdRender();await pdCarregar();pdRender();pdFilaEnviar()}
+async function pdAbrir(){pdSubPr(PDpr);paSub(PAsub,1);pdRender();await pdCarregar();pdRender();pdFilaEnviar()}
 async function pdAbrirDis(){PDsub="dis";PDD.t=0;pdRender();await pdCarregar();pdRender()}
-function pdCfgRender(){pdDisLista();pdTurnosLista();const m=$("#pdMt");if(m&&!(document.activeElement&&m.contains(document.activeElement)&&document.activeElement.matches("input,select")))m.innerHTML=pdMetasHtml()}
-function pdRender(){if(view==="cfg"){if(csub==="cpd")pdCfgRender();return}if(PDsub==="dis")pdEqRender();else{pdWho();pdLista()}}
+function pdCfgRender(){paCfgMot();pdDisLista();pdTurnosLista();const m=$("#pdMt");if(m&&!(document.activeElement&&m.contains(document.activeElement)&&document.activeElement.matches("input,select")))m.innerHTML=pdMetasHtml()}
+function pdRender(){if(view==="cfg"){if(csub==="cpd")pdCfgRender();return}if(PDsub==="dis")pdEqRender();else{pdWho();pdLista();if(PAsub==="aus"){paForm();paLista()}}}
 
 /* ---------- Bipar ---------- */
 function pdSugest(){const q=nrm($("#pdP").value),box=$("#pdSug");PDsI=-1;PDsL=[];
@@ -2985,11 +3001,11 @@ async function pdBipar(){const o=PDsel;if(!o){toast("Escolha a pessoa primeiro."
 function pdLista(){const el=$("#pdL");if(!el)return;const by={};
  PDB.forEach(b=>{by[b.id]=Object.assign({st:"ok"},b)});PDLOC.forEach(x=>{if(x.st!=="ok"||!by[x.id])by[x.id]=Object.assign({},by[x.id]||{},x)});
  const q=nrm($("#pdQ")?$("#pdQ").value:""),all=Object.values(by).sort((a,b)=>b.em-a.em),L=all.filter(x=>{if(!q)return true;const o=pdOp(x.oid);return nrm(x.wn).includes(q)||(o&&(nrm(o.n).includes(q)||nrm(o.m)===q))});
- const okN=all.filter(x=>x.st==="ok").reduce((a,x)=>a+(x.q||1),0),pend=all.filter(x=>x.st==="pend").length;
- $("#pdN").textContent=okN?okN+(okN===1?" onda":" ondas")+(pend?", "+pend+" pendente"+(pend>1?"s":""):""):(pend?pend+" pendente"+(pend>1?"s":""):"");
- const st=x=>x.st==="ok"?(x.q?'<span class="pdSt ok">Quantidade</span>':x.col?'<span class="pdSt ok">Coletada</span>':'<span class="pdSt warn">Não coletada</span>'):x.st==="pend"||x.st==="env"?'<span class="pdSt pend">'+(x.st==="env"?"Enviando":"Pendente")+"</span>":x.st==="rep"?'<span class="pdSt err">Já embalada</span>':'<span class="pdSt err">Não registrada</span>';
- el.innerHTML=L.length?`<table class="pdT"><tr><th>Hora</th><th>Onda</th><th>Pessoa</th><th class="pdHm">Posto</th><th>Status</th></tr>`+L.slice(0,150).map(x=>{const o=pdOp(x.oid),nm=o?o.n:"—";
-  return`<tr><td>${hmT(x.em)}</td><td class="wn">${x.q?fmt(x.q)+(x.q===1?" embalagem":" embalagens"):esc(x.wn)}</td><td>${esc(nm)}</td><td class="pdHm">${x.andar?PD_AND[x.andar]+", "+PD_AT[x.at]:"—"}</td><td>${st(x)}</td></tr>`}).join("")+"</table>"+(L.length>150?`<div class="legend">Mostrando as 150 mais recentes de ${L.length}.</div>`:"")
+ const okW=all.filter(x=>x.st==="ok"&&!x.q).length,okQ=all.filter(x=>x.st==="ok"&&x.q).reduce((a,x)=>a+x.q,0),pend=all.filter(x=>x.st==="pend").length;
+ $("#pdN").textContent=[okW?okW+(okW===1?" onda":" ondas"):"",okQ?fmt(okQ)+(okQ===1?" embalagem":" embalagens")+" (quantidade)":"",pend?pend+" pendente"+(pend>1?"s":""):""].filter(Boolean).join(", ");
+ const st=x=>x.st==="ok"?(x.q?'<span class="pdSt ok">Sem onda</span>':x.col?'<span class="pdSt ok">Coletada</span>':'<span class="pdSt warn">Não coletada</span>'):x.st==="pend"||x.st==="env"?'<span class="pdSt pend">'+(x.st==="env"?"Enviando":"Pendente")+"</span>":x.st==="rep"?'<span class="pdSt err">Já embalada</span>':'<span class="pdSt err">Não registrada</span>';
+ el.innerHTML=L.length?`<table class="pdT"><tr><th>Hora</th><th>Registro</th><th>Pessoa</th><th class="pdHm">Posto</th><th>Status</th></tr>`+L.slice(0,150).map(x=>{const o=pdOp(x.oid),nm=o?o.n:"—";
+  return`<tr><td>${hmT(x.em)}</td><td class="wn">${x.q?'<span class="pdTag">Quantidade</span> '+fmt(x.q)+(x.q===1?" embalagem":" embalagens"):'<span class="pdTag t">Onda</span> '+esc(x.wn)}</td><td>${esc(nm)}</td><td class="pdHm">${x.andar?PD_AND[x.andar]+", "+PD_AT[x.at]:"—"}</td><td>${st(x)}</td></tr>`}).join("")+"</table>"+(L.length>150?`<div class="legend">Mostrando as 150 mais recentes de ${L.length}.</div>`:"")
   :`<div class="empty">${q?"Nenhuma bipagem encontrada.":"Nenhuma onda bipada hoje."}</div>`}
 
 /* ---------- Distribuição ---------- */
@@ -3330,8 +3346,92 @@ document.addEventListener("input",e=>{const f=e.target.closest&&e.target.closest
 document.addEventListener("change",e=>{const id=e.target.id;if(id==="pdPer"){PDper=e.target.value;pdDesempenho()}else if(id==="pdPs"){PDps=e.target.value;pdDesempenho()}else if(id==="day"&&view==="ind"&&gsub==="pd")pdDesempenho()});
 setInterval(()=>{pdFilaEnviar();if((view==="prod"||(view==="ind"&&gsub==="pd"))&&online()&&document.visibilityState==="visible"&&Date.now()-PD_AT0>55000&&PDed==null){if(ON)pdCarregar().then(pdRender);else{if(!ON)PDB=pdLocalB();PD_AT0=Date.now();if(PDsub!=="bip")pdRender()}}},30000);
 
+
+/* ===== Ausência do pessoal da embalagem (cadastro próprio, separado da Coleta) ===== */
+var MOT_PD=["Ajudando na coleta","Reunião","Treinamento","Outra atividade"],PAUS=[],PAM=null,PAsel=null,PAL=[],PAI=-1,PAsub="bip",PAUSR={de:null,ate:null,rows:[],at:0,key:"",g:"__all"};
+function motivosP(){return(S.cfg&&Array.isArray(S.cfg.motP)&&S.cfg.motP.length)?S.cfg.motP:MOT_PD}
+const paMap=x=>({id:x.id,oid:x.pessoa_id,mot:x.motivo,ini:Date.parse(x.inicio),fim:x.fim?Date.parse(x.fim):null});
+const paNome=id=>{const o=pdOps().find(x=>pdK(x)===id);return o?o.n:"Pessoa removida"};
+function paSub(s,quiet){PAsub=s==="aus"?"aus":"bip";$("#paV").classList.toggle("hide",PAsub!=="aus");$("#pdBipV").classList.toggle("hide",PAsub==="aus");$$("#pasub button").forEach(b=>b.classList.toggle("on",b.dataset.pa===PAsub));
+ if(PAsub==="aus"&&!quiet){paForm();paLista();(async()=>{if(!pdOps().length&&ON)await pdCarregar();await paCarregar();paForm();paLista()})()}}
+async function paCarregar(){if(!ON){PAUS=(S.prodAus||[]).filter(a=>dk(a.ini)===hoje());return}
+ if(!online())return;try{PAUS=(await api("/rest/v1/rpc/prod_ausencias_dia",{method:"POST",body:{p_dia:hoje()}})).map(paMap)}catch(e){}}
+function paForm(){const M=motivosP();if(!M.includes(PAM))PAM=null;
+ $("#paMot").innerHTML=M.map(m=>`<button type="button" class="ausC" data-pam="${esc(m)}" aria-pressed="${m===PAM}">${esc(m)}</button>`).join("");
+ if(!$("#paI").value)$("#paI").value=hmT(Date.now());paWho()}
+function paFind(v){if(PAsel&&PAsel.m===String(v||"").trim())return PAsel;const o=pdFind(v);if(o)return o;const q=nrm(v);if(q.length<2)return null;const L=pdOps().filter(x=>nrm(x.n).includes(q)||nrm(x.m)===q);return L.length===1?L[0]:null}
+function paWho(){const o=PAsel||pdFind($("#paP").value);$("#paWho").innerHTML=o?'<div class="cracha">'+av(o.n)+"<div><b>"+esc(o.n)+"</b><small>"+esc(o.m)+(o.g?", "+esc(o.g):"")+"</small></div></div>":""}
+function paSugest(){const q=nrm($("#paP").value),box=$("#paSug");PAI=-1;PAL=[];
+ if(!q||PAsel){box.innerHTML="";$("#paP").setAttribute("aria-expanded","false");return}
+ const all=opsBusca(q,pdOps());PAL=all.slice(0,8);box.innerHTML=opsCartoes(PAL,all.length,"data-pasug");$("#paP").setAttribute("aria-expanded",String(PAL.length>0))}
+function paEscolher(o){PAsel=o;$("#paP").value=o.m;PAL=[];PAI=-1;$("#paSug").innerHTML="";$("#paP").setAttribute("aria-expanded","false");paWho();const b=$("#paMot button");if(b&&!PAM)b.focus({preventScroll:true})}
+function paLista(){const el=$("#paL");if(!el)return;const now=Date.now(),L=PAUS.slice().sort((a,b)=>(!!a.fim-!!b.fim)||(b.ini-a.ini)),fora=L.filter(a=>!a.fim||a.fim>now).length;
+ $("#paN").textContent=fora?fora+" fora agora":"";
+ el.innerHTML=L.length?`<table class="ausT"><tr><th>Pessoa</th><th>Motivo</th><th>Saída</th><th>Volta</th></tr>`+L.map(a=>{const nm=paNome(a.oid),aberta=!a.fim;
+  return`<tr${aberta?' class="ab"':""}><td><div class="who2">${av(nm)}<div>${esc(nm)}</div></div></td><td><span class="ausTag">${esc(a.mot)}</span></td><td>${hmT(a.ini)}</td><td>${aberta?`<button type="button" class="btn sm" data-pav="${esc(a.id)}">Voltei</button><br><small>há ${durA(now-a.ini)}</small>`:`${hmT(a.fim)}<br><small>${durA(a.fim-a.ini)}</small>`}</td></tr>`}).join("")+"</table>"
+  :'<div class="empty">Ninguém ausente hoje.</div>'}
+async function paSalvar(){const o=paFind($("#paP").value);if(!o){toast("Escolha o nome da pessoa na lista.");$("#paP").focus();return}
+ if(!PAM){toast("Escolha o motivo da ausência.");return}
+ const ini=ausHora($("#paI").value),fim=$("#paV2").value?ausHora($("#paV2").value):null;
+ if(ini==null){toast("Informe o horário de saída.");$("#paI").focus();return}
+ if(ini>Date.now()+12*36e5){toast("O horário de saída está muito à frente.");return}
+ if(fim!=null&&fim<=ini){toast("A volta precisa ser depois da saída.");$("#paV2").focus();return}
+ if(PAUS.some(a=>a.oid===pdK(o)&&!a.fim)){toast(o.n+" já está ausente. Registre a volta antes de lançar outra.",5000);return}
+ const reg={id:uid(),oid:pdK(o),mot:PAM,ini,fim},msg="Ausência registrada: "+o.n+", "+PAM+", saída "+hmT(ini)+(fim?" e volta "+hmT(fim):"");
+ if(!ON){S.prodAus=(S.prodAus||[]).concat([{...reg,g:o.g}]);save();await paCarregar()}
+ else{if(!online()){toast("Sem internet. A ausência precisa de conexão para ser registrada.",5000);return}
+  const b=$("#paB");b.disabled=true;try{await api("/rest/v1/rpc/prod_registrar_ausencia",{method:"POST",body:{p_id:reg.id,p_pessoa:o.id,p_motivo:PAM,p_inicio:new Date(ini).toISOString(),p_fim:fim?new Date(fim).toISOString():null}});PAUS.push(reg)}
+  catch(e){b.disabled=false;toast(errMsg(e),6000);return}b.disabled=false;paCarregar().then(paLista)}
+ PAsel=null;$("#paSug").innerHTML="";$("#paP").value="";$("#paV2").value="";$("#paI").value="";PAM=null;paForm();paLista();toast(msg,5000)}
+async function paVoltar(id){const a=PAUS.find(x=>x.id===id);if(!a)return;const fim=Math.max(Date.now(),a.ini+6e4);
+ if(!ON){const x=(S.prodAus||[]).find(z=>z.id===id);if(x)x.fim=fim;save();await paCarregar();paLista();toast("Volta registrada às "+hmT(fim));return}
+ try{await api("/rest/v1/rpc/prod_encerrar_ausencia",{method:"POST",body:{p_id:id,p_fim:new Date(fim).toISOString()}});a.fim=fim;paLista();toast("Volta registrada às "+hmT(fim))}catch(e){toast(errMsg(e),6000);paLista()}}
+$("#pasub").onclick=e=>{const k=e.target.dataset.pa;if(k)paSub(k)};
+document.addEventListener("click",e=>{const t=e.target.closest?e.target:null;if(!t)return;
+ const m=t.closest("[data-pam]");if(m){PAM=m.dataset.pam;paForm();return}
+ const v=t.closest("[data-pav]");if(v){v.disabled=true;paVoltar(v.dataset.pav);return}
+ const g=t.closest("[data-pasug]");if(g){const o=PAL.find(x=>x.m===g.dataset.pasug);if(o)paEscolher(o);return}
+ const x=t.closest("[data-pamx]");if(x){const n=x.dataset.pamx;if(!confirm("Remover o motivo “"+n+"”? As ausências já registradas continuam no relatório."))return;paMotSalvar(motivosP().filter(m=>m!==n),"Motivo “"+n+"” removido");return}
+ const d=t.closest("[data-padel]");if(d){if(!confirm("Excluir este registro de ausência?"))return;(async()=>{if(await rem(()=>mut("/rest/v1/prod_ausencias?id=eq."+encodeURIComponent(d.dataset.padel),"DELETE"),"Ausência excluída"))pausRel(true)})()}});
+document.addEventListener("input",e=>{if(e.target.id!=="paP")return;PAsel=null;const v=$("#paP").value.trim(),o=pdFind(v);if(o&&o.m.toLowerCase()===v.toLowerCase()){paEscolher(o);return}paWho();paSugest()});
+document.addEventListener("keydown",e=>{if(e.target.id!=="paP")return;
+ if((e.key==="ArrowDown"||e.key==="ArrowUp")&&PAL.length){e.preventDefault();PAI=(PAI+(e.key==="ArrowDown"?1:-1)+PAL.length)%PAL.length;$$("#paSug [data-pasug]").forEach((b,i)=>b.classList.toggle("on",i===PAI));return}
+ if(e.key==="Enter"&&!PAsel){e.preventDefault();if(PAI>=0&&PAL[PAI]){paEscolher(PAL[PAI]);return}if(PAL.length===1){paEscolher(PAL[0]);return}if(PAL.length>1)toast("Há mais de uma pessoa. Selecione o nome desejado.",5000);return}
+ if(e.key==="Escape"){$("#paSug").innerHTML="";PAL=[];PAI=-1}});
+document.addEventListener("submit",e=>{if(e.target.id==="paF"){e.preventDefault();paSalvar()}else if(e.target.id==="paMotF"){e.preventDefault();paMotAdd()}});
+/* motivos (Config) */
+function paCfgMot(){const el=$("#paMotL");if(!el)return;const pode=!ON||(me&&(me.pC||me.adm));$("#paMotF").classList.toggle("hide",!pode);
+ el.innerHTML=motivosP().map(m=>`<span class="ausC on">${esc(m)}${pode&&motivosP().length>1?`<button type="button" data-pamx="${esc(m)}" aria-label="Remover o motivo ${esc(m)}">×</button>`:""}</span>`).join("")}
+async function paMotSalvar(L,msg){if(!ON){S.cfg.motP=L;save();paCfgMot();toast(msg);return}
+ if(await rem(()=>mut(CFGP,"PATCH",{motivos_ausencia_prod:L}),msg)){S.cfg.motP=L;paCfgMot()}}
+function paMotAdd(){const n=$("#paMotN").value.trim().replace(/\s+/g," ");if(!n)return;if(n.length>40){toast("Use até 40 caracteres.");return}
+ if(motivosP().some(m=>nrm(m)===nrm(n))){toast("Este motivo já existe.");return}if(motivosP().length>=30){toast("Limite de 30 motivos.");return}
+ $("#paMotN").value="";paMotSalvar(motivosP().concat([n]),"Motivo “"+n+"” adicionado")}
+/* gestão: Histórico › Ausências da embalagem */
+function pausRelHtml(){const KA=(t,v,x)=>`<div class="kpi"><dt>${t}</dt><dd class="num">${v}</dd><dd class="sm">${x||""}</dd></div>`,R=PAUSR.rows,G=PAUSR.g&&PAUSR.g!=="__all"?PAUSR.g:null,per=new Date(PAUSR.de+"T00:00:00").toLocaleDateString("pt-BR")+" a "+new Date(PAUSR.ate+"T00:00:00").toLocaleDateString("pt-BR");
+ const L=R.filter(a=>!G||a.g===G),dur=a=>a.fim?a.fim-a.ini:0,M=motivosP().slice();L.forEach(a=>{if(!M.includes(a.mot))M.push(a.mot)});
+ const tot=L.reduce((q,a)=>q+dur(a),0),abertas=L.filter(a=>!a.fim).length,pes=new Set(L.map(a=>a.oid)).size,mx=Math.max(1,...M.map(m=>L.filter(a=>a.mot===m).reduce((q,a)=>q+dur(a),0)));
+ const porM=M.map(m=>{const l=L.filter(a=>a.mot===m);return{m,n:l.length,t:l.reduce((q,a)=>q+dur(a),0),p:new Set(l.map(a=>a.oid)).size}});
+ const pm={};L.forEach(a=>{const x=pm[a.oid]||(pm[a.oid]={n:a.nome||"Pessoa removida",g:a.g||"",c:0,t:0,m:{}});x.c++;x.t+=dur(a);x.m[a.mot]=(x.m[a.mot]||0)+1});
+ const PL=Object.values(pm).sort((a,b)=>b.t-a.t||b.c-a.c),pode=ON&&me&&(me.adm||me.pC||me.pR);
+ return`<dl class="stats solo">${KA("Ausências",fmt(L.length),"no período")+KA("Tempo fora",durA(tot),"com volta registrada")+KA("Pessoas",fmt(pes),"com ausência")+KA("Sem volta registrada",fmt(abertas),abertas?"não somam tempo":"")}</dl>
+ <div class="grid two" style="margin-top:14px"><div class="card"><h2>Por motivo</h2><table class="ausR"><tr><th>Motivo</th><th>Ausências</th><th>Tempo</th><th>Pessoas</th></tr>${porM.map(x=>`<tr${x.n?"":' class="z"'}><td><b>${esc(x.m)}</b><span class="ausBar"><i style="width:${x.t/mx*100}%"></i></span></td><td>${fmt(x.n)}</td><td>${x.t?durA(x.t):"—"}</td><td>${fmt(x.p)}</td></tr>`).join("")}</table><div class="legend">Ausências sem volta registrada não somam tempo.</div></div>
+ <div class="card"><h2>Por pessoa</h2>${PL.length?`<table class="ausR"><tr><th>Pessoa</th><th>Ausências</th><th>Tempo</th><th>Principal motivo</th></tr>${PL.map(x=>{const top=Object.entries(x.m).sort((a,b)=>b[1]-a[1])[0];return`<tr><td><b>${esc(x.n)}</b><br><small>${esc(x.g)}</small></td><td>${x.c}</td><td>${x.t?durA(x.t):"—"}</td><td>${top?esc(top[0]):"—"}</td></tr>`}).join("")}</table>`:'<div class="empty">Nenhuma ausência no período.</div>'}</div></div>
+ <div class="card" style="margin-top:14px"><h2>Registros <span class="pill">${fmt(L.length)}</span></h2>${L.length?`<div class="tw"><table class="ausR"><tr><th>Dia</th><th>Pessoa</th><th>Galpão</th><th>Motivo</th><th>Saída</th><th>Volta</th><th>Tempo</th>${pode?"<th></th>":""}</tr>${L.slice(0,500).map(a=>`<tr><td>${new Date(a.ini).toLocaleDateString("pt-BR")}</td><td>${esc(a.nome||"Pessoa removida")}</td><td>${esc(a.g||"—")}</td><td>${esc(a.mot)}</td><td>${hmT(a.ini)}</td><td>${a.fim?hmT(a.fim):"—"}</td><td>${a.fim?durA(a.fim-a.ini):"sem volta"}</td>${pode?`<td><button type="button" class="pill off" data-padel="${esc(a.id)}">Excluir</button></td>`:""}</tr>`).join("")}</table></div>${L.length>500?'<div class="legend">Mostrando as 500 mais recentes.</div>':""}`:'<div class="empty">Nenhuma ausência no período.</div>'}<div class="legend">${per}${G?", "+esc(G):""}. Só o pessoal da embalagem; as ausências da Coleta ficam em Ausências.</div></div>`}
+async function pausRel(force){const el=$("#hPaus");if(!el)return;if(!PAUSR.de){const d=new Date();PAUSR.ate=hoje();d.setDate(d.getDate()-29);PAUSR.de=dk(d)}
+ const head=`<div class="ctl ausRc"><label>De<input type="date" id="prDe" value="${PAUSR.de}"></label><label>Até<input type="date" id="prAte" value="${PAUSR.ate}"></label><select id="prGal" aria-label="Galpão"><option value="__all">Todos os galpões</option>${S.gals.map(g=>`<option${PAUSR.g===g?" selected":""}>${esc(g)}</option>`).join("")}</select></div>`;
+ const key=PAUSR.de+"|"+PAUSR.ate;
+ if(!force&&key===PAUSR.key&&Date.now()-PAUSR.at<60000){el.innerHTML=head+pausRelHtml();return}
+ el.innerHTML=head+'<div class="skel" aria-label="Carregando ausências"><i></i><i></i></div>';
+ const a=new Date(PAUSR.de+"T00:00:00").getTime(),b=new Date(PAUSR.ate+"T00:00:00").getTime()+864e5;
+ if(!ON){PAUSR.rows=(S.prodAus||[]).filter(x=>x.ini>=a&&x.ini<b).map(x=>({...x,nome:paNome(x.oid)}))}
+ else{try{const rs=await api("/rest/v1/prod_ausencias?select=id,pessoa_id,galpao_id,motivo,inicio,fim,prod_pessoas(nome)&inicio=gte."+encodeURIComponent(new Date(a).toISOString())+"&inicio=lt."+encodeURIComponent(new Date(b).toISOString())+"&order=inicio.desc&limit=5000");PAUSR.rows=rs.map(x=>({...paMap(x),g:GN[x.galpao_id],nome:x.prod_pessoas&&x.prod_pessoas.nome}))}
+  catch(e){el.innerHTML=head+'<div class="card">Não foi possível carregar as ausências. '+esc(errMsg(e))+"</div>";return}}
+ PAUSR.key=key;PAUSR.at=Date.now();if(HS==="paus")el.innerHTML=head+pausRelHtml()}
+document.addEventListener("change",e=>{const id=e.target.id;if(id==="prDe"||id==="prAte"){const de=$("#prDe").value,ate=$("#prAte").value;if(!de||!ate)return;if(ate<de){toast("A data final é anterior à inicial");return}PAUSR.de=de;PAUSR.ate=ate;pausRel(true)}else if(id==="prGal"){PAUSR.g=e.target.value;pausRel()}});
+
 /* mini abas na lateral: espelham as abas internas de cada área */
-const SUBS={op:["sub","s"],ind:["gsub","gs"],prs:["psub","p"],his:["hsub","hs"],cfg:["csub","c"]};
+const SUBS={prod:["pasub","pa"],op:["sub","s"],ind:["gsub","gs"],prs:["psub","p"],his:["hsub","hs"],cfg:["csub","c"]};
 function sideSubs(){
  $$(".ssub").forEach(e=>e.remove());const k=SUBS[view];if(!k)return;const bar=document.getElementById(k[0]),tab=document.querySelector('nav.side .tab[data-t="'+view+'"]');if(!bar||!tab)return;
  const box=document.createElement("div");box.className="ssub";box.setAttribute("role","group");box.setAttribute("aria-label","Abas de "+tab.textContent.trim());
