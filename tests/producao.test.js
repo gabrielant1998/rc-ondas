@@ -130,4 +130,21 @@ await T("P14 Celular: embalagem sem rolagem horizontal",async()=>{const p=await 
  await posto(p,'Ana','terreo','mesa');await bipar(p,'PR001',['201','202']);let w;
  for(const v of ['eq','ind']){await emb(p,v);w=await p.evaluate(()=>document.documentElement.scrollWidth);ok(w<=391,v+' '+w)}ok(!p.errors.length,p.errors.join(';'))});
 
+await T("P15 Painel: Coleta e Embalagem lado a lado, só uma delas, fila entre as duas",async()=>{
+ const t0=Math.max(Date.now()-90*60000,new Date(HJ+'T00:01:00').getTime()),W=[1,2,3,4,5].map(i=>({id:'w'+i,wn:'20'+i,op:'CL001',opn:'Coleta Um',gal:'RC',ty:'Vários artigos',qty:100,st:0,ts:t0+i*60000,fin:t0+i*60000,sync:1}));
+ const p=await page(b,base({waves:W}));await posto(p,'Ana','terreo','mesa');await bipar(p,'PR001',['201','202','203']);
+ await p.evaluate(()=>go('painel'));await p.waitForTimeout(500);
+ ok(await p.isVisible('#pnSeg'),'seletor do painel');let t=(await p.textContent('#pnDuo')).replace(/\s+/g,' ');
+ ok(await p.isVisible('#pnDuo')&&!(await p.isVisible('#pnColW')),'abre lado a lado');
+ ok(t.includes('Coleta')&&t.includes('Embalagem')&&t.includes('Fila entre Coleta e Embalagem'),'blocos '+t.slice(0,160));
+ ok(/Aguardando embalagem2/.test(t)&&/Embaladas3/.test(t)&&/Coletadas no dia5/.test(t),'fila '+t.slice(t.indexOf('Fila'),t.indexOf('Fila')+240));
+ ok((await p.$$('#pnDuo .pnSide')).length===2,'dois lados');
+ ok((await p.$$('#pnDuo .pnRk')).length===2,'ranking Mesa e Máquina');const rk=(await p.textContent('#pnDuo .pnRkC')).replace(/\s+/g,' ');
+ ok(/Mesa 1 pessoa/.test(rk)&&/1ºAna Souza/.test(rk)&&/3 ondas/.test(rk)&&/Máquina 0 pessoas/.test(rk)&&/Ninguém embalou na Máquina/.test(rk),'ranking '+rk.slice(0,260));
+ await p.click('#pnSeg [data-pnv="col"]');ok(await p.isVisible('#pnColW')&&!(await p.isVisible('#pnDuo')),'só Coleta');ok(await p.isVisible('#pGar'),'gargalo da Coleta');
+ ok(!(await p.evaluate(()=>document.getElementById('pnDet').open)),'detalhes antigos recolhidos');ok((await p.$$('#pnDet #chF')).length===1,'funil guardado nos detalhes');
+ await p.click('#pnSeg [data-pnv="emb"]');await p.waitForTimeout(150);t=(await p.textContent('#pnDuo')).replace(/\s+/g,' ');ok(await p.isVisible('#pnDuo')&&(await p.$$('#pnDuo .pnSide')).length===1&&t.includes('Postos'),'só Embalagem');
+ await p.click('#pnSeg [data-pnv="duo"]');if(SHOT)await p.screenshot({path:SHOT+'/p_duo.png',fullPage:true});
+ ok(!p.errors.length,p.errors.join(';'))});
+
 await b.close();let f=0;R.forEach(([s,n,i])=>{if(s!=="PASS")f++;console.log((s==="PASS"?"✅ ":"❌ ")+n+"  "+(s==="PASS"?"("+i+"ms)":i))});console.log("\n"+(R.length-f)+"/"+R.length+" passaram");process.exit(f?1:0)})();

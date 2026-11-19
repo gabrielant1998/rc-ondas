@@ -521,12 +521,14 @@ await T('S97 Produção: admin grava metas por hora e o desempenho do período v
  const p=await page(b,db);await p.click('.tab[data-t="prod"]');await p.waitForTimeout(300);await p.fill('#pdP','PR001');await p.waitForTimeout(120);
  for(const w of ['5001','5002']){await p.fill('#pdW',w);await p.press('#pdW','Enter');await p.waitForTimeout(250)}ok(db.pb.length===2,'bipagens '+db.pb.length);
  const neg=await p.evaluate(async()=>{try{await api("/rest/v1/rpc/prod_bipagens_periodo",{method:"POST",body:{p_ini:hoje(),p_fim:hoje()}});return 200}catch(e){return e.status||0}});ok(neg===403,'público leu o desempenho: '+neg);
+ await p.evaluate(()=>go('painel'));await p.waitForTimeout(500);ok(!(await p.isVisible('#pnSeg'))&&!(await p.isVisible('#pnDuo')),'público vendo o painel da Embalagem');
  const pa=await page(b,db);await login(pa,'adm@x.com','senha1234');await pa.evaluate(()=>{go('ind');document.querySelector('#gsub [data-gs="pd"]').click();document.querySelector('#pdEqSeg [data-pde="eq"]').click()});await pa.waitForTimeout(600);
  ok(db.calls.per>=1,'não buscou o período no servidor');ok((await pa.textContent('#pdDesV')).includes('Sem meta por hora'),'meta antes');
  await pa.fill('#pdMetaF [name="mesa"]','96');await pa.click('#pdMetaF [type="submit"]');await pa.waitForTimeout(600);
  ok(db.pm.length===1&&db.pm[0].atividade==='mesa'&&db.pm[0].por_dia===96&&db.pm[0].horas_dia===8&&db.pm[0].por_hora===12&&db.pm[0].galpao_id===G1,'meta gravada '+JSON.stringify(db.pm));
  await pa.waitForTimeout(200);ok((await pa.textContent('#pdDesV')).includes('% da meta'),'equipe sem a meta');
  await pa.evaluate(()=>{document.querySelector('#pdEqSeg [data-pde="ind"]').click()});await pa.waitForTimeout(300);ok((await pa.textContent('#pdDesV')).includes('Ana Embalagem'),'individual');
+ await pa.evaluate(()=>go('painel'));await pa.waitForTimeout(700);ok(await pa.isVisible('#pnSeg')&&await pa.isVisible('#pnDuo'),'admin deveria ver Coleta e Embalagem no Painel');ok((await pa.textContent('#pnDuo')).includes('Fila entre Coleta e Embalagem'),'fila no painel do admin');
 });
 
 await b.close();

@@ -15,7 +15,7 @@ function bigState(N){const TY=["Vários","Múltiplos","Itens Únicos","Maiores/P
  return base({ops,waves})}
 async function page(b,state,opts={}){const ctx=await b.newContext({viewport:opts.vp||{width:1366,height:900}});const p=await ctx.newPage();if(!opts.festa)await p.addInitScript(()=>{window.__semFesta=1});if(!opts.sidebarSubs)await p.addInitScript(()=>{document.addEventListener('DOMContentLoaded',()=>{const s=document.createElement('style');s.textContent='#sub,#gsub,#psub,#hsub,#csub{display:flex!important}';document.head.appendChild(s)})});
  p.errors=[];p.on('pageerror',e=>p.errors.push(e.message));
- await ctx.addInitScript(([s])=>{if(!sessionStorage.__seeded){sessionStorage.__seeded=1;localStorage.clear();if(s)localStorage.setItem("rcondas.v2",s)}},[state?JSON.stringify(state):null]);
+ await ctx.addInitScript(([s])=>{if(!sessionStorage.__seeded){sessionStorage.__seeded=1;localStorage.clear();localStorage.setItem("rcondas.pnv","col");if(s)localStorage.setItem("rcondas.v2",s)}},[state?JSON.stringify(state):null]);
  await p.route(/fonts\.(googleapis|gstatic)\.com/,r=>r.abort());
  await p.goto(FILE);await p.waitForTimeout(150);return p}
 const TYN=["Vários artigos","Múltiplas quantidades","Itens Únicos","Maiores/Pesados","Retrabalho","Pacote do mesmo"];
@@ -640,7 +640,7 @@ await T("86 Lista de presença: colunas Horário justificado e Motivo do atraso 
 await T("87 Painel denso: 7 gráficos (área, colunas, funil, dispersão, radar, ranking, mapa de calor), cartões de tipo e tabelas",async()=>{const p=await page(b,base({waves:[WV('q1','Q1','Vários artigos',50,HR(9,10)),WV('q2','Q2','Itens Únicos',30,HR(10,5)),WV('q3','Q3','Pacote do mesmo',20,HR(10,40))]}));
  await p.evaluate(()=>go('painel'));await p.waitForTimeout(250);
  const r=await p.evaluate(()=>{const v=s=>document.querySelector(s),box=e=>e.getBoundingClientRect();return{n:[...document.querySelectorAll('#painel .pc')].filter(e=>e.offsetParent).length,area:!!v('#vivoC polygon'),bars:!!v('#chH svg'),rosca:!!v('#pFil .pf'),tmp:!!v('#chP .gal')||!!v('#chP svg')||!!v('#chP .bar'),t1:!!v('#tTipos table tr td'),t2:!!v('#gals table tr td'),dir:box(v('#tTipos')).left>box(v('#pHeat')).right-1&&box(v('#pFun')).left>box(v('#vivo')).right-1,fun:document.querySelectorAll('#chF .fu-r').length,dis:document.querySelectorAll('#chD circle').length,rad:document.querySelectorAll('#chR polygon').length}});
- ok(r.n===7,'cartões de gráfico: '+r.n);ok(r.area&&r.bars&&r.rosca&&r.tmp,'gráficos: '+JSON.stringify(r));ok(r.t1&&r.t2,'tabelas: '+JSON.stringify(r));ok(r.dir,'tabelas não ficam à direita');ok(r.fun===5,'funil: '+r.fun);ok(r.rad>=3,'radar: '+r.rad)});
+ ok(r.n===8,'cartões de gráfico (7 antigos + gargalo da Coleta): '+r.n);ok(r.area&&r.bars&&r.rosca&&r.tmp,'gráficos: '+JSON.stringify(r));ok(r.t1&&r.t2,'tabelas: '+JSON.stringify(r));ok(r.dir,'tabelas não ficam à direita');ok(r.fun===5,'funil: '+r.fun);ok(r.rad>=3,'radar: '+r.rad)});
 await T("88 Painel: cartões de tipo filtram tudo, Limpar filtros volta, e hora extra filtra pelo KPI",async()=>{const p=await page(b,base({waves:[WV('q1','Q1','Vários artigos',50,HR(9,10)),WV('q2','Q2','Itens Únicos',30,HR(10,5)),WV('q3','Q3','Pacote do mesmo',20,HR(10,40),'CL002','Bruno Lima')]}));
  await p.evaluate(()=>go('painel'));await p.waitForTimeout(250);
  const big=()=>p.evaluate(()=>document.querySelector('.placar .num').textContent.replace(/\D/g,''));
