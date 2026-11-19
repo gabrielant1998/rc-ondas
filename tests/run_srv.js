@@ -73,20 +73,22 @@ function fake(db){const cors={'access-control-allow-origin':'*','access-control-
    return J(route,200,db.pb.filter(x=>x.dia>=body.p_ini&&x.dia<=body.p_fim).map(x=>{const o=db.ppes.find(z=>z.id===x.pessoa_id)||{};return Object.assign({},x,{nome:o.nome,codigo:o.codigo,coletado:db.ondas.some(w=>nW(w.wn)===nW(x.wn))})}).filter(x=>{const o=db.ppes.find(z=>z.id===x.pessoa_id);return o&&escopo(o.galpao_id)}))}
   if(t==='rpc/prod_bipagens_dia')return J(route,200,db.pb.filter(x=>x.dia===body.p_dia).map(x=>Object.assign({},x,{coletado:db.ondas.some(w=>nW(w.wn)===nW(x.wn))})));
   if(t==='rpc/prod_turno_salvar'){if(!g||!(g.admin||g.pode_config))return J(route,403,{code:'42501',message:'Sem permissão para alterar turnos'});
-   const x={nome:body.p_nome,entrada:body.p_entrada,saida:body.p_saida,dias:body.p_dias,int_ini:body.p_int_ini,int_fim:body.p_int_fim,ativo:body.p_ativo};
+   const x={nome:body.p_nome,entrada:body.p_entrada,saida:body.p_saida,dias:body.p_dias,int_ini:body.p_int_ini,int_fim:body.p_int_fim,ativo:body.p_ativo,sab_entrada:body.p_sab_entrada,sab_saida:body.p_sab_saida,dom_entrada:body.p_dom_entrada,dom_saida:body.p_dom_saida};
    if(body.p_id==null){const id=Math.max(...db.pt.map(t=>t.id))+1;db.pt.push(Object.assign({id},x));return J(route,200,id)}Object.assign(db.pt.find(t=>t.id===body.p_id),x);return J(route,200,body.p_id)}
   if(t==='rpc/prod_atribuir'){const o=db.ppes.find(x=>x.id===body.p_pessoa&&!x.excluido_em);
    if(!g||!o||!(g.admin||(g.pode_config&&g.galpao_id===o.galpao_id)))return J(route,403,{code:'42501',message:'Sem permissão para distribuir esta pessoa'});
    const cur=db.pa.find(a=>a.pessoa_id===o.id&&!a.fim);if(cur)cur.fim=body.p_desde;const id='a'+(db.seq++);
    db.pa.push({id,pessoa_id:o.id,andar:body.p_andar,atividade:body.p_atividade,turno_id:body.p_turno,entrada:body.p_entrada,saida:body.p_saida,situacao:body.p_situacao,inicio:body.p_desde,fim:null,criado_por:email});return J(route,200,id)}
   if(t==='rpc/registrar_embalagens'){db.calls.emb=(db.calls.emb||0)+1;return J(route,200,(body.lote||[]).map(x=>{const r={id:x.id,resultado:'ok',detalhe:null,coletado:null,presenca_nova:false,andar:null,atividade:null};
+    if(x.quantidade!==undefined&&x.quantidade!==null&&!(Number.isInteger(x.quantidade)&&x.quantidade>=1&&x.quantidade<=5000))return Object.assign(r,{resultado:'recusada',detalhe:'A quantidade precisa ser um número inteiro de 1 a 5000'});
+    const ehQ=x.quantidade!==undefined&&x.quantidade!==null;if(ehQ)x.wn='QTD'+String(x.id).replace(/-/g,'');
     const o=db.ppes.find(z=>z.id===x.pessoa_id&&!z.excluido_em);if(!o)return Object.assign(r,{resultado:'recusada',detalhe:'Pessoa não encontrada na produção'});
     const a=db.pa.find(z=>z.pessoa_id===o.id&&!z.fim);if(!a||a.situacao!=='ativo')return Object.assign(r,{resultado:'sem_posto',detalhe:o.nome+' ainda não tem posto na produção. Fale com o gestor.'});
-    r.andar=a.andar;r.atividade=a.atividade;r.coletado=db.ondas.some(w=>nW(w.wn)===nW(x.wn));
+    r.andar=a.andar;r.atividade=a.atividade;r.coletado=ehQ?false:db.ondas.some(w=>nW(w.wn)===nW(x.wn));
     if(db.pb.some(z=>z.id===x.id))return Object.assign(r,{resultado:'ja_existia'});
     if(db.pb.some(z=>nW(z.wn)===nW(x.wn)&&z.atividade===a.atividade))return Object.assign(r,{resultado:'wn_repetido',detalhe:'A onda '+x.wn+' já foi embalada na '+(a.atividade==='maquina'?'Máquina':'Mesa')});
     const dia=new Date(Date.parse(x.bipada_em)-3*36e5).toISOString().slice(0,10);
-    db.pb.push({id:x.id,wn:x.wn,pessoa_id:o.id,andar:a.andar,atividade:a.atividade,turno_id:a.turno_id,bipada_em:x.bipada_em,dia});
+    db.pb.push({id:x.id,wn:x.wn,pessoa_id:o.id,andar:a.andar,atividade:a.atividade,turno_id:a.turno_id,bipada_em:x.bipada_em,dia,quantidade:ehQ?x.quantidade:1,origem:ehQ?'quantidade':'bipagem'});
     if(!db.pp.some(z=>z.pessoa_id===o.id&&z.dia===dia)){db.pp.push({pessoa_id:o.id,dia,primeira_id:x.id});r.presenca_nova=true}return r}))}
   if(t==='rpc/ausencias_publicas'){return J(route,200,(db.aus||[]).filter(a=>new Date(Date.parse(a.inicio)-3*36e5).toISOString().slice(0,10)===body.p_dia))}
   if(t==='rpc/registrar_ausencia'){const op=db.operadores.find(o=>o.id===body.p_operador&&!o.excluido_em);if(!op)return J(route,400,{code:'23503',message:'Pessoa não encontrada'});
@@ -552,6 +554,17 @@ await T('S99 Admin edita o galpão de um gestor; gestor comum não tem o botão'
  ok(db.gestores.find(x=>x.email==='g2@x.com').galpao_id===G1,'galpão não gravado '+JSON.stringify(db.gestores[1]));
  ok((await pa.textContent('#mL')).includes('Galpão 1'),'lista não mostra o novo galpão');
  const pg=await page(b,db);await login(pg,'g2@x.com','senha1234');await pg.evaluate(()=>{go('cfg');document.querySelector('#csub [data-c="cge"]').click()});await pg.waitForTimeout(400);ok((await pg.$$('#mL [data-mgal]')).length===0,'gestor comum com botão Galpão')});
+
+await T('S100 Só a quantidade: o servidor valida, grava uma vez e o gestor vê no período',async()=>{const db=banco();
+ db.ppes=[{id:'00000000-0000-4000-8000-0000000c0001',codigo:'PR001',nome:'Ana Embalagem',galpao_id:G1,excluido_em:null}];db.pa=[{id:'a1',pessoa_id:'00000000-0000-4000-8000-0000000c0001',andar:'terreo',atividade:'mesa',turno_id:1,entrada:null,saida:null,situacao:'ativo',inicio:new Date(Date.now()-36e5*5).toISOString(),fim:null,criado_por:'adm@x.com'}];
+ const p=await page(b,db);await p.click('.tab[data-t="prod"]');await p.waitForTimeout(300);await p.fill('#pdP','PR001');await p.waitForTimeout(150);
+ await p.click('#pdMode [data-pdq="q"]');await p.fill('#pdQn','30');await p.click('#pdQb');await p.click('#pdQok');await p.waitForTimeout(500);
+ ok(db.pb.length===1&&db.pb[0].quantidade===30&&db.pb[0].origem==='quantidade','quantidade não gravada '+JSON.stringify(db.pb));ok((await p.textContent('#pdMsg')).includes('30 embalagens registradas'),'mensagem '+await p.textContent('#pdMsg'));
+ const r=await p.evaluate(async()=>{const id=uid(),B=q=>({lote:[{id:crypto.randomUUID(),wn:'x',pessoa_id:'00000000-0000-4000-8000-0000000c0001',bipada_em:new Date().toISOString(),quantidade:q}]});const o=[];for(const q of [0,5001,2.5,"9"])o.push((await api("/rest/v1/rpc/registrar_embalagens",{method:"POST",body:B(q)}))[0].resultado);
+  const L={lote:[{id,wn:'x',pessoa_id:'00000000-0000-4000-8000-0000000c0001',bipada_em:new Date().toISOString(),quantidade:7}]};o.push((await api("/rest/v1/rpc/registrar_embalagens",{method:"POST",body:L}))[0].resultado);o.push((await api("/rest/v1/rpc/registrar_embalagens",{method:"POST",body:L}))[0].resultado);return o});
+ ok(r.slice(0,4).every(x=>x==='recusada')&&r[4]==='ok'&&r[5]==='ja_existia','validação do servidor '+r);ok(db.pb.length===2,'duplicou ao reenviar: '+db.pb.length);
+ const pa=await page(b,db);await login(pa,'adm@x.com','senha1234');const per=await pa.evaluate(async()=>(await api("/rest/v1/rpc/prod_bipagens_periodo",{method:"POST",body:{p_ini:hoje(),p_fim:hoje()}})).map(x=>[x.origem,x.quantidade]));
+ ok(per.some(x=>x[0]==='quantidade'&&x[1]===30),'gestor não recebeu a quantidade '+JSON.stringify(per))});
 
 await b.close();
 const w=Math.max(...R.map(r=>r[1].length));for(const r of R)console.log((r[0]==='PASS'?'✅':'❌')+' '+r[1].padEnd(w)+'  '+r[2]);

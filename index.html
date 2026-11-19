@@ -485,7 +485,7 @@ body[data-v=cfg] #turnoF,body[data-v=cfg] #gal,body[data-v=cfg] #day{display:non
 .pdSeg input{accent-color:var(--a)}
 .pdTop{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;margin-bottom:12px}.pdTop .ctl{margin:0}
 #coBody[data-cv="eq"] [data-cov="tu"],#coBody[data-cv="tu"] [data-cov="eq"]{display:none}
-.pnTog{margin-bottom:10px}.pdTabs{display:inline-flex;gap:4px;flex-wrap:wrap}.pdTabs button{all:unset;cursor:pointer;padding:8px 14px;border:1px solid var(--line);border-radius:4px;font:600 13.5px var(--fb);color:var(--mut);background:var(--card)}
+.pnTog{margin-bottom:10px}.pdMode{margin-bottom:12px}.pdConf{margin:10px 0;padding:12px;border:1px solid var(--line);border-left:4px solid var(--a);border-radius:4px;background:var(--bg)}.pdConf b{display:block;margin-bottom:8px}.pdTabs{display:inline-flex;gap:4px;flex-wrap:wrap}.pdTabs button{all:unset;cursor:pointer;padding:8px 14px;border:1px solid var(--line);border-radius:4px;font:600 13.5px var(--fb);color:var(--mut);background:var(--card)}
 .pdTabs button.on{background:var(--ink);color:var(--card);border-color:var(--ink)}.pdTabs button:focus-visible{outline:2px solid var(--a);outline-offset:2px}
 .pdChipsP{margin-bottom:12px}.pdKp .placar{margin-top:0}.pdGrid{margin-top:12px}.pdGrid .pdWide{grid-column:1/-1}
 @media(min-width:1200px){.pdGrid{grid-template-columns:repeat(2,minmax(0,1fr));grid-template-areas:none}}
@@ -517,6 +517,7 @@ body[data-v=cfg] #turnoF,body[data-v=cfg] #gal,body[data-v=cfg] #day{display:non
 .pdTF .pdDias label:has(input:focus-visible){outline:2px solid var(--a);outline-offset:1px}
 .pdTF>*,.pdG>*{min-width:0}.pdTF input:not([type=checkbox]),.pdG input,.pdG select{width:100%;min-width:0;box-sizing:border-box}
 .pdTF .pdInt{display:flex;gap:6px;align-items:center}.pdTF .pdInt input{min-width:0;flex:1}
+.pdTF .pdWk{grid-column:1/-1;display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px}.pdTF .pdWk fieldset{border:0;padding:0;margin:0;min-width:0}.pdTF .pdWk legend{font-size:13px;color:var(--mut);padding:0;margin-bottom:4px}.pdTF .pdWk small{font-size:12px}
 .pdTF .pdAc{grid-column:1/-1;display:flex;gap:12px;align-items:center;justify-content:flex-end;flex-wrap:wrap}
 .pdTF .pdAc .chk{display:flex;gap:6px;align-items:center;margin-right:auto;font-size:14px}
 @media (max-width:760px){.pdRow{grid-template-columns:1fr auto}.pdRow .pdPc,.pdRow .pdH{grid-column:1/2}.pdTF{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}.pdTF>label:first-child,.pdTF .pdDiasW,.pdTF>label:nth-child(4){grid-column:1/-1}
@@ -643,11 +644,17 @@ body[data-v=cfg] #turnoF,body[data-v=cfg] #gal,body[data-v=cfg] #day{display:non
    <div class="f">
     <label>Operador<input id="pdP" placeholder="Digite o nome" autocomplete="off" role="combobox" aria-expanded="false" aria-controls="pdSug"></label>
     <div id="pdWho" aria-live="polite"></div><div id="pdSug" role="listbox" aria-label="Operadores encontrados"></div>
-    <div id="pdWb" class="hide"><label>Onda<input id="pdW" placeholder="Bipe a onda" autocomplete="off" autocapitalize="characters" enterkeyhint="send"></label>
-     <div class="ctl2"><button type="button" class="btn alt sm" id="pdTroca">Trocar pessoa</button><button type="button" class="btn" id="pdEnv">Registrar onda</button></div></div>
+    <div id="pdWb" class="hide">
+     <div class="pdTabs pdMode" id="pdMode" role="group" aria-label="Como registrar"><button type="button" data-pdq="o" class="on" aria-pressed="true">Bipar onda</button><button type="button" data-pdq="q" aria-pressed="false">Só a quantidade</button></div>
+     <div id="pdOnda"><label>Onda<input id="pdW" placeholder="Bipe a onda" autocomplete="off" autocapitalize="characters" enterkeyhint="send"></label>
+      <div class="ctl2"><button type="button" class="btn alt sm" id="pdTroca">Trocar pessoa</button><button type="button" class="btn" id="pdEnv">Registrar onda</button></div></div>
+     <div id="pdQtd" class="hide"><div class="pdG"><label>Quantidade de embalagens<input id="pdQn" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="Ex.: 120" enterkeyhint="done"></label>
+      <label>Horário (opcional)<input id="pdQh" type="time" aria-describedby="pdQhd"></label></div>
+      <div class="legend" id="pdQhd" style="margin:0 0 8px">Horário vazio = agora.</div><div id="pdQc" aria-live="polite"></div>
+      <div class="ctl2"><button type="button" class="btn alt sm" data-pdtroca="1">Trocar pessoa</button><button type="button" class="btn" id="pdQb">Registrar quantidade</button></div></div></div>
     <div id="pdMsg" class="pdMsg" role="status" aria-live="polite"></div>
    </div>
-   <div class="legend">Bipe uma onda por vez. A primeira bipagem do dia registra a presença da pessoa. Ondas sem registro na Coleta ficam como “Não coletada”.</div>
+   <div class="legend">Bipe uma onda por vez, ou use “Só a quantidade” para lançar quantas embalagens a pessoa fez, sem bipar cada onda. O primeiro registro do dia marca a presença da pessoa. Ondas sem registro na Coleta ficam como “Não coletada”.</div>
   </div>
   <div class="card"><h2>Bipagens de hoje <span class="pill" id="pdN"></span></h2>
    <label class="hint" style="display:block;margin-bottom:8px">Pesquisar<input id="pdQ" type="search" placeholder="Número da onda ou nome" autocomplete="off"></label>
@@ -742,7 +749,7 @@ body[data-v=cfg] #turnoF,body[data-v=cfg] #gal,body[data-v=cfg] #day{display:non
     <div class="legend">O cadastro de quem embala é separado do cadastro da Coleta. Cada mudança de posto vale a partir do horário informado; as ondas já bipadas continuam com o andar, a atividade e o turno da época.</div></div>
   </div>
   <details class="card pnDet" id="cpdTu"><summary>Turnos da embalagem</summary><div id="pdTl"></div>
-   <div class="legend">Saída em branco = ainda não configurada; as horas trabalhadas só são calculadas com a saída preenchida. Saída menor que a entrada = turno que passa da meia-noite.</div></details>
+   <div class="legend">Saída em branco = ainda não configurada; as horas trabalhadas só são calculadas com a saída preenchida. Saída menor que a entrada = turno que passa da meia-noite. Sábado e domingo: preencha só se o horário for diferente da semana, e marque S e D nos dias do turno.</div></details>
  </div>
 
  <div id="cme" class="grid two">
@@ -2868,21 +2875,23 @@ const PD_POS=[["terreo","mesa"],["terreo","maquina"],["mezanino","mesa"],["mezan
 const PD_T0=()=>[{id:1,nome:"1º turno",ent:"06:00",sai:"",dias:[1,2,3,4,5,6],ii:"",if:"",ativo:true},{id:2,nome:"2º turno",ent:"09:00",sai:"",dias:[1,2,3,4,5,6],ii:"",if:"",ativo:true}];
 let PDT=null,PDA=[],PDH=[],PDB=[],PDLOC=[],PDPES=[],PDnova=false,PDreset=false,PDsel=null,PDsI=-1,PDsL=[],PDsub="bip",PDed=null,PDf="todos",PD_AT0=0;
 const pdK=o=>o.id||o.m,pdOp=k=>pdOps().find(o=>pdK(o)===k),pdFind=v=>{v=String(v||"").trim().toLowerCase();const L=pdOps();return L.find(o=>o.m.toLowerCase()===v)||L.find(o=>o.n.toLowerCase()===v)},hh5=t=>t?String(t).slice(0,5):"";
-const pdTmap=t=>({id:t.id,nome:t.nome,ent:hh5(t.entrada),sai:hh5(t.saida),dias:t.dias||[],ii:hh5(t.int_ini),if:hh5(t.int_fim),ativo:t.ativo!==false});
+const pdTmap=t=>({id:t.id,nome:t.nome,ent:hh5(t.entrada),sai:hh5(t.saida),dias:t.dias||[],ii:hh5(t.int_ini),if:hh5(t.int_fim),ativo:t.ativo!==false,se:hh5(t.sab_entrada),ss:hh5(t.sab_saida),de:hh5(t.dom_entrada),ds:hh5(t.dom_saida)});
+/* horário do turno no dia da semana: sábado e domingo podem ter horário próprio (em branco = o da semana) */
+function pdTHor(t,ts){t=t||{};const w=new Date(ts==null?Date.now():ts).getDay();if(w===6&&t.se)return[t.se,t.ss||""];if(w===0&&t.de)return[t.de,t.ds||""];return[t.ent||"",t.sai||""]}
 const pdAmap=x=>({id:x.id||null,oid:x.pessoa_id,andar:x.andar,at:x.atividade,tu:x.turno_id,ent:hh5(x.entrada),sai:hh5(x.saida),sit:x.situacao||"ativo",ini:Date.parse(x.inicio),fim:x.fim?Date.parse(x.fim):null,por:x.criado_por||""});
 function pdGestor(){return ON?!!(me&&(me.adm||me.pC)):(!S.ges.length||!!(me&&(me.adm||me.pC)))}
 function pdTurnos(){return ON?(PDT||[]):(S.prodT||(S.prodT=PD_T0()))}
 function pdAtribs(){return ON?(pdGestor()&&PDH.length?PDH:PDA):(S.prodA||(S.prodA=[]))}
 function pdPosto(k,t){t=t||Date.now();return pdAtribs().filter(a=>a.oid===k&&a.ini<=t&&(!a.fim||a.fim>t)).sort((a,b)=>b.ini-a.ini)[0]||null}
 function pdTurno(id){return pdTurnos().find(t=>t.id===id)||null}
-function pdHorario(a){const t=pdTurno(a.tu)||{};const e=a.ent||t.ent||"",s=a.sai||t.sai||"";return e?(s?e+" às "+s:"a partir de "+e):"—"}
+function pdHorario(a,ts){const t=pdTurno(a.tu)||{},h=pdTHor(t,ts),e=a.ent||h[0]||"",s=a.sai||(a.ent?"":h[1])||"";return e?(s?e+" às "+s:"a partir de "+e):"—"}
 /* pessoas da produção: cadastro próprio, separado das pessoas da Coleta */
 function pdOps(){return ON?PDPES:(S.prodPes||(S.prodPes=[]))}
 function pdGalpao(){if(me&&!me.adm&&me.g)return me.g;return S.gals.includes(PD_GAL)?PD_GAL:(S.gals[0]||PD_GAL)}
 function pdProxCod(){const n=pdOps().map(o=>{const m=/^PR(\d+)$/.exec(o.m);return m?+m[1]:0});return"PR"+String(Math.max(0,...n)+1).padStart(3,"0")}
 const m2=v=>{const m=hm2m(v);return m==null?null:m};
 /* dia operacional: em turno que passa da meia-noite, a madrugada pertence ao dia de entrada */
-function pdDia(ts,a){const t=pdTurno(a.tu)||{},e=m2(a.ent||t.ent),s=m2(a.sai||t.sai),d=new Date(ts),m=d.getHours()*60+d.getMinutes();
+function pdDia(ts,a){const t=pdTurno(a.tu)||{},h=a.ent?[a.ent,a.sai]:pdTHor(t,ts),e=m2(h[0]),s=m2(h[1]),d=new Date(ts),m=d.getHours()*60+d.getMinutes();
  if(e!=null&&s!=null&&s<=e&&m<s)return dk(ts-864e5);return dk(ts)}
 
 function pdLocalB(){const W=new Set(S.waves.filter(w=>!w.err).map(w=>normWN(w.wn)));return(S.prodB||[]).filter(b=>b.dia===hoje()).map(b=>Object.assign({},b,{st:"ok",col:W.has(normWN(b.wn))}))}
@@ -2891,7 +2900,7 @@ async function pdCarregar(){
  if(!online())return;
  try{const [t,p,b,ps,mt]=await Promise.all([api("/rest/v1/prod_turnos?select=*&order=id"),api("/rest/v1/rpc/prod_postos",{method:"POST",body:{}}),api("/rest/v1/rpc/prod_bipagens_dia",{method:"POST",body:{p_dia:hoje()}}),api("/rest/v1/prod_pessoas?select=id,codigo,nome,galpao_id&excluido_em=is.null&order=nome&limit=2000"),api("/rest/v1/prod_metas?select=galpao_id,atividade,por_hora,por_dia,horas_dia,inicio,criado_por&order=inicio&limit=2000").catch(()=>null)]);
   if(mt)PDM=mt.map(pdMmap);PDPES=ps.map(x=>({id:x.id,m:x.codigo,n:x.nome,g:GN[x.galpao_id]||""}));if(PDsel)PDsel=PDPES.find(o=>o.id===PDsel.id)||null;
-  PDT=t.map(pdTmap);PDA=p.map(pdAmap);PDB=b.map(x=>({id:x.id,wn:x.wn,oid:x.pessoa_id,andar:x.andar,at:x.atividade,tu:x.turno_id,em:Date.parse(x.bipada_em),col:!!x.coletado,st:"ok"}));
+  PDT=t.map(pdTmap);PDA=p.map(pdAmap);PDB=b.map(x=>({id:x.id,wn:x.wn,oid:x.pessoa_id,andar:x.andar,at:x.atividade,tu:x.turno_id,em:Date.parse(x.bipada_em),col:!!x.coletado,q:x.origem==="quantidade"?+x.quantidade:undefined,st:"ok"}));
   if(pdGestor()){try{PDH=(await api("/rest/v1/prod_atribuicoes?select=*&order=inicio.desc&limit=3000")).map(pdAmap)}catch(e){PDH=[]}}else PDH=[];
   PD_AT0=Date.now()}catch(e){}}
 function pdSubPr(){PDpr=PDsub="bip";
@@ -2907,7 +2916,7 @@ function pdSugest(){const q=nrm($("#pdP").value),box=$("#pdSug");PDsI=-1;PDsL=[]
  const all=opsBusca(q,pdOps());PDsL=all.slice(0,8);box.innerHTML=opsCartoes(PDsL,all.length,"data-pdsug");$("#pdP").setAttribute("aria-expanded",String(PDsL.length>0))}
 function pdEscolher(o){PDsel=o;$("#pdP").value=o.m;PDsL=[];PDsI=-1;$("#pdSug").innerHTML="";$("#pdP").setAttribute("aria-expanded","false");$("#pdMsg").innerHTML="";$("#pdMsg").className="pdMsg";pdWho();
  if(!$("#pdWb").classList.contains("hide"))setTimeout(()=>$("#pdW").focus({preventScroll:true}),30)}
-function pdTrocar(){PDsel=null;$("#pdP").value="";$("#pdW").value="";$("#pdMsg").innerHTML="";pdWho();pdSugest();$("#pdP").focus()}
+function pdTrocar(){PDsel=null;PDqp=null;$("#pdQc").innerHTML="";$("#pdQn").value="";$("#pdQh").value="";$("#pdP").value="";$("#pdW").value="";$("#pdMsg").innerHTML="";pdWho();pdSugest();$("#pdP").focus()}
 function pdPostoTags(a){const t=pdTurno(a.tu);return`<span class="pdTag ${a.andar==="terreo"?"t":"m"}">${PD_AND[a.andar]}</span><span class="pdTag">${PD_AT[a.at]}</span><span class="pdTag">${esc(t?t.nome:"Turno "+a.tu)}, ${esc(pdHorario(a))}</span>`}
 function pdWho(){const o=PDsel,box=$("#pdWho");if(!box)return;if(!o){box.innerHTML="";$("#pdWb").classList.add("hide");return}
  const a=pdPosto(pdK(o)),ok=a&&a.sit==="ativo";
@@ -2920,21 +2929,45 @@ function pdFilaSet(L){try{L.length?localStorage.setItem(PD_FILA,JSON.stringify(L
 function pdAplicar(x,r){x.andar=r.andar||x.andar;x.at=r.atividade||x.at;x.col=r.coletado;x.det=r.detalhe||"";
  x.st=r.resultado==="ok"||r.resultado==="ja_existia"?"ok":r.resultado==="wn_repetido"?"rep":r.resultado==="sem_posto"?"sem":"rec";x.pres=!!r.presenca_nova}
 function pdAvisar(x){const o=pdOp(x.oid),nm=o?o.n:"";
+ if(x.q){const t=fmt(x.q)+(x.q===1?" embalagem":" embalagens");if(x.st==="ok")pdMsg("ok",t+" registradas para "+nm,PD_AND[x.andar]+", "+PD_AT[x.at]+(x.pres?". Presença registrada às "+hmT(x.em):""));else if(x.st==="pend")pdMsg("pend",t+" guardadas neste aparelho","Sem internet. Serão enviadas assim que a conexão voltar.");else pdMsg("err",t+" não registradas",x.det||"Tente de novo.");return}
  if(x.st==="ok")pdMsg(x.col?"ok":"warn","Onda "+x.wn+" registrada · "+(x.col?"Coletada":"Não coletada"),(x.col?"":"Sem registro na Coleta. ")+PD_AND[x.andar]+", "+PD_AT[x.at]+(x.pres?". Presença de "+nm+" registrada às "+hmT(x.em):""));
  else if(x.st==="rep")pdMsg("err","Onda "+x.wn+" já embalada",x.det||"Esta onda já foi bipada nesta atividade.");
  else if(x.st==="pend")pdMsg("pend","Onda "+x.wn+" guardada neste aparelho","Sem internet. Ela será enviada assim que a conexão voltar.");
  else pdMsg("err","Onda "+x.wn+" não registrada",x.det||"Tente de novo.")}
 async function pdEnviar(L,avisar){
- try{const r=await api("/rest/v1/rpc/registrar_embalagens",{method:"POST",body:{lote:L.map(x=>({id:x.id,wn:x.wn,pessoa_id:x.oid,bipada_em:new Date(x.em).toISOString()}))}});
+ try{const r=await api("/rest/v1/rpc/registrar_embalagens",{method:"POST",body:{lote:L.map(x=>Object.assign({id:x.id,wn:x.wn,pessoa_id:x.oid,bipada_em:new Date(x.em).toISOString()},x.q?{quantidade:x.q}:{}))}});
   (r||[]).forEach(res=>{const x=L.find(z=>z.id===res.id);if(x)pdAplicar(x,res)});
   const ids=new Set(L.filter(x=>x.st!=="pend").map(x=>x.id));pdFilaSet(pdFila().filter(f=>!ids.has(f.id)));
   L.forEach(x=>{if(x.st==="ok"&&!PDB.some(b=>b.id===x.id))PDB.unshift({...x})})}
- catch(e){if(!e.status||e.status>=500||e.status===408||e.status===429){L.forEach(x=>{x.st="pend"});const F=pdFila();L.forEach(x=>{if(!F.some(f=>f.id===x.id))F.push({id:x.id,wn:x.wn,oid:x.oid,em:x.em,andar:x.andar,at:x.at})});pdFilaSet(F)}
+ catch(e){if(!e.status||e.status>=500||e.status===408||e.status===429){L.forEach(x=>{x.st="pend"});const F=pdFila();L.forEach(x=>{if(!F.some(f=>f.id===x.id))F.push({id:x.id,wn:x.wn,oid:x.oid,em:x.em,andar:x.andar,at:x.at,q:x.q})});pdFilaSet(F)}
   else L.forEach(x=>{x.st="rec";x.det=errMsg(e)})}
  if(avisar&&L.length)pdAvisar(L[L.length-1]);pdLista()}
 let pdEnvBusy=false;
 async function pdFilaEnviar(){if(!ON||pdEnvBusy||!online())return;const F=pdFila();if(!F.length)return;pdEnvBusy=true;
  try{const L=F.slice(0,200).map(f=>{const x=PDLOC.find(z=>z.id===f.id)||Object.assign({st:"pend"},f);if(!PDLOC.includes(x))PDLOC.push(x);return x});await pdEnviar(L,false)}finally{pdEnvBusy=false}}
+/* lançamento só da quantidade de embalagens (sem bipar cada onda) */
+var PDmode="o",PDqp=null;
+function pdModo(m){PDmode=m;PDqp=null;$("#pdQc").innerHTML="";$$("#pdMode [data-pdq]").forEach(b=>{const on=b.dataset.pdq===m;b.classList.toggle("on",on);b.setAttribute("aria-pressed",on)});
+ $("#pdOnda").classList.toggle("hide",m!=="o");$("#pdQtd").classList.toggle("hide",m!=="q");setTimeout(()=>{const i=$(m==="q"?"#pdQn":"#pdW");if(i)i.focus({preventScroll:true})},30)}
+function pdQtdPedir(){const o=PDsel;if(!o){toast("Escolha a pessoa primeiro.");$("#pdP").focus();return}
+ const txt=String($("#pdQn").value||"").trim(),n=/^\d{1,4}$/.test(txt)?+txt:0;
+ if(!(n>=1&&n<=5000)){pdMsg("err","Quantidade inválida","Digite quantas embalagens a pessoa fez, de 1 a 5000.");$("#pdQn").focus();return}
+ let em=Date.now();const h=$("#pdQh").value;
+ if(h){const [hh,mm]=h.split(":").map(Number),d=new Date();d.setHours(hh,mm,0,0);em=d.getTime();
+  if(em>Date.now()+3*6e4){pdMsg("err","Horário no futuro","Escolha um horário que já passou, ou deixe vazio para usar agora.");$("#pdQh").focus();return}}
+ const k=pdK(o),a=pdPosto(k,em);
+ if(!a||a.sit!=="ativo"){pdWho();pdMsg("err",o.n+" sem posto na produção neste horário","Fale com o gestor para definir andar e atividade.");return}
+ PDqp={k,n,em};$("#pdMsg").innerHTML="";$("#pdMsg").className="pdMsg";
+ $("#pdQc").innerHTML=`<div class="pdConf"><b>Registrar ${fmt(n)} ${n===1?"embalagem":"embalagens"} de ${esc(o.n)}${h?" às "+h:""}?</b><div class="ctl2"><button type="button" class="btn alt sm" data-pdqc="x">Corrigir</button><button type="button" class="btn" data-pdqc="ok" id="pdQok">Confirmar</button></div></div>`;
+ setTimeout(()=>{const b=$("#pdQok");if(b)b.focus({preventScroll:true})},30)}
+async function pdQtdGravar(){const p=PDqp,o=PDsel;if(!p||!o)return;PDqp=null;$("#pdQc").innerHTML="";
+ const k=p.k,em=p.em,a=pdPosto(k,em);if(!a||a.sit!=="ativo"){pdWho();pdMsg("err",o.n+" sem posto na produção","Fale com o gestor.");return}
+ const id=uid(),x={id,wn:"QTD"+id.replace(/-/g,""),oid:k,em,andar:a.andar,at:a.at,tu:a.tu,q:p.n,st:"env"};$("#pdQn").value="";$("#pdQh").value="";
+ if(!ON){S.prodB=S.prodB||[];S.prodP=S.prodP||{};x.dia=pdDia(em,a);x.st="ok";const pk=k+"|"+x.dia;if(!S.prodP[pk]){S.prodP[pk]={em,id:x.id,tu:a.tu,andar:a.andar,at:a.at};x.pres=true}
+  S.prodB.push({id:x.id,wn:x.wn,oid:k,em,andar:a.andar,at:a.at,tu:a.tu,dia:x.dia,q:p.n});save();PDB=pdLocalB();PDLOC.unshift(x);pdAvisar(x);pdLista();$("#pdQn").focus();return}
+ PDLOC.unshift(x);pdLista();
+ if(!online()){x.st="pend";const F=pdFila();F.push({id:x.id,wn:x.wn,oid:k,em,andar:a.andar,at:a.at,q:p.n});pdFilaSet(F);pdAvisar(x);pdLista();$("#pdQn").focus();return}
+ pdMsg("pend","Enviando "+fmt(p.n)+" embalagens…","");await pdEnviar([x],true);$("#pdQn").focus()}
 async function pdBipar(){const o=PDsel;if(!o){toast("Escolha a pessoa primeiro.");$("#pdP").focus();return}
  const wn=String($("#pdW").value||"").replace(/\s+/g,"").replace(/~/g,"");if(!wn){$("#pdW").focus();return}
  if(wn.length>40){pdMsg("err","Número da onda muito longo","Confira a leitura e bipe de novo.");return}
@@ -2952,17 +2985,17 @@ async function pdBipar(){const o=PDsel;if(!o){toast("Escolha a pessoa primeiro."
 function pdLista(){const el=$("#pdL");if(!el)return;const by={};
  PDB.forEach(b=>{by[b.id]=Object.assign({st:"ok"},b)});PDLOC.forEach(x=>{if(x.st!=="ok"||!by[x.id])by[x.id]=Object.assign({},by[x.id]||{},x)});
  const q=nrm($("#pdQ")?$("#pdQ").value:""),all=Object.values(by).sort((a,b)=>b.em-a.em),L=all.filter(x=>{if(!q)return true;const o=pdOp(x.oid);return nrm(x.wn).includes(q)||(o&&(nrm(o.n).includes(q)||nrm(o.m)===q))});
- const okN=all.filter(x=>x.st==="ok").length,pend=all.filter(x=>x.st==="pend").length;
+ const okN=all.filter(x=>x.st==="ok").reduce((a,x)=>a+(x.q||1),0),pend=all.filter(x=>x.st==="pend").length;
  $("#pdN").textContent=okN?okN+(okN===1?" onda":" ondas")+(pend?", "+pend+" pendente"+(pend>1?"s":""):""):(pend?pend+" pendente"+(pend>1?"s":""):"");
- const st=x=>x.st==="ok"?(x.col?'<span class="pdSt ok">Coletada</span>':'<span class="pdSt warn">Não coletada</span>'):x.st==="pend"||x.st==="env"?'<span class="pdSt pend">'+(x.st==="env"?"Enviando":"Pendente")+"</span>":x.st==="rep"?'<span class="pdSt err">Já embalada</span>':'<span class="pdSt err">Não registrada</span>';
+ const st=x=>x.st==="ok"?(x.q?'<span class="pdSt ok">Quantidade</span>':x.col?'<span class="pdSt ok">Coletada</span>':'<span class="pdSt warn">Não coletada</span>'):x.st==="pend"||x.st==="env"?'<span class="pdSt pend">'+(x.st==="env"?"Enviando":"Pendente")+"</span>":x.st==="rep"?'<span class="pdSt err">Já embalada</span>':'<span class="pdSt err">Não registrada</span>';
  el.innerHTML=L.length?`<table class="pdT"><tr><th>Hora</th><th>Onda</th><th>Pessoa</th><th class="pdHm">Posto</th><th>Status</th></tr>`+L.slice(0,150).map(x=>{const o=pdOp(x.oid),nm=o?o.n:"—";
-  return`<tr><td>${hmT(x.em)}</td><td class="wn">${esc(x.wn)}</td><td>${esc(nm)}</td><td class="pdHm">${x.andar?PD_AND[x.andar]+", "+PD_AT[x.at]:"—"}</td><td>${st(x)}</td></tr>`}).join("")+"</table>"+(L.length>150?`<div class="legend">Mostrando as 150 mais recentes de ${L.length}.</div>`:"")
+  return`<tr><td>${hmT(x.em)}</td><td class="wn">${x.q?fmt(x.q)+(x.q===1?" embalagem":" embalagens"):esc(x.wn)}</td><td>${esc(nm)}</td><td class="pdHm">${x.andar?PD_AND[x.andar]+", "+PD_AT[x.at]:"—"}</td><td>${st(x)}</td></tr>`}).join("")+"</table>"+(L.length>150?`<div class="legend">Mostrando as 150 mais recentes de ${L.length}.</div>`:"")
   :`<div class="empty">${q?"Nenhuma bipagem encontrada.":"Nenhuma onda bipada hoje."}</div>`}
 
 /* ---------- Distribuição ---------- */
 function pdDisLista(){const el=$("#pdDl");if(!el)return;const ops=pdOps(),now=Date.now(),post=o=>{const a=pdPosto(pdK(o),now);return a&&a.sit==="ativo"?a:null};
  const n={todos:ops.length,sem:0};PD_POS.forEach(([a,x])=>n[a+"-"+x]=0);ops.forEach(o=>{const a=post(o);if(a)n[a.andar+"-"+a.at]++;else n.sem++});
- const bip={};PDB.forEach(b=>{bip[b.oid]=(bip[b.oid]||0)+1});
+ const bip={};PDB.forEach(b=>{bip[b.oid]=(bip[b.oid]||0)+(b.q||1)});
  $("#pdDf").innerHTML=[["todos","Todos"]].concat(PD_POS.map(([a,x])=>[a+"-"+x,PD_AND[a]+" "+PD_AT[x]]),[["sem","Sem posto"]]).map(([k,t])=>`<button type="button" data-pdf="${k}" aria-pressed="${PDf===k}">${t} <span class="pdCn">${n[k]}</span></button>`).join("");
  const q=nrm($("#pdDq").value),L=ops.filter(o=>{const a=post(o);if(PDf==="sem"&&a)return false;if(PDf!=="todos"&&PDf!=="sem"&&(!a||a.andar+"-"+a.at!==PDf))return false;return!q||nrm(o.n).includes(q)||nrm(o.m).includes(q)}).sort((a,b)=>a.n.localeCompare(b.n));
  pdNovaForm();{const c=$("#pdCnt");if(c)c.textContent=ops.length}
@@ -3045,20 +3078,25 @@ function pdTurnosLista(){const el=$("#pdTl");if(!el)return;const T=pdTurnos().sl
    <label>Saída<input type="time" name="s" value="${t.sai}"></label>
    <label>Intervalo<span class="pdInt"><input type="time" name="ii" value="${t.ii}" aria-label="Início do intervalo"><span>às</span><input type="time" name="if" value="${t.if}" aria-label="Fim do intervalo"></span></label>
    <div class="pdDiasW"><span class="hint">Dias</span><div class="pdDias">${PD_DIAS.map((d,i)=>`<label title="${PD_DIAS_N[i]}"><input type="checkbox" name="d" value="${i}"${t.dias.includes(i)?" checked":""} aria-label="${PD_DIAS_N[i]}">${d}</label>`).join("")}</div></div>
+   <div class="pdWk"><fieldset><legend>Sábado <small>(em branco = igual à semana)</small></legend><span class="pdInt"><input type="time" name="se" value="${t.se||""}" aria-label="Entrada no sábado"><span>às</span><input type="time" name="ss" value="${t.ss||""}" aria-label="Saída no sábado"></span></fieldset>
+    <fieldset><legend>Domingo <small>(em branco = igual à semana)</small></legend><span class="pdInt"><input type="time" name="de" value="${t.de||""}" aria-label="Entrada no domingo"><span>às</span><input type="time" name="ds" value="${t.ds||""}" aria-label="Saída no domingo"></span></fieldset></div>
    <div class="pdAc"><label class="chk"><input type="checkbox" name="a"${t.ativo?" checked":""}> Turno ativo</label>${t.id==="novo"?'<button type="button" class="btn alt sm" data-pdtx="1">Cancelar</button>':""}<button type="submit" class="btn sm">${t.id==="novo"?"Criar turno":"Salvar "+esc(t.nome)}</button></div>
   </form>`).join("")+(PDed==="novoT"?"":'<div class="ctl2" style="margin-top:10px"><span></span><button type="button" class="btn alt sm" data-pdtn="1">+ Novo turno</button></div>')}
-async function pdTurnoSalvar(f){const v=n=>(f.querySelector(`[name="${n}"]`)||{}).value||"",id=f.dataset.pdt,nome=v("n").trim(),ent=v("e"),sai=v("s"),ii=v("ii"),fi=v("if"),dias=[...f.querySelectorAll('[name="d"]:checked')].map(c=>+c.value),ativo=f.querySelector('[name="a"]').checked;
- if(!nome){toast("Informe o nome do turno.");return}if(!ent){toast("Informe o horário de entrada.");return}if(!dias.length){toast("Escolha pelo menos um dia.");return}
+async function pdTurnoSalvar(f){const v=n=>(f.querySelector(`[name="${n}"]`)||{}).value||"",id=f.dataset.pdt,nome=v("n").trim(),ent=v("e"),sai=v("s"),ii=v("ii"),fi=v("if"),dias=[...f.querySelectorAll('[name="d"]:checked')].map(c=>+c.value),ativo=f.querySelector('[name="a"]').checked,se=v("se"),ss=v("ss"),de=v("de"),ds=v("ds");
+ if(!nome){toast("Informe o nome do turno.");return}
+ if((ss&&!se)||(ds&&!de)){toast("Informe a entrada do sábado ou do domingo, ou deixe os dois horários em branco.",5000);return}
+ if(se&&!dias.includes(6)){toast("Marque o sábado (S, o penúltimo dia) nos dias do turno para usar o horário de sábado.",6000);return}
+ if(de&&!dias.includes(0)){toast("Marque o domingo (D, o primeiro dia) nos dias do turno para usar o horário de domingo.",6000);return}if(!ent){toast("Informe o horário de entrada.");return}if(!dias.length){toast("Escolha pelo menos um dia.");return}
  if(!!ii!==!!fi){toast("Informe início e fim do intervalo, ou deixe os dois em branco.",5000);return}
  const e=hm2m(ent),s=sai?hm2m(sai):null,a=ii?hm2m(ii):null,b=fi?hm2m(fi):null;
  if(a!=null&&!(b>a)){toast("O fim do intervalo precisa ser depois do início.",5000);return}
  if(a!=null&&s!=null&&s>e&&!(a>=e&&b<=s)){toast("O intervalo precisa ficar dentro do horário do turno.",5000);return}
  const msg=(id==="novo"?"Turno criado: ":"Turno salvo: ")+nome+", "+ent+(sai?" às "+sai:"");
  if(ON){const bt=f.querySelector('[type="submit"]');bt.disabled=true;
-  try{await api("/rest/v1/rpc/prod_turno_salvar",{method:"POST",body:{p_id:id==="novo"?null:+id,p_nome:nome,p_entrada:ent,p_saida:sai||null,p_dias:dias,p_int_ini:ii||null,p_int_fim:fi||null,p_ativo:ativo}})}
+  try{await api("/rest/v1/rpc/prod_turno_salvar",{method:"POST",body:{p_id:id==="novo"?null:+id,p_nome:nome,p_entrada:ent,p_saida:sai||null,p_dias:dias,p_int_ini:ii||null,p_int_fim:fi||null,p_ativo:ativo,p_sab_entrada:se||null,p_sab_saida:ss||null,p_dom_entrada:de||null,p_dom_saida:ds||null}})}
   catch(er){bt.disabled=false;toast(errMsg(er),7000);return}
   PDed=null;await pdCarregar();pdRender();toast(msg,4000);return}
- const T=S.prodT||(S.prodT=PD_T0()),x={nome,ent,sai,dias,ii,if:fi,ativo};
+ const T=S.prodT||(S.prodT=PD_T0()),x={nome,ent,sai,dias,ii,if:fi,ativo,se,ss,de,ds};
  if(id==="novo")T.push(Object.assign({id:Math.max(0,...T.map(t=>t.id))+1},x));else Object.assign(T.find(t=>t.id===+id)||{},x);
  save();PDed=null;pdRender();toast(msg,4000)}
 
@@ -3077,13 +3115,13 @@ function pdNome(oid){const o=pdOps().find(x=>pdK(x)===oid)||(S.prodPesEx||[]).fi
 const pdFiltroP=B=>PDfp==="todos"?B:B.filter(b=>b.andar+"-"+b.at===PDfp);
 function pdStats(B){const now=Date.now(),P=new Map(),H=new Map(),D=new Map(),Q=new Map(),vis=new Set(),fr=h=>Math.max(0,Math.min(1,(now-h)/36e5));
  B.slice().sort((a,b)=>a.em-b.em).forEach(b=>{const h=Math.floor(b.em/36e5)*36e5,k=b.andar+"-"+b.at;
-  let p=P.get(b.oid);if(!p)P.set(b.oid,p={oid:b.oid,nm:b.nm,cod:b.cod,n:0,col:0,hrs:0,meta:0,dias:new Map(),pk:k,ult:0});p.n++;if(b.col)p.col++;p.pk=k;p.ult=b.em;
-  let x=H.get(h);if(!x)H.set(h,x={h,n:0,pes:new Set(),meta:0});x.n++;x.pes.add(b.oid);
-  let d=D.get(b.dia);if(!d)D.set(b.dia,d={dia:b.dia,n:0,pes:new Set(),meta:0});d.n++;d.pes.add(b.oid);
-  let q=Q.get(k);if(!q)Q.set(k,q={n:0,pes:new Set(),hrs:0,meta:0});q.n++;q.pes.add(b.oid);
-  let pd=p.dias.get(b.dia);if(!pd)p.dias.set(b.dia,pd={n:0,meta:0});pd.n++;
+  let p=P.get(b.oid);if(!p)P.set(b.oid,p={oid:b.oid,nm:b.nm,cod:b.cod,n:0,col:0,hrs:0,meta:0,dias:new Map(),pk:k,ult:0});const w=b.q||1;p.n+=w;if(b.col||b.q)p.col+=w;p.pk=k;p.ult=b.em;
+  let x=H.get(h);if(!x)H.set(h,x={h,n:0,pes:new Set(),meta:0});x.n+=w;x.pes.add(b.oid);
+  let d=D.get(b.dia);if(!d)D.set(b.dia,d={dia:b.dia,n:0,pes:new Set(),meta:0});d.n+=w;d.pes.add(b.oid);
+  let q=Q.get(k);if(!q)Q.set(k,q={n:0,pes:new Set(),hrs:0,meta:0});q.n+=w;q.pes.add(b.oid);
+  let pd=p.dias.get(b.dia);if(!pd)p.dias.set(b.dia,pd={n:0,meta:0});pd.n+=w;
   const sk=b.oid+"|"+h;if(!vis.has(sk)){vis.add(sk);const f=fr(h),m=pdMetaH(b.at,b.dia)*f;p.hrs+=f;p.meta+=m;pd.meta+=m;x.meta+=m;d.meta+=m;q.hrs+=f;q.meta+=m}});
- const L=[...P.values()];return{n:B.length,col:B.filter(b=>b.col).length,meta:L.reduce((a,p)=>a+p.meta,0),hrs:L.reduce((a,p)=>a+p.hrs,0),P:L,H,D,Q}}
+ const L=[...P.values()];return{n:B.reduce((a,b)=>a+(b.q||1),0),col:B.reduce((a,b)=>a+(b.col||b.q?(b.q||1):0),0),meta:L.reduce((a,p)=>a+p.meta,0),hrs:L.reduce((a,p)=>a+p.hrs,0),P:L,H,D,Q}}
 const pdAbaixo=p=>{const hj=hoje(),F=p?[...p.dias].filter(([k,d])=>k<hj&&d.meta):[];return F.length?F.filter(([k,d])=>d.n<d.meta).length+" de "+F.length:"—"};
 const pdPct=(n,m)=>m?n/m*100:null,pdStC=pc=>pc>=100?"ok":pc>=80?"warn":"err";
 
@@ -3107,7 +3145,7 @@ function pdDiasItens(st,dias){return dias.map(d=>{const x=st.D.get(d)||{n:0,meta
 function pdPlacar(st,txt){const pc=pdPct(st.n,st.meta);
  return`<div class="placar"><div><div class="num">${fmt(st.n)}</div><div class="un">${st.n===1?"onda embalada":"ondas embaladas"}${txt.sub?" "+txt.sub:""}</div></div><div class="regua"><div class="hd"><span>${st.meta?txt.meta+": "+fmt(st.meta)+" ondas":"Sem meta por hora cadastrada"}</span><b${pc!=null&&pc<100?' class="bad"':""}>${pc!=null?fmt(pc)+"% da meta":""}</b></div><div class="trk" style="--n:4"><b style="width:${pc!=null?Math.min(100,pc):0}%"></b></div></div></div>`}
 const pdK2=(t,v,s)=>`<div class="kpi"><dt>${t}</dt><dd class="num">${v}</dd><dd class="sm">${s||""}</dd></div>`;
-function pdChipsP(B){const n={todos:B.length};PD_PK.forEach(k=>n[k]=0);B.forEach(b=>{const k=b.andar+"-"+b.at;if(k in n)n[k]++});
+function pdChipsP(B){const n={todos:B.reduce((a,b)=>a+(b.q||1),0)};PD_PK.forEach(k=>n[k]=0);B.forEach(b=>{const k=b.andar+"-"+b.at,w=b.q||1;if(k in n)n[k]+=w});
  return`<div class="pdChips pdChipsP" role="group" aria-label="Filtrar por posto">`+[["todos","Todos os postos"]].concat(PD_PK.map(k=>[k,pdPN(k)])).map(([k,t])=>`<button type="button" data-pdfp="${k}" aria-pressed="${PDfp===k}">${t} <span class="pdCn">${fmt(n[k])}</span></button>`).join("")+"</div>"}
 function pdPostosHtml(st,dia){return PD_PK.filter(k=>PDfp==="todos"||PDfp===k).map(k=>{const q=st.Q.get(k)||{n:0,pes:new Set(),hrs:0,meta:0},pc=pdPct(q.n,q.meta),mh=q.hrs?q.meta/q.hrs:pdMetaH(k.split("-")[1],dia);
  return`<div class="gal"><div class="r"><b>${pdPN(k)}</b><span>${fmt(q.n)} <small>${q.n===1?"onda":"ondas"}</small></span></div><div class="bar" style="--c:${pc!=null&&pc>=100?"var(--k)":"var(--g)"}"><b style="width:${pc!=null?Math.min(100,pc):0}%"></b></div>
@@ -3121,7 +3159,7 @@ function pdPerDias(){const n=+PDper||1,end=$("#day").value||hoje(),t=new Date(en
 async function pdDesCarregar(ini,fim){
  if(!ON)return pdDesLocal(ini,fim);
  const r=await api("/rest/v1/rpc/prod_bipagens_periodo",{method:"POST",body:{p_ini:ini,p_fim:fim}});
- return r.map(x=>({id:x.id,oid:x.pessoa_id,nm:x.nome,cod:x.codigo,andar:x.andar,at:x.atividade,tu:x.turno_id,dia:x.dia,em:Date.parse(x.bipada_em),col:!!x.coletado,wn:x.wn_norm||x.wn||""}))}
+ return r.map(x=>({id:x.id,oid:x.pessoa_id,nm:x.nome,cod:x.codigo,andar:x.andar,at:x.atividade,tu:x.turno_id,dia:x.dia,em:Date.parse(x.bipada_em),col:!!x.coletado,q:x.origem==="quantidade"?+x.quantidade:undefined,wn:x.wn_norm||x.wn||""}))}
 function pdDesLocal(ini,fim){{const W=new Set(S.waves.filter(w=>!w.err).map(w=>normWN(w.wn)));return(S.prodB||[]).filter(b=>b.dia>=ini&&b.dia<=fim).map(b=>Object.assign({},b,pdNome(b.oid),{col:W.has(normWN(b.wn))}))}}
 function pdEqSeg(){PDE="ind";$("#pdPs").classList.remove("hide")}
 function pdDesempenho(){const el=$("#pdDesV");if(!el)return;const dias=pdPerDias(),ini=dias[0],fim=dias[dias.length-1],key=ini+"|"+fim,hj=fim>=hoje();
@@ -3199,8 +3237,8 @@ function pnColHtml(D){const it=pnItens(D.M,false),pp=pnItens(D.M,true);
 /* Embalagem do dia (B = bipagens do dia anterior e de hoje, só as do dia entram nos números) */
 function pnEmbDados(d){const TF=$("#turnoF").value,g=$("#gal").value==="__all"?null:$("#gal").value,B=PNE.B.filter(b=>b.dia===d&&(!TF||String(b.tu)===TF)),st=pdStats(B),M=new Map();
  st.H.forEach((x,h)=>M.set(h,{n:x.n,pes:x.pes,m:x.meta}));
- const UM=pnUnMap(),MU=new Map();let un=0,sem=0;B.forEach(b=>{const k=normWN(b.wn||""),u=UM.get(k)||0,h=Math.floor(b.em/36e5)*36e5;if(!UM.has(k))sem++;un+=u;let x=MU.get(h);if(!x)MU.set(h,x={n:0,pes:new Set(),m:0});x.n+=u;x.pes.add(b.oid)});
- return{B,st,M,TF,UM,MU,un,sem,fora:g&&g!==pdGalpao()}}
+ const UM=pnUnMap(),MU=new Map();let un=0,sem=0,qtd=0;B.forEach(b=>{const k=normWN(b.wn||""),u=b.q?0:(UM.get(k)||0),h=Math.floor(b.em/36e5)*36e5;if(b.q)qtd+=b.q;else if(!UM.has(k))sem++;un+=u;let x=MU.get(h);if(!x)MU.set(h,x={n:0,pes:new Set(),m:0});x.n+=u;x.pes.add(b.oid)});
+ return{B,st,M,TF,UM,MU,un,sem,qtd,fora:g&&g!==pdGalpao()}}
 /* unidades de cada onda embalada = unidades da onda concluída na Coleta (mesmo número da onda) */
 function pnUnMap(){const m=new Map();S.waves.forEach(w=>{if(w.st===0&&!w.err){const k=normWN(w.wn);if(!m.has(k))m.set(k,+w.qty||0)}});return m}
 function pnUM(){try{return localStorage.getItem("rcondas.pnu")==="o"?"o":"u"}catch(e){return"u"}}
@@ -3208,7 +3246,7 @@ function pnTog(){const m=pnUM();return`<div class="pdTabs pnTog" role="group" ar
 function pnEmbHtml(E){const st=E.st,pc=pdPct(st.n,st.meta),hit=pnItens(E.M,false),pp=pnItens(E.M,true);
  if(pnUM()==="u"){const ui=pnItens(E.MU,false),up=pnItens(E.MU,true);
   return pnTog()+(E.fora?`<div class="legend">A Embalagem existe só no galpão ${esc(pdGalpao())}; os números abaixo são dele.</div>`:"")
-  +pnPlacar(E.un,E.un===1?"unidade embalada":"unidades embaladas",E.sem?fmt(E.sem)+(E.sem===1?" onda embalada sem registro na Coleta, sem unidades":" ondas embaladas sem registro na Coleta, sem unidades"):"Unidades das ondas embaladas, conforme a Coleta",null)
+  +pnPlacar(E.un,E.un===1?"unidade embalada":"unidades embaladas",(E.sem||E.qtd)?[E.sem?fmt(E.sem)+(E.sem===1?" onda sem registro na Coleta":" ondas sem registro na Coleta"):"",E.qtd?fmt(E.qtd)+" embalagens lançadas só por quantidade":""].filter(Boolean).join(" e ")+", sem unidades":"Unidades das ondas embaladas, conforme a Coleta",null)
   +`<div class="card" style="margin-top:12px"><h2>Unidades por hora</h2>${pdBarras(ui,{w:520,serie:"Unidades embaladas",un:["unidade","unidades"],vazio:"Nenhuma onda embalada neste dia.",aria:"Unidades embaladas por hora"})}</div>`
   +`<div class="card" style="margin-top:12px"><h2>Unidades por pessoa por hora <span class="pill">${st.P.length} ${st.P.length===1?"pessoa":"pessoas"}</span></h2>${pdBarras(up,{w:520,dec:1,serie:"Unidades por pessoa",un:["unidade","unidades"],vazio:"Nenhuma onda embalada neste dia.",aria:"Unidades embaladas por pessoa por hora"})}${pnLenta(up,"unidades")}</div>`
   +`<div class="card" style="margin-top:12px"><h2>Postos</h2>${pdPostosHtml(st,$("#day").value||hoje())}</div>`}
@@ -3218,7 +3256,7 @@ function pnEmbHtml(E){const st=E.st,pc=pdPct(st.n,st.meta),hit=pnItens(E.M,false
   +`<div class="card" style="margin-top:12px"><h2>Ondas por pessoa por hora <span class="pill">${st.P.length} ${st.P.length===1?"pessoa":"pessoas"}</span></h2>${pdBarras(pp,{w:520,dec:1,metaTxt:"Meta por pessoa",serie:"Ondas por pessoa",vazio:"Nenhuma onda embalada neste dia.",aria:"Ondas embaladas por pessoa por hora e meta"})}${pnLenta(pp,"ondas")}</div>`
   +`<div class="card" style="margin-top:12px"><h2>Postos</h2>${pdPostosHtml(st,$("#day").value||hoje())}</div>`}
 /* Ranking da Embalagem: Mesa e Máquina separadas (só gestor logado) */
-function pnRanking(E,d){const un=pnUM()==="u",col=at=>{const B=E.B.filter(b=>b.at===at),st=pdStats(B),U=new Map();B.forEach(b=>U.set(b.oid,(U.get(b.oid)||0)+(E.UM.get(normWN(b.wn||""))||0)));st.P.forEach(p=>{p.u=U.get(p.oid)||0});const V=p=>un?p.u:p.n,L=st.P.slice().sort((a,b)=>V(b)-V(a)||String(a.nm).localeCompare(String(b.nm),"pt-BR")),mx=Math.max(1,...L.map(V));
+function pnRanking(E,d){const un=pnUM()==="u",col=at=>{const B=E.B.filter(b=>b.at===at),st=pdStats(B),U=new Map();B.forEach(b=>U.set(b.oid,(U.get(b.oid)||0)+(b.q?0:(E.UM.get(normWN(b.wn||""))||0))));st.P.forEach(p=>{p.u=U.get(p.oid)||0});const V=p=>un?p.u:p.n,L=st.P.slice().sort((a,b)=>V(b)-V(a)||String(a.nm).localeCompare(String(b.nm),"pt-BR")),mx=Math.max(1,...L.map(V));
   return`<div class="pnRk"><h3>${PD_AT[at]} <span class="pill">${L.length} ${L.length===1?"pessoa":"pessoas"}</span></h3>`+(L.length?`<ol class="pnRkL">`+L.slice(0,10).map((p,i)=>{const pc=pdPct(p.n,p.meta);
    return`<li><span class="pnRkN">${i+1}º</span><div class="pnRkW"><div class="pnRkT"><b>${esc(p.nm)}</b> <span class="pdTag ${p.pk.startsWith("terreo")?"t":"m"}">${PD_AND[p.pk.split("-")[0]]}</span></div><div class="bar" style="--c:${!un&&pc!=null&&pc>=100?"var(--k)":"var(--g)"}"><b style="width:${V(p)/mx*100}%"></b></div><div class="pdH">${un?fmt(p.u)+(p.u===1?" unidade":" unidades")+" ("+fmt(p.n)+(p.n===1?" onda":" ondas")+"), "+nf1(p.hrs?p.u/p.hrs:0)+" por hora":fmt(p.n)+(p.n===1?" onda":" ondas")+", "+nf1(p.hrs?p.n/p.hrs:0)+" por hora"+(p.hrs&&p.meta?", meta "+nf1(p.meta/p.hrs):"")}</div></div>${un?"":pc==null?'<span class="note">sem meta</span>':`<span class="pdSt ${pdStC(pc)}">${fmt(pc)}%</span>`}</li>`}).join("")+"</ol>"+(L.length>10?`<div class="legend">Mostrando as 10 primeiras de ${L.length}.</div>`:""):'<div class="empty">Ninguém embalou na '+PD_AT[at]+' neste dia.</div>')+"</div>"};
  return`<div class="card pnRkC" style="margin-top:12px"><h2>Ranking da Embalagem <small class="legend" style="margin:0">${un?"unidades embaladas no dia":"ondas embaladas no dia"}</small></h2><div class="pnRkG">${col("mesa")}${col("maquina")}</div><div class="legend">${un?"As unidades de cada onda vêm da Coleta. A meta da Embalagem é em ondas: para ver a % da meta, escolha Ondas no alto da Embalagem.":"A porcentagem compara as ondas da pessoa com a meta dela (meta por hora vezes as horas em que bipou)."} Quem trocou de posto no dia aparece na atividade em que bipou.</div></div>`}
@@ -3266,8 +3304,9 @@ document.addEventListener("keydown",e=>{const id=e.target.id;
  if(id==="pdP"){if((e.key==="ArrowDown"||e.key==="ArrowUp")&&PDsL.length){e.preventDefault();PDsI=(PDsI+(e.key==="ArrowDown"?1:-1)+PDsL.length)%PDsL.length;$$("#pdSug [data-pdsug]").forEach((b,i)=>b.classList.toggle("on",i===PDsI));return}
   if(e.key==="Enter"){e.preventDefault();if(PDsel){$("#pdW").focus();return}if(PDsI>=0&&PDsL[PDsI]){pdEscolher(PDsL[PDsI]);return}if(PDsL.length===1){pdEscolher(PDsL[0]);return}if(PDsL.length>1)toast("Há mais de uma pessoa. Selecione o nome desejado.",5000);return}
   if(e.key==="Escape"){$("#pdSug").innerHTML="";PDsL=[];PDsI=-1}return}
- if(id==="pdW"&&e.key==="Enter"){e.preventDefault();pdBipar()}});
-document.addEventListener("click",e=>{const t=e.target.closest&&e.target.closest("[data-pdsug],[data-pnv],[data-pnu],[data-pdfp],[data-pde],[data-pdf],[data-pded],[data-pdtn],[data-pdtx],[data-pdnx],[data-pdcad],[data-pdrm],#pdNovaB,#pdTroca,#pdEnv");if(!t)return;
+ if(id==="pdW"&&e.key==="Enter"){e.preventDefault();pdBipar()}
+ if((id==="pdQn"||id==="pdQh")&&e.key==="Enter"){e.preventDefault();pdQtdPedir()}});
+document.addEventListener("click",e=>{const t=e.target.closest&&e.target.closest("[data-pdsug],[data-pnv],[data-pnu],[data-pdfp],[data-pde],[data-pdf],[data-pded],[data-pdtn],[data-pdtx],[data-pdnx],[data-pdcad],[data-pdrm],[data-pdq],[data-pdqc],[data-pdtroca],#pdQb,#pdNovaB,#pdTroca,#pdEnv");if(!t)return;
  if(t.dataset.pdcad){pdCadastrar(t.closest("form"),t.dataset.pdcad);return}
  if(t.dataset.pdrm){const o=pdOp(t.dataset.pdrm);if(!o)return;if(t.dataset.ok!=="1"){t.dataset.ok="1";t.textContent="Confirmar remoção de "+o.n.split(" ")[0];setTimeout(()=>{if(t.isConnected){t.dataset.ok="";t.textContent="Remover da produção"}},5000);return}pdRemover(t.dataset.pdrm);return}
  if(t.dataset.pdsug){const o=PDsL.find(x=>x.m===t.dataset.pdsug);if(o)pdEscolher(o);return}
@@ -3279,6 +3318,10 @@ document.addEventListener("click",e=>{const t=e.target.closest&&e.target.closest
  if(t.dataset.pded){PDed=PDed===t.dataset.pded?null:t.dataset.pded;pdDisLista();const f=PDed&&document.querySelector(`[data-pdform="${CSS.escape(PDed)}"]`);if(f){const r=f.querySelector('input[name="pdAn"]');f.scrollIntoView({block:"nearest"});if(r)r.focus({preventScroll:true})}return}
  if(t.dataset.pdtn){PDed="novoT";pdTurnosLista();const i=$('[data-pdt="novo"] [name="n"]');if(i)i.focus();return}
  if(t.dataset.pdtx){PDed=null;pdTurnosLista();return}
+ if(t.dataset.pdq){pdModo(t.dataset.pdq);return}
+ if(t.dataset.pdqc){if(t.dataset.pdqc==="ok")pdQtdGravar();else{PDqp=null;$("#pdQc").innerHTML="";$("#pdQn").focus()}return}
+ if(t.id==="pdQb"){pdQtdPedir();return}
+ if(t.dataset.pdtroca){pdTrocar();return}
  if(t.id==="pdTroca"){pdTrocar();return}
  if(t.id==="pdEnv")pdBipar()});
 document.addEventListener("submit",e=>{const f=e.target;if(f.id==="pdMetaF"){e.preventDefault();pdMetaSalvar(f);return}if(f.id==="pdNovaF"){e.preventDefault();pdCadastrar(f,null);return}if(f.dataset&&f.dataset.pdform){e.preventDefault();pdAtribuir(f)}else if(f.dataset&&f.dataset.pdt){e.preventDefault();pdTurnoSalvar(f)}});

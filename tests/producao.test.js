@@ -151,4 +151,34 @@ await T("P15 Painel: Coleta e Embalagem lado a lado, só uma delas, fila entre a
  await p.click('#pnSeg [data-pnv="duo"]');if(SHOT)await p.screenshot({path:SHOT+'/p_duo.png',fullPage:true});
  ok(!p.errors.length,p.errors.join(';'))});
 
+await T("P16 Turnos: sábado e domingo com horário próprio (em branco = semana)",async()=>{const p=await page(b,base());await dis(p);
+ const f='[data-pdt="1"]';await p.fill(f+' [name="s"]','15:00');
+ await p.fill(f+' [name="ss"]','12:00');await p.click(f+' [type="submit"]');await p.waitForTimeout(80);let s=await st(p);ok(!((s.prodT||[{}])[0]).ss,'aceitou saída de sábado sem entrada');
+ await p.fill(f+' [name="de"]','08:00');await p.fill(f+' [name="ds"]','13:00');await p.click(f+' [type="submit"]');await p.waitForTimeout(80);s=await st(p);ok(!((s.prodT||[{}])[0]).de,'aceitou domingo sem marcar o dia D');
+ await p.fill(f+' [name="se"]','07:00');await p.click(f+' .pdDias label:first-child');await p.fill(f+' [name="de"]','08:00');await p.fill(f+' [name="ds"]','13:00');await p.click(f+' [type="submit"]');await p.waitForTimeout(80);s=await st(p);
+ ok(s.prodT[0].se==='07:00'&&s.prodT[0].ss==='12:00'&&s.prodT[0].de==='08:00'&&s.prodT[0].ds==='13:00'&&s.prodT[0].dias.includes(0),'horários de sábado e domingo '+JSON.stringify(s.prodT[0]));
+ const h=await p.evaluate(()=>{const sab=new Date(2026,10,21,10,0).getTime(),dom=new Date(2026,10,22,10,0).getTime(),seg=new Date(2026,10,23,10,0).getTime(),a={tu:1,ent:"",sai:""};return[pdHorario(a,sab),pdHorario(a,dom),pdHorario(a,seg),pdHorario({tu:1,ent:"09:00",sai:"10:00"},sab),pdHorario({tu:2},sab)]});
+ ok(h[0]==='07:00 às 12:00'&&h[1]==='08:00 às 13:00'&&h[2]==='06:00 às 15:00'&&h[3]==='09:00 às 10:00'&&h[4]==='a partir de 09:00',"horário por dia "+h);
+ await p.fill(f+' [name="se"]','');await p.fill(f+' [name="ss"]','');await p.click(f+' [type="submit"]');await p.waitForTimeout(80);s=await st(p);ok(!s.prodT[0].se&&s.prodT[0].de==='08:00','limpar sábado volta ao da semana');
+ if(SHOT)await p.screenshot({path:SHOT+'/p_turno_fds.png',fullPage:true});ok(!p.errors.length,p.errors.join(';'))});
+
+await T("P17 Só a quantidade: lança quantas embalagens a pessoa fez, com confirmação, e entra nas contas",async()=>{const p=await page(b,base());
+ await posto(p,'Ana','terreo','mesa');await bipar(p,'PR001',['201','202']);
+ await p.click('.tab[data-t="prod"]');await p.fill('#pdP','PR001');await p.waitForTimeout(150);if(await p.isVisible('#pdSug [data-pdsug]'))await p.locator('#pdSug [data-pdsug]').first().click();
+ ok(await p.isVisible('#pdMode'),'alternância de modo');await p.click('#pdMode [data-pdq="q"]');ok(await p.isVisible('#pdQn')&&!(await p.isVisible('#pdW')),'campo de quantidade');
+ for(const v of ['0','abc','5001','']){await p.fill('#pdQn',v);await p.click('#pdQb');ok(!(await p.isVisible('#pdQc .pdConf')),'aceitou quantidade inválida '+v)}
+ await p.fill('#pdQn','40');await p.fill('#pdQh','23:59');await p.click('#pdQb');const fut=await p.evaluate(()=>new Date().getHours()*60+new Date().getMinutes()<23*60+57);
+ if(fut)ok(!(await p.isVisible('#pdQc .pdConf')),'aceitou horário no futuro');await p.fill('#pdQh','');
+ await p.click('#pdQb');ok((await p.textContent('#pdQc')).includes('40 embalagens')&&(await p.textContent('#pdQc')).includes('Ana Souza'),'pede confirmação');
+ let s=await st(p);ok(!(s.prodB||[]).some(b=>b.q),'gravou antes de confirmar');
+ await p.click('#pdQc [data-pdqc="x"]');ok(!(await p.isVisible('#pdQc .pdConf')),'corrigir fecha a confirmação');
+ await p.fill('#pdQn','40');await p.click('#pdQb');await p.click('#pdQok');await p.waitForTimeout(150);s=await st(p);const q=(s.prodB||[]).find(b=>b.q);
+ ok(q&&q.q===40&&q.oid==='p1'&&q.andar==='terreo'&&q.at==='mesa'&&q.dia===HJ,'lançamento '+JSON.stringify(q));
+ ok((await p.textContent('#pdMsg')).includes('40 embalagens registradas'),'mensagem '+await p.textContent('#pdMsg'));ok((await p.textContent('#pdL')).includes('40 embalagens')&&(await p.textContent('#pdL')).includes('Quantidade'),'lista de hoje');
+ ok((await p.textContent('#pdN')).includes('42'),'total de hoje '+await p.textContent('#pdN'));
+ const t=await p.evaluate(()=>{const r=pdStats(pdLocalB().map(b=>Object.assign({},b,{nm:'x',dia:b.dia||hoje()})));return[r.n,r.P[0].n,r.col]});ok(t[0]===42&&t[1]===42,'contas '+t);
+ await emb(p,'ind');await p.waitForTimeout(150);ok((await p.textContent('#pdDesV')).includes('42'),'individual com a quantidade');
+ await p.evaluate(()=>go('painel'));await p.waitForTimeout(500);const pt=(await p.textContent('#pnDuo')).replace(/\s+/g,' ');ok(pt.includes('40 embalagens lançadas só por quantidade'),'painel avisa sem unidades '+pt.slice(0,300));
+ if(SHOT){await p.click('.tab[data-t="prod"]');await p.click('#pdMode [data-pdq="q"]');await p.fill('#pdQn','15');await p.click('#pdQb');await p.screenshot({path:SHOT+'/p_qtd.png'})}ok(!p.errors.length,p.errors.join(';'))});
+
 await b.close();let f=0;R.forEach(([s,n,i])=>{if(s!=="PASS")f++;console.log((s==="PASS"?"✅ ":"❌ ")+n+"  "+(s==="PASS"?"("+i+"ms)":i))});console.log("\n"+(R.length-f)+"/"+R.length+" passaram");process.exit(f?1:0)})();
