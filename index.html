@@ -1146,7 +1146,8 @@ async function importar(){const L=antigos();if(!L||!(me&&me.adm))return;
   await pull();cfgRender();renderAll();
   toast("Dados antigos: "+(tot.ok+tot.ja_existia)+" ondas no banco, "+(tot.wn_repetido+tot.recusada+tot.sem_operador)+" não entraram.",10000)}
  catch(e){toast("Envio interrompido: "+errMsg(e)+" Pode tentar de novo, nada duplica.",9000);cfgRender()}}
-let bootOk=false;function bootDone(){if(bootOk)return;bootOk=true;const b=document.getElementById("boot");if(b){b.classList.add("out");setTimeout(()=>b.remove(),600)}}
+/* tela de abertura: fica pelo menos 1,8 s para a animação aparecer inteira, mesmo quando os dados já estão no aparelho */
+let bootOk=false;const BOOT_MIN=1800;function bootDone(){if(bootOk)return;bootOk=true;const fim=()=>{const b=document.getElementById("boot");if(b){b.classList.add("out");setTimeout(()=>b.remove(),600)}},rest=BOOT_MIN-performance.now();if(rest>0&&!window.__semFesta&&!navigator.webdriver)setTimeout(fim,rest);else fim()}
 setTimeout(()=>{const t=document.getElementById("bootT");if(t&&!bootOk)t.textContent="A conexão está lenta, ainda carregando…"},6000);setTimeout(bootDone,25000);
 async function bootSrv(){let tinhaSess=false;try{tinhaSess=!!localStorage.getItem("rcondas.sess")}catch(e){}if(tinhaSess){const t=document.getElementById("bootT");if(t)t.textContent="Entrando como gestor…"}
  $("#lExtra").classList.remove("hide");$("#lNew").classList.add("hide");loginUI();
