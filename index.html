@@ -500,7 +500,7 @@ body[data-v=cfg] #turnoF,body[data-v=cfg] #gal,body[data-v=cfg] #day{display:non
 .pnRk h3{font:700 16px var(--fd);margin:0 0 8px;display:flex;gap:8px;align-items:center}.pnRkL{list-style:none;margin:0;padding:0;display:grid;gap:10px}
 .pnRkL li{display:grid;grid-template-columns:30px minmax(0,1fr) auto;gap:10px;align-items:center}.pnRkN{font:700 15px var(--fd);color:var(--mut)}
 .pnRkT{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:4px}
-.pdSeg4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr))}.pdSeg4 label{justify-content:flex-start;min-height:44px}
+.pdSeg2{display:grid;grid-template-columns:1fr 1fr}.pdSeg4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr))}.pdSeg4 label{justify-content:flex-start;min-height:44px}
 .pdCn{display:inline-block;min-width:1.4em;margin-left:4px;padding:0 5px;border-radius:999px;background:color-mix(in srgb,var(--mut) 16%,transparent);font-size:12px;text-align:center}
 @media (max-width:760px){.pdSeg4{grid-template-columns:1fr 1fr}}
 .pdG{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:12px}
@@ -2937,11 +2937,17 @@ function pdDisLista(){const el=$("#pdDl");if(!el)return;const ops=pdOps(),now=Da
    <div class="pdH">${a?esc(t?t.nome:"Turno "+a.tu)+", "+esc(pdHorario(a))+(a.ent?" (individual)":"")+"<br>desde "+new Date(a.ini).toLocaleString("pt-BR",{day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"}):""}</div>
    <button type="button" class="btn alt sm" data-pded="${esc(k)}" aria-expanded="${PDed===k}">${PDed===k?"Fechar":a?"Alterar":"Definir posto"}</button></div>`+(PDed===k?pdEditor(o,a):"")}).join("")
   :`<div class="empty">${ops.length?"Ninguém neste filtro.":"Nenhuma pessoa cadastrada na embalagem. Use o formulário ao lado."}</div>`}
-const pdPosR=(name,cur)=>`<div class="pdSeg pdSeg4">${PD_POS.map(([a,x])=>`<label><input type="radio" name="${name}" value="${a}-${x}"${cur===a+"-"+x?" checked":""}>${PD_AND[a]} ${PD_AT[x]}</label>`).join("")}</div>`;
+const pdPosR=cur=>{const [ca,cx]=(cur||"-").split("-"),r=(n,v,t,c)=>`<label><input type="radio" name="${n}" value="${v}"${c===v?" checked":""}>${t}</label>`;
+ return`<fieldset><legend>Andar <small>(obrigatório)</small></legend><div class="pdSeg pdSeg2">${Object.keys(PD_AND).map(a=>r("pdAn",a,PD_AND[a],ca)).join("")}</div></fieldset>
+ <fieldset><legend>Atividade <small>(obrigatório)</small></legend><div class="pdSeg pdSeg2">${Object.keys(PD_AT).map(x=>r("pdAt",x,PD_AT[x],cx)).join("")}</div></fieldset>`};
+function pdPosLer(f){const a=f.querySelector('[name="pdAn"]:checked'),x=f.querySelector('[name="pdAt"]:checked');
+ if(!a){toast("Escolha o andar: Térreo ou Mezanino.",5000);const r=f.querySelector('[name="pdAn"]');if(r)r.focus();return null}
+ if(!x){toast("Escolha a atividade: Mesa ou Máquina.",5000);const r=f.querySelector('[name="pdAt"]');if(r)r.focus();return null}
+ return[a.value,x.value]}
 const pdTurOpts=cur=>pdTurnos().filter(t=>t.ativo||t.id===cur).map(t=>`<option value="${t.id}"${cur===t.id?" selected":""}>${esc(t.nome)} (${t.ent}${t.sai?" às "+t.sai:""})</option>`).join("");
 function pdNovaForm(){const el=$("#pdNova");if(!el)return;if(el.querySelector("form")&&!PDreset)return;PDreset=false;
  el.innerHTML=`<form class="pdNf" id="pdNovaF" novalidate><div class="pdG"><label>Nome<input name="n" maxlength="80" autocomplete="off" required></label><label>Código do crachá<input name="c" value="${pdProxCod()}" maxlength="12" autocomplete="off" autocapitalize="characters" required></label></div>
-  <fieldset><legend>Posto</legend>${pdPosR("pdA4",PDf.includes("-")?PDf:"")}</fieldset>
+  ${pdPosR(PDf.includes("-")?PDf:"")}
   <div class="pdG"><label>Turno<select name="pdT">${pdTurOpts(null)}</select></label></div>
   <div class="legend" style="margin:0 0 10px">Pessoa da produção (${esc(pdGalpao())}). O código é o que fica no crachá: letras e números, sem espaço.</div>
   <div class="ctl2"><span></span><button type="submit" class="btn">Cadastrar</button></div></form>`}
@@ -2950,10 +2956,10 @@ async function pdCadastrar(f,k){const nome=f.querySelector('[name="n"]').value.t
  if(nome.length<2){toast("Informe o nome da pessoa.");f.querySelector('[name="n"]').focus();return}
  if(!pdCodOk(cod)){toast("O código precisa ter de 2 a 12 letras ou números.",5000);f.querySelector('[name="c"]').focus();return}
  if(pdOps().some(o=>o.m===cod&&pdK(o)!==k)){toast("O código "+cod+" já está em uso na produção.",5000);return}
- const pr=k?null:f.querySelector('[name="pdA4"]:checked'),tu=k?0:+((f.querySelector('[name="pdT"]')||{}).value||0);
- if(!k&&!pr){toast("Escolha o posto: Térreo ou Mezanino, Mesa ou Máquina.",5000);const r=f.querySelector('[name="pdA4"]');if(r)r.focus();return}
+ const pr=k?null:pdPosLer(f),tu=k?0:+((f.querySelector('[name="pdT"]')||{}).value||0);
+ if(!k&&!pr)return
  if(!k&&!tu){toast("Cadastre um turno primeiro.");return}
- const [an,at]=pr?pr.value.split("-"):[];
+ const [an,at]=pr||[];
  const msg=(k?"Cadastro atualizado: ":"Pessoa cadastrada na produção: ")+nome+", "+cod+(pr?" ("+PD_AND[an]+" "+PD_AT[at]+")":"");
  if(ON){const b=f.querySelector('[type="submit"],[data-pdcad]');if(b)b.disabled=true;
   let id;try{id=await api("/rest/v1/rpc/prod_pessoa_salvar",{method:"POST",body:{p_id:k||null,p_codigo:cod,p_nome:nome,p_galpao:GID[pdGalpao()]||null}})}catch(e){if(b)b.disabled=false;toast(errMsg(e),7000);return}
@@ -2969,7 +2975,7 @@ function pdLocalDT(t){const d=new Date(t);d.setSeconds(0,0);return dk(d.getTime(
 function pdEditor(o,a){const k=pdK(o),T=pdTurnos().filter(t=>t.ativo||(a&&t.id===a.tu)),r=(n,v,lab,cur)=>`<label><input type="radio" name="${n}" value="${v}"${cur===v?" checked":""}>${lab}</label>`;
  const H=pdAtribs().filter(x=>x.oid===k).sort((x,y)=>y.ini-x.ini).slice(0,8),fd=t=>new Date(t).toLocaleString("pt-BR",{day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"});
  return`<form class="pdEd" data-pdform="${esc(k)}" novalidate>
-  <fieldset><legend>Posto</legend>${pdPosR("pdA4",a?a.andar+"-"+a.at:"")}</fieldset>
+  ${pdPosR(a?a.andar+"-"+a.at:"")}
   <div class="pdG"><label>Turno<select name="pdT">${T.map(t=>`<option value="${t.id}"${a&&a.tu===t.id?" selected":""}>${esc(t.nome)} (${t.ent}${t.sai?" às "+t.sai:""})</option>`).join("")}</select></label>
    <label>Entrada individual<input type="time" name="pdE" value="${a?a.ent:""}"></label><label>Saída individual<input type="time" name="pdS" value="${a?a.sai:""}"></label>
    <label>Situação<select name="pdSit"><option value="ativo"${!a||a.sit==="ativo"?" selected":""}>Ativo</option><option value="inativo"${a&&a.sit==="inativo"?" selected":""}>Inativo</option></select></label>
@@ -2981,7 +2987,7 @@ function pdEditor(o,a){const k=pdK(o),T=pdTurnos().filter(t=>t.ativo||(a&&t.id==
   ${H.length?`<ul class="pdHist" aria-label="Histórico de postos">${H.map(x=>{const t=pdTurno(x.tu);return`<li>${fd(x.ini)} até ${x.fim?fd(x.fim):"agora"}: ${PD_AND[x.andar]}, ${PD_AT[x.at]}, ${esc(t?t.nome:"Turno "+x.tu)}${x.sit!=="ativo"?" (inativo)":""}</li>`}).join("")}</ul>`:""}
  </form>`}
 async function pdAtribuir(f){const k=f.dataset.pdform,o=pdOp(k);if(!o)return;const g=n=>{const e=f.querySelector(`[name="${n}"]:checked`)||f.querySelector(`[name="${n}"]`);return e?e.value:""};
- const p4=f.querySelector('[name="pdA4"]:checked');if(!p4){toast("Escolha o posto.");return}const [av4,at4]=p4.value.split("-"),andar={value:av4},at={value:at4};
+ const p4=pdPosLer(f);if(!p4)return;const [av4,at4]=p4,andar={value:av4},at={value:at4};
  const tu=+g("pdT"),ent=g("pdE"),sai=g("pdS"),sit=g("pdSit"),dv=g("pdD");if(!tu){toast("Cadastre um turno primeiro.");return}
  if(!!ent!==!!sai){toast("Informe entrada e saída do horário individual, ou deixe os dois em branco.",5000);return}
  const desde=dv?new Date(dv).getTime():Date.now();if(!isFinite(desde)){toast("Confira a data de início.");return}
@@ -3220,8 +3226,8 @@ document.addEventListener("click",e=>{const t=e.target.closest&&e.target.closest
  if(t.dataset.pnv){PNV=t.dataset.pnv;try{localStorage.setItem("rcondas.pnv",PNV)}catch(e){}pnRender();return}
  if(t.dataset.pdfp){PDfp=t.dataset.pdfp;pdRender();return}
  if(t.dataset.pde){PDE=t.dataset.pde;PDed=null;pdEqRender();return}
- if(t.dataset.pdf){PDf=t.dataset.pdf;pdDisLista();const r=document.querySelector('#pdNovaF input[name="pdA4"][value="'+PDf+'"]');if(r)r.checked=true;return}
- if(t.dataset.pded){PDed=PDed===t.dataset.pded?null:t.dataset.pded;pdDisLista();const f=PDed&&document.querySelector(`[data-pdform="${CSS.escape(PDed)}"]`);if(f){const r=f.querySelector('input[name="pdA4"]');f.scrollIntoView({block:"nearest"});if(r)r.focus({preventScroll:true})}return}
+ if(t.dataset.pdf){PDf=t.dataset.pdf;pdDisLista();if(PDf.includes("-")){const [fa,fx]=PDf.split("-");[["pdAn",fa],["pdAt",fx]].forEach(([n,v])=>{const r=document.querySelector('#pdNovaF input[name="'+n+'"][value="'+v+'"]');if(r)r.checked=true})}return}
+ if(t.dataset.pded){PDed=PDed===t.dataset.pded?null:t.dataset.pded;pdDisLista();const f=PDed&&document.querySelector(`[data-pdform="${CSS.escape(PDed)}"]`);if(f){const r=f.querySelector('input[name="pdAn"]');f.scrollIntoView({block:"nearest"});if(r)r.focus({preventScroll:true})}return}
  if(t.dataset.pdtn){PDed="novoT";pdTurnosLista();const i=$('[data-pdt="novo"] [name="n"]');if(i)i.focus();return}
  if(t.dataset.pdtx){PDed=null;pdTurnosLista();return}
  if(t.id==="pdTroca"){pdTrocar();return}

@@ -16,7 +16,7 @@ async function T(name,fn){if(process.env.ONLY&&!process.env.ONLY.split(",").some
 async function dis(p){await p.evaluate(()=>{go('cfg');document.querySelector('#csub [data-c="cpd"]').click()});await p.evaluate(()=>{document.getElementById('cpdTu').open=true});await p.waitForTimeout(120)}
 async function emb(p,v){await p.evaluate(v=>{go('ind');document.querySelector('#gsub [data-gs="pd"]').click()},v);await p.waitForTimeout(150)}
 async function posto(p,nome,andar,at,extra){await dis(p);await p.fill('#pdDq',nome);await p.waitForTimeout(80);
- await p.locator('#pdDl [data-pded]').first().click();await p.check(`.pdEd input[name="pdA4"][value="${andar}-${at}"]`);
+ await p.locator('#pdDl [data-pded]').first().click();await p.check(`.pdEd input[name="pdAn"][value="${andar}"]`);await p.check(`.pdEd input[name="pdAt"][value="${at}"]`);
  if(extra)await extra();await p.click('.pdEd [type="submit"]');await p.waitForTimeout(120)}
 async function bipar(p,cod,wns){await p.click('.tab[data-t="prod"]');await p.evaluate(()=>pdSubPr('bip'));const cur=await p.inputValue('#pdP');if(cur!==cod){await p.fill('#pdP',cod);await p.waitForTimeout(80)}
  for(const w of wns){await p.fill('#pdW',String(w));await p.press('#pdW','Enter');await p.waitForTimeout(60)}}
@@ -80,13 +80,14 @@ await T("P08 Pessoas da Coleta não aparecem na Produção (nem na busca, nem na
 await T("P11 Cadastro da produção: cadastrar, código repetido recusado, editar e remover mantendo o histórico",async()=>{const p=await page(b,base({prodPes:[]}));await p.click('.tab[data-t="prod"]');await dis(p);
  ok((await p.textContent('#pdDl')).includes('Nenhuma pessoa cadastrada'),'estado vazio');
  ok((await p.inputValue('#pdNovaF [name="c"]'))==='PR001','código sugerido');await p.fill('#pdNovaF [name="n"]','Diego Ramos');await p.click('#pdNovaF [type="submit"]');await p.waitForTimeout(80);
- ok(!((await st(p)).prodPes||[]).length,'cadastrou sem posto');ok((await p.$$('#pdNovaF input[name="pdA4"]')).length===4,'4 postos no cadastro');
- await p.check('#pdNovaF input[name="pdA4"][value="mezanino-maquina"]');await p.click('#pdNovaF [type="submit"]');await p.waitForTimeout(80);
+ ok(!((await st(p)).prodPes||[]).length,'cadastrou sem posto');ok((await p.$$('#pdNovaF input[name="pdAn"]')).length===2&&(await p.$$('#pdNovaF input[name="pdAt"]')).length===2,'andar e atividade, duas marcações');
+ await p.check('#pdNovaF input[name="pdAn"][value="mezanino"]');await p.click('#pdNovaF [type="submit"]');await p.waitForTimeout(80);ok(!((await st(p)).prodPes||[]).length,'cadastrou só com o andar');
+ await p.check('#pdNovaF input[name="pdAn"][value="mezanino"]');await p.check('#pdNovaF input[name="pdAt"][value="maquina"]');await p.click('#pdNovaF [type="submit"]');await p.waitForTimeout(80);
  ok((await st(p)).prodA.some(a=>a.andar==='mezanino'&&a.at==='maquina'&&!a.fim),'posto do cadastro');
  let s=await st(p);ok(s.prodPes.length===1&&s.prodPes[0].m==='PR001'&&s.prodPes[0].n==='Diego Ramos','cadastro '+JSON.stringify(s.prodPes));ok(s.ops.length===2,'mexeu na Coleta');
- await p.fill('#pdNovaF [name="n"]','Elisa');await p.check('#pdNovaF input[name="pdA4"][value="terreo-mesa"]');await p.fill('#pdNovaF [name="c"]','pr001');await p.click('#pdNovaF [type="submit"]');await p.waitForTimeout(80);
+ await p.fill('#pdNovaF [name="n"]','Elisa');await p.check('#pdNovaF input[name="pdAn"][value="terreo"]');await p.check('#pdNovaF input[name="pdAt"][value="mesa"]');await p.fill('#pdNovaF [name="c"]','pr001');await p.click('#pdNovaF [type="submit"]');await p.waitForTimeout(80);
  s=await st(p);ok(s.prodPes.length===1,'aceitou código repetido');await p.fill('#pdNovaF [name="c"]','PR002');await p.click('#pdNovaF [type="submit"]');await p.waitForTimeout(80);s=await st(p);ok(s.prodPes.length===2,'segunda pessoa');
- await p.fill('#pdDq','Diego');await p.locator('#pdDl [data-pded]').first().click();await p.check('.pdEd input[name="pdA4"][value="terreo-mesa"]');await p.click('.pdEd [type="submit"]');await p.waitForTimeout(80);
+ await p.fill('#pdDq','Diego');await p.locator('#pdDl [data-pded]').first().click();await p.check('.pdEd input[name="pdAn"][value="terreo"]');await p.check('.pdEd input[name="pdAt"][value="mesa"]');await p.click('.pdEd [type="submit"]');await p.waitForTimeout(80);
  await p.locator('#pdDl [data-pded]').first().click();await p.fill('.pdEd [name="n"]','Diego R. Ramos');await p.click('.pdEd [data-pdcad]');await p.waitForTimeout(80);s=await st(p);ok(s.prodPes[0].n==='Diego R. Ramos','editar nome');
  await bipar(p,'PR001',['555']);await dis(p);await p.fill('#pdDq','Diego');if(!(await p.isVisible('.pdEd [data-pdrm]')))await p.locator('#pdDl [data-pded]').first().click();
  await p.click('.pdEd [data-pdrm]');await p.click('.pdEd [data-pdrm]');await p.waitForTimeout(80);s=await st(p);
@@ -107,7 +108,7 @@ await T("P12 Equipe › Pessoas da produção: filtro Térreo Mesa, Térreo Máq
  ok(JSON.stringify(chips)===JSON.stringify(["Todos 3","Térreo Mesa 1","Térreo Máquina 1","Mezanino Mesa 0","Mezanino Máquina 1","Sem posto 0"]),'chips '+chips);
  await p.click('#pdDf [data-pdf="terreo-maquina"]');let t=await p.textContent('#pdDl');ok(t.includes('Bruno')&&!t.includes('Ana')&&!t.includes('Carla'),'filtro: '+t);
  await p.click('#pdDf [data-pdf="mezanino-mesa"]');ok((await p.textContent('#pdDl')).includes('Ninguém neste filtro'),'vazio');
- ok(await p.isChecked('#pdNovaF input[value="mezanino-mesa"]'),'cadastro herda o filtro');
+ ok(await p.isChecked('#pdNovaF input[name="pdAn"][value="mezanino"]')&&await p.isChecked('#pdNovaF input[name="pdAt"][value="mesa"]'),'cadastro herda o filtro');
  if(SHOT)await p.screenshot({path:SHOT+'/p_eq.png'});ok(!p.errors.length,p.errors.join(';'))});
 
 await T("P13 Metas por hora (Mesa e Máquina), Equipe e Individual com meta; Produção sem painel",async()=>{const p=await page(b,base());

@@ -493,7 +493,7 @@ await T('S95 Produção: gestor define posto e turno, aparelho público bipa, pr
  await pa.evaluate(()=>{go('cfg');document.querySelector('#csub [data-c="cpd"]').click();document.getElementById('cpdTu').open=true});await pa.waitForTimeout(400);ok(await pa.isVisible('#cpd'),'admin deveria ver o cadastro da embalagem na Config');
  await pa.fill('[data-pdt="1"] [name="s"]','15:00');await pa.click('[data-pdt="1"] [type="submit"]');await pa.waitForTimeout(400);ok(db.pt[0].saida==='15:00','turno não salvo: '+JSON.stringify(db.pt[0]));
  ok((await pa.textContent('#pdDl')).includes('Nenhuma pessoa cadastrada'),'pessoas da Coleta apareceram na Produção');
- await pa.fill('#pdNovaF [name="n"]','Ana Embalagem');await pa.check('#pdNovaF input[name="pdA4"][value="mezanino-maquina"]');await pa.click('#pdNovaF [type="submit"]');await pa.waitForTimeout(450);
+ await pa.fill('#pdNovaF [name="n"]','Ana Embalagem');await pa.check('#pdNovaF input[name="pdAn"][value="mezanino"]');await pa.check('#pdNovaF input[name="pdAt"][value="maquina"]');await pa.click('#pdNovaF [type="submit"]');await pa.waitForTimeout(450);
  ok(db.ppes.length===1&&db.ppes[0].codigo==='PR001'&&db.ppes[0].galpao_id===G1,'cadastro: '+JSON.stringify(db.ppes));
  ok(db.pa.length===1&&db.pa[0].andar==='mezanino'&&db.pa[0].criado_por==='adm@x.com','posto: '+JSON.stringify(db.pa));
  ok((await pa.textContent('#pdDl')).includes('Mezanino'),'lista não atualizou');
