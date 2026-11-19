@@ -43,6 +43,7 @@ function fake(db){const cors={'access-control-allow-origin':'*','access-control-
    if(body.acao==='senha'){if(!db.gestores.some(x=>x.email===em))return J(route,404,{erro:'Gestor não encontrado.'});db.users[em]={pw:body.senha,ok:true};return J(route,200,{ok:true})}
    return J(route,400,{erro:'Ação desconhecida.'})}
   if(p==='/auth/v1/logout'){delete db.tokens[bearer];return route.fulfill({status:204,headers:cors})}
+  if(p==='/auth/v1/user'&&req.method()==='PUT'){if(!email)return J(route,401,{msg:'no'});db.calls.pwput=(db.calls.pwput||0)+1;db.users[email].pw=body.password;return J(route,200,{email})}
   if(p==='/auth/v1/user')return email?J(route,200,{email}):J(route,401,{msg:'no'});
   // ---- rest
   const t=p.replace('/rest/v1/','');
@@ -530,6 +531,27 @@ await T('S97 Produção: admin grava metas por hora e o desempenho do período v
  await pa.evaluate(()=>{go('ind');document.querySelector('#gsub [data-gs="pd"]').click()});await pa.waitForTimeout(600);ok(db.calls.per>=1,'não buscou o período no servidor');ok((await pa.textContent('#pdDesV')).includes('Ana Embalagem'),'individual');
  await pa.evaluate(()=>go('painel'));await pa.waitForTimeout(700);ok(await pa.isVisible('#pnSeg')&&await pa.isVisible('#pnDuo'),'admin deveria ver Coleta e Embalagem no Painel');ok((await pa.textContent('#pnDuo')).includes('Fila entre Coleta e Embalagem'),'fila no painel do admin');
 });
+
+await T('S98 Cada gestor troca a própria senha: pede a atual, confere a repetição e a nova senha passa a valer',async()=>{const db=banco();
+ const pub=await page(b,db);ok(!(await pub.isVisible('#pwbtn')),'público vendo o botão Minha senha');
+ const pa=await page(b,db);await login(pa,'adm@x.com','senha1234');ok(await pa.isVisible('#pwbtn'),'gestor sem o botão Minha senha');
+ await pa.click('#pwbtn');ok(await pa.isVisible('#pw'),'janela');
+ await pa.fill('#pwA','errada123');await pa.fill('#pwN','novaSenha99');await pa.fill('#pwR','novaSenha99');await pa.click('#pwB');await pa.waitForTimeout(400);
+ ok(db.users['adm@x.com'].pw==='senha1234'&&(await pa.isVisible('#pw'))&&(await pa.textContent('#toast')).includes('atual incorreta'),'aceitou senha atual errada');
+ await pa.fill('#pwA','senha1234');await pa.fill('#pwR','outraCoisa1');await pa.click('#pwB');await pa.waitForTimeout(300);ok(db.users['adm@x.com'].pw==='senha1234','trocou sem repetir igual');
+ await pa.fill('#pwN','curta');await pa.fill('#pwR','curta');await pa.click('#pwB');await pa.waitForTimeout(300);ok(db.users['adm@x.com'].pw==='senha1234','aceitou senha curta');
+ await pa.fill('#pwN','novaSenha99');await pa.fill('#pwR','novaSenha99');await pa.click('#pwB');await pa.waitForTimeout(500);
+ ok(db.users['adm@x.com'].pw==='novaSenha99'&&!(await pa.isVisible('#pw')),'senha não foi trocada');
+ await pa.click('#logbtn');await pa.waitForTimeout(400);const pb=await page(b,db);await login(pb,'adm@x.com','novaSenha99');ok(await pb.isVisible('#pwbtn'),'nova senha não entrou')});
+
+await T('S99 Admin edita o galpão de um gestor; gestor comum não tem o botão',async()=>{const db=banco();
+ const pa=await page(b,db);await login(pa,'adm@x.com','senha1234');await pa.evaluate(()=>{go('cfg');document.querySelector('#csub [data-c="cge"]').click()});await pa.waitForTimeout(500);
+ ok((await pa.$$('#mL [data-mgal]')).length===2,'botão Galpão por gestor');
+ await pa.click('#mL [data-mgal="g2@x.com"]');ok(await pa.isVisible('#mGalS'),'editor');ok((await pa.$$eval('#mGalS option',o=>o.map(x=>x.textContent))).join()==='Galpão 1,Galpão 2','só galpões, sem "Todos" para gestor comum');
+ await pa.selectOption('#mGalS','Galpão 1');await pa.click('#mGalOk');await pa.waitForTimeout(600);
+ ok(db.gestores.find(x=>x.email==='g2@x.com').galpao_id===G1,'galpão não gravado '+JSON.stringify(db.gestores[1]));
+ ok((await pa.textContent('#mL')).includes('Galpão 1'),'lista não mostra o novo galpão');
+ const pg=await page(b,db);await login(pg,'g2@x.com','senha1234');await pg.evaluate(()=>{go('cfg');document.querySelector('#csub [data-c="cge"]').click()});await pg.waitForTimeout(400);ok((await pg.$$('#mL [data-mgal]')).length===0,'gestor comum com botão Galpão')});
 
 await b.close();
 const w=Math.max(...R.map(r=>r[1].length));for(const r of R)console.log((r[0]==='PASS'?'✅':'❌')+' '+r[1].padEnd(w)+'  '+r[2]);

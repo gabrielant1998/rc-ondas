@@ -265,7 +265,7 @@ a[data-pick]{display:inline-block;padding:8px 0 2px;color:var(--gx);font-weight:
  .nav-short{display:inline}
  .tab{flex-direction:column;gap:3px;font-size:11.5px;padding:6px 8px;min-height:32px;white-space:nowrap}
  nav.side .tab{flex:0 1 auto;min-width:0;padding:6px 3px;font-size:10.5px}
- nav.side #logbtn,nav.side #inst{font-size:0;gap:0;padding:6px 4px}
+ nav.side #logbtn,nav.side #inst,nav.side #pwbtn{font-size:0;gap:0;padding:6px 4px}
  main{padding:14px 14px 96px}header.top h1{font-size:28px}
  .placar{grid-template-columns:1fr;gap:12px;padding:12px 16px}.placar .num{font-size:46px}
  .card{padding:14px}.sub{gap:18px}
@@ -541,6 +541,7 @@ body[data-v=cfg] #turnoF,body[data-v=cfg] #gal,body[data-v=cfg] #day{display:non
  <button class="tab" data-t="cfg"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/></svg>Config</button>
  <div class="sp"></div>
  <div class="who" id="who"></div>
+ <button class="tab hide" id="pwbtn" aria-label="Alterar minha senha"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="8" cy="15" r="4"/><path d="M11 12l9-9M16 7l3 3M14 9l2 2"/></svg><span>Minha senha</span></button>
  <button class="tab" id="logbtn"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 3h4v18h-4M11 8l-4 4 4 4M7 12h9"/></svg><span id="logtx">Entrar</span></button>
  <button class="tab" id="inst"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12M7 10l5 5 5-5M4 20h16"/></svg>Instalar app</button>
  <button class="tab" id="theme"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3v18"/></svg>Tema</button>
@@ -779,7 +780,7 @@ body[data-v=cfg] #turnoF,body[data-v=cfg] #gal,body[data-v=cfg] #day{display:non
    <label class="row"><input type="checkbox" id="mA" style="min-height:auto"> Administrador (vê todos os galpões)</label>
    <button class="btn" id="mB">Criar gestor</button></div></div>
   <div class="card" id="pedCard"><h2>Pedidos de acesso</h2><div class="tw" id="pedL"></div><div class="legend">Para liberar, preencha nome, galpão e permissões no formulário ao lado e clique em Aceitar.</div></div>
-  <div class="card"><h2>Gestores</h2><div class="tw" id="mL"></div><div id="mSen"></div><div id="mAbas"></div><div class="legend">Enquanto não existir nenhum gestor, Configurações e Individual ficam abertos. Depois do primeiro gestor, passam a exigir login.</div></div>
+  <div class="card"><h2>Gestores</h2><div class="tw" id="mL"></div><div id="mSen"></div><div id="mAbas"></div><div id="mGalE"></div><div class="legend">Enquanto não existir nenhum gestor, Configurações e Individual ficam abertos. Depois do primeiro gestor, passam a exigir login.</div></div>
  </div>
 </section>
 </main>
@@ -792,6 +793,14 @@ body[data-v=cfg] #turnoF,body[data-v=cfg] #gal,body[data-v=cfg] #day{display:non
  <label><span id="lPl">Senha</span><input id="lP" type="password" autocomplete="current-password"></label>
  <div class="grid" style="grid-template-columns:1fr 1fr"><button class="btn" id="lB">Entrar</button><button class="btn alt" id="lX">Cancelar</button></div>
  <div class="ctl2 hide" id="lExtra"><button class="btn alt sm" id="lNew">Primeiro acesso</button><button class="btn alt sm" id="lRec">Esqueci a senha</button></div></div></div></div>
+
+<div class="mask hide" id="pw" role="dialog" aria-modal="true" aria-labelledby="pwT"><form class="card" id="pwF" novalidate><h2 id="pwT">Alterar minha senha</h2><div class="f">
+ <input type="text" id="pwU" autocomplete="username" class="hide" tabindex="-1" aria-hidden="true">
+ <label><span>Senha atual</span><input id="pwA" type="password" autocomplete="current-password"></label>
+ <label><span>Nova senha</span><input id="pwN" type="password" autocomplete="new-password" placeholder="mínimo 8 caracteres"></label>
+ <label><span>Repita a nova senha</span><input id="pwR" type="password" autocomplete="new-password"></label>
+ <div class="grid" style="grid-template-columns:1fr 1fr"><button class="btn" id="pwB" type="submit">Salvar senha</button><button class="btn alt" id="pwX" type="button">Cancelar</button></div>
+ <div class="legend">Só você troca a sua senha. O administrador também pode definir uma nova em Config › Gestores.</div></div></form></div>
 
 <script>
 /* ===================== estado ===================== */
@@ -2197,11 +2206,12 @@ function cfgGes(){
   $("#pedCard").classList.toggle("hide",!SOL.length);
   const ms=$("#mSen"),sm=mSenU?S.ges.find(x=>x.u===mSenU):null;ms.innerHTML=sm?`<div class="f" style="margin-top:14px;padding-top:12px;border-top:1px solid var(--line)"><b>Nova senha para ${esc(sm.n)}</b><div class="legend">${esc(sm.u)}. Passe a senha para o gestor; ele entra direto com o e-mail e esta senha.</div><label>Nova senha<input type="password" id="mSenP" autocomplete="new-password" placeholder="mínimo 8 caracteres"></label><div class="ctl"><button class="btn sm" type="button" id="mSenOk">Salvar senha</button><button class="btn alt sm" type="button" id="mSenX">Cancelar</button></div></div>`:""}
  const mb=$("#mAbas");if(mb){const m=mAbasU?S.ges.find(x=>x.u===mAbasU):null;if(!m)mb.innerHTML="";else{const cur=m.ab||ABAS_T.map(a=>a[0]);mb.innerHTML=`<div class="f" style="margin-top:14px;padding-top:12px;border-top:1px solid var(--line)"><b>Abas que ${esc(m.n)} pode ver</b><div class="legend">Administradores veem todas as abas. Desmarque para esconder abas deste gestor.</div>${ABAS_T.map(([k,l])=>`<label class="row"><input type="checkbox" data-abk="${k}" style="min-height:auto"${cur.includes(k)?" checked":""}> ${l}</label>`).join("")}<div class="ctl"><button class="btn sm" data-abs="salvar" type="button">Salvar abas</button> <button class="btn alt sm" data-abs="todas" type="button">Liberar todas</button> <button class="btn alt sm" data-abs="fechar" type="button">Fechar</button></div></div>`}}
+ {const el=$("#mGalE"),m=mGalU?S.ges.find(x=>x.u===mGalU):null;if(el)el.innerHTML=m?`<div class="f" style="margin-top:14px;padding-top:12px;border-top:1px solid var(--line)"><b>Galpão de ${esc(m.n)}</b><div class="legend">${esc(m.u)}. O gestor passa a ver e alterar só o galpão escolhido; a mudança vale no próximo acesso dele.${m.adm?" Administrador também pode ficar com todos os galpões.":""}</div><label>Galpão<select id="mGalS">${m.adm?`<option value=""${m.g?"":" selected"}>Todos os galpões</option>`:""}${S.gals.map(g=>`<option${g===m.g?" selected":""}>${esc(g)}</option>`).join("")}</select></label><div class="ctl"><button class="btn sm" type="button" id="mGalOk">Salvar galpão</button><button class="btn alt sm" type="button" id="mGalX">Cancelar</button></div></div>`:""}
  $("#mG").innerHTML=S.gals.map(g=>`<option>${esc(g)}</option>`).join("");
  $("#pedL").innerHTML=SOL.length?`<table><tr><th>E-mail</th><th></th></tr>`+SOL.map(s=>`<tr><td><b>${esc(s.nome||"Sem nome")}</b><br>${esc(s.email)}<br><small style="color:var(--mut)">${esc((s.galpao_id&&GN[s.galpao_id])||"sem galpão")}, pediu em ${new Date(s.criado_em).toLocaleDateString("pt-BR")}</small></td><td style="white-space:nowrap"><button class="btn sm" data-sacc="${esc(s.email)}">Aceitar</button> <button class="btn d sm" data-srec="${esc(s.email)}">Recusar</button></td></tr>`).join("")+"</table>"
   :'<div class="empty">Nenhum pedido de acesso pendente.</div>';
  $("#mL").innerHTML=S.ges.length?`<table><tr><th>Gestor</th><th>Login</th><th>Permissões</th><th></th></tr>`+S.ges.map((m,i)=>
-  `<tr><td>${esc(m.n)}<br><small style="color:var(--mut)">${esc(m.g||"sem galpão")}</small>${m.adm?' <span class="tag">admin</span>':""}</td><td>${esc(m.u)}${ON?"":m.p?' <span class="tag">senha</span>':' <span class="tag t2">sem senha</span>'}</td><td style="font-size:12px">${[m.pC&&"config",m.pI&&"individual",m.pR&&"registros"].filter(Boolean).join(", ")||"—"}<br><small style="color:var(--mut)">Abas: ${m.ab?ABAS_T.filter(a=>m.ab.includes(a[0])).map(a=>a[1]).join(", "):"todas"}</small></td><td style="white-space:nowrap">${(!ON||(me&&me.adm))?`<button class="btn alt sm" data-mabas="${esc(m.u)}">Abas</button> `:""}${ON&&me&&me.adm?`<button class="btn alt sm" data-msen="${esc(m.u)}">Trocar senha</button> `:""}<button class="btn d sm" data-mdel="${i}">Excluir</button></td></tr>`).join("")+"</table>"
+  `<tr><td>${esc(m.n)}<br><small style="color:var(--mut)">${esc(m.g||"sem galpão")}</small>${m.adm?' <span class="tag">admin</span>':""}</td><td>${esc(m.u)}${ON?"":m.p?' <span class="tag">senha</span>':' <span class="tag t2">sem senha</span>'}</td><td style="font-size:12px">${[m.pC&&"config",m.pI&&"individual",m.pR&&"registros"].filter(Boolean).join(", ")||"—"}<br><small style="color:var(--mut)">Abas: ${m.ab?ABAS_T.filter(a=>m.ab.includes(a[0])).map(a=>a[1]).join(", "):"todas"}</small></td><td style="white-space:nowrap">${(!ON||(me&&me.adm))?`<button class="btn alt sm" data-mgal="${esc(m.u)}">Galpão</button> <button class="btn alt sm" data-mabas="${esc(m.u)}">Abas</button> `:""}${ON&&me&&me.adm?`<button class="btn alt sm" data-msen="${esc(m.u)}">Trocar senha</button> `:""}<button class="btn d sm" data-mdel="${i}">Excluir</button></td></tr>`).join("")+"</table>"
   :'<div class="empty">Nenhum gestor cadastrado. Configurações e Individual estão abertos.</div>'}
 function cfgRender(){cfgOp();cfgParadas();cfgUsers();cfgMetas();cfgGals();cfgGes();cfgMan();cfgMot()}
 /* manutenção: só o administrador apaga registros por período; o servidor confere a permissão */
@@ -2448,13 +2458,13 @@ function hisRender(){
 
 /* ===================== acesso ===================== */
 const needAuth=k=>ON?!me:S.ges.length>0&&!(me&&(k==="cfg"?me.pC:me.pI));
-const ABAS_T=[["painel","Painel"],["op","Coleta"],["prs","Procurando"],["ind","Equipe"],["his","Relatórios"],["cfg","Config"]];let mAbasU=null;
+const ABAS_T=[["painel","Painel"],["op","Coleta"],["prs","Procurando"],["ind","Equipe"],["his","Relatórios"],["cfg","Config"]];let mAbasU=null,mGalU=null;
 const isI=t=>t==="ind"||t==="his";
 /* aba só aparece se o perfil atual pode abri-la; o que não é acessível fica oculto */
 function podeVer(t){if(t==="prod")return true;if(ON&&me&&!me.adm&&me.ab&&!me.ab.includes(t))return false;if(t==="op"||t==="prod"||t==="painel"||t==="prs")return true;if(ON)return !!me&&(isI(t)?!!me.pI:t==='cfg'?!!(me.pC||me.pI):!!me.pC);if(t==="painel")return true;return !needAuth(t)}
 function updTabs(){$$(".tab[data-t]").forEach(b=>{b.style.display=podeVer(b.dataset.t)?"":"none"});$$('#csub [data-c="cga"]').forEach(b=>{b.style.display=soMeta()?"none":""});$$('#fCard').forEach(c=>c.classList.toggle("hide",soMeta()));$$('#csub [data-c="cpd"]').forEach(b=>{let g=false;try{g=pdGestor()}catch(e){}b.style.display=g?"":"none"});$$('#csub [data-c="cge"]').forEach(b=>{b.style.display=soMeta()?"none":""});$$('#csub [data-c="cma"]').forEach(b=>{b.style.display=(!ON||(me&&me.adm))?"":"none"});{const soHor=ON&&me&&!me.adm&&!me.pC;$$('#csub [data-c="cop"],#csub [data-c="cus"],#csub [data-c="cme"],#csub [data-c="cho"]').forEach(b=>{b.style.display=''});if(soHor)$$('#csub button').forEach(b=>{if(b.dataset.c!=='cho')b.style.display='none'})}if(!podeVer(view)){view="op";["painel","op","prs","ind","his","cfg"].forEach(s=>$("#"+s).classList.toggle("hide",s!=="op"));$$(".tab[data-t]").forEach(b=>b.classList.toggle("on",b.dataset.t==="op"))}}
 let hWho="";
-function authUI(){const w=me?me.n+"|"+(me.g||"")+"|"+(me.adm?1:0):"";if(w!==hWho){hWho=w;hKey="";HW=null;HPW=null}$("#who").textContent=me?"Gestor: "+me.n:"";const pub=ON&&!me;["#turnoF","#gal","#day"].forEach(i=>$(i).classList.toggle("hide",pub));if(pub){$("#turnoF").value="";$("#day").value=dk(Date.now())}$("#logtx").textContent=me?"Sair":"Entrar";updTabs()}
+function authUI(){const w=me?me.n+"|"+(me.g||"")+"|"+(me.adm?1:0):"";if(w!==hWho){hWho=w;hKey="";HW=null;HPW=null}$("#who").textContent=me?"Gestor: "+me.n:"";const pub=ON&&!me;["#turnoF","#gal","#day"].forEach(i=>$(i).classList.toggle("hide",pub));if(pub){$("#turnoF").value="";$("#day").value=dk(Date.now())}$("#logtx").textContent=me?"Sair":"Entrar";$("#pwbtn").classList.toggle("hide",!me);updTabs()}
 function go(t){if(ON&&me&&!me.adm&&me.ab&&!podeVer(t)){const f=ABAS_T.find(([k])=>podeVer(k));if(f)t=f[0]}setTimeout(()=>{try{sideSubs()}catch(e){}},0);
  updTabs();
  if((t==="cfg"||isI(t))&&needAuth(t)){$("#login").classList.remove("hide");$("#lU").focus();pend=t;return}
@@ -2474,6 +2484,22 @@ $("#lB").onclick=()=>{if(ON){entrar();return}const u=$("#lU").value.trim().toLow
  if(!g||(g.p&&g.p!==h32(p))){toast("Usuário ou senha inválidos");return}
  me=g;$("#login").classList.add("hide");primeiroMode=false;$("#lP").value="";if(g.g&&S.gals.includes(g.g)){S.gal=g.g;save()}authUI();toast("Bem-vindo, "+g.n);const t=pend||"cfg";pend=null;go(t)};
 $("#lP").onkeydown=e=>{if(e.key==="Enter")$("#lB").click()};
+/* cada gestor troca a própria senha */
+function pwAbrir(){if(!me)return;$("#pwU").value=(sess&&sess.email)||me.u||"";["#pwA","#pwN","#pwR"].forEach(i=>$(i).value="");$("#pw").classList.remove("hide");$("#pwA").focus()}
+function pwFechar(){$("#pw").classList.add("hide");["#pwA","#pwN","#pwR"].forEach(i=>$(i).value="");$("#pwbtn").focus()}
+async function pwSalvar(){const a=$("#pwA").value,n=$("#pwN").value,r=$("#pwR").value;
+ if(!a){toast("Informe a senha atual.");$("#pwA").focus();return}
+ if(n.length<8){toast("A nova senha precisa ter pelo menos 8 caracteres.",5000);$("#pwN").focus();return}
+ if(n===a){toast("A nova senha precisa ser diferente da atual.",5000);$("#pwN").focus();return}
+ if(n!==r){toast("A repetição não confere com a nova senha.",5000);$("#pwR").focus();return}
+ if(!ON){const g=S.ges.find(x=>me&&x.u===me.u);if(!g)return;if(g.p&&g.p!==h32(a)){toast("Senha atual incorreta.");$("#pwA").focus();return}g.p=h32(n);save();pwFechar();toast("Senha alterada.");return}
+ const b=$("#pwB");b.disabled=true;const email=((sess&&sess.email)||me.u||"").toLowerCase();
+ try{try{setSess(tok(await raw("/auth/v1/token?grant_type=password",{method:"POST",auth:false,body:{email,password:a}})));sess.email=email;setSess(sess)}
+  catch(e){b.disabled=false;toast(e.status===400||e.status===401?"Senha atual incorreta.":errMsg(e),6000);if(e.status===400||e.status===401)$("#pwA").focus();return}
+  await api("/auth/v1/user",{method:"PUT",body:{password:n}});b.disabled=false;pwFechar();toast("Senha alterada. Use a nova senha no próximo acesso.",6000)}
+ catch(e){b.disabled=false;toast(errMsg(e),7000)}}
+$("#pwbtn").onclick=pwAbrir;$("#pwX").onclick=pwFechar;$("#pwF").onsubmit=e=>{e.preventDefault();pwSalvar()};$("#pw").onkeydown=e=>{if(e.key==="Escape")pwFechar()};
+
 
 /* ===================== render geral ===================== */
 function netUI(){const n=$("#net"),o=online(),p=S.waves.filter(w=>!w.sync).length;n.className="pill"+(o?"":" off");n.hidden=o&&!(ON&&p);n.textContent=o?(ON&&p?"Online, "+p+" a enviar":"Online"):"Offline, "+p+(p===1?" pendente":" pendentes");
@@ -2644,7 +2670,8 @@ document.addEventListener("click",e=>{const d=e.target.dataset,t=e.target;
   rem(()=>mut("/rest/v1/rpc/aceitar_solicitacao","POST",{p_email:em,p_nome:n,p_galpao:adm?null:(GID[gg]||null),p_admin:adm,p_pc:$("#mC").checked,p_pi:$("#mI").checked,p_pr:$("#mR").checked}),"Acesso liberado para "+em).then(ok=>{if(ok)$("#mN").value=""});return}
  if(d.srec){const em=d.srec;if(!confirm("Recusar o pedido de "+em+"?"))return;
   rem(()=>mut("/rest/v1/solicitacoes_gestor?email=eq."+encodeURIComponent(em),"DELETE"),"Pedido recusado");return}
- if(d.mabas){mAbasU=d.mabas;cfgGes();$("#mAbas").scrollIntoView({block:"nearest"});return}
+ if(d.mgal){mGalU=d.mgal;mAbasU=null;mSenU=null;cfgGes();$("#mGalE").scrollIntoView({block:"nearest"});const sl=$("#mGalS");if(sl)sl.focus();return}
+ if(d.mabas){mAbasU=d.mabas;mGalU=null;cfgGes();$("#mAbas").scrollIntoView({block:"nearest"});return}
  if(d.msen){mSenU=d.msen;cfgGes();$("#mSen").scrollIntoView({block:"nearest"});const i=$("#mSenP");if(i)i.focus();return}
  if(d.mdel){const g=S.ges[+d.mdel];if(!confirm("Excluir o gestor "+g.n+"?"))return;
   if(ON){rem(()=>mut("/rest/v1/gestores?email=eq."+encodeURIComponent(g.u),"DELETE"),"Gestor excluído");return}
@@ -2742,6 +2769,14 @@ $("#mAbas").onclick=async e=>{const b=e.target.closest("[data-abs]");if(!b)retur
  let abas=null;if(b.dataset.abs==="salvar"){abas=[...document.querySelectorAll("#mAbas [data-abk]")].filter(c=>c.checked).map(c=>c.dataset.abk);if(!abas.length){toast("Escolha pelo menos uma aba");return}if(abas.length===ABAS_T.length)abas=null}
  if(ON){const ok=await rem(()=>mut("/rest/v1/gestores?email=eq."+encodeURIComponent(m.u),"PATCH",{abas}),"Abas de "+m.n+" atualizadas");if(ok){mAbasU=null;cfgGes()}}
  else{m.ab=abas;save();mAbasU=null;cfgGes();toast("Abas de "+m.n+" atualizadas")}};
+$("#mGalE").onclick=async e=>{const m=S.ges.find(x=>x.u===mGalU);if(!m)return;
+ if(e.target.id==="mGalX"){mGalU=null;cfgGes();return}
+ if(e.target.id!=="mGalOk")return;const nome=$("#mGalS").value;
+ if(!nome&&!m.adm){toast("Escolha o galpão do gestor.");return}
+ if((nome||null)===(m.g||null)){mGalU=null;cfgGes();toast("O galpão não mudou.");return}
+ const msg="Galpão de "+m.n+": "+(nome||"todos os galpões");
+ if(ON){e.target.disabled=true;const ok=await rem(()=>mut("/rest/v1/gestores?email=eq."+encodeURIComponent(m.u),"PATCH",{galpao_id:nome?(GID[nome]||null):null}),msg);if(ok){mGalU=null;cfgGes()}else e.target.disabled=false;return}
+ m.g=nome||null;save();mGalU=null;cfgGes();toast(msg)};
 $("#mB").onclick=()=>{const n=$("#mN").value.trim(),u=$("#mU").value.trim(),p=$("#mP2").value;
  if(ON){const em=u.toLowerCase(),adm=$("#mA").checked,gg0=$("#mG").value;
   if(n.length<2||!/^\S+@\S+\.\S+$/.test(em)){toast("Informe o nome e um e-mail válido.");return}
