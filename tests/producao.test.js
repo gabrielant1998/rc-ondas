@@ -131,15 +131,14 @@ await T("P14 Celular: embalagem sem rolagem horizontal",async()=>{const p=await 
  await posto(p,'Ana','terreo','mesa');await bipar(p,'PR001',['201','202']);let w;
  for(const v of ['dis','emb']){if(v==='dis')await dis(p);else await emb(p,'ind');w=await p.evaluate(()=>document.documentElement.scrollWidth);ok(w<=391,v+' '+w)}ok(!p.errors.length,p.errors.join(';'))});
 
-await T("P15 Painel: Coleta e Embalagem lado a lado, só uma delas, fila entre as duas",async()=>{
+await T("P15 Painel: Coleta e Embalagem visão geral só com os gráficos novos; Coleta e Embalagem em separado",async()=>{
  const t0=Math.max(Date.now()-90*60000,new Date(HJ+'T00:01:00').getTime()),W=[1,2,3,4,5].map(i=>({id:'w'+i,wn:'20'+i,op:'CL001',opn:'Coleta Um',gal:'RC',ty:'Vários artigos',qty:100,st:0,ts:t0+i*60000,fin:t0+i*60000,sync:1}));
  const p=await page(b,base({waves:W}));await posto(p,'Ana','terreo','mesa');await bipar(p,'PR001',['201','202','203']);
  await p.evaluate(()=>go('painel'));await p.waitForTimeout(500);
- ok(await p.isVisible('#pnSeg'),'seletor do painel');let t=(await p.textContent('#pnDuo')).replace(/\s+/g,' ');
- ok(await p.isVisible('#pnDuo')&&!(await p.isVisible('#pnColW')),'abre lado a lado');
- ok(t.includes('Coleta')&&t.includes('Embalagem')&&t.includes('Fila entre Coleta e Embalagem'),'blocos '+t.slice(0,160));
- ok(/Aguardando embalagem2/.test(t)&&/Embaladas3/.test(t)&&/Coletadas no dia5/.test(t),'fila '+t.slice(t.indexOf('Fila'),t.indexOf('Fila')+240));
- ok((await p.$$('#pnDuo .pnSide')).length===2,'dois lados');
+ ok(await p.isVisible('#pnSeg'),'seletor do painel');ok(await p.isVisible('#pnDuo')&&!(await p.isVisible('#pnColW')),'abre na visão geral');
+ ok(await p.isVisible('#pnVis')&&!(await p.$('#pnDuo .pnSide'))&&!(await p.$('#pnDuo .pnRk'))&&!(await p.$('#pnDuo .pnFlux')),'visão geral sem os blocos antigos');
+ await p.click('#pnSeg [data-pnv="emb"]');await p.waitForTimeout(150);let t=(await p.textContent('#pnDuo')).replace(/\s+/g,' ');
+ ok(t.includes('Fila entre Coleta e Embalagem')&&/Aguardando embalagem2/.test(t)&&/Embaladas3/.test(t)&&/Coletadas no dia5/.test(t),'fila '+t.slice(t.indexOf('Fila'),t.indexOf('Fila')+240));
  ok((await p.$$('#pnDuo .pnRk')).length===2,'ranking Mesa e Máquina');const rk=(await p.textContent('#pnDuo .pnRkC')).replace(/\s+/g,' ');
  ok(/Mesa 1 pessoa/.test(rk)&&/1ºAna Souza/.test(rk)&&/3 ondas/.test(rk)&&/Máquina 0 pessoas/.test(rk)&&/Ninguém embalou na Máquina/.test(rk),'ranking '+rk.slice(0,260));
  ok(/300unidades embaladas|300 unidades embaladas/.test(t.replace(/\s+/g,' '))&&t.includes('Unidades por hora')&&t.includes('Unidades por pessoa por hora')&&/300 unidades \(3 ondas\)/.test(rk),'unidades por hora e por pessoa na Embalagem: '+rk.slice(0,200));
@@ -178,7 +177,7 @@ await T("P17 Só a quantidade: lança quantas embalagens a pessoa fez, com confi
  ok((await p.textContent('#pdN')).includes('2 ondas')&&(await p.textContent('#pdN')).includes('40 embalagens'),'total de hoje '+await p.textContent('#pdN'));
  const t=await p.evaluate(()=>{const r=pdStats(pdLocalB().map(b=>Object.assign({},b,{nm:'x',dia:b.dia||hoje()})));return[r.n,r.P[0].n,r.col]});ok(t[0]===42&&t[1]===42,'contas '+t);
  await emb(p,'ind');await p.waitForTimeout(150);ok((await p.textContent('#pdDesV')).includes('42'),'individual com a quantidade');
- await p.evaluate(()=>go('painel'));await p.waitForTimeout(500);const pt=(await p.textContent('#pnDuo')).replace(/\s+/g,' ');ok(pt.includes('40 embalagens lançadas só por quantidade'),'painel avisa sem unidades '+pt.slice(0,300));
+ await p.evaluate(()=>go('painel'));await p.waitForTimeout(500);const pt=(await p.textContent('#pnDuo')).replace(/\s+/g,' ');ok(pt.includes('40 un.'),'quantidade conta 1 unidade por embalagem '+pt.slice(0,300));
  if(SHOT){await p.click('.tab[data-t="prod"]');await p.click('#pdMode [data-pdq="q"]');await p.fill('#pdQn','15');await p.click('#pdQb');await p.screenshot({path:SHOT+'/p_qtd.png'})}ok(!p.errors.length,p.errors.join(';'))});
 
 await T("P18 Ausência da embalagem: registra, volta, motivos próprios e aba de gestão",async()=>{const p=await page(b,base());

@@ -179,14 +179,14 @@ const num=p=>p.evaluate(()=>(document.querySelector('#kpis .num')||{}).textConte
 async function T(name,fn){const t0=Date.now();try{const i=await fn();R.push(['PASS',name,(i||'')+` (${Date.now()-t0}ms)`])}catch(e){R.push(['FALHA',name,e.message.split('\n')[0]])}}
 (async()=>{const b=await chromium.launch();
 
-await T('S01 Público: carrega cadastros do banco e abre no Painel',async()=>{const db=banco();const p=await page(b,db);
+await T('S01 Público: carrega cadastros do banco e abre na Coleta (Painel só com login)',async()=>{const db=banco();const p=await page(b,db);
  const r=await p.evaluate(()=>({ops:S.ops.map(o=>o.m).join(),gals:S.gals.join(),view,temId:!!S.ops[0].id}));
- ok(r.ops==='CL001,CL002'&&r.gals==='Galpão 1,Galpão 2'&&r.view==='painel'&&r.temId,JSON.stringify(r));ok(p.errors.length===0,p.errors.join(';'))});
+ ok(r.ops==='CL001,CL002'&&r.gals==='Galpão 1,Galpão 2'&&r.view==='op'&&r.temId,JSON.stringify(r));ok(p.errors.length===0,p.errors.join(';'))});
 
-await T('S02 Público: Painel aberto e gestão exige login',async()=>{const db=banco(),agora=new Date().toISOString();db.ondas.push({id:'a',wn:'123',operador_id:db.operadores[0].id,galpao_id:G1,tipo:'Vários artigos',quantidade:31,status:0,registrada_em:agora,concluida_em:agora});const p=await page(b,db);
- await p.click('.tab[data-t="painel"]');ok(await p.isHidden('#login'),'painel pediu login');ok((await num(p)).trim()==='31','painel não trouxe o total');ok((await p.evaluate(()=>S.waves.filter(w=>w.srv).length))===1,'modo público deveria trazer as ondas do dia para a Operação');
- for(const t of['ind','cfg']){ok(await p.isHidden(`.tab[data-t="${t}"]`),t+' fica oculta sem login')}
- ok((await p.evaluate(()=>view))==='painel','saiu do painel')});
+await T('S02 Público: Painel e gestão só com login',async()=>{const db=banco(),agora=new Date().toISOString();db.ondas.push({id:'a',wn:'123',operador_id:db.operadores[0].id,galpao_id:G1,tipo:'Vários artigos',quantidade:31,status:0,registrada_em:agora,concluida_em:agora});const p=await page(b,db);
+ await p.waitForTimeout(400);ok(await p.isHidden('#login'),'pediu login ao abrir');ok((await p.evaluate(()=>S.waves.filter(w=>w.srv).length))===1,'modo público deveria trazer as ondas do dia para a Coleta');
+ for(const t of['painel','ind','cfg']){ok(await p.isHidden(`.tab[data-t="${t}"]`),t+' fica oculta sem login')}
+ await p.evaluate(()=>go('painel'));ok((await p.evaluate(()=>view))==='op','abriu o painel sem login')});
 
 await T('S03 Público registra 3 ondas e elas chegam ao banco',async()=>{const db=banco();const p=await page(b,db);await reg(p,'CL001','Pacote do mesmo',[[5001,10],[5002,20],[5003,30]]);
  ok(db.ondas.length===3,'banco tem '+db.ondas.length);ok(db.ondas.every(o=>o.galpao_id===G1&&/^[0-9a-f-]{36}$/.test(o.id)),'galpão/id errado');
@@ -247,12 +247,12 @@ await T('S18 Admin libera pedido de acesso: aparece em Pedidos, aceita com galp�
 await p.fill('#mN','Fora Gestora');await p.click('[data-sacc="fora@x.com"]');await p.waitForTimeout(600);
  const criado=db.gestores.find(x=>x.email==='fora@x.com');const sumiu=!db.pedidos.includes('fora@x.com');
  ok(visto&&criado&&criado.galpao_id===G1&&criado.nome==='Fora Gestora'&&sumiu,'visto '+visto+', criado '+!!criado+', pedido apagado '+sumiu);});
-await T('S19 Abas: sem login aparecem Operação e Painel; com login, as abas do perfil',async()=>{const db=banco();const p=await page(b,db);
+await T('S19 Abas: sem login aparecem Coleta e Produção, sem Painel; com login, as abas do perfil',async()=>{const db=banco();const p=await page(b,db);
  const vis=async t=>p.isVisible('.tab[data-t="'+t+'"]');
  const sem=[await vis('op'),await vis('painel'),await vis('ind'),await vis('cfg')];
  await login(p,'g2@x.com','senha1234');await p.waitForTimeout(300);
  const com=[await vis('op'),await vis('painel'),await vis('ind'),await vis('cfg')];
- ok(sem.join()==='true,true,false,false'&&com.join()==='true,true,true,true','sem login '+sem+' | gestor '+com);});
+ ok(sem.join()==='true,false,false,false'&&com.join()==='true,true,true,true','sem login '+sem+' | gestor '+com);});
 await T('S20 Manutenção: só o administrador vê; apaga o período escolhido depois de confirmar',async()=>{const db=banco();
  db.ondas.push({id:'m1',wn:'M1',operador_id:db.operadores[0].id,galpao_id:G1,tipo:'Vários artigos',quantidade:5,status:0,registrada_em:'2026-11-05T12:00:00-03:00',concluida_em:'2026-11-05T12:05:00-03:00',encerrada_auto:false});
  db.ondas.push({id:'m2',wn:'M2',operador_id:db.operadores[0].id,galpao_id:G1,tipo:'Vários artigos',quantidade:5,status:0,registrada_em:'2026-11-20T12:00:00-03:00',concluida_em:'2026-11-20T12:05:00-03:00',encerrada_auto:false});
@@ -531,7 +531,7 @@ await T('S97 Produção: admin grava metas por hora e o desempenho do período v
  ok(db.pm.length===1&&db.pm[0].atividade==='mesa'&&db.pm[0].por_dia===96&&db.pm[0].horas_dia===8&&db.pm[0].por_hora===12&&db.pm[0].galpao_id===G1,'meta gravada '+JSON.stringify(db.pm));
  await pa.waitForTimeout(200);
  await pa.evaluate(()=>{go('ind');document.querySelector('#gsub [data-gs="pd"]').click()});await pa.waitForTimeout(600);ok(db.calls.per>=1,'não buscou o período no servidor');ok((await pa.textContent('#pdDesV')).includes('Ana Embalagem'),'individual');
- await pa.evaluate(()=>go('painel'));await pa.waitForTimeout(700);ok(await pa.isVisible('#pnSeg')&&await pa.isVisible('#pnDuo'),'admin deveria ver Coleta e Embalagem no Painel');ok((await pa.textContent('#pnDuo')).includes('Fila entre Coleta e Embalagem'),'fila no painel do admin');
+ await pa.evaluate(()=>go('painel'));await pa.waitForTimeout(700);ok(await pa.isVisible('#pnSeg')&&await pa.isVisible('#pnDuo'),'admin deveria ver Coleta e Embalagem no Painel');ok(await pa.isVisible('#pnVis'),'visão geral do admin');await pa.click('#pnSeg [data-pnv="emb"]');await pa.waitForTimeout(300);ok((await pa.textContent('#pnDuo')).includes('Fila entre Coleta e Embalagem'),'fila no painel do admin');
 });
 
 await T('S98 Cada gestor troca a própria senha: pede a atual, confere a repetição e a nova senha passa a valer',async()=>{const db=banco();

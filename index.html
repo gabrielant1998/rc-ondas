@@ -2494,11 +2494,11 @@ const needAuth=k=>ON?!me:S.ges.length>0&&!(me&&(k==="cfg"?me.pC:me.pI));
 const ABAS_T=[["painel","Painel"],["op","Coleta"],["prs","Procurando"],["ind","Equipe"],["his","Relatórios"],["cfg","Config"]];let mAbasU=null,mGalU=null;
 const isI=t=>t==="ind"||t==="his";
 /* aba só aparece se o perfil atual pode abri-la; o que não é acessível fica oculto */
-function podeVer(t){if(t==="prod")return true;if(ON&&me&&!me.adm&&me.ab&&!me.ab.includes(t))return false;if(t==="op"||t==="prod"||t==="painel"||t==="prs")return true;if(ON)return !!me&&(isI(t)?!!me.pI:t==='cfg'?!!(me.pC||me.pI):!!me.pC);if(t==="painel")return true;return !needAuth(t)}
+function podeVer(t){if(t==="painel"&&ON&&!me)return false;if(t==="prod")return true;if(ON&&me&&!me.adm&&me.ab&&!me.ab.includes(t))return false;if(t==="op"||t==="prod"||t==="painel"||t==="prs")return true;if(ON)return !!me&&(isI(t)?!!me.pI:t==='cfg'?!!(me.pC||me.pI):!!me.pC);if(t==="painel")return true;return !needAuth(t)}
 function updTabs(){$$(".tab[data-t]").forEach(b=>{b.style.display=podeVer(b.dataset.t)?"":"none"});$$('#csub [data-c="cga"]').forEach(b=>{b.style.display=soMeta()?"none":""});$$('#fCard').forEach(c=>c.classList.toggle("hide",soMeta()));$$('#csub [data-c="cpd"]').forEach(b=>{let g=false;try{g=pdGestor()}catch(e){}b.style.display=g?"":"none"});$$('#csub [data-c="cge"]').forEach(b=>{b.style.display=soMeta()?"none":""});$$('#csub [data-c="cma"]').forEach(b=>{b.style.display=(!ON||(me&&me.adm))?"":"none"});{const soHor=ON&&me&&!me.adm&&!me.pC;$$('#csub [data-c="cop"],#csub [data-c="cus"],#csub [data-c="cme"],#csub [data-c="cho"]').forEach(b=>{b.style.display=''});if(soHor)$$('#csub button').forEach(b=>{if(b.dataset.c!=='cho')b.style.display='none'})}if(!podeVer(view)){view="op";["painel","op","prs","ind","his","cfg"].forEach(s=>$("#"+s).classList.toggle("hide",s!=="op"));$$(".tab[data-t]").forEach(b=>b.classList.toggle("on",b.dataset.t==="op"))}}
 let hWho="";
-function authUI(){const w=me?me.n+"|"+(me.g||"")+"|"+(me.adm?1:0):"";if(w!==hWho){hWho=w;hKey="";HW=null;HPW=null}$("#who").textContent=me?"Gestor: "+me.n:"";const pub=ON&&!me;["#turnoF","#gal","#day"].forEach(i=>$(i).classList.toggle("hide",pub));if(pub){$("#turnoF").value="";$("#day").value=dk(Date.now())}$("#logtx").textContent=me?"Sair":"Entrar";$("#pwbtn").classList.toggle("hide",!me);updTabs()}
-function go(t){if(ON&&me&&!me.adm&&me.ab&&!podeVer(t)){const f=ABAS_T.find(([k])=>podeVer(k));if(f)t=f[0]}setTimeout(()=>{try{sideSubs()}catch(e){}},0);
+function authUI(){const w=me?me.n+"|"+(me.g||"")+"|"+(me.adm?1:0):"";if(w!==hWho){hWho=w;hKey="";HW=null;HPW=null}$("#who").textContent=me?"Gestor: "+me.n:"";const pub=ON&&!me;["#turnoF","#gal","#day"].forEach(i=>$(i).classList.toggle("hide",pub));if(pub){$("#turnoF").value="";$("#day").value=dk(Date.now())}$("#logtx").textContent=me?"Sair":"Entrar";$("#pwbtn").classList.toggle("hide",!me);updTabs();if(ON&&!me&&view==="painel")go("op")}
+function go(t){if(t==="painel"&&ON&&!me)t="op";if(ON&&me&&!me.adm&&me.ab&&!podeVer(t)){const f=ABAS_T.find(([k])=>podeVer(k));if(f)t=f[0]}setTimeout(()=>{try{sideSubs()}catch(e){}},0);
  updTabs();
  if((t==="cfg"||isI(t))&&needAuth(t)){$("#login").classList.remove("hide");$("#lU").focus();pend=t;return}
  if(ON&&me&&((t==="cfg"&&!me.pC&&!me.pI)||(isI(t)&&!me.pI))){toast("Seu acesso não inclui esta área.");return}
@@ -2506,7 +2506,7 @@ function go(t){if(ON&&me&&!me.adm&&me.ab&&!podeVer(t)){const f=ABAS_T.find(([k])
  $$(".tab[data-t]").forEach(b=>b.classList.toggle("on",b.dataset.t===t));
  $("#ttl").textContent={painel:"Painel",op:"Coleta",prod:"Produção",ind:"Equipe",his:"Relatórios",prs:"Procurando",cfg:"Configurações"}[t];
  if(t==="cfg")cfgRender();if(t==="his")hisOpen();if(t==="prs"){procurando();psub(window.__ps||"bip")}if(t==="ind"){if(gsub==="pd")pdAbrirDis();else{individual();loadManagement({cache:true})}}if(t==="prod")pdAbrir();renderAll();
- if(t==="op"&&!$("#s1").classList.contains("hide"))setTimeout(()=>$("#opIn").focus({preventScroll:true}),60)}
+ if(t==="op"&&!$("#s1").classList.contains("hide"))setTimeout(()=>{if(view==="op")$("#opIn").focus({preventScroll:true})},60)}
 let pend=null;
 $("#logbtn").onclick=()=>{if(ON&&(me||sess)){sair();return}if(me){me=null;authUI();toast("Sessão encerrada");go("painel");return}$("#login").classList.remove("hide");$("#lU").focus()};
 $("#lX").onclick=()=>{if(recMode){recMode=false;loginUI()}$("#login").classList.add("hide");primeiroMode=false;pend=null;$("#logbtn").focus()};
@@ -3314,7 +3314,7 @@ function pnRender(){const seg=$("#pnSeg");if(!seg)return;const ok=pnPode(),v=pnV
  if(PNE.err){el.innerHTML=`<div class="card"><div class="empty">Não foi possível carregar a Embalagem: ${esc(PNE.err)}</div></div>`;return}
  const D=pnColDados(),E=pnEmbDados(d),fl=pnRanking(E,d)+`<div class="card pnFlux" style="margin-top:12px"><h2>Fila entre Coleta e Embalagem</h2>${pnFluxo(D,E)}</div>`;
  const V=v==="duo"?pnVisDados(D,E):null;PNVD=V?{V,D,E}:null;
- el.innerHTML=v==="duo"?`<div id="pnVis">${pnVisHtml(V,D,E)}</div><div class="pnGrid" style="margin-top:18px"><section class="pnSide" aria-label="Coleta"><h2 class="pnH"><i class="pnDot" style="background:var(--g)"></i>Coleta</h2>${pnColHtml(D)}</section><section class="pnSide" aria-label="Embalagem"><h2 class="pnH"><i class="pnDot" style="background:var(--k)"></i>Embalagem</h2>${pnEmbHtml(E)}</section></div>${fl}`
+ el.innerHTML=v==="duo"?`<div id="pnVis">${pnVisHtml(V,D,E)}</div>`
   :`<section class="pnSide" aria-label="Embalagem"><h2 class="pnH"><i class="pnDot" style="background:var(--k)"></i>Embalagem</h2>${pnEmbHtml(E)}</section>${fl}`;if(V){pnRadarFill();pnPresCarregar(d)}}
 /* gargalo da Coleta no painel antigo (no lugar do funil, tempo × unidades e mix) */
 function pnGargaloCol(){const el=$("#pGarB");if(!el)return;const D=pnColDados(),pp=pnItens(D.M,true),PR=S.waves.filter(w=>w.st===1&&inView(w)&&(!D.g||w.gal===D.g)),now=Date.now(),old=PR.length?Math.max(...PR.map(w=>now-w.ts))/6e4:0;
