@@ -7,11 +7,11 @@
 <meta name="description" content="Painel de produção e operação de ondas">
 <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Condensed:wght@600;700&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#eef1f4;--card:#fff;--ink:#14243d;--mut:#55627a;--line:#d3d9e3;--field:#8792a6;--side:#0d2a5e;--band:#0d2a5e;--g:#0f4bd0;--gx:#0f4bd0;--a:#3d7be8;--t:#5b8fe6;--v:#0a2f7a;--r:#d42a2a;--rx:#b3261e;--ox:#8a4b0b;--o:#b85c00;--k:#0b7f70;
+:root{--bom:#1a8a43;--bg:#eef1f4;--card:#fff;--ink:#14243d;--mut:#55627a;--line:#d3d9e3;--field:#8792a6;--side:#0d2a5e;--band:#0d2a5e;--g:#0f4bd0;--gx:#0f4bd0;--a:#3d7be8;--t:#5b8fe6;--v:#0a2f7a;--r:#d42a2a;--rx:#b3261e;--ox:#8a4b0b;--o:#b85c00;--k:#0b7f70;
  --fd:"Barlow Condensed","DejaVu Sans Condensed","Arial Narrow",sans-serif;--fb:"Barlow","Segoe UI",system-ui,sans-serif;
  box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
-@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0e1726;--card:#152033;--ink:#e8edf5;--mut:#9aa7bd;--line:#2a3850;--field:#5d7096;--side:#0a1322;--band:#173a85;--g:#2a63e0;--gx:#8fb4ff;--a:#5aa0f2;--t:#7db3f5;--v:#9db2ff;--rx:#ff8d8d;--ox:#fbbf24;--o:#fbbf24;--k:#34d0b8}}
-:root[data-theme="dark"]{--bg:#0e1726;--card:#152033;--ink:#e8edf5;--mut:#9aa7bd;--line:#2a3850;--field:#5d7096;--side:#0a1322;--band:#173a85;--g:#2a63e0;--gx:#8fb4ff;--a:#5aa0f2;--t:#7db3f5;--v:#9db2ff;--rx:#ff8d8d;--ox:#fbbf24;--o:#fbbf24;--k:#34d0b8}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0e1726;--card:#152033;--bom:#2fb866;--ink:#e8edf5;--mut:#9aa7bd;--line:#2a3850;--field:#5d7096;--side:#0a1322;--band:#173a85;--g:#2a63e0;--gx:#8fb4ff;--a:#5aa0f2;--t:#7db3f5;--v:#9db2ff;--rx:#ff8d8d;--ox:#fbbf24;--o:#fbbf24;--k:#34d0b8}}
+:root[data-theme="dark"]{--bg:#0e1726;--card:#152033;--bom:#2fb866;--ink:#e8edf5;--mut:#9aa7bd;--line:#2a3850;--field:#5d7096;--side:#0a1322;--band:#173a85;--g:#2a63e0;--gx:#8fb4ff;--a:#5aa0f2;--t:#7db3f5;--v:#9db2ff;--rx:#ff8d8d;--ox:#fbbf24;--o:#fbbf24;--k:#34d0b8}
 *{box-sizing:border-box}html{scroll-padding-top:env(safe-area-inset-top,0px)}
 body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 var(--fb)}
 h1,h2{margin:0}
@@ -392,7 +392,7 @@ body[data-v=cfg] #turnoF,body[data-v=cfg] #gal,body[data-v=cfg] #day{display:non
 .pgh{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap}
 .pgl{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:13px;color:var(--mut);margin:10px 0 4px}.pgl span{display:inline-flex;align-items:center;gap:6px}.pgl i{display:inline-block;width:12px;height:12px;border-radius:3px}.pgl i.ln{height:3px;width:18px;border-radius:2px}.pgl i.ds{background:repeating-linear-gradient(90deg,var(--k) 0 6px,transparent 6px 9px)}.pgl b{color:var(--ink)}
 .pgw svg{display:block;max-width:none}.pgw{overflow-x:auto}
-.pgv text{font-size:12px;fill:var(--mut)}.pgv .pgn{font-size:13px;font-weight:700;fill:var(--ink)}.pgv .pgp{fill:var(--ink);font-weight:600;font-size:11.5px}.pgv .pgp.in{fill:#fff}.pgt th:nth-child(2),.pgt td:nth-child(2){text-align:left}
+.pgv text{font-size:12px;fill:var(--mut)}.pgv .pgn{font-size:13px;font-weight:700;fill:var(--ink)}.pgv .pgp{fill:var(--ink);font-weight:600;font-size:11.5px;paint-order:stroke;stroke:var(--card);stroke-width:3.5px;stroke-linejoin:round}.pgv .pgp.in{fill:#fff}.pgt th:nth-child(2),.pgt td:nth-child(2){text-align:left}
 .pgck{display:inline-flex;gap:10px;align-items:center;font-size:13px;color:var(--mut)}.pgck label{display:inline-flex;gap:5px;align-items:center;cursor:pointer;white-space:nowrap}.pgck input{width:16px;height:16px;margin:0;accent-color:var(--g)}.pgt .pgz td{color:var(--mut)}.pgt small{color:var(--mut)}.pgt .ok{color:var(--k);font-weight:600}.pgt .nok{color:var(--rx);font-weight:600}
 /* Folha de produção para imprimir (A4 paisagem, 1 página por pessoa) */
 #folha{display:none}
@@ -1928,15 +1928,16 @@ function prodSVG(D,print){const P=D.P,n=P.length;if(!n)return'<div class="empty"
  const bw=print?Math.max(18,(1000-66)/n):Math.max(46,Math.min(80,880/n)),lmax=Math.max(...P.map(x=>nmCurto(x.n).length)),rot=n>(print?14:10)||lmax*6.4>bw-6,l=52,r=14,tp=26,bt=rot?Math.round(lmax*6.4*.66+24):34,Wd=Math.max(print?1000:720,l+r+n*bw),H=(print?340:330)+Math.max(0,bt-70);
  const mx=nice(Math.max(1,...P.map(x=>Math.max(x.q,PLN.mi&&x.mi||0)))*1.2),Y=v=>tp+(H-tp-bt)*(1-v/mx),X=i=>l+i*bw+bw/2;
  const ln=(k,c,dash)=>{let d='',o=false;P.forEach((x,i)=>{const v=x[k];if(v==null){o=false;return}d+=(o?'L':'M')+X(i).toFixed(1)+' '+Y(v).toFixed(1);o=true});
-  return`<path d="${d}" fill="none" stroke="${c}" stroke-width="2"${dash?' stroke-dasharray="6 4"':''}/>`+P.map((x,i)=>x[k]==null?'':`<circle cx="${X(i)}" cy="${Y(x[k])}" r="4.5" fill="${c}" stroke="var(--card,#fff)" stroke-width="2"><title>${esc(x.n)}: ${k==='mi'?'meta individual':'cota da meta do dia'} ${fmt(x[k])} un.</title></circle>`).join('')};
+  return`<path d="${d}" fill="none" stroke="${c}" stroke-width="1.5" stroke-dasharray="5 5" opacity=".6"/>`+P.map((x,i)=>x[k]==null?'':`<circle cx="${X(i)}" cy="${Y(x[k])}" r="2.5" fill="${c}" opacity=".7"><title>${esc(x.n)}: ${k==='mi'?'meta individual':'cota da meta do dia'} ${fmt(x[k])} un.</title></circle>`).join('')};
  return`<svg class="ch pgv" viewBox="0 0 ${Wd} ${H}" width="${print?'100%':Wd}" role="img" aria-label="Produtividade por pessoa: unidades produzidas e meta individual">`
   +[0,.25,.5,.75,1].map(f=>`<line x1="${l}" x2="${Wd-r}" y1="${Y(mx*f)}" y2="${Y(mx*f)}" stroke="var(--line,#dde3ee)"/><text x="${l-6}" y="${Y(mx*f)+4}" text-anchor="end">${fmt(mx*f)}</text>`).join('')
+  +(PLN.mi?ln('mi','var(--o)'):'')
   +P.map((x,i)=>{const w=Math.min(bw*.62,print?70:46),h=Y(0)-Y(x.q),vt=fmt(x.q),tw=vt.length*6.6,dentro=false,deitado=tw>bw-4,yi=Y(0)-9,lb=nmCurto(x.n);
-   return`<rect x="${X(i)-w/2}" y="${Y(x.q)}" width="${w}" height="${Math.max(h,1)}" rx="4" fill="var(--g)"><title>${esc(x.n)}: ${fmt(x.q)} un.${x.mi?' · meta individual '+fmt(x.mi):''} · ${x.pc.toLocaleString('pt-BR',{maximumFractionDigits:1})}% de contribuição</title></rect>`
+   return`<rect x="${X(i)-w/2}" y="${Y(x.q)}" width="${w}" height="${Math.max(h,1)}" rx="4" fill="${x.mi&&x.q>=x.mi?'var(--bom)':'var(--g)'}"><title>${esc(x.n)}: ${fmt(x.q)} un.${x.mi?' · meta individual '+fmt(x.mi)+(x.q>=x.mi?' (bateu a meta)':''):''} · ${x.pc.toLocaleString('pt-BR',{maximumFractionDigits:1})}% de contribuição</title></rect>`
     +(deitado?`<text x="${X(i)+4}" y="${Y(x.q)-6}" transform="rotate(-90 ${X(i)+4} ${Y(x.q)-6})" class="pgp">${vt}</text>`:`<text x="${X(i)}" y="${dentro?yi:Y(x.q)-6}" text-anchor="middle" class="pgp${dentro?' in':''}">${vt}</text>`)
     +(rot?`<text transform="translate(${X(i)+4} ${H-bt+12}) rotate(-40)" text-anchor="end" class="pgn">${esc(lb)}</text>`:`<text x="${X(i)}" y="${H-bt+18}" text-anchor="middle" class="pgn">${esc(lb)}</text>`)}).join('')
-  +(PLN.mi?ln('mi','var(--o)'):'')+'</svg>'}
-function prodLeg(D){return`<div class="pgl"><span><i style="background:var(--g)"></i>Unidades produzidas (sem retrabalho)</span>${PLN.mi?'<span><i class="ln" style="background:var(--o)"></i>Meta individual do período</span>':''}<span>Número acima da barra: unidades produzidas · contribuição ${D.usaMeta?'para a meta do dia':'no total da equipe'} na tabela</span></div>`}
+  +'</svg>'}
+function prodLeg(D){return`<div class="pgl"><span><i style="background:var(--g)"></i>Unidades produzidas (sem retrabalho)</span><span><i style="background:var(--bom)"></i>Bateu a meta individual</span>${PLN.mi?'<span><i class="ln" style="background:var(--o);opacity:.6"></i>Meta individual do período (tracejada)</span>':''}<span>Número acima da barra: unidades produzidas · contribuição ${D.usaMeta?'para a meta do dia':'no total da equipe'} na tabela</span></div>`}
 function prodTab(D){return`<table class="tp pgt"><tr><th title="Posição por produtividade">Posição</th><th>Pessoa</th><th>Produzido</th><th>Meta individual</th><th>% da meta</th><th>Contribuição</th></tr>`+D.P.map((x,i)=>`<tr${x.ativo?'':' class="pgz"'}><td>${x.pos}º</td><td>${esc(x.n)}${x.ativo?'':' <small>sem produção</small>'}</td><td><b>${fmt(x.q)}</b></td><td>${x.mi?fmt(x.mi):'—'}</td><td>${x.pm==null?'—':`<span class="${x.pm>=100?'ok':'nok'}">${Math.round(x.pm)}%</span>`}</td><td>${x.pc.toLocaleString('pt-BR',{maximumFractionDigits:1})}%</td></tr>`).join('')
  +`<tr class="tot"><td></td><td><b>Total</b></td><td><b>${fmt(D.tot)}</b></td><td>${fmt(D.P.reduce((a,x)=>a+(x.mi||0),0))||'—'}</td><td></td><td><b>${D.base?(D.tot/D.base*100).toLocaleString('pt-BR',{maximumFractionDigits:1}):0}%</b></td></tr></table>`}
 function prodGrafCard(D){const sem=D.P.filter(x=>x.mi&&x.q<x.mi).length;
