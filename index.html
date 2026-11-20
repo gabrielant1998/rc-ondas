@@ -41,8 +41,10 @@ header.top h1{font:700 34px/1 var(--fd)}
 .pgrid{display:grid;grid-template-columns:minmax(0,1fr);gap:12px;margin-top:12px;align-items:stretch}
 .pc{display:flex;flex-direction:column;min-width:0}.pc>#vivoC,.pc>#chH{flex:1;display:flex;flex-direction:column;justify-content:center}
 @media(min-width:900px){.pgrid{grid-template-columns:repeat(2,minmax(0,1fr))}#pHeat{grid-column:1/-1}}
-@media(min-width:1200px){.pgrid{grid-template-columns:repeat(3,minmax(0,1fr));grid-template-areas:"v h f" "s r k" "m m t" "g g t"}
- #vivo{grid-area:v}#pHora{grid-area:h}#pFun{grid-area:f}#pDis{grid-area:s}#pRad{grid-area:r}#pRank{grid-area:k}#pHeat{grid-area:m}#pTip{grid-area:t}#pGal{grid-area:g}
+@media(min-width:1200px){.pgrid{grid-template-columns:repeat(3,minmax(0,1fr))}
+ /* painel da Coleta: sem buracos — linha 1 acumulado, hora e gargalo; linha 2 pessoas por hora e ranking; linha 3 tipos e galpões */
+ #pnColW>.pgrid{grid-template-areas:"v h a" "m m k" "t t g"}
+ #vivo{grid-area:v}#pHora{grid-area:h}#pGar{grid-area:a}#pRank{grid-area:k}#pHeat{grid-area:m}#pTip{grid-area:t}#pGal{grid-area:g}
  #painel .card{padding:14px 16px}#painel .card h2{font-size:16.5px;margin-bottom:10px}#painel #pace{font-size:14px}#painel #pace .legend,#painel .legend{font-size:13.5px}#painel #vivoLeg{gap:4px 14px;font-size:13.5px}
  #kpis{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);border:1px solid var(--line);border-radius:6px;overflow:hidden}
  #kpis .placar{border-radius:0;grid-template-columns:1fr;gap:12px;padding:14px 20px}#kpis .stats{border:0;border-radius:0;grid-template-columns:repeat(3,1fr)}
@@ -492,10 +494,10 @@ body[data-v=cfg] #turnoF,body[data-v=cfg] #gal,body[data-v=cfg] #day{display:non
 .pdCh{overflow-x:auto}.pdLeg{margin-top:6px}.pdLeg i.pdDash{width:16px;height:0;border-top:2px dashed var(--o);background:none;vertical-align:3px}
 .pdUn{display:flex;flex-direction:column;gap:3px}.pdUn small{color:var(--mut);font-size:12px}.pdMetaF{align-items:start}.pdMetaAc{grid-column:1/-1}
 .pnVk{margin-bottom:12px}.pnMain{margin-bottom:12px}.pnVLeg .ln{display:inline-block;width:16px;height:3px;border-radius:2px;vertical-align:3px}
-.pnVG{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;align-items:start}@media(max-width:1000px){.pnVG{grid-template-columns:minmax(0,1fr)}}
+.pnVG{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;align-items:stretch}.pnVG>.card{display:flex;flex-direction:column}.pnVG #pnRadB{flex:1;display:flex;flex-direction:column;justify-content:space-between}@media(max-width:1000px){.pnVG{grid-template-columns:minmax(0,1fr)}}
 .pnCh2{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px}.pnCh2 h2{margin:0}.pnCh2 select{width:auto;min-height:36px;font-size:14px;padding:4px 30px 4px 10px;max-width:100%}
 .pnSel{display:flex;gap:6px;flex-wrap:wrap;min-width:0}.pnSel select{max-width:220px}
-.pnRosca,.pnRadar{max-width:360px;margin:0 auto}.pnRadar{max-width:520px}.pnRk6 .num{font-size:22px}.pnRosca svg,.pnRadar svg{width:100%;height:auto;display:block}.pnRosca text{font-weight:700}
+.pnRosca,.pnRadar{max-width:360px;margin:0 auto}.pnRadar{max-width:560px;width:100%}.pnRk6 .num{font-size:22px}.pnRosca svg,.pnRadar svg{width:100%;height:auto;display:block}.pnRosca text{font-weight:700}
 .pnLeg2{margin-top:10px}.pnLr{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:10px;align-items:center;padding:7px 0;border-bottom:1px solid var(--line);font-size:14px}
 .pnLr .sq{width:12px;height:12px;border-radius:3px;display:inline-block}.pnLr small{display:block;color:var(--mut);font-size:12.5px}.pnLr em{font-style:normal;font-weight:700;text-align:right;color:var(--ink)}.pnLr em small{display:inline;font-weight:400}
 .pnLg{font-size:12.5px;color:var(--mut);margin:10px 0 0;font-weight:700}
@@ -3369,16 +3371,16 @@ function pnArc(cx,cy,r0,r1,a0,a1){if(a1-a0>=Math.PI*2-1e-4)a1=a0+Math.PI*2-1e-4;
 const PN_LBL='style="fill:#fff;font-size:12px;paint-order:stroke;stroke:rgba(10,20,40,.55);stroke-width:3px;stroke-linejoin:round"';
 function pnRoscaHtml(V){const M=PNRM,sec=V.sec,tot=sec.reduce((a,s)=>a+s.u,0),cu=sec[0].u,eu=tot-cu;
  if(!tot&&M==="c")return'<div class="empty">Nenhuma unidade da Coleta ou da Embalagem neste dia.</div>';
- const cx=160,cy=160,R1=150,R0=104,RP=90,g=0.025,lab=(s,i)=>M==="c"?(tot?fmt(s.u/tot*100)+"%":""):M==="m"?(s.pc==null?"—":fmt(s.pc)+"%"):M==="p"?(s.tot-s.sem?s.hit+"/"+(s.tot-s.sem):"—"):(s.falta==null?"—":fmt(s.falta));
+ const cx=160,cy=160,R1=150,R0=104,RP=90,g=0.025,lab=(s,i)=>M==="c"?(tot?fmt(s.u/tot*100)+"%":""):M==="m"?(s.pc==null?"":fmt(s.pc)+"%"):M==="p"?(s.tot-s.sem?s.hit+"/"+(s.tot-s.sem):""):(s.falta==null?"":fmt(s.falta));
  let s=`<div class="pnRosca"><svg viewBox="0 0 320 320" role="img" aria-label="Rosca por setor com pizza da Coleta e da Embalagem no centro">`,a=0;
  if(M==="c"){sec.forEach(x=>{if(!x.u)return;const da=x.u/tot*Math.PI*2,a0=a+g/2,a1=a+da-g/2;s+=`<path d="${pnArc(cx,cy,R0,R1,a0,Math.max(a0+.001,a1))}" fill="${x.c}"><title>${x.nm}: ${fmt(x.u)} un. (${fmt(x.u/tot*100)}%)</title></path>`;
    if(da>.32){const m=a+da/2;s+=`<text x="${(cx+(R0+R1)/2*Math.sin(m)).toFixed(1)}" y="${(cy-(R0+R1)/2*Math.cos(m)+4).toFixed(1)}" text-anchor="middle" ${PN_LBL}>${lab(x)}</text>`}a+=da})}
  else{const da=Math.PI*2/sec.length;sec.forEach((x,i)=>{const a0=i*da+g/2,a1=(i+1)*da-g/2,f=M==="p"?(x.tot-x.sem?x.hit/(x.tot-x.sem):0):Math.min(1,(x.pc||0)/100),t=M==="m"?`${x.nm}: ${x.pc==null?"sem meta":fmt(x.pc)+"% da meta"}`:M==="p"?(x.tot-x.sem?`${x.nm}: ${x.hit} de ${x.tot-x.sem} ${x.tot-x.sem===1?"pessoa bateu":"pessoas bateram"} a meta`:`${x.nm}: sem meta`):`${x.nm}: ${x.falta==null?"sem meta":"faltam "+fmt(x.falta)+" "+x.fu}`;
    s+=`<path d="${pnArc(cx,cy,R0,R1,a0,a1)}" fill="${x.c}" opacity=".22"><title>${t}</title></path>`+(f>0?`<path d="${pnArc(cx,cy,R0,R1,a0,a0+(a1-a0)*f)}" fill="${x.c}"><title>${t}</title></path>`:"");
-   const m=(a0+a1)/2;s+=`<text x="${(cx+(R0+R1)/2*Math.sin(m)).toFixed(1)}" y="${(cy-(R0+R1)/2*Math.cos(m)+4).toFixed(1)}" text-anchor="middle" ${PN_LBL}>${lab(x)}</text>`})}
- if(tot){const pc=cu/tot,ac=pc*Math.PI*2,pie=[["Coleta",cu,"var(--gx)",0,ac],["Embalagem",eu,"var(--k)",ac,Math.PI*2]];
+   const m=(a0+a1)/2;const lt=lab(x);if(lt)s+=`<text x="${(cx+(R0+R1)/2*Math.sin(m)).toFixed(1)}" y="${(cy-(R0+R1)/2*Math.cos(m)+4).toFixed(1)}" text-anchor="middle" ${PN_LBL}>${lt}</text>`})}
+ if(tot){const pc=cu/tot,ac=pc*Math.PI*2,pie=[["Coleta",cu,"#1e4fc2",0,ac],["Embalagem",eu,"#087466",ac,Math.PI*2]];
   pie.forEach(([nm,v,c,a0,a1])=>{if(!v)return;s+=`<path d="${pnArc(cx,cy,0,RP,a0,a1)}" fill="${c}" stroke="var(--card)" stroke-width="2"><title>${nm}: ${fmt(v)} un. (${fmt(v/tot*100)}%)</title></path>`;
-   const m=(a0+a1)/2,r=a1-a0>=Math.PI*2-1e-3?0:RP*.52,x=cx+r*Math.sin(m),y=cy-r*Math.cos(m);s+=`<text x="${x.toFixed(1)}" y="${(y-10).toFixed(1)}" text-anchor="middle" ${PN_LBL}>${nm}</text><text x="${x.toFixed(1)}" y="${(y+6).toFixed(1)}" text-anchor="middle" ${PN_LBL} font-size="15">${fmt(v)}</text><text x="${x.toFixed(1)}" y="${(y+21).toFixed(1)}" text-anchor="middle" ${PN_LBL}>un. · ${fmt(v/tot*100)}%</text>`})}
+   const m=(a0+a1)/2,r=a1-a0>=Math.PI*2-1e-3?0:RP*.52,x=cx+r*Math.sin(m),y=cy-r*Math.cos(m);const fr=(a1-a0)/(Math.PI*2);if(fr<.07)return;s+=`<text x="${x.toFixed(1)}" y="${(y-4).toFixed(1)}" text-anchor="middle" ${PN_LBL}>${nm}</text><text x="${x.toFixed(1)}" y="${(y+14).toFixed(1)}" text-anchor="middle" ${PN_LBL} style="fill:#fff;font-size:15px;paint-order:stroke;stroke:rgba(10,20,40,.55);stroke-width:3px">${fmt(v/tot*100)}%</text>`})}
  else s+=`<circle cx="${cx}" cy="${cy}" r="${RP}" fill="var(--line)"/><text x="${cx}" y="${cy+4}" text-anchor="middle">Sem unidades</text>`;
  s+=`</svg></div>`;
  const val=x=>M==="c"?fmt(x.u)+" un.":M==="m"?(x.pc==null?"sem meta":fmt(x.pc)+"% da meta"):M==="p"?(!x.tot?"ninguém":x.tot-x.sem?x.hit+" de "+(x.tot-x.sem)+(x.sem?` <small>(${x.sem} sem meta)</small>`:""):"sem meta"):(x.falta==null?"sem meta":x.falta?"faltam "+fmt(x.falta)+" "+x.fu:"meta batida");
