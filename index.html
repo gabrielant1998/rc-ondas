@@ -891,6 +891,8 @@ const save=()=>{try{const s=ser();localStorage.setItem(LS,s);storeLen=s.length;
   if(storeLen>LIM_STORE*.8&&!storeWarned){storeWarned=true;setTimeout(()=>toast("Atenção: memória do aparelho em "+Math.round(storeLen/LIM_STORE*100)+"%. Ligue um banco de dados antes que encha.",9000),2600)}
   return true}catch(e){toast("Não foi possível gravar no aparelho: armazenamento cheio. Nada foi salvo.",9000);return false}};
 const online=()=>!S.off&&navigator.onLine;
+/* nome curto para gráficos: primeiro nome + sobrenome (último nome), para saber quem é */
+const nmCurto=n=>{const p=String(n||"").trim().split(/\s+/).filter(Boolean);return p.length>1?p[0]+" "+p[p.length-1]:(p[0]||"")};
 const av=n=>{const p=String(n||"?").trim().split(/\s+/);return'<span class="av" aria-hidden="true">'+esc((p[0][0]||"")+(p.length>1?p[p.length-1][0]:"")).toUpperCase()+"</span>"};
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const dk=t=>{const d=new Date(t);return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")};
@@ -1318,7 +1320,7 @@ function dispersao(D){if(!D.length)return'<div class="empty">Ainda não há conj
 function radarGal(P,g){const gs=g?[g]:visG(),cor=["var(--g)","#8b5cf6","#0ea5a4","#e0832b"],N=TY.length;
  const ser=gs.map((k,i)=>{const q=P.filter(w=>w.gal===k),t=q.reduce((s,w)=>s+w.qty,0);return{k,c:cor[i%cor.length],t,v:TY.map(([n])=>t?q.filter(w=>w.ty===n).reduce((s,w)=>s+w.qty,0)/t*100:0)}}).filter(x=>x.t);
  if(!ser.length)return'<div class="empty">Sem produção neste filtro.</div>';
- const W=360,H=260,cx=W/2,cy=H/2+4,Rr=92,mx=Math.min(100,nice(Math.max(...ser.flatMap(x=>x.v))*1.05)),A=i=>-Math.PI/2+i*2*Math.PI/N,P2=(i,v)=>[cx+Math.cos(A(i))*Rr*v/mx,cy+Math.sin(A(i))*Rr*v/mx],sh=n=>n.split(" ")[0];
+ const W=360,H=260,cx=W/2,cy=H/2+4,Rr=92,mx=Math.min(100,nice(Math.max(...ser.flatMap(x=>x.v))*1.05)),A=i=>-Math.PI/2+i*2*Math.PI/N,P2=(i,v)=>[cx+Math.cos(A(i))*Rr*v/mx,cy+Math.sin(A(i))*Rr*v/mx],sh=nmCurto;
  let s=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Radar: participação de cada tipo nas unidades por galpão">`;
  [.5,1].forEach(f=>{s+=`<polygon points="${TY.map((z,i)=>P2(i,mx*f).join(",")).join(" ")}" fill="none" stroke="var(--line)"/><text x="${cx+3}" y="${cy-Rr*f+11}">${Math.round(mx*f)}%</text>`});
  TY.forEach(([n],i)=>{const[x,y]=P2(i,mx),[lx,ly]=P2(i,mx*1.2);s+=`<line x1="${cx}" y1="${cy}" x2="${x}" y2="${y}" stroke="var(--line)"/><text x="${lx}" y="${ly+4}" text-anchor="${Math.abs(lx-cx)<8?"middle":lx<cx?"end":"start"}" style="fill:var(--ink)"><title>${esc(n)}</title>${esc(sh(n))}</text>`});
@@ -1812,7 +1814,7 @@ let INDX=null;const LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAggAAAGy
 
 function folhaInsights(o,data,L,P,qty,mi,single){
  const seed=[...String(o.m)].reduce((a,c)=>a+c.charCodeAt(0),0)+qty+P.length*7,pk=(a,i)=>a[(seed+(i||0))%a.length];
- const nome=String(o.n).split(' ')[0].toLowerCase().replace(/^./,c=>c.toUpperCase()),days=[...new Set(P.map(w=>dk(w.ts)))].sort(),nd=days.length;
+ const nome=nmCurto(o.n).toLowerCase().replace(/(^|\s)\S/g,c=>c.toUpperCase()),days=[...new Set(P.map(w=>dk(w.ts)))].sort(),nd=days.length;
  const rate=C=>{const tm=C.reduce((a,c)=>a+c.d,0),cu=C.reduce((a,c)=>a+c.qty,0);return C.length>=3&&tm>0?cu/(tm/36e5):0};
  const C=durs(L),my=rate(C),mates=new Set(data.ops.filter(x=>x.g===o.g&&x.t===o.t).map(x=>x.m)),TC=durs(data.waves.filter(w=>mates.has(w.op))),tr=rate(TC),PM=semRet(P),qM=qtdOf(PM),rQ=qtdOf(soRet(P)),pctM=mi.q?Math.round(qM/mi.q*100):0;
  const f1=x=>x.toLocaleString('pt-BR',{maximumFractionDigits:1}),pc=x=>Math.round(Math.abs(x)*100);
@@ -1923,13 +1925,13 @@ function prodDados(rows,data){const g=$("#gal").value,t=$("#turnoF").value,hj=dk
   per:data.days.length===1?new Date(data.days[0]+'T12:00').toLocaleDateString('pt-BR'):new Date(data.days[0]+'T12:00').toLocaleDateString('pt-BR')+' a '+new Date(data.days[data.days.length-1]+'T12:00').toLocaleDateString('pt-BR'),
   filtro:(g==='__all'?'Todos os galpões':g)+' · '+(t?t+'º turno':'todos os turnos')}}
 function prodSVG(D,print){const P=D.P,n=P.length;if(!n)return'<div class="empty">Sem produção no período para os filtros escolhidos.</div>';
- const bw=print?Math.max(18,(1000-66)/n):Math.max(46,Math.min(80,880/n)),l=52,r=14,tp=26,bt=print?(n>14?64:30):(n>10?70:34),Wd=Math.max(print?1000:720,l+r+n*bw),H=print?340:330;
- const mx=nice(Math.max(1,...P.map(x=>Math.max(x.q,PLN.mi&&x.mi||0)))*1.2),Y=v=>tp+(H-tp-bt)*(1-v/mx),X=i=>l+i*bw+bw/2,rot=n>(print?14:10);
+ const bw=print?Math.max(18,(1000-66)/n):Math.max(46,Math.min(80,880/n)),lmax=Math.max(...P.map(x=>nmCurto(x.n).length)),rot=n>(print?14:10)||lmax*6.4>bw-6,l=52,r=14,tp=26,bt=rot?Math.round(lmax*6.4*.66+24):34,Wd=Math.max(print?1000:720,l+r+n*bw),H=(print?340:330)+Math.max(0,bt-70);
+ const mx=nice(Math.max(1,...P.map(x=>Math.max(x.q,PLN.mi&&x.mi||0)))*1.2),Y=v=>tp+(H-tp-bt)*(1-v/mx),X=i=>l+i*bw+bw/2;
  const ln=(k,c,dash)=>{let d='',o=false;P.forEach((x,i)=>{const v=x[k];if(v==null){o=false;return}d+=(o?'L':'M')+X(i).toFixed(1)+' '+Y(v).toFixed(1);o=true});
   return`<path d="${d}" fill="none" stroke="${c}" stroke-width="2"${dash?' stroke-dasharray="6 4"':''}/>`+P.map((x,i)=>x[k]==null?'':`<circle cx="${X(i)}" cy="${Y(x[k])}" r="4.5" fill="${c}" stroke="var(--card,#fff)" stroke-width="2"><title>${esc(x.n)}: ${k==='mi'?'meta individual':'cota da meta do dia'} ${fmt(x[k])} un.</title></circle>`).join('')};
  return`<svg class="ch pgv" viewBox="0 0 ${Wd} ${H}" width="${print?'100%':Wd}" role="img" aria-label="Produtividade por pessoa: unidades produzidas e meta individual">`
   +[0,.25,.5,.75,1].map(f=>`<line x1="${l}" x2="${Wd-r}" y1="${Y(mx*f)}" y2="${Y(mx*f)}" stroke="var(--line,#dde3ee)"/><text x="${l-6}" y="${Y(mx*f)+4}" text-anchor="end">${fmt(mx*f)}</text>`).join('')
-  +P.map((x,i)=>{const w=Math.min(bw*.62,print?70:46),h=Y(0)-Y(x.q),vt=fmt(x.q),tw=vt.length*6.6,dentro=h>=26&&tw<=w+2,deitado=!dentro&&tw>bw-4,yi=Y(0)-9,nm=String(x.n).trim().split(/\s+/),lb=nm[0]+(nm[1]&&!rot?' '+nm[1][0]+'.':'');
+  +P.map((x,i)=>{const w=Math.min(bw*.62,print?70:46),h=Y(0)-Y(x.q),vt=fmt(x.q),tw=vt.length*6.6,dentro=h>=26&&tw<=w+2,deitado=!dentro&&tw>bw-4,yi=Y(0)-9,lb=nmCurto(x.n);
    return`<rect x="${X(i)-w/2}" y="${Y(x.q)}" width="${w}" height="${Math.max(h,1)}" rx="4" fill="var(--g)"><title>${esc(x.n)}: ${fmt(x.q)} un.${x.mi?' · meta individual '+fmt(x.mi):''} · ${x.pc.toLocaleString('pt-BR',{maximumFractionDigits:1})}% de contribuição</title></rect>`
     +(deitado?`<text x="${X(i)+4}" y="${Y(x.q)-6}" transform="rotate(-90 ${X(i)+4} ${Y(x.q)-6})" class="pgp">${vt}</text>`:`<text x="${X(i)}" y="${dentro?yi:Y(x.q)-6}" text-anchor="middle" class="pgp${dentro?' in':''}">${vt}</text>`)
     +(rot?`<text transform="translate(${X(i)+4} ${H-bt+12}) rotate(-40)" text-anchor="end" class="pgn">${esc(lb)}</text>`:`<text x="${X(i)}" y="${H-bt+18}" text-anchor="middle" class="pgn">${esc(lb)}</text>`)}).join('')
