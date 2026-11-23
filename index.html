@@ -850,9 +850,11 @@ const ico=n=>`<svg class="ti" viewBox="0 0 24 24" aria-hidden="true">${TI[n]||TI
 const TYREN={"Vários":"Vários artigos","Múltiplos":"Múltiplas quantidades"};
 const ST=["Concluído","Procurando","Difícil acesso"],SC=["s0","s1","s2"];
 /* Banco de dados: a chave abaixo é pública por definição (só permite o que as regras do banco deixam). */
-const SRV=(()=>{let f=null;try{f=localStorage.getItem("rcondas.srv")}catch(e){}
- const q=new URLSearchParams(location.search).get("srv");if(q==="0"||q==="1"){f=q;try{localStorage.setItem("rcondas.srv",q)}catch(e){}}
- const liga=f==="1"||(f!=="0"&&/\.github\.io$/.test(location.hostname));
+const SRV=(()=>{const pub=/\.github\.io$/.test(location.hostname);let f=null;
+ /* no site publicado o modo local (sem banco) não existe: sem login, sem dados de outro galpão no aparelho, sem registro perdido */
+ if(pub){try{localStorage.removeItem("rcondas.srv")}catch(e){}}
+ else{try{f=localStorage.getItem("rcondas.srv")}catch(e){}const q=new URLSearchParams(location.search).get("srv");if(q==="0"||q==="1"){f=q;try{localStorage.setItem("rcondas.srv",q)}catch(e){}}}
+ const liga=pub||f==="1";
  return liga?{url:(window.__RC_SRV_URL||"https://fiqintmclivzckmfjeml.supabase.co"),key:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZpcWludG1jbGl2emNrbWZqZW1sIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTQ0MzM3MDcsImV4cCI6MjExMDAwOTcwN30.Aj8AGWwytOLEKm3P4I9nB-9u1FxZDI4fYJoWOUOs0AE"}:null})();
 const ON=!!SRV;
 const LS=ON?"rcondas.srv1":"rcondas.v2",$=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
@@ -1167,7 +1169,10 @@ async function bootSrv(){let tinhaSess=false;try{tinhaSess=!!localStorage.getIte
 
 /* ===================== usuários / códigos ===================== */
 function nextCode(){const used=new Set(S.ops.map(o=>o.m));for(let i=1;i<1000;i++){const c="CL"+String(i).padStart(3,"0");if(!used.has(c))return c}return"CL999"}
-function findOp(v){v=(v||"").trim().toLowerCase();return S.ops.find(o=>o.m.toLowerCase()===v)||S.ops.find(o=>o.n.toLowerCase()===v)}
+function findOp(v){v=(v||"").trim().toLowerCase();const L=opsGal();return L.find(o=>o.m.toLowerCase()===v)||L.find(o=>o.n.toLowerCase()===v)}
+/* pessoas do galpão em uso: gestor que não é administrador só vê e registra as do seu galpão; aparelho público (sem login) vê todos; "Visão geral" mostra todos */
+function galAtual(){try{if(ON&&!me)return null;const e=document.getElementById("gal"),g=restricted()?myG():(e&&e.value)||S.gal;return g&&g!=="__all"?g:null}catch(x){return null}}
+function opsGal(){const g=galAtual();return g?S.ops.filter(o=>o.g===g):S.ops}
 function opOf(code){return S.ops.find(o=>o.m===code)}
 const h32=s=>{let h=5381;for(let i=0;i<s.length;i++)h=(h*33^s.charCodeAt(i))>>>0;return h.toString(36)};
 
@@ -2727,7 +2732,7 @@ function mesmoOperador(o){const a=operadorSelecionado;if(!a||!o)return false;
  if(ON&&(!a.id||!o.id))return false;
  return a.id?o.id===a.id:(o.m===a.m&&o.n===a.n)}
 function opsBusca(q,LS){const ck=q.length>=2&&(LS?/\d/.test(q)||LS.some(o=>o.m.toLowerCase().startsWith(q)):/^(cl\d*|\d+)$/.test(q)),sc=o=>{const n=nrm(o.n),c=o.m.toLowerCase();if(n===q||(ck&&c===q))return-1;if(n.startsWith(q)||(ck&&c.startsWith(q)))return 0;if(n.split(/\s+/).some(w=>w.startsWith(q)))return 1;if(ck&&c.includes(q))return 2;return 9};
- return (LS||S.ops).map(o=>[o,sc(o)]).filter(x=>x[1]<9).sort((a,b)=>a[1]-b[1]||a[0].n.localeCompare(b[0].n)).map(x=>x[0])}
+ return (LS||opsGal()).map(o=>[o,sc(o)]).filter(x=>x[1]<9).sort((a,b)=>a[1]-b[1]||a[0].n.localeCompare(b[0].n)).map(x=>x[0])}
 function opsCartoes(L,total,attr){return L.length?L.map(o=>`<button type="button" class="cracha" role="option" ${attr}="${esc(o.m)}">${av(o.n)}<div><b>${esc(o.n)}</b><small>${o.m}${o.t?", "+o.t+"º turno":""}${o.g?", "+esc(o.g):""}</small></div></button>`).join("")+(total>8?`<div class="legend">Mais ${total-8} nomes. Continue digitando.</div>`:""):'<div class="legend">Nenhum operador encontrado.</div>'}
 function opSugest(){const q=nrm($("#opIn").value),box=$("#opSug");sugI=-1;sugL=[];
  if(!q){box.innerHTML="";$("#opIn").setAttribute("aria-expanded","false");return}
@@ -2910,7 +2915,7 @@ $("#inst").onclick=async()=>{if(dp){dp.prompt();await dp.userChoice;dp=null;retu
 const PD_POS=[["terreo","mesa"],["terreo","maquina"],["mezanino","mesa"],["mezanino","maquina"]],PD_AND={terreo:"Térreo",mezanino:"Mezanino"},PD_AT={mesa:"Mesa",maquina:"Máquina"},PD_DIAS=["D","S","T","Q","Q","S","S"],PD_DIAS_N=["Domingo","Segunda","Terça","Quarta","Quinta","Sexta","Sábado"],PD_GAL="RC",PD_FILA="rcondas.prodFila";
 const PD_T0=()=>[{id:1,nome:"1º turno",ent:"06:00",sai:"",dias:[1,2,3,4,5,6],ii:"",if:"",ativo:true},{id:2,nome:"2º turno",ent:"09:00",sai:"",dias:[1,2,3,4,5,6],ii:"",if:"",ativo:true}];
 let PDT=null,PDA=[],PDH=[],PDB=[],PDLOC=[],PDPES=[],PDnova=false,PDreset=false,PDsel=null,PDsI=-1,PDsL=[],PDsub="bip",PDed=null,PDf="todos",PD_AT0=0;
-const pdK=o=>o.id||o.m,pdOp=k=>pdOps().find(o=>pdK(o)===k),pdFind=v=>{v=String(v||"").trim().toLowerCase();const L=pdOps();return L.find(o=>o.m.toLowerCase()===v)||L.find(o=>o.n.toLowerCase()===v)},hh5=t=>t?String(t).slice(0,5):"";
+const pdK=o=>o.id||o.m,pdOp=k=>pdOps().find(o=>pdK(o)===k),pdFind=v=>{v=String(v||"").trim().toLowerCase();const L=pdOpsGal();return L.find(o=>o.m.toLowerCase()===v)||L.find(o=>o.n.toLowerCase()===v)},hh5=t=>t?String(t).slice(0,5):"";
 const pdTmap=t=>({id:t.id,nome:t.nome,ent:hh5(t.entrada),sai:hh5(t.saida),dias:t.dias||[],ii:hh5(t.int_ini),if:hh5(t.int_fim),ativo:t.ativo!==false,se:hh5(t.sab_entrada),ss:hh5(t.sab_saida),de:hh5(t.dom_entrada),ds:hh5(t.dom_saida)});
 /* horário do turno no dia da semana: sábado e domingo podem ter horário próprio (em branco = o da semana) */
 function pdTHor(t,ts){t=t||{};const w=new Date(ts==null?Date.now():ts).getDay();if(w===6&&t.se)return[t.se,t.ss||""];if(w===0&&t.de)return[t.de,t.ds||""];return[t.ent||"",t.sai||""]}
@@ -2923,6 +2928,7 @@ function pdTurno(id){return pdTurnos().find(t=>t.id===id)||null}
 function pdHorario(a,ts){const t=pdTurno(a.tu)||{},h=pdTHor(t,ts),e=a.ent||h[0]||"",s=a.sai||(a.ent?"":h[1])||"";return e?(s?e+" às "+s:"a partir de "+e):"—"}
 /* pessoas da produção: cadastro próprio, separado das pessoas da Coleta */
 function pdOps(){return ON?PDPES:(S.prodPes||(S.prodPes=[]))}
+function pdOpsGal(){const g=galAtual();return g?pdOps().filter(o=>!o.g||o.g===g):pdOps()}
 function pdGalpao(){if(me&&!me.adm&&me.g)return me.g;return S.gals.includes(PD_GAL)?PD_GAL:(S.gals[0]||PD_GAL)}
 function pdProxCod(){const n=pdOps().map(o=>{const m=/^PR(\d+)$/.exec(o.m);return m?+m[1]:0});return"PR"+String(Math.max(0,...n)+1).padStart(3,"0")}
 const m2=v=>{const m=hm2m(v);return m==null?null:m};
@@ -2949,7 +2955,7 @@ function pdRender(){if(view==="cfg"){if(csub==="cpd")pdCfgRender();return}if(PDs
 /* ---------- Bipar ---------- */
 function pdSugest(){const q=nrm($("#pdP").value),box=$("#pdSug");PDsI=-1;PDsL=[];
  if(!q||PDsel){box.innerHTML="";$("#pdP").setAttribute("aria-expanded","false");return}
- const all=opsBusca(q,pdOps());PDsL=all.slice(0,8);box.innerHTML=opsCartoes(PDsL,all.length,"data-pdsug");$("#pdP").setAttribute("aria-expanded",String(PDsL.length>0))}
+ const all=opsBusca(q,pdOpsGal());PDsL=all.slice(0,8);box.innerHTML=opsCartoes(PDsL,all.length,"data-pdsug");$("#pdP").setAttribute("aria-expanded",String(PDsL.length>0))}
 function pdEscolher(o){PDsel=o;$("#pdP").value=o.m;PDsL=[];PDsI=-1;$("#pdSug").innerHTML="";$("#pdP").setAttribute("aria-expanded","false");$("#pdMsg").innerHTML="";$("#pdMsg").className="pdMsg";pdWho();
  if(!$("#pdWb").classList.contains("hide"))setTimeout(()=>$("#pdW").focus({preventScroll:true}),30)}
 function pdTrocar(){PDsel=null;PDqp=null;$("#pdQc").innerHTML="";$("#pdQn").value="";$("#pdQh").value="";$("#pdP").value="";$("#pdW").value="";$("#pdMsg").innerHTML="";pdWho();pdSugest();$("#pdP").focus()}
@@ -3476,11 +3482,11 @@ async function paCarregar(){if(!ON){PAUS=(S.prodAus||[]).filter(a=>dk(a.ini)===h
 function paForm(){const M=motivosP();if(!M.includes(PAM))PAM=null;
  $("#paMot").innerHTML=M.map(m=>`<button type="button" class="ausC" data-pam="${esc(m)}" aria-pressed="${m===PAM}">${esc(m)}</button>`).join("");
  if(!$("#paI").value)$("#paI").value=hmT(Date.now());paWho()}
-function paFind(v){if(PAsel&&PAsel.m===String(v||"").trim())return PAsel;const o=pdFind(v);if(o)return o;const q=nrm(v);if(q.length<2)return null;const L=pdOps().filter(x=>nrm(x.n).includes(q)||nrm(x.m)===q);return L.length===1?L[0]:null}
+function paFind(v){if(PAsel&&PAsel.m===String(v||"").trim())return PAsel;const o=pdFind(v);if(o)return o;const q=nrm(v);if(q.length<2)return null;const L=pdOpsGal().filter(x=>nrm(x.n).includes(q)||nrm(x.m)===q);return L.length===1?L[0]:null}
 function paWho(){const o=PAsel||pdFind($("#paP").value);$("#paWho").innerHTML=o?'<div class="cracha">'+av(o.n)+"<div><b>"+esc(o.n)+"</b><small>"+esc(o.m)+(o.g?", "+esc(o.g):"")+"</small></div></div>":""}
 function paSugest(){const q=nrm($("#paP").value),box=$("#paSug");PAI=-1;PAL=[];
  if(!q||PAsel){box.innerHTML="";$("#paP").setAttribute("aria-expanded","false");return}
- const all=opsBusca(q,pdOps());PAL=all.slice(0,8);box.innerHTML=opsCartoes(PAL,all.length,"data-pasug");$("#paP").setAttribute("aria-expanded",String(PAL.length>0))}
+ const all=opsBusca(q,pdOpsGal());PAL=all.slice(0,8);box.innerHTML=opsCartoes(PAL,all.length,"data-pasug");$("#paP").setAttribute("aria-expanded",String(PAL.length>0))}
 function paEscolher(o){PAsel=o;$("#paP").value=o.m;PAL=[];PAI=-1;$("#paSug").innerHTML="";$("#paP").setAttribute("aria-expanded","false");paWho();const b=$("#paMot button");if(b&&!PAM)b.focus({preventScroll:true})}
 function paLista(){const el=$("#paL");if(!el)return;const now=Date.now(),L=PAUS.slice().sort((a,b)=>(!!a.fim-!!b.fim)||(b.ini-a.ini)),fora=L.filter(a=>!a.fim||a.fim>now).length;
  $("#paN").textContent=fora?fora+" fora agora":"";

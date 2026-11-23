@@ -34,7 +34,7 @@ await T("01 Volume: 20.000 ondas carregam e o Painel renderiza rápido",async()=
  ok(p.errors.length===0,"erros JS: "+p.errors.join(";"));ok(t.painel<1500&&t.op<1500&&t.ind30<2500,"lento: "+JSON.stringify(t));
  return `painel ${t.painel|0}ms · operação ${t.op|0}ms · individual 30d ${t.ind30|0}ms · ${t.kb} KB salvos`});
 
-await T("02 Volume: salvar 1 onda com 20.000 já existentes",async()=>{const p=await page(b,bigState(20000));await openReg(p,"CL001","Vários");
+await T("02 Volume: salvar 1 onda com 20.000 já existentes",async()=>{const p=await page(b,bigState(20000));await openReg(p,"CL003","Vários");
  const t0=Date.now();await typeRows(p,[[999001,10]]);await p.click('#save');await p.waitForTimeout(200);const dt=Date.now()-t0;
  const s=await st(p);ok(s.waves.length===20001,"total "+s.waves.length);return `ok em ${dt}ms (inclui digitação)`});
 
@@ -341,6 +341,8 @@ await T("51 Operador: nomes aparecem em cartões a partir da primeira letra, sem
  await p.click('#opIn');await p.keyboard.type('b');let c=await p.$$eval('#opSug [data-sug]',a=>a.map(e=>e.textContent.replace(/\s+/g,' ').trim()));
  ok(c.length===1&&c[0].includes('Bruno Lima')&&c[0].includes('CL002')&&c[0].includes('1º turno'),'b: '+JSON.stringify(c));
  await p.fill('#opIn','');await p.keyboard.type('c');c=await p.$$eval('#opSug [data-sug]',a=>a.map(e=>e.textContent));
+ ok(c.length===0,'Galpão 1 não deve mostrar pessoa do Galpão 2: '+JSON.stringify(c));
+ await p.selectOption('#gal','__all');await p.fill('#opIn','');await p.keyboard.type('c');c=await p.$$eval('#opSug [data-sug]',a=>a.map(e=>e.textContent));
  ok(c.length===1&&c[0].includes('Carla Dias'),'c não deve casar com todos os códigos: '+c.length);
  await p.fill('#opIn','');await p.keyboard.type('souza');c=await p.$$eval('#opSug [data-sug]',a=>a.length);ok(c===1,'busca por sobrenome: '+c);
  await p.fill('#opIn','');await p.keyboard.type('xyz');ok((await p.textContent('#opSug')).includes('Nenhum operador'),'sem aviso de nenhum');

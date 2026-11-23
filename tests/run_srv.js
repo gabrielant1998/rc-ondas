@@ -176,7 +176,7 @@ async function reg(p,op,ty,rows){await p.click('.tab[data-t="op"]');await p.wait
  await p.click('#save');await p.waitForTimeout(450)}
 async function login(p,email,pw){await p.click('#logbtn');await p.fill('#lU',email);await p.fill('#lP',pw);await p.click('#lB');await p.waitForTimeout(600)}
 const num=p=>p.evaluate(()=>(document.querySelector('#kpis .num')||{}).textContent);
-async function T(name,fn){const t0=Date.now();try{const i=await fn();R.push(['PASS',name,(i||'')+` (${Date.now()-t0}ms)`])}catch(e){R.push(['FALHA',name,e.message.split('\n')[0]])}}
+async function T(name,fn){if(process.env.ONLY&&!process.env.ONLY.split(",").some(k=>name.startsWith(k+" ")))return;const t0=Date.now();try{const i=await fn();R.push(['PASS',name,(i||'')+` (${Date.now()-t0}ms)`])}catch(e){R.push(['FALHA',name,e.message.split('\n')[0]])}}
 (async()=>{const b=await chromium.launch();
 
 await T('S01 Público: carrega cadastros do banco e abre na Coleta (Painel só com login)',async()=>{const db=banco();const p=await page(b,db);
@@ -317,6 +317,13 @@ await T('S17 Celular: registro público funciona e não há erro de JavaScript',
  await reg(p,'CL002','Pacote do mesmo',[[9501,4]]);ok(db.ondas.length===1&&db.ondas[0].galpao_id===G2,'não chegou');ok(p.errors.length===0,p.errors.join(';'));
  ok((await p.evaluate(()=>document.documentElement.scrollWidth))<=392,'rolagem lateral')});
 
+
+await T('S101 Gestor de um galpão só encontra e registra pessoas do seu galpão; aparelho público vê todos',async()=>{const db=banco();
+ const p0=await page(b,db);await p0.evaluate(()=>go('op'));await p0.fill('#opIn','Ana');await p0.waitForTimeout(200);ok((await p0.$$('#opSug [data-sug]')).length===1,'público deveria ver todos');
+ const p=await page(b,db);await login(p,'g2@x.com','senha1234');await p.evaluate(()=>go('op'));await p.waitForTimeout(200);
+ await p.fill('#opIn','Ana');await p.waitForTimeout(200);ok((await p.$$('#opSug [data-sug]')).length===0,'gestor do Galpão 2 encontrou pessoa do Galpão 1');
+ await p.fill('#opIn','CL001');await p.waitForTimeout(200);ok(!(await p.evaluate(()=>findOp('CL001'))),'código de outro galpão foi aceito');
+ await p.fill('#opIn','Carla');await p.waitForTimeout(200);ok((await p.$$('#opSug [data-sug]')).length===1,'não encontrou a pessoa do próprio galpão')});
 
 await T('S22 Gestor comum vê só "Metas" do seu galpão, sem Galpões; admin vê tudo',async()=>{const db=banco();const p=await page(b,db);
  await login(p,'g2@x.com','senha1234');await p.click('.tab[data-t="cfg"]');
