@@ -516,13 +516,13 @@ await T("77 Lista de presença: três atalhos (Check-in, Semanal, Conferidos), c
  ok(r.sem===0&&!/Conferidos \(\d+\)<\/h2>/.test(r.txt),'Check-in não mostra a tabela da semana');
  await p.evaluate(()=>document.querySelector('#ckBody [data-ckv="sem"]').click());await p.waitForTimeout(500);
  r=await v();
- ok(r.cards===7&&r.sem>0&&r.sem<=20&&await p.evaluate(()=>mgDates().length)===1&&r.txt.includes('Primeiro bipe'),'Hoje é a tela padrão do Semanal: '+r.sem+' / '+r.cards);
+ ok(r.cards===8&&r.sem>0&&r.sem<=20&&await p.evaluate(()=>mgDates().length)===1&&r.txt.includes('Primeiro bipe'),'Hoje é a tela padrão do Semanal: '+r.sem+' / '+r.cards);
  await p.evaluate(()=>document.querySelector('#ckBody [data-sper="7"]').click());await p.waitForTimeout(500);
  r=await v();
- ok(r.sem>0&&r.sem%7===0&&r.cards===7&&r.btn.length===0,'Semanal: tabela e cartões: '+r.sem+' / '+r.cards);
+ ok(r.sem>0&&r.sem%7===0&&r.cards===8&&r.btn.length===0,'Semanal: tabela e cartões: '+r.sem+' / '+r.cards);
  await p.evaluate(()=>document.querySelector('#ckBody [data-sper="30"]').click());await p.waitForTimeout(500);
  r=await v();
- ok(r.cards===7&&r.sem===0&&r.txt.includes('Presenças'),'Mensal: resumo por pessoa e cartões');
+ ok(r.cards===8&&r.sem===0&&r.txt.includes('Dias que veio')&&r.txt.includes('Pessoas que vieram no período'),'Mensal: resumo por pessoa e cartões');
  await p.evaluate(()=>document.querySelector('#ckBody [data-sper="90"]').click());await p.waitForTimeout(500);
  const n90=await p.evaluate(()=>({n:mgDates().length,dia:$('#day').value}));
  ok(n90.n===90&&n90.dia===dia0,'Trimestral usa 90 dias sem mudar a data do topo: '+JSON.stringify(n90));
@@ -536,7 +536,7 @@ await T("77 Lista de presença: três atalhos (Check-in, Semanal, Conferidos), c
  await p.evaluate(()=>{document.querySelector('#gsub [data-gs="chk"]').click()});await p.waitForTimeout(500);
  await p.evaluate(()=>document.querySelector('#ckBody [data-ckv="conf"]').click());await p.waitForTimeout(400);
  r=await v();
- ok(/Conferidos \(\d+\)/.test(r.txt)&&r.btn.length===0,'Conferidos: '+r.txt.slice(0,120))});
+ ok(/Conferidos \(\d+\)/.test(r.txt)&&r.btn.length===0,'Conferidos: '+r.txt.slice(0,120));ok(r.cards===6&&/\d+ de \d+\s*Pessoas que vieram/.test(r.txt)&&(r.txt.includes('Dias que veio na semana')||/Nenhum conferido/.test(r.txt)),'Conferidos: pessoas que vieram e dias na semana '+r.txt.slice(0,300))});
 
 await T("78 Lista de presença: quem bipa uma onda vira presente sozinho e sai da lista",async()=>{
  const t0=new Date();t0.setHours(0,0,0,0);
