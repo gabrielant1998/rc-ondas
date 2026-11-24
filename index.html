@@ -1127,6 +1127,30 @@ async function lerRetorno(){const h=location.hash.slice(1);if(!/access_token=|er
  try{const u=await raw("/auth/v1/user");sess.email=(u.email||"").toLowerCase();setSess(sess)}catch(e){setSess(null);return}
  if(q.get("type")==="recovery"){recMode=true;loginUI();$("#login").classList.remove("hide");$("#lP").focus()}
  else toast("E-mail confirmado.")}
+/* Registros que ficaram só neste aparelho (modo local, sem banco): envia ao banco sozinho, com ou sem login.
+   Só os dos últimos 7 dias (ondas) e 2 dias (embalagens, limite do servidor); a pessoa é achada pelo nome no cadastro do banco.
+   Não cria galpão nem pessoa; o que não casar fica guardado no aparelho para o administrador ver. Nada é apagado. */
+async function recuperarLocal(forcar,dias){if(!ON||!online())return null;let L=null;try{L=JSON.parse(localStorage.getItem("rcondas.v2"))}catch(e){}if(!L)return null;
+ let feito={};try{feito=JSON.parse(localStorage.getItem("rcondas.v2.enviados")||"{}")||{}}catch(e){}
+ if(L.wv)L.waves=L.wv.map(a=>({id:a[0],wn:a[1],op:a[2],opn:a[3],gal:a[4],ty:(TY[a[5]]||TY[0])[0],qty:a[6],st:a[7],ts:a[8],fin:a[9]<0?null:a[8]+a[9]}));
+ const de=Date.now()-(dias||7)*864e5,ops=L.ops||[],nomeDe=w=>{const o=ops.find(x=>x.m===w.op);return(o&&o.n)||w.opn||""};
+ const W=(L.waves||[]).filter(w=>w&&w.id&&!w.srv&&!w.err&&w.ts>=de&&(forcar||!feito["w:"+w.id]));
+ const B=((L.prodB||[]).filter(b=>b&&b.id&&b.em>=Date.now()-2*864e5+36e5&&(forcar||!feito["b:"+b.id])));
+ if(!W.length&&!B.length)return null;
+ const r={ok:0,ja:0,rep:0,sem:0,rec:0},porNome=n=>{const k=nrm(n);return k?S.ops.find(o=>nrm(o.n)===k):null};
+ const fila=[];for(const w of W){const o=porNome(nomeDe(w));if(!o){r.sem++;continue}
+  fila.push({k:"w:"+w.id,x:{id:await uuidDe(w.id),wn:w.wn||String(w.id),operador_id:o.id,tipo:TYREN[w.ty]||w.ty,quantidade:w.qty,status:w.st||0,registrada_em:new Date(w.ts).toISOString(),concluida_em:(w.st||0)===0?new Date(w.fin||w.ts).toISOString():null}})}
+ for(let i=0;i<fila.length;i+=100){const lote=fila.slice(i,i+100),res=await api("/rest/v1/rpc/registrar_ondas",{method:"POST",body:{lote:lote.map(f=>f.x)}});
+  (res||[]).forEach((x,j)=>{const f=lote[j];if(x.resultado==="ok")r.ok++;else if(x.resultado==="ja_existia")r.ja++;else if(x.resultado==="wn_repetido")r.rep++;else{r.rec++;return}if(f)feito[f.k]=1})}
+ if(B.length){if(!PDPES.length)await pdCarregar();const pes=L.prodPes||[],fb=[];
+  for(const b of B){const lp=pes.find(x=>(x.id||x.m)===b.oid),k=nrm(lp&&lp.n),sp=k?PDPES.find(x=>nrm(x.n)===k):null;if(!sp){r.sem++;continue}
+   fb.push({k:"b:"+b.id,x:{id:await uuidDe("b"+b.id),wn:b.wn,pessoa_id:sp.id,bipada_em:new Date(b.em).toISOString(),...(b.q?{quantidade:b.q}:{})}})}
+  for(let i=0;i<fb.length;i+=100){const lote=fb.slice(i,i+100),res=await api("/rest/v1/rpc/registrar_embalagens",{method:"POST",body:{lote:lote.map(f=>f.x)}});
+   (res||[]).forEach((x,j)=>{const f=lote[j];if(x.resultado==="ok")r.ok++;else if(x.resultado==="ja_existia")r.ja++;else if(x.resultado==="wn_repetido")r.rep++;else{r.rec++;return}if(f)feito[f.k]=1})}}
+ try{localStorage.setItem("rcondas.v2.enviados",JSON.stringify(feito));localStorage.setItem("rcondas.v2.relatorio",JSON.stringify({em:new Date().toISOString(),...r}))}catch(e){}
+ if(r.ok)toast(r.ok+(r.ok===1?" registro que estava só neste aparelho foi salvo":" registros que estavam só neste aparelho foram salvos")+" no banco"+(r.sem?". "+r.sem+" sem pessoa correspondente no cadastro ficaram guardados no aparelho":""),8000);
+ if(r.ok){try{await pull()}catch(e){}renderAll()}
+ return r}
 /* dados antigos deste aparelho (de antes do banco) */
 function antigos(){try{const L=JSON.parse(localStorage.getItem("rcondas.v2"));if(!L)return null;
   if(L.wv)L.waves=L.wv.map(a=>({id:a[0],wn:a[1],op:a[2],opn:a[3],gal:a[4],ty:(TY[a[5]]||TY[0])[0],qty:a[6],st:a[7],ts:a[8],fin:a[9]<0?null:a[8]+a[9]}));
@@ -1134,24 +1158,12 @@ function antigos(){try{const L=JSON.parse(localStorage.getItem("rcondas.v2"));if
 async function uuidDe(txt){const b=new Uint8Array(await crypto.subtle.digest("SHA-256",new TextEncoder().encode("rcondas-antigo:"+txt))).slice(0,16);
  b[6]=b[6]&15|80;b[8]=b[8]&63|128;const x=[...b].map(v=>v.toString(16).padStart(2,"0")).join("");
  return x.slice(0,8)+"-"+x.slice(8,12)+"-"+x.slice(12,16)+"-"+x.slice(16,20)+"-"+x.slice(20)}
-async function importar(){const L=antigos();if(!L||!(me&&me.adm))return;
- if(!online()){toast("Sem internet. Tente de novo quando voltar.");return}
+async function importar(){if(!(me&&me.adm))return;if(!online()){toast("Sem internet. Tente de novo quando voltar.");return}
  const b=$("#impB");if(b){b.disabled=true;b.textContent="Enviando"}
- const tot={ok:0,ja_existia:0,wn_repetido:0,recusada:0,sem_operador:0};
- try{
-  for(const g of L.gals)if(!S.gals.some(x=>x.toLowerCase()===String(g).toLowerCase()))await mut("/rest/v1/galpoes","POST",{nome:g});
-  await pull();
-  for(const o of L.ops){if(S.ops.some(x=>x.n.toLowerCase()===o.n.toLowerCase()))continue;
-   const livre=!S.ops.some(x=>x.m===o.m)&&/^CL\d{3}$/.test(o.m);
-   await mut("/rest/v1/operadores","POST",{codigo:livre?o.m:nextCode(),nome:o.n,turno:o.t===2?2:1,...turnoPadrao(o.t,o.g),galpao_id:GID[o.g]||GID[S.gals[0]]});await pull()}
-  const porCod={};L.ops.forEach(o=>{const s=S.ops.find(x=>x.n.toLowerCase()===o.n.toLowerCase());if(s)porCod[o.m]=s.id});
-  const fila=[];for(const w of L.waves){const oid=porCod[w.op];if(!oid){tot.sem_operador++;continue}
-   fila.push({id:await uuidDe(w.id),wn:w.wn||String(w.id),operador_id:oid,tipo:TYREN[w.ty]||w.ty,quantidade:w.qty,status:w.st||0,registrada_em:new Date(w.ts).toISOString(),concluida_em:(w.st||0)===0?new Date(w.fin||w.ts).toISOString():null})}
-  for(let i=0;i<fila.length;i+=100){const r=await api("/rest/v1/rpc/registrar_ondas",{method:"POST",body:{lote:fila.slice(i,i+100)}});(r||[]).forEach(x=>{tot[x.resultado]=(tot[x.resultado]||0)+1})}
-  try{localStorage.setItem("rcondas.antigos.enviado",new Date().toISOString())}catch(e){}
-  await pull();cfgRender();renderAll();
-  toast("Dados antigos: "+(tot.ok+tot.ja_existia)+" ondas no banco, "+(tot.wn_repetido+tot.recusada+tot.sem_operador)+" não entraram.",10000)}
- catch(e){toast("Envio interrompido: "+errMsg(e)+" Pode tentar de novo, nada duplica.",9000);cfgRender()}}
+ /* não cria galpão nem pessoa: liga cada registro à pessoa do banco pelo nome; o resto fica no aparelho */
+ try{const r=await recuperarLocal(true,3650);try{localStorage.setItem("rcondas.antigos.enviado",new Date().toISOString())}catch(e){}cfgRender();renderAll();
+  toast(r?"Dados deste aparelho: "+(r.ok+r.ja)+" no banco, "+r.rep+" já registrados por outro aparelho, "+r.sem+" sem pessoa no cadastro"+(r.rec?", "+r.rec+" recusados":"")+".":"Nada para enviar.",10000)}
+ catch(e){toast(errMsg(e),6000)}finally{const x=$("#impB");if(x){x.disabled=false;x.textContent="Enviar de novo"}}}
 /* tela de abertura: fica pelo menos 1,8 s para a animação aparecer inteira, mesmo quando os dados já estão no aparelho */
 let bootOk=false;const BOOT_MIN=1800;function bootDone(){if(bootOk)return;bootOk=true;const fim=()=>{const b=document.getElementById("boot");if(b){b.classList.add("out");setTimeout(()=>b.remove(),600)}},rest=BOOT_MIN-performance.now();if(rest>0&&!window.__semFesta&&!navigator.webdriver)setTimeout(fim,rest);else fim()}
 setTimeout(()=>{const t=document.getElementById("bootT");if(t&&!bootOk)t.textContent="A conexão está lenta, ainda carregando…"},6000);setTimeout(bootDone,25000);
@@ -1163,7 +1175,7 @@ async function bootSrv(){let tinhaSess=false;try{tinhaSess=!!localStorage.getIte
  if(!tinhaSess)go("painel");await lerRetorno();
  if(tinhaSess&&await cacheAbrir()){authUI();go("painel");renderAll();bootDone();const t=document.getElementById("bootT");}
  try{await pull()}catch(e){if(e.status)toast(errMsg(e),6000)}
- authUI();if(!me&&tinhaSess)go("painel");renderAll();if(me&&!recMode)go("painel");push();if(me||!publicLoading)bootDone();
+ authUI();if(!me&&tinhaSess)go("painel");renderAll();if(me&&!recMode)go("painel");push();if(me||!publicLoading)bootDone();setTimeout(()=>recuperarLocal().catch(()=>{}),2500);
  setInterval(push,15000);
  setInterval(()=>{if(online()&&document.visibilityState==="visible"&&!pushing)pull().then(()=>{renderAll();if(view==="ind")loadManagement();if(view==="op"&&!$("#aus").classList.contains("hide"))ausAbrir()}).catch(()=>{})},60000)}
 

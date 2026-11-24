@@ -298,14 +298,14 @@ await T('S13 Gestor exclui onda do banco; ondas somem do Painel',async()=>{const
 await T('S14 Sem Primeiro acesso; Esqueci a senha chama o serviço certo',async()=>{const db=banco();const p=await page(b,db);await p.click('#logbtn');
  ok(await p.isHidden('#lNew'),'Primeiro acesso deveria sumir');await p.fill('#lU','gestora@x.com');
  await p.click('#lRec');await p.waitForTimeout(300);ok(/enviamos um link/.test(await p.textContent('#toast')),await p.textContent('#toast'))});
-await T('S15 Dados antigos do aparelho: admin envia para o banco, e repetir não duplica',async()=>{const db=banco();const t=Date.now()-36e5;
+await T('S15 Dados antigos do aparelho: admin envia para o banco sem criar galpão nem pessoa, e repetir não duplica',async()=>{const db=banco();const t=Date.now()-36e5;
  const antigo={gals:['Galpão 1','Galpão Sul'],metas:{'Galpão Sul':900},ops:[{m:'CL001',n:'Ana Souza',t:1,g:'Galpão 1'},{m:'CL002',n:'Zeca Antigo',t:2,g:'Galpão Sul'}],
   waves:[{id:'w1',wn:'8001',op:'CL001',opn:'Ana Souza',gal:'Galpão 1',ty:'Vários',qty:10,st:0,ts:t,fin:t},{id:'w2',wn:'8002',op:'CL002',opn:'Zeca Antigo',gal:'Galpão Sul',ty:'Itens Únicos',qty:5,st:0,ts:t,fin:t},{id:'w3',wn:'8003',op:'CL009~x',opn:'Sumiu',gal:'Galpão 1',ty:'Vários artigos',qty:1,st:0,ts:t,fin:t}]};
  const p=await page(b,db,{antigo});await login(p,'adm@x.com','senha1234');await p.click('.tab[data-t="cfg"]');await p.waitForTimeout(150);
  await p.click('#impB');await p.waitForTimeout(1500);const t1=await p.textContent('#toast');
- ok(db.galpoes.some(g=>g.nome==='Galpão Sul'),'galpão antigo criado');const z=db.operadores.find(o=>o.nome==='Zeca Antigo');ok(z&&z.codigo==='CL003','Zeca: '+JSON.stringify(z));
- ok(db.ondas.length===2&&db.ondas.some(o=>o.wn==='8001'&&o.tipo==='Vários artigos'),'ondas: '+JSON.stringify(db.ondas.map(o=>o.wn+o.tipo)));
- await p.click('#impB');await p.waitForTimeout(1500);ok(db.ondas.length===2&&db.operadores.length===3,'duplicou ao repetir');
+ ok(!db.galpoes.some(g=>g.nome==='Galpão Sul')&&!db.operadores.some(o=>o.nome==='Zeca Antigo'),'criou galpão ou pessoa a partir de dados do aparelho');
+ ok(db.ondas.length===1&&db.ondas.some(o=>o.wn==='8001'&&o.tipo==='Vários artigos'),'ondas: '+JSON.stringify(db.ondas.map(o=>o.wn+o.tipo)));ok(/1 no banco/.test(t1)&&/2 sem pessoa/.test(t1),'resumo: '+t1);
+ await p.click('#impB');await p.waitForTimeout(1500);ok(db.ondas.length===1&&db.operadores.length===2,'duplicou ao repetir');
  ok((await p.evaluate(()=>!!localStorage.getItem('rcondas.v2'))),'apagou os dados antigos do aparelho');return t1});
 
 await T('S16 Lote grande: 250 ondas offline sobem em 3 envios',async()=>{const db=banco();const p=await page(b,db);
@@ -324,6 +324,15 @@ await T('S101 Gestor de um galpão só encontra e registra pessoas do seu galpã
  await p.fill('#opIn','Ana');await p.waitForTimeout(200);ok((await p.$$('#opSug [data-sug]')).length===0,'gestor do Galpão 2 encontrou pessoa do Galpão 1');
  await p.fill('#opIn','CL001');await p.waitForTimeout(200);ok(!(await p.evaluate(()=>findOp('CL001'))),'código de outro galpão foi aceito');
  await p.fill('#opIn','Carla');await p.waitForTimeout(200);ok((await p.$$('#opSug [data-sug]')).length===1,'não encontrou a pessoa do próprio galpão')});
+
+await T('S102 Registros que ficaram só no aparelho (modo local) vão sozinhos para o banco, sem login e sem criar galpão',async()=>{const db=banco();const nG=db.galpoes.length,t=Date.now()-36e5;
+ const antigo={gals:['Galpão 1','Galpão 2','Galpão 3'],ops:[{m:'CL001',n:'ana souza',t:1,g:'Galpão 1'},{m:'CL009',n:'Pessoa Inexistente',t:1,g:'Galpão 1'}],
+   waves:[{id:'loc1',wn:'88001',op:'CL001',gal:'Galpão 1',ty:'Vários',qty:12,st:0,ts:t,fin:t+6e4,sync:1},{id:'loc2',wn:'88002',op:'CL009',gal:'Galpão 1',ty:'Vários',qty:5,st:0,ts:t,fin:t+6e4,sync:1},
+    {id:'velha',wn:'88003',op:'CL001',gal:'Galpão 1',ty:'Vários',qty:5,st:0,ts:t-40*864e5,fin:t-40*864e5,sync:1}]};
+ const p=await page(b,db,{antigo});await p.waitForTimeout(4500);
+ const o=db.ondas.filter(w=>/^8800/.test(w.wn));ok(o.length===1&&o[0].wn==='88001'&&o[0].galpao_id===G1,'banco: '+JSON.stringify(o));ok(db.galpoes.length===nG,'criou galpão');
+ ok((await p.textContent('#toast')).includes('no banco'),'aviso: '+await p.textContent('#toast'));
+ await p.reload();await p.waitForTimeout(4000);ok(db.ondas.filter(w=>/^8800/.test(w.wn)).length===1&&!p.errors.length,'repetiu o envio ou erro '+p.errors.join(';'))});
 
 await T('S22 Gestor comum vê só "Metas" do seu galpão, sem Galpões; admin vê tudo',async()=>{const db=banco();const p=await page(b,db);
  await login(p,'g2@x.com','senha1234');await p.click('.tab[data-t="cfg"]');
