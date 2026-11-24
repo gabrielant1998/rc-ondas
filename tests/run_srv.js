@@ -117,9 +117,10 @@ function fake(db){const cors={'access-control-allow-origin':'*','access-control-
    if(t==='presenca_registros'){if(!email)return J(route,401,{message:'permission denied',code:'42501'});return J(route,200,(db.presenca||[]).filter(r=>!r.cancelado_em&&escopo(db.operadores.find(o=>o.id===r.operador_id).galpao_id)))}
    if(/^presenca_(baixas|atrasos|historico|alteracoes)$/.test(t))return J(route,200,[]);
    if(t==='ondas'){if(!email)return J(route,401,{message:'permission denied for table ondas',code:'42501'});
-    const de=(q.get('registrada_em')||'gte.').slice(4),au=q.get('atualizado_em'),off=+q.get('offset')||0,lim=+q.get('limit')||1000;db.calls.ondas=db.calls.ondas||{full:0,delta:0};if(off===0&&(au||q.get('registrada_em')))db.calls.ondas[au?'delta':'full']++;
+    const RG=q.getAll('registrada_em'),de=((RG.find(x=>x.startsWith('gte.'))||'gte.').slice(4)),ate=(RG.find(x=>x.startsWith('lt.'))||'').slice(3),orq=q.get('or'),au=q.get('atualizado_em'),off=+q.get('offset')||0,lim=+q.get('limit')||1000;db.calls.ondas=db.calls.ondas||{full:0,delta:0,dias:0};
+    const orDe=orq?decodeURIComponent((/registrada_em\.gte\.([^,)]+)/.exec(orq)||[])[1]||''):null;if(off===0&&(au||RG.length||orq))db.calls.ondas[au?'delta':ate?'dias':'full']=(db.calls.ondas[au?'delta':ate?'dias':'full']||0)+1;
     const ua=o=>o.atualizado_em||o.registrada_em;
-    return J(route,200,db.ondas.filter(o=>escopo(o.galpao_id)&&o.registrada_em>=de&&(!au||ua(o)>=au.slice(4))).map(o=>Object.assign({atualizado_em:ua(o)},o)).sort((a,b)=>a.registrada_em<b.registrada_em?-1:1).slice(off,off+lim))}
+    return J(route,200,db.ondas.filter(o=>escopo(o.galpao_id)&&(orq?(o.registrada_em>=orDe||o.status!==0):o.registrada_em>=de)&&(!ate||o.registrada_em<ate)&&(!au||ua(o)>=au.slice(4))).map(o=>Object.assign({atualizado_em:ua(o)},o)).sort((a,b)=>a.registrada_em<b.registrada_em?-1:1).slice(off,off+lim))}
    if(t==='ondas_excluidas'){if(!email)return J(route,401,{message:'permission denied',code:'42501'});return J(route,200,(db.excl||[]).filter(x=>x.excluida_em>=(q.get('excluida_em')||'gte.').slice(4)))}}
   const podeC=gal=>g&&g.pode_config&&(g.admin||g.galpao_id===gal);
   if(t==='operadores'&&m==='POST'&&(body.inicio==null||body.fim==null))return J(route,400,{code:'23502',message:'null value in column "inicio" of relation "operadores" violates not-null constraint'});
@@ -370,6 +371,16 @@ await T('S106 Gestor de um galpão cadastra pessoa nova sem repetir código de o
  await p.fill('#uN','Pessoa Nova G2');await p.click('#uB');await p.waitForTimeout(600);const o=db.operadores.find(x=>x.nome==='Pessoa Nova G2');
  ok(o&&!db.operadores.some(x=>x!==o&&!x.excluido_em&&x.codigo===o.codigo),'código repetido ou não criou: '+JSON.stringify(o));ok((await p.textContent('#toast')).includes(o&&o.codigo),'aviso com o código errado: '+await p.textContent('#toast'));
  await p.fill('#uN','Ana Souza');await p.click('#uB');await p.waitForTimeout(500);ok(/outro galpão|Já existe/.test(await p.textContent('#toast'))&&db.operadores.filter(x=>x.nome==='Ana Souza').length===1,'mensagem do nome repetido: '+await p.textContent('#toast'))});
+
+await T('S107 Aparelho do gestor guarda só a semana e as ondas abertas; dia antigo vem do banco quando abre',async()=>{const db=banco();const d=n=>new Date(Date.now()-n*864e5).toISOString();
+ db.ondas.push({id:'00000000-0000-4000-8000-00000000cc01',wn:'9101',operador_id:db.operadores[0].id,galpao_id:G1,tipo:'Vários artigos',quantidade:7,status:0,registrada_em:d(20),concluida_em:d(20),procura_hist:[]},
+  {id:'00000000-0000-4000-8000-00000000cc02',wn:'9102',operador_id:db.operadores[0].id,galpao_id:G1,tipo:'Vários artigos',quantidade:7,status:1,registrada_em:d(15),concluida_em:null,procura_hist:[]},
+  {id:'00000000-0000-4000-8000-00000000cc03',wn:'9103',operador_id:db.operadores[0].id,galpao_id:G1,tipo:'Vários artigos',quantidade:7,status:0,registrada_em:d(2),concluida_em:d(2),procura_hist:[]});
+ const p=await page(b,db);await login(p,'adm@x.com','senha1234');await p.waitForTimeout(500);
+ let w=await p.evaluate(()=>S.waves.filter(x=>x.srv).map(x=>x.wn));ok(w.includes('9103')&&w.includes('9102')&&!w.includes('9101'),'aparelho: '+w);
+ const dia=new Date(Date.now()-20*864e5-3*36e5).toISOString().slice(0,10);await p.evaluate(dd=>{go('op');$('#day').value=dd;$('#day').dispatchEvent(new Event('change'))},dia);await p.waitForTimeout(900);
+ w=await p.evaluate(()=>S.waves.filter(x=>x.srv).map(x=>x.wn));ok(w.includes('9101'),'não buscou o dia antigo: '+w+' chamadas '+JSON.stringify(db.calls.ondas));ok(db.calls.ondas.dias===1,'buscas do dia: '+JSON.stringify(db.calls.ondas));
+ await p.evaluate(()=>renderAll());await p.waitForTimeout(300);ok(db.calls.ondas.dias===1,'buscou de novo o mesmo dia');ok(!p.errors.length,p.errors.join(';'))});
 
 await T('S22 Gestor comum vê só "Metas" do seu galpão, sem Galpões; admin vê tudo',async()=>{const db=banco();const p=await page(b,db);
  await login(p,'g2@x.com','senha1234');await p.click('.tab[data-t="cfg"]');

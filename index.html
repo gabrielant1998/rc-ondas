@@ -951,7 +951,7 @@ function errMsg(e){if(!e.status)return"Sem conexão com o servidor. Tente de nov
  if(c==="over_email_send_rate_limit")return"Muitos pedidos seguidos. Espere um minuto e tente de novo.";
  if(c==="42501"||e.status===401||e.status===403)return"Sem permissão para esta ação.";
  return e.message}
-/* sincronização: na 1ª vez (ou a cada 6 h) baixa as ondas dos 35 dias; no resto só o que mudou desde a última vez */
+/* sincronização: na 1ª vez (ou a cada 6 h) baixa as ondas da última semana e as ainda abertas; no resto só o que mudou desde a última vez */
 const FULL_EVERY=6*36e5,PRES_EVERY=10*6e4;let SYNC={at:null,full:0},PRES_AT=0,pullP=null,pullNext=null;
 function pull(o){if(!pullP){pullP=pullReal(o||{}).finally(()=>{pullP=null});return pullP}
  if(!pullNext)pullNext=pullP.catch(()=>{}).then(()=>{pullNext=null;return pull(o)});return pullNext}
@@ -973,7 +973,7 @@ async function cacheAbrir(){if(!sess||!sess.email)return false;let m=null;try{m=
 function atualizarIdentidadeOnda(w){if(!w.oid)return w;const o=OPSALL[w.oid];
  if(o){w.op=o.excluido_em?o.codigo+"~"+o.id.slice(0,6):o.codigo;w.opn=o.nome}
  else{w.op="—~"+String(w.oid).slice(0,6);if(w.srv)w.opn="Operador removido"}return w}
-/* traz cadastros e, para gestor, as ondas dos últimos 35 dias */
+/* traz cadastros e, para gestor, as ondas da última semana (o resto vem quando pedem um dia antigo) */
 async function pullReal(opt){
  const [gs,ts,cf,os]=await Promise.all([api("/rest/v1/galpoes?select=*&order=nome"),api("/rest/v1/tipos_onda?select=*&order=ordem"),api("/rest/v1/config?select=*"),api("/rest/v1/operadores?select=*&order=codigo")]);
  GID={};GN={};gs.forEach(g=>{GID[g.nome]=g.id;GN[g.id]=g.nome});
@@ -1003,21 +1003,37 @@ async function pullReal(opt){
   try{const bs=await api("/rest/v1/presenca_baixas?select=id,operador_id,data,saida&data=gte."+cd);bs.forEach(b=>{PBX[b.operador_id+'|'+b.data]={id:b.id,saida:Date.parse(b.saida)}})}catch(e){}
   try{const at=await api("/rest/v1/presenca_atrasos?select=id,operador_id,data,observacao,horario_justificado,criado_por&data=gte."+cd);at.forEach(a=>{ATR[a.operador_id+'|'+a.data]={id:a.id,obs:a.observacao,hj:a.horario_justificado,e:a.criado_por}})}catch(e){}}
  const mine=S.waves.filter(w=>!w.srv);
- if(me){const de=new Date(Date.now()-35*864e5).toISOString(),deMs=Date.parse(de),COLS="id,wn,operador_id,galpao_id,tipo,quantidade,status,registrada_em,concluida_em,encerrada_auto,procura_sku,procura_local,procura_nome,procura_em,procura_hist,tempo_zerado,atualizado_em"+PIC,
+ if(me){const deMs=janelaIni(),de=new Date(deMs).toISOString(),COLS=ONDA_COLS(),
    mapW=mapOnda,
-   pages=async base=>{const out=[];for(let off=0;;off+=4000){const R=await Promise.all([0,1,2,3].map(k=>api(base+(off+k*1000))));let cut=false;for(const p of R){out.push(...p);if(p.length<1000){cut=true;break}}if(cut||off>=400000)break}return out},
+   pages=ondaPaginas,
    maxAt=rows=>rows.reduce((m,x)=>x.atualizado_em&&(!m||Date.parse(x.atualizado_em)>Date.parse(m))?x.atualizado_em:m,SYNC.at);
   const full=opt.full||!SYNC.at||Date.now()-SYNC.full>FULL_EVERY||!S.waves.some(w=>w.srv);let srv;
-  if(full){const rows=await pages("/rest/v1/ondas?select="+COLS+"&registrada_em=gte."+encodeURIComponent(de)+"&order=registrada_em.asc,id.asc&limit=1000&offset=");
-   srv=rows.map(mapW);SYNC={at:maxAt(rows)||new Date().toISOString(),full:Date.now()}}
+  /* aparelho leve: só a última semana + as ondas ainda abertas (em andamento / procurando) de qualquer data; dias mais antigos vêm quando alguém abre */
+  if(full){const rows=await pages("/rest/v1/ondas?select="+COLS+"&or=(registrada_em.gte."+encodeURIComponent(de)+",status.neq.0)&order=registrada_em.asc,id.asc&limit=1000&offset=");
+   srv=rows.map(mapW);SYNC={at:maxAt(rows)||new Date().toISOString(),full:Date.now()};DIAS_OK.clear()}
   else{const desde=encodeURIComponent(new Date(Date.parse(SYNC.at)-5000).toISOString());
    const [rows,exc]=await Promise.all([pages("/rest/v1/ondas?select="+COLS+"&atualizado_em=gte."+desde+"&order=atualizado_em.asc,id.asc&limit=1000&offset="),api("/rest/v1/ondas_excluidas?select=id&excluida_em=gte."+desde).catch(()=>[])]);
    const M=new Map(S.waves.filter(w=>w.srv).map(w=>[w.id,w]));rows.forEach(x=>M.set(x.id,mapW(x)));(exc||[]).forEach(x=>M.delete(x.id));
-   srv=[...M.values()].filter(w=>w.ts>=deMs).sort((a,b)=>a.ts-b.ts);SYNC.at=maxAt(rows)||SYNC.at}
+   srv=[...M.values()].filter(w=>w.ts>=deMs||w.st!==0||DIAS_OK.has(dk(w.ts))).sort((a,b)=>a.ts-b.ts);SYNC.at=maxAt(rows)||SYNC.at}
   const ids=new Set(srv.map(w=>w.id));S.waves=srv.concat(mine.filter(w=>!ids.has(w.id)&&!(w.sync&&!w.err&&w.ts>=deMs)));cacheSalvar()}
  else{const corte=Date.now()-3*864e5;S.waves=mine.filter(w=>!w.sync||w.err||w.ts>corte);await limparExcluidas();await ondasPublicas()}
  S.waves.forEach(atualizarIdentidadeOnda);
  save();authUI()}
+/* ===== carregamento leve das ondas do gestor ===== */
+const JAN_DIAS=8;
+function janelaIni(){const d=new Date(Date.now()-(JAN_DIAS-1)*864e5);d.setHours(0,0,0,0);return d.getTime()}
+function ONDA_COLS(){return"id,wn,operador_id,galpao_id,tipo,quantidade,status,registrada_em,concluida_em,encerrada_auto,procura_sku,procura_local,procura_nome,procura_em,procura_hist,tempo_zerado,atualizado_em"+PIC}
+async function ondaPaginas(base){const out=[];for(let off=0;;off+=4000){const R=await Promise.all([0,1,2,3].map(k=>api(base+(off+k*1000))));let cut=false;for(const p of R){out.push(...p);if(p.length<1000){cut=true;break}}if(cut||off>=400000)break}return out}
+var DIAS_OK=new Set(),DIAS_BUSCA=new Set(),diasT=0,diasRodando=false;
+/* pede ao banco um dia anterior à semana carregada (painel ou coleta em data antiga) */
+function precisaDia(d){if(!ON||!me||!d||!S.waves.some(w=>w.srv))return;if(Date.parse(d+"T00:00:00")>=janelaIni()||Date.parse(d+"T00:00:00")>Date.now())return;
+ if(DIAS_OK.has(d)||DIAS_BUSCA.has(d))return;DIAS_BUSCA.add(d);clearTimeout(diasT);diasT=setTimeout(buscarDias,40)}
+async function buscarDias(){if(diasRodando){diasT=setTimeout(buscarDias,300);return}const L=[...DIAS_BUSCA].filter(d=>!DIAS_OK.has(d)).sort();if(!L.length)return;diasRodando=true;
+ const a=new Date(L[0]+"T00:00:00"),b=new Date(new Date(L[L.length-1]+"T00:00:00").getTime()+864e5);
+ try{const rows=await ondaPaginas("/rest/v1/ondas?select="+ONDA_COLS()+"&registrada_em=gte."+encodeURIComponent(a.toISOString())+"&registrada_em=lt."+encodeURIComponent(b.toISOString())+"&order=registrada_em.asc,id.asc&limit=1000&offset=");
+  const M=new Map(S.waves.map(w=>[w.id,w]));rows.forEach(x=>{const w=mapOnda(x),o=M.get(w.id);if(!o||o.srv)M.set(w.id,w)});
+  S.waves=[...M.values()].sort((x,y)=>x.ts-y.ts);for(let t=a.getTime();t<b.getTime();t+=864e5)DIAS_OK.add(dk(t));L.forEach(d=>{DIAS_OK.add(d);DIAS_BUSCA.delete(d)});cacheSalvar();renderAll()}
+ catch(e){L.forEach(d=>DIAS_BUSCA.delete(d));toast("Não foi possível buscar as ondas desse dia. "+errMsg(e),6000)}finally{diasRodando=false}}
 const mapOnda=x=>{const o=OPSALL[x.operador_id];return {id:x.id,wn:x.wn,oid:x.operador_id,op:o?(o.excluido_em?o.codigo+"~"+o.id.slice(0,6):o.codigo):"—",opn:o?o.nome:"Operador removido",gal:GN[x.galpao_id]||"—",ty:x.tipo,qty:x.quantidade,st:x.status,ts:Date.parse(x.registrada_em),fin:x.concluida_em?Date.parse(x.concluida_em):null,sync:1,srv:1,auto:x.encerrada_auto?1:0,sku:x.procura_sku||"",itens:prItensSrv(x.procura_itens),marcas:prMarcasSrv(x.procura_marcas),loc:x.procura_local||"",pn:x.procura_nome||"",pt:x.procura_em?Date.parse(x.procura_em):0,hist:prHistSrv(x.procura_hist),zt:x.tempo_zerado?1:0}};
 /* modo público: baixa as ondas do dia de todos (em andamento e concluídas) para a Operação */
 let PUBW_AT=0;
@@ -1244,10 +1260,10 @@ function isOT(w){const o=opOf(w.op);if(!o)return false;const t=turnoOf(o,dk(w.fi
  return h<t.ini-tol&&h>t.fim+tol}
 
 /* ===================== seleções de dados ===================== */
-function dayWaves(d){d=d||$("#day").value;return S.waves.filter(w=>dk(w.ts)===d&&inView(w))}
+function dayWaves(d){d=d||$("#day").value;precisaDia(d);return S.waves.filter(w=>dk(w.ts)===d&&inView(w))}
 function rangeWaves(days){if(days<=1)return dayWaves();const end=new Date($("#day").value+"T12:00"),out=[];
  for(let i=0;i<days;i++){const d=new Date(end);d.setDate(d.getDate()-i);out.push(dk(d))}
- const set=new Set(out);return S.waves.filter(w=>set.has(dk(w.ts))&&inView(w))}
+ out.forEach(precisaDia);const set=new Set(out);return S.waves.filter(w=>set.has(dk(w.ts))&&inView(w))}
 const prod=l=>l.filter(w=>w.st===0&&!w.err);
 function hourly(list,gal){const H=24,a=Array(H).fill(0),o=Array(H).fill(0);
  prod(list).filter(w=>!gal||w.gal===gal).forEach(w=>{const h=new Date(w.fin||w.ts).getHours();a[h]+=w.qty;o[h]++});return{a,o}}
@@ -2432,14 +2448,16 @@ async function loadHis(force){
  if(!ON){HW=S.waves.filter(w=>w.ts>=s.getTime()&&w.ts<=e.getTime());HPW=HW.filter(w=>w.st!==0||(w.hist||[]).length);hAt=Date.now();hisRender();return}
  HW=null;HPW=null;hBusy=true;hisRender();
  try{const cols='id,wn,operador_id,galpao_id,tipo,quantidade,status,registrada_em,concluida_em,tempo_zerado',win='&registrada_em=gte.'+de+'&registrada_em=lt.'+ate+'&order=registrada_em.asc,id.asc';
-  /* os últimos 35 dias já estão no aparelho (sincronização); o período mais antigo vem em totais do banco */
-  const temSrv=S.waves.some(w=>w.srv),cut=temSrv?(()=>{const d=new Date(Date.now()-34*864e5);d.setHours(0,0,0,0);return d.getTime()})():Infinity,ini=s.getTime(),fim=e.getTime();
-  const velho=async()=>{if(ini>=cut)return[];const lim=Math.min(cut,fim+1);
+  /* a última semana já está no aparelho; de 35 dias até a semana vem onda a onda do banco; antes disso, em totais */
+  const temSrv=S.waves.some(w=>w.srv),cut=temSrv?janelaIni():Infinity,cutDet=temSrv?(()=>{const d=new Date(Date.now()-34*864e5);d.setHours(0,0,0,0);return d.getTime()})():Infinity,ini=s.getTime(),fim=e.getTime();
+  /* entre 35 dias e a última semana: onda a onda, direto do banco (o aparelho só guarda a semana) */
+  const meio=async()=>{const a=Math.max(ini,cutDet),b=Math.min(cut,fim+1);if(!(b>a))return[];const r=await hFetchAll('/rest/v1/ondas?select='+cols+'&status=eq.0&registrada_em=gte.'+encodeURIComponent(new Date(a).toISOString())+'&registrada_em=lt.'+encodeURIComponent(new Date(b).toISOString())+'&order=registrada_em.asc,id.asc');return r.map(hRow)};
+  const velho=async()=>{if(ini>=cutDet)return[];const lim=Math.min(cutDet,fim+1);
    try{const ag=await api('/rest/v1/rpc/relatorio_agregado',{method:'POST',body:{p_ini:new Date(ini).toISOString(),p_fim:new Date(lim).toISOString()}});
     return(ag||[]).map((x,i)=>{const o=OPSALL[x.operador_id],t=Date.parse(x.dia+'T12:00:00');return{id:'ag'+i+'|'+x.dia,agg:1,n:+x.ondas||0,wn:'',op:x.operador_id,opn:o?o.nome:'Operador removido',opc:o?String(o.codigo):'—',gal:GN[x.galpao_id]||'—',ty:x.tipo,qty:+x.unidades||0,st:0,ts:t,fin:t,srv:1}})}
    catch(e){const a=await hFetchAll('/rest/v1/ondas?select='+cols+'&status=eq.0&registrada_em=gte.'+encodeURIComponent(new Date(ini).toISOString())+'&registrada_em=lt.'+encodeURIComponent(new Date(lim).toISOString())+'&order=registrada_em.asc,id.asc');return a.map(hRow)}};
   const recentes=()=>S.waves.filter(w=>w.srv&&w.st===0&&w.ts>=Math.max(ini,cut)&&w.ts<=fim).map(w=>Object.assign({},w,{op:w.oid||w.op,opc:String(w.op).split('~')[0]}));
-  const [arr,parr]=await Promise.all([temSrv?velho().then(v=>v.concat(recentes())):hFetchAll('/rest/v1/ondas?select='+cols+'&status=eq.0'+win).then(a=>a.map(hRow)),hFetchAll('/rest/v1/ondas?select='+cols+',procura_sku,procura_local,procura_nome,procura_em,procura_hist'+PIC+'&or=(status.neq.0,procura_hist.not.is.null)'+win).catch(()=>undefined)]);
+  const [arr,parr]=await Promise.all([temSrv?Promise.all([velho(),meio()]).then(([v,m])=>v.concat(m,recentes())):hFetchAll('/rest/v1/ondas?select='+cols+'&status=eq.0'+win).then(a=>a.map(hRow)),hFetchAll('/rest/v1/ondas?select='+cols+',procura_sku,procura_local,procura_nome,procura_em,procura_hist'+PIC+'&or=(status.neq.0,procura_hist.not.is.null)'+win).catch(()=>undefined)]);
   if(seq!==hSeq)return;
   const rows=arr,ids=new Set(rows.map(w=>w.id)),mine=S.waves.filter(w=>!w.srv&&!ids.has(w.id)&&w.ts>=s.getTime()&&w.ts<=e.getTime());
   HW=rows.concat(mine);HPW=parr?parr.map(hRow).concat(mine.filter(w=>w.st!==0||(w.hist||[]).length)):undefined;hAt=Date.now();hBusy=false;hisRender();
