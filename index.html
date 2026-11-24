@@ -1193,7 +1193,7 @@ async function bootSrv(){let tinhaSess=false;try{tinhaSess=!!localStorage.getIte
  setInterval(()=>{if(online()&&document.visibilityState==="visible"&&!pushing)pull().then(()=>{renderAll();if(view==="ind")loadManagement();if(view==="op"&&!$("#aus").classList.contains("hide"))ausAbrir()}).catch(()=>{})},60000)}
 
 /* ===================== usuários / códigos ===================== */
-function nextCode(){const used=new Set(S.ops.map(o=>o.m));for(let i=1;i<1000;i++){const c="CL"+String(i).padStart(3,"0");if(!used.has(c))return c}return"CL999"}
+function nextCode(){const used=new Set(S.ops.map(o=>o.m));for(let i=1;i<10000;i++){const c="CL"+String(i).padStart(i<1000?3:4,"0");if(!used.has(c))return c}return"CL9999"}
 function findOp(v){v=(v||"").trim().toLowerCase();const L=opsGal();return L.find(o=>o.m.toLowerCase()===v)||L.find(o=>o.n.toLowerCase()===v)}
 /* galpão em uso: gestor que não é administrador fica no seu galpão; aparelho público usa o galpão escolhido nele (guardado no aparelho); "Visão geral" mostra todos */
 function galAtual(){try{const e=document.getElementById("gal"),g=restricted()?myG():(e&&e.value)||S.gal;return g&&g!=="__all"?g:null}catch(x){return null}}
@@ -2248,7 +2248,7 @@ document.addEventListener("change",e=>{const id=e.target.id;if(id==="arDe"||id==
 document.addEventListener("click",async e=>{const b=e.target.closest&&e.target.closest("[data-ausdel]");if(!b)return;if(!confirm("Excluir este registro de ausência?"))return;
  if(await rem(()=>mut("/rest/v1/ausencias?id=eq."+encodeURIComponent(b.dataset.ausdel),"DELETE"),"Ausência excluída"))ausRel(true)});
 function cfgUsers(){
- $("#nextCode").textContent="próximo: "+nextCode();
+ $("#nextCode").textContent="próximo: "+nextCode();if(ON&&me)api("/rest/v1/rpc/operador_proximo_codigo",{method:"POST",body:{}}).then(c=>{if(c)$("#nextCode").textContent="próximo: "+c}).catch(()=>{});
  $("#uT").innerHTML=[1,2].map(t=>`<button data-ut="${t}" class="${uT===t?"on":""}" style="--c:${t===1?"var(--g)":"var(--v)"}">${t}º turno</button>`).join("");
  const lim=ON&&restricted(),GS=lim?[myG()]:S.gals,OPS=lim?S.ops.filter(o=>o.g===myG()):S.ops;
  $("#uG").innerHTML=GS.map(g=>`<option>${esc(g)}</option>`).join("");$("#uG").closest("label").classList.toggle("hide",lim);
@@ -2826,7 +2826,11 @@ $("#uB").onclick=()=>{const n=$("#uN").value.trim().replace(/\s+/g," ");
  if(n.length<2){toast("Informe o nome");return}
  if(S.ops.some(o=>o.n.toLowerCase()===n.toLowerCase())){toast("Já existe um usuário com esse nome");return}
  if(ON){const g=$("#uG").value;if(!g){toast("Crie um galpão antes de cadastrar operadores.");return}
-  const cod=nextCode();rem(()=>mut("/rest/v1/operadores","POST",{codigo:cod,nome:n,turno:uT,...turnoPadrao(uT,g),galpao_id:GID[g]}),"Usuário "+n+" criado com o código "+cod).then(ok=>{if(ok)$("#uN").value=""});return}
+  /* o código sai do banco, que enxerga todos os galpões (o gestor só vê o cadastro do seu) */
+  (async()=>{const b=$("#uB");b.disabled=true;let cod=null;try{cod=await api("/rest/v1/rpc/operador_proximo_codigo",{method:"POST",body:{}})}catch(e){}
+   try{const r=await mut("/rest/v1/operadores","POST",{codigo:cod||nextCode(),nome:n,turno:uT,...turnoPadrao(uT,g),galpao_id:GID[g]});const c=(Array.isArray(r)&&r[0]&&r[0].codigo)||cod;
+    $("#uN").value="";toast("Usuário "+n+" criado com o código "+c,5000);try{await pull()}catch(e){}cfgUsers();renderAll()}
+   catch(e){toast(String(e.code)==="23505"?"Já existe uma pessoa ativa chamada "+n+" (pode estar em outro galpão). Use o nome com sobrenome para diferenciar.":errMsg(e),8000)}finally{b.disabled=false}})();return}
  const m=nextCode();S.ops.push({m,n,t:uT,g:$("#uG").value});$("#uN").value="";save();cfgUsers();renderAll();
  toast("Usuário "+n+" criado, "+m+", "+uT+"º turno")};
 $("#uN").onkeydown=e=>{if(e.key==="Enter")$("#uB").click()};
@@ -3102,7 +3106,7 @@ async function pdCadastrar(f,k){const nome=f.querySelector('[name="n"]').value.t
  if(ON){const b=f.querySelector('[type="submit"],[data-pdcad]');if(b)b.disabled=true;
   let id;try{id=await api("/rest/v1/rpc/prod_pessoa_salvar",{method:"POST",body:{p_id:k||null,p_codigo:cod,p_nome:nome,p_galpao:GID[pdGalpao()]||null}})}catch(e){if(b)b.disabled=false;toast(errMsg(e),7000);return}
   let aviso="";if(!k&&id){try{await api("/rest/v1/rpc/prod_atribuir",{method:"POST",body:{p_pessoa:id,p_andar:an,p_atividade:at,p_turno:tu,p_entrada:null,p_saida:null,p_situacao:"ativo",p_desde:new Date().toISOString()}})}catch(e){aviso=" Não foi possível definir o posto: "+errMsg(e)}}
-  if(!k)PDreset=true;await pdCarregar();pdRender();toast(msg+aviso,aviso?8000:4000);return}
+  if(!k)PDreset=true;await pdCarregar();pdRender();{const o=id&&PDPES.find(x=>x.id===id);toast(o&&o.m!==cod?msg.replace(cod,o.m):msg+aviso,aviso?8000:4000)}return}
  const P=S.prodPes||(S.prodPes=[]);if(k){const o=P.find(x=>pdK(x)===k);if(o){o.n=nome;o.m=cod}}else{const id=uid();P.push({id,m:cod,n:nome,g:pdGalpao()});(S.prodA||(S.prodA=[])).push({id:uid(),oid:id,andar:an,at,tu,ent:"",sai:"",sit:"ativo",ini:Date.now(),fim:null,por:me?me.u:"local"});PDreset=true}
  save();pdRender();toast(msg,4000)}
 async function pdRemover(k){const o=pdOp(k);if(!o)return;

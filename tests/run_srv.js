@@ -99,6 +99,7 @@ function fake(db){const cors={'access-control-allow-origin':'*','access-control-
   if(t==='ausencias'&&m==='DELETE'){const a=(db.aus||[]).find(x=>x.id===eq('id'));if(!a||!(g&&g.pode_registros&&escopo(a.galpao_id)))return J(route,200,[]);db.aus=db.aus.filter(x=>x!==a);return J(route,200,[a])}
   if(t==='rpc/registrar_acesso'){if(g){db.aud=db.aud||[];db.aud.push({id:db.aud.length+1,em:new Date().toISOString(),email:g.email,nome:g.nome,galpao_id:g.galpao_id,acao:body.p_acao,tabela:null,registro:null,antes:null,depois:null})}return J(route,204,null)}
   if(t==='rpc/auditoria_listar'){if(!(g&&g.admin))return J(route,403,{code:'42501',message:'Só o administrador vê a auditoria'});return J(route,200,(db.aud||[]).slice().reverse())}
+  if(t==='rpc/operador_proximo_codigo'){if(!g)return J(route,403,{code:'42501',message:'Entre como gestor'});return J(route,200,proxCod(db))}
   if(t==='rpc/ondas_removidas'){db.calls.rem=(db.calls.rem||0)+1;return J(route,200,(body.p_ids||[]).filter(i=>!db.ondas.some(x=>x.id===i)))}
   if(t==='rpc/registrar_ondas'){db.calls.rpc++;return J(route,200,body.lote.map(o=>{
     if(db.ondas.some(x=>x.id===o.id))return{id:o.id,resultado:'ja_existia',detalhe:null};
@@ -123,7 +124,8 @@ function fake(db){const cors={'access-control-allow-origin':'*','access-control-
   const podeC=gal=>g&&g.pode_config&&(g.admin||g.galpao_id===gal);
   if(t==='operadores'&&m==='POST'&&(body.inicio==null||body.fim==null))return J(route,400,{code:'23502',message:'null value in column "inicio" of relation "operadores" violates not-null constraint'});
   if(t==='operadores'&&m==='POST'){if(!podeC(body.galpao_id))return J(route,403,{code:'42501',message:'new row violates row-level security policy'});
-   if(db.operadores.some(o=>!o.excluido_em&&(o.codigo===body.codigo||o.nome.toLowerCase()===body.nome.toLowerCase())))return J(route,409,{code:'23505',message:'duplicate key value'});
+   if(db.operadores.some(o=>!o.excluido_em&&o.nome.toLowerCase()===body.nome.toLowerCase()))return J(route,409,{code:'23505',message:'duplicate key value'});
+   if(!body.codigo||db.operadores.some(o=>!o.excluido_em&&o.codigo===body.codigo))body.codigo=proxCod(db);
    const row=Object.assign({id:'00000000-0000-4000-8000-'+String(db.seq++).padStart(12,'0'),excluido_em:null},body);db.operadores.push(row);return J(route,201,[row])}
   if(t==='presenca_registros'&&m==='POST'){const op=db.operadores.find(o=>o.id===body.operador_id);if(!op||!(g&&g.pode_registros&&(g.admin||g.galpao_id===op.galpao_id)))return J(route,403,{code:'42501',message:'new row violates row-level security policy'});
    const row=Object.assign({id:'pr'+db.seq++,horario_ini:null,horario_fim:null,observacao:null,criado_por:email,cancelado_em:null},body);(db.presenca=db.presenca||[]).push(row);return J(route,201,[row])}
@@ -178,6 +180,7 @@ async function reg(p,op,ty,rows){await p.click('.tab[data-t="op"]');await p.wait
  await p.click('#save');await p.waitForTimeout(450)}
 async function login(p,email,pw){await p.click('#logbtn');await p.fill('#lU',email);await p.fill('#lP',pw);await p.click('#lB');await p.waitForTimeout(600)}
 const num=p=>p.evaluate(()=>(document.querySelector('#kpis .num')||{}).textContent);
+function proxCod(db){for(let i=1;i<10000;i++){const c='CL'+String(i).padStart(i<1000?3:4,'0');if(!db.operadores.some(o=>!o.excluido_em&&o.codigo===c))return c}}
 async function T(name,fn){if(process.env.ONLY&&!process.env.ONLY.split(",").some(k=>name.startsWith(k+" ")))return;const t0=Date.now();try{const i=await fn();R.push(['PASS',name,(i||'')+` (${Date.now()-t0}ms)`])}catch(e){R.push(['FALHA',name,e.message.split('\n')[0]])}}
 (async()=>{const b=await chromium.launch();
 
@@ -230,11 +233,11 @@ await T('S09 Sessão continua após recarregar e renova quando o acesso vence',a
  await p.reload();await p.waitForTimeout(700);ok((await p.evaluate(()=>me&&me.adm&&view==='painel')),'sessão não voltou');ok(db.calls.refresh>=1,'não renovou o acesso vencido')});
 
 await T('S10 Admin cadastra operador; excluir libera o código para o próximo',async()=>{const db=banco();const p=await page(b,db);await login(p,'adm@x.com','senha1234');
- await p.click('.tab[data-t="cfg"]');await p.click('[data-c="cus"]');await p.fill('#uN','Diego Rocha');await p.click('#uB');await p.waitForTimeout(500);
- ok(db.operadores.some(o=>o.nome==='Diego Rocha'&&o.codigo==='CL003'),'não criou CL003');
+ await p.click('.tab[data-t="cfg"]');await p.click('[data-c="cus"]');await p.fill('#uN','Diego Rocha');await p.click('#uB');await p.waitForTimeout(1000);
+ ok(db.operadores.some(o=>o.nome==='Diego Rocha'&&o.codigo==='CL003'),'não criou CL003: '+JSON.stringify(db.operadores.map(o=>o.codigo+o.nome)));
  ok(await p.isHidden('[data-udel="CL001"]'),'lista deveria começar recolhida');await p.fill('#uQ','ana');await p.waitForTimeout(150);
  await p.click('[data-udel="CL001"]');await p.waitForTimeout(500);ok(db.operadores.find(o=>o.nome==='Ana Souza').excluido_em,'não excluiu');
- await p.fill('#uN','Eva Lima');await p.click('#uB');await p.waitForTimeout(500);ok(db.operadores.some(o=>o.nome==='Eva Lima'&&o.codigo==='CL001'),'código CL001 não foi reaproveitado');
+ await p.fill('#uN','Eva Lima');await p.click('#uB');await p.waitForTimeout(1000);ok(db.operadores.some(o=>o.nome==='Eva Lima'&&o.codigo==='CL001'),'código CL001 não foi reaproveitado');
  ok(p.errors.length===0,p.errors.join(';'))});
 
 await T('S11 Gestor comum: não altera limites nem cria operador em outro galpão',async()=>{const db=banco();const p=await page(b,db);await login(p,'g2@x.com','senha1234');
@@ -361,6 +364,12 @@ await T('S105 Administrador com G2 escolhido no topo: lista de concluídas do di
  const p=await page(b,db);await login(p,'adm@x.com','senha1234');await p.evaluate(()=>go('op'));await p.selectOption('#gal','Galpão 2');await p.waitForTimeout(300);
  const L=await p.textContent('#aceL');ok(L.includes('7402')&&!L.includes('7301'),'concluídas: '+L.replace(/\s+/g,' ').slice(0,200));
  await p.selectOption('#gal','__all');await p.waitForTimeout(200);const T2=await p.textContent('#aceL');ok(T2.includes('7402')&&T2.includes('7301'),'visão geral deveria mostrar os dois')});
+
+await T('S106 Gestor de um galpão cadastra pessoa nova sem repetir código de outro galpão; nome repetido explica o motivo',async()=>{const db=banco();
+ const p=await page(b,db);await login(p,'g2@x.com','senha1234');await p.evaluate(()=>{go('cfg');document.querySelector('#csub [data-c="cus"]').click()});await p.waitForTimeout(300);
+ await p.fill('#uN','Pessoa Nova G2');await p.click('#uB');await p.waitForTimeout(600);const o=db.operadores.find(x=>x.nome==='Pessoa Nova G2');
+ ok(o&&!db.operadores.some(x=>x!==o&&!x.excluido_em&&x.codigo===o.codigo),'código repetido ou não criou: '+JSON.stringify(o));ok((await p.textContent('#toast')).includes(o&&o.codigo),'aviso com o código errado: '+await p.textContent('#toast'));
+ await p.fill('#uN','Ana Souza');await p.click('#uB');await p.waitForTimeout(500);ok(/outro galpão|Já existe/.test(await p.textContent('#toast'))&&db.operadores.filter(x=>x.nome==='Ana Souza').length===1,'mensagem do nome repetido: '+await p.textContent('#toast'))});
 
 await T('S22 Gestor comum vê só "Metas" do seu galpão, sem Galpões; admin vê tudo',async()=>{const db=banco();const p=await page(b,db);
  await login(p,'g2@x.com','senha1234');await p.click('.tab[data-t="cfg"]');
