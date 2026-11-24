@@ -1005,7 +1005,7 @@ async function pullReal(opt){
  const mine=S.waves.filter(w=>!w.srv);
  if(me){const de=new Date(Date.now()-35*864e5).toISOString(),deMs=Date.parse(de),COLS="id,wn,operador_id,galpao_id,tipo,quantidade,status,registrada_em,concluida_em,encerrada_auto,procura_sku,procura_local,procura_nome,procura_em,procura_hist,tempo_zerado,atualizado_em"+PIC,
    mapW=mapOnda,
-   pages=async base=>{const out=[];for(let off=0;;off+=4000){const R=await Promise.all([0,1,2,3].map(k=>api(base+(off+k*1000))));let cut=false;for(const p of R){out.push(...p);if(p.length<1000){cut=true;break}}if(cut||off>=56000)break}return out},
+   pages=async base=>{const out=[];for(let off=0;;off+=4000){const R=await Promise.all([0,1,2,3].map(k=>api(base+(off+k*1000))));let cut=false;for(const p of R){out.push(...p);if(p.length<1000){cut=true;break}}if(cut||off>=400000)break}return out},
    maxAt=rows=>rows.reduce((m,x)=>x.atualizado_em&&(!m||Date.parse(x.atualizado_em)>Date.parse(m))?x.atualizado_em:m,SYNC.at);
   const full=opt.full||!SYNC.at||Date.now()-SYNC.full>FULL_EVERY||!S.waves.some(w=>w.srv);let srv;
   if(full){const rows=await pages("/rest/v1/ondas?select="+COLS+"&registrada_em=gte."+encodeURIComponent(de)+"&order=registrada_em.asc,id.asc&limit=1000&offset=");
@@ -1543,8 +1543,7 @@ async function loadManagement(opt){
  if((jaPronto||c)&&opt&&opt.cache&&c&&c.sw===swSig()&&Date.now()-c.at<30000){mgBar(false);if(jaPronto)mgRender();return}
  if(jaPronto||c){mgBar(true)}else{MGW=null;MGKEY='';mgState='Carregando histórico do período…';mgBar(true)}
  try{
-  const arr=[];for(let off=0;;off+=1000){const q='/rest/v1/ondas?select=id,wn,operador_id,galpao_id,tipo,quantidade,status,registrada_em,concluida_em,encerrada_auto,procura_sku,procura_local,procura_nome,procura_em,procura_hist,tempo_zerado'+PIC+'&registrada_em=gte.'+encodeURIComponent(start.toISOString())+'&registrada_em=lt.'+encodeURIComponent(end.toISOString())+'&order=registrada_em.asc,id.asc&limit=1000&offset='+off;
-   const part=await api(q);if(seq!==mgSeq)return;arr.push(...part);if(part.length<1000)break}
+  const arr=[];const pg=off=>{const q='/rest/v1/ondas?select=id,wn,operador_id,galpao_id,tipo,quantidade,status,registrada_em,concluida_em,encerrada_auto,procura_sku,procura_local,procura_nome,procura_em,procura_hist,tempo_zerado'+PIC+'&registrada_em=gte.'+encodeURIComponent(start.toISOString())+'&registrada_em=lt.'+encodeURIComponent(end.toISOString())+'&order=registrada_em.asc,id.asc&limit=1000&offset='+off;return api(q)};for(let off=0;;off+=4000){const R=await Promise.all([0,1,2,3].map(k=>pg(off+k*1000)));if(seq!==mgSeq)return;let fim=false;for(const part of R){arr.push(...part);if(part.length<1000){fim=true;break}}if(fim)break}
   const rows=arr.map(x=>{const o=OPSALL[x.operador_id];return{id:x.id,wn:x.wn,oid:x.operador_id,op:o?(o.excluido_em?o.codigo+'~'+o.id.slice(0,6):o.codigo):'—',opn:o?o.nome:'Operador removido',gal:GN[x.galpao_id]||'—',ty:x.tipo,qty:x.quantidade,st:x.status,ts:Date.parse(x.registrada_em),fin:x.concluida_em?Date.parse(x.concluida_em):null,sync:1,srv:1,auto:x.encerrada_auto?1:0,sku:x.procura_sku||"",itens:prItensSrv(x.procura_itens),marcas:prMarcasSrv(x.procura_marcas),loc:x.procura_local||"",pn:x.procura_nome||"",pt:x.procura_em?Date.parse(x.procura_em):0,hist:prHistSrv(x.procura_hist),zt:x.tempo_zerado?1:0}});
   const ids=new Set(rows.map(w=>w.id)),novo=rows.concat(S.waves.filter(w=>!w.srv&&!ids.has(w.id)&&w.ts>=start.getTime()&&w.ts<end.getTime()));
   const sig=a=>a.length+'|'+a.reduce((t,w)=>t+(+w.qty||0)+(w.st||0)*7+((w.fin||0)%1009)+((w.pt||0)%997)+((w.pn||'').length)*11+((w.sku||'').length)*13+(w.zt?3:0)+(w.ty||'').length+(w.auto?17:0),0)+'|'+(a.length?a[a.length-1].id:'');
@@ -2424,7 +2423,7 @@ async function hUniGo(raw){const q=raw.trim();HUQ=raw;const box=$("#hUniRes");
  catch(e){HUR='<div class="legend">Não foi possível buscar agora. Confira a conexão.</div>';box.innerHTML=HUR;return}
  HUR=rows.length?`<div class="tw"><table><tr><th>Onda</th><th>Pessoa</th><th>Galpão</th><th>Tipo</th><th>Qtd</th><th>Situação</th><th>Data e hora</th></tr>${rows.map(w=>`<tr><td><b>${esc(wnS(w)||'—')}</b></td><td>${esc(w.opn)} <small>${esc(w.opc||'')}</small></td><td>${esc(w.gal)}</td><td>${esc(w.ty)}</td><td class="num">${fmt(w.qty)}</td><td>${hST[w.st]||''}</td><td>${hDT(w.fin||w.ts)}</td></tr>`).join('')}</table></div>`:'<div class="legend">Nenhuma onda encontrada com esse número.</div>';box.innerHTML=HUR}
 let HPW=null,hBusy=false;
-async function hFetchAll(path){const out=[];for(let off=0;;off+=4000){const r=await Promise.all([0,1,2,3].map(k=>api(path+'&limit=1000&offset='+(off+k*1000))));let cut=false;for(const p of r){out.push(...p);if(p.length<1000){cut=true;break}}if(cut||off>=80000)break}return out}
+async function hFetchAll(path){const out=[];for(let off=0;;off+=4000){const r=await Promise.all([0,1,2,3].map(k=>api(path+'&limit=1000&offset='+(off+k*1000))));let cut=false;for(const p of r){out.push(...p);if(p.length<1000){cut=true;break}}if(cut||off>=400000)break}return out}
 async function loadHis(force){
  if(!podeVer('his')||view!=='his')return;
  const key=$("#hVis").value+'|'+$("#hPer").value;
