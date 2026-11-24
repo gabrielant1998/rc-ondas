@@ -850,7 +850,8 @@ const ico=n=>`<svg class="ti" viewBox="0 0 24 24" aria-hidden="true">${TI[n]||TI
 const TYREN={"Vários":"Vários artigos","Múltiplos":"Múltiplas quantidades"};
 const ST=["Concluído","Procurando","Difícil acesso"],SC=["s0","s1","s2"];
 /* Banco de dados: a chave abaixo é pública por definição (só permite o que as regras do banco deixam). */
-const SRV=(()=>{const pub=/\.github\.io$/.test(location.hostname);let f=null;
+/* site publicado = qualquer endereço que não seja este computador (inclui "github.io." com ponto no fim, que o navegador trata como outro site) */
+const SRV=(()=>{const hn=location.hostname.replace(/\.$/,""),pub=location.protocol!=="file:"&&!/^(localhost|127\.0\.0\.1|\[::1\]|)$/.test(hn);let f=null;
  /* no site publicado o modo local (sem banco) não existe: sem login, sem dados de outro galpão no aparelho, sem registro perdido */
  if(pub){try{localStorage.removeItem("rcondas.srv")}catch(e){}}
  else{try{f=localStorage.getItem("rcondas.srv")}catch(e){}const q=new URLSearchParams(location.search).get("srv");if(q==="0"||q==="1"){f=q;try{localStorage.setItem("rcondas.srv",q)}catch(e){}}}
