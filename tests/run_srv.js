@@ -334,6 +334,16 @@ await T('S102 Registros que ficaram só no aparelho (modo local) vão sozinhos p
  ok((await p.textContent('#toast')).includes('no banco'),'aviso: '+await p.textContent('#toast'));
  await p.reload();await p.waitForTimeout(4000);ok(db.ondas.filter(w=>/^8800/.test(w.wn)).length===1&&!p.errors.length,'repetiu o envio ou erro '+p.errors.join(';'))});
 
+await T('S103 Aparelho público: escolher o galpão mostra só as pessoas e registros dele e fica guardado no aparelho',async()=>{const db=banco();const t=Date.now()-6e5;
+ db.ondas.push({id:'00000000-0000-4000-8000-00000000aa01',wn:'7101',operador_id:db.operadores[0].id,galpao_id:G1,tipo:'Vários artigos',quantidade:5,status:0,registrada_em:new Date(t).toISOString(),concluida_em:new Date(t).toISOString(),procura_hist:[]},
+  {id:'00000000-0000-4000-8000-00000000aa02',wn:'7202',operador_id:db.operadores[1].id,galpao_id:G2,tipo:'Vários artigos',quantidade:5,status:0,registrada_em:new Date(t).toISOString(),concluida_em:new Date(t).toISOString(),procura_hist:[]});
+ const p=await page(b,db);await p.evaluate(()=>go('op'));await p.waitForTimeout(400);ok(await p.isVisible('#gal'),'seletor de galpão escondido no aparelho público');
+ ok((await p.$eval('#gal',e=>e.value))==='__all','começa em todos os galpões');
+ await p.selectOption('#gal','Galpão 2');await p.waitForTimeout(200);await p.fill('#opIn','Ana');await p.waitForTimeout(200);ok((await p.$$('#opSug [data-sug]')).length===0,'mostrou pessoa do Galpão 1');
+ let L=await p.textContent('#last');ok(L.includes('7202')&&!L.includes('7101'),'últimos registros: '+L.slice(0,200));
+ await p.reload();await p.waitForTimeout(900);await p.evaluate(()=>go('op'));await p.waitForTimeout(200);ok((await p.$eval('#gal',e=>e.value))==='Galpão 2','não guardou o galpão no aparelho');
+ await p.fill('#opIn','Carla');await p.waitForTimeout(200);ok((await p.$$('#opSug [data-sug]')).length===1,'não achou a pessoa do galpão escolhido')});
+
 await T('S22 Gestor comum vê só "Metas" do seu galpão, sem Galpões; admin vê tudo',async()=>{const db=banco();const p=await page(b,db);
  await login(p,'g2@x.com','senha1234');await p.click('.tab[data-t="cfg"]');
  await p.click('[data-c="cme"]');const g=await p.evaluate(()=>({cga:getComputedStyle(document.querySelector('#csub [data-c="cga"]')).display,tab:document.querySelector('#csub [data-c="cme"]').textContent,fcard:document.querySelector('#fCard').classList.contains('hide'),linhas:document.querySelectorAll('#mtL tr').length,txt:document.querySelector('#mtL').textContent}));
@@ -371,9 +381,9 @@ await T('S25 Gestor comum: Usuários só do galpão dele, cria usuário nele e a
  const n=db.operadores.find(o=>o.nome==='Novo Op');ok(n&&n.galpao_id===G2,JSON.stringify(n));
  await p.click('#logbtn');await login(p,'adm@x.com','senha1234');await p.click('.tab[data-t="cfg"]');await p.click('[data-c="cus"]');
  const a=await ver();ok(a.lista.includes('Ana Souza')&&a.lista.includes('Carla Dias')&&!a.sel&&a.ges!=='none',JSON.stringify(a))});
-await T('S29 Site público: turno, galpão e data escondidos sem login; gestor vê',async()=>{const db=banco();const p=await page(b,db);
+await T('S29 Site público: turno e data escondidos sem login (galpão fica para escolher o do aparelho); gestor vê',async()=>{const db=banco();const p=await page(b,db);
  await p.waitForTimeout(300);
- for(const i of ['#turnoF','#gal','#day'])ok(!(await p.isVisible(i)),i+' visível no público');
+ for(const i of ['#turnoF','#day'])ok(!(await p.isVisible(i)),i+' visível no público');ok(await p.isVisible('#gal'),'galpão do aparelho escondido');
  await login(p,'g2@x.com','senha1234');await p.waitForTimeout(300);
  for(const i of ['#turnoF','#gal','#day'])ok(await p.isVisible(i),i+' deveria aparecer para gestor')});
 await T('S30 Lista de presença: marcar tira o nome da lista e preenche a semana; desfazer devolve; sem permissão não marca',async()=>{const db=banco();const p=await page(b,db);

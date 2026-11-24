@@ -1183,8 +1183,8 @@ async function bootSrv(){let tinhaSess=false;try{tinhaSess=!!localStorage.getIte
 /* ===================== usuários / códigos ===================== */
 function nextCode(){const used=new Set(S.ops.map(o=>o.m));for(let i=1;i<1000;i++){const c="CL"+String(i).padStart(3,"0");if(!used.has(c))return c}return"CL999"}
 function findOp(v){v=(v||"").trim().toLowerCase();const L=opsGal();return L.find(o=>o.m.toLowerCase()===v)||L.find(o=>o.n.toLowerCase()===v)}
-/* pessoas do galpão em uso: gestor que não é administrador só vê e registra as do seu galpão; aparelho público (sem login) vê todos; "Visão geral" mostra todos */
-function galAtual(){try{if(ON&&!me)return null;const e=document.getElementById("gal"),g=restricted()?myG():(e&&e.value)||S.gal;return g&&g!=="__all"?g:null}catch(x){return null}}
+/* galpão em uso: gestor que não é administrador fica no seu galpão; aparelho público usa o galpão escolhido nele (guardado no aparelho); "Visão geral" mostra todos */
+function galAtual(){try{const e=document.getElementById("gal"),g=restricted()?myG():(e&&e.value)||S.gal;return g&&g!=="__all"?g:null}catch(x){return null}}
 function opsGal(){const g=galAtual();return g?S.ops.filter(o=>o.g===g):S.ops}
 function opOf(code){return S.ops.find(o=>o.m===code)}
 const h32=s=>{let h=5381;for(let i=0;i<s.length;i++)h=(h*33^s.charCodeAt(i))>>>0;return h.toString(36)};
@@ -2166,7 +2166,7 @@ function ausSugest(){const q=nrm($("#ausP").value),box=$("#ausSug");ausI=-1;ausL
  const all=opsBusca(q);ausL2=all.slice(0,8);box.innerHTML=opsCartoes(ausL2,all.length,"data-aussug");$("#ausP").setAttribute("aria-expanded",String(ausL2.length>0))}
 function ausEscolher(o){ausSel=o;$("#ausP").value=o.m;ausL2=[];ausI=-1;$("#ausSug").innerHTML="";$("#ausP").setAttribute("aria-expanded","false");ausWho();const b=$("#ausMot button");if(b&&!AUSM)b.focus({preventScroll:true})}
 function ausWho(){const o=ausSel||findOp($("#ausP").value);$("#ausWho").innerHTML=o?'<div class="cracha">'+av(o.n)+"<div><b>"+esc(o.n)+"</b><small>"+o.m+", "+o.t+"º turno"+(o.g?", "+esc(o.g):"")+"</small></div></div>":""}
-function ausLista(){const el=$("#ausL");if(!el)return;const now=Date.now(),L=AUS.slice().sort((a,b)=>(!!a.fim-!!b.fim)||(b.ini-a.ini)),fora=L.filter(a=>!a.fim||a.fim>now).length;
+function ausLista(){const el=$("#ausL");if(!el)return;const now=Date.now(),L=AUS.filter(a=>{const o=OPSALL[a.oid];return galOk(o?GN[o.galpao_id]:(S.ops.find(x=>x.id===a.oid)||{}).g)}).sort((a,b)=>(!!a.fim-!!b.fim)||(b.ini-a.ini)),fora=L.filter(a=>!a.fim||a.fim>now).length;
  $("#ausN").textContent=fora?fora+(fora===1?" fora agora":" fora agora"):"";
  el.innerHTML=L.length?`<table class="ausT"><tr><th>Pessoa</th><th>Motivo</th><th>Saída</th><th>Volta</th></tr>`+L.map(a=>{const o=OPSALL[a.oid],nm=o?o.nome:((S.ops.find(x=>x.id===a.oid)||{}).n||"—"),aberta=!a.fim;
   return`<tr${aberta?' class="ab"':""}><td><div class="who2">${av(nm)}<div>${esc(nm)}</div></div></td><td><span class="ausTag">${esc(a.mot)}</span></td><td>${hmT(a.ini)}</td><td>${aberta?`<button type="button" class="btn sm" data-ausv="${esc(a.id)}">Voltei</button><br><small>há ${durA(now-a.ini)}</small>`:`${hmT(a.fim)}<br><small>${durA(a.fim-a.ini)}</small>`}</td></tr>`}).join("")+"</table>"
@@ -2525,7 +2525,7 @@ const isI=t=>t==="ind"||t==="his";
 function podeVer(t){if(t==="painel"&&ON&&!me)return false;if(t==="prod")return true;if(ON&&me&&!me.adm&&me.ab&&!me.ab.includes(t))return false;if(t==="op"||t==="prod"||t==="painel"||t==="prs")return true;if(ON)return !!me&&(isI(t)?!!me.pI:t==='cfg'?!!(me.pC||me.pI):!!me.pC);if(t==="painel")return true;return !needAuth(t)}
 function updTabs(){$$(".tab[data-t]").forEach(b=>{b.style.display=podeVer(b.dataset.t)?"":"none"});$$('#csub [data-c="cga"]').forEach(b=>{b.style.display=soMeta()?"none":""});$$('#fCard').forEach(c=>c.classList.toggle("hide",soMeta()));$$('#csub [data-c="cpd"]').forEach(b=>{let g=false;try{g=pdGestor()}catch(e){}b.style.display=g?"":"none"});$$('#csub [data-c="cge"]').forEach(b=>{b.style.display=soMeta()?"none":""});$$('#csub [data-c="cma"]').forEach(b=>{b.style.display=(!ON||(me&&me.adm))?"":"none"});{const soHor=ON&&me&&!me.adm&&!me.pC;$$('#csub [data-c="cop"],#csub [data-c="cus"],#csub [data-c="cme"],#csub [data-c="cho"]').forEach(b=>{b.style.display=''});if(soHor)$$('#csub button').forEach(b=>{if(b.dataset.c!=='cho')b.style.display='none'})}if(!podeVer(view)){view="op";["painel","op","prs","ind","his","cfg"].forEach(s=>$("#"+s).classList.toggle("hide",s!=="op"));$$(".tab[data-t]").forEach(b=>b.classList.toggle("on",b.dataset.t==="op"))}}
 let hWho="";
-function authUI(){const w=me?me.n+"|"+(me.g||"")+"|"+(me.adm?1:0):"";if(w!==hWho){hWho=w;hKey="";HW=null;HPW=null}$("#who").textContent=me?"Gestor: "+me.n:"";const pub=ON&&!me;["#turnoF","#gal","#day"].forEach(i=>$(i).classList.toggle("hide",pub));if(pub){$("#turnoF").value="";$("#day").value=dk(Date.now())}$("#logtx").textContent=me?"Sair":"Entrar";$("#pwbtn").classList.toggle("hide",!me);updTabs();if(ON&&!me&&view==="painel")go("op")}
+function authUI(){const w=me?me.n+"|"+(me.g||"")+"|"+(me.adm?1:0):"";if(w!==hWho){hWho=w;hKey="";HW=null;HPW=null}$("#who").textContent=me?"Gestor: "+me.n:"";const pub=ON&&!me;["#turnoF","#day"].forEach(i=>$(i).classList.toggle("hide",pub));$("#gal").classList.remove("hide");if(pub){$("#turnoF").value="";$("#day").value=dk(Date.now())}$("#logtx").textContent=me?"Sair":"Entrar";$("#pwbtn").classList.toggle("hide",!me);updTabs();if(ON&&!me&&view==="painel")go("op")}
 function go(t){if(t==="painel"&&ON&&!me)t="op";if(ON&&me&&!me.adm&&me.ab&&!podeVer(t)){const f=ABAS_T.find(([k])=>podeVer(k));if(f)t=f[0]}setTimeout(()=>{try{sideSubs()}catch(e){}},0);
  updTabs();
  if((t==="cfg"||isI(t))&&needAuth(t)){$("#login").classList.remove("hide");$("#lU").focus();pend=t;return}
@@ -2567,10 +2567,11 @@ function netUI(){const n=$("#net"),o=online(),p=S.waves.filter(w=>!w.sync).lengt
  const pc=Math.round(storeLen/LIM_STORE*100),e=$("#stor");e.classList.toggle("hide",pc<70);e.className="pill "+(pc>=90?"off":"warn")+(pc<70?" hide":"");e.textContent="Memória "+pc+"%";e.title="Uso do armazenamento deste aparelho"}
 const myG=()=>(me&&me.g&&S.gals.includes(me.g))?me.g:S.gal;
 const restricted=()=>ON?!!me&&!me.adm:S.ges.length>0&&!(me&&me.adm);
-const inView=w=>!restricted()||(ON&&!me)||w.gal===myG();
+const inView=w=>{if(ON&&!me){const g=galAtual();return !g||w.gal===g}return !restricted()||w.gal===myG()};
+const galOk=g=>{const a=galAtual();return !a||!g||g===a};
 const visG=()=>restricted()?[myG()]:S.gals;
 const inTurno=w=>{const f=$("#turnoF").value;if(!f)return true;const o=opOf(w.op);return!!o&&String(o.t)===f};
-function galSel(){const e=$("#gal"),v=e.value;e.innerHTML=(restricted()?"":'<option value="__all">Visão geral</option>')+visG().map(g=>`<option>${esc(g)}</option>`).join("");
+function galSel(){const e=$("#gal");let v=e.value;if(ON&&!me){let a=null;try{a=localStorage.getItem("rcondas.galAparelho")}catch(x){}v=a&&visG().includes(a)?a:"__all"}e.innerHTML=(restricted()?"":`<option value="__all">${ON&&!me?"Todos os galpões":"Visão geral"}</option>`)+visG().map(g=>`<option>${esc(g)}</option>`).join("");
  if(restricted()){S.gal=myG();e.value=myG();e.disabled=true}else{e.value=S.gals.includes(v)||v==="__all"?v:S.gal;e.disabled=false}}
 function renderAll(){netUI();galSel();if(ON&&!me){if(view==="painel")painelPublico()}else painel();painelVivo();aceLista();operacao();procurando();filters();
  $("#sub2").textContent=new Date($("#day").value+"T12:00").toLocaleDateString("pt-BR",{weekday:"long",day:"numeric",month:"long",year:"numeric"});
@@ -2578,7 +2579,7 @@ function renderAll(){netUI();galSel();if(ON&&!me){if(view==="painel")painelPubli
 
 /* ===================== eventos ===================== */
 $("#day").value=dk(Date.now());galSel();$("#gal").value=S.gal;
-$("#gal").onchange=e=>{if(e.target.value!=="__all"){S.gal=e.target.value;save()}renderAll()};
+$("#gal").onchange=e=>{if(e.target.value!=="__all"){S.gal=e.target.value;save()}if(ON&&!me)try{localStorage.setItem("rcondas.galAparelho",e.target.value)}catch(x){}PDsel=null;renderAll();if(view==="prod"&&typeof pdRender==="function")pdRender()};
 $("#ctlQ").oninput=ctlLive;async function zerarTempo(ids){const L=S.waves.filter(w=>ids.includes(w.id));if(!L.length)return;
  if(ON){const wns=L.filter(w=>w.srv||w.sync).map(w=>w.wn);if(wns.length){try{await api("/rest/v1/rpc/zerar_tempo_ondas",{method:"POST",body:{p_wns:wns}})}catch(e){toast(errMsg(e));return}}}
  L.forEach(w=>{w.zt=1});save();renderAll();ctlLive();toast("Tempo zerado: as unidades continuam contando")}
@@ -3039,7 +3040,7 @@ async function pdBipar(){const o=PDsel;if(!o){toast("Escolha a pessoa primeiro."
  pdMsg("pend","Enviando onda "+wn+"…","");await pdEnviar([x],true);$("#pdW").focus()}
 function pdLista(){const el=$("#pdL");if(!el)return;const by={};
  PDB.forEach(b=>{by[b.id]=Object.assign({st:"ok"},b)});PDLOC.forEach(x=>{if(x.st!=="ok"||!by[x.id])by[x.id]=Object.assign({},by[x.id]||{},x)});
- const q=nrm($("#pdQ")?$("#pdQ").value:""),all=Object.values(by).sort((a,b)=>b.em-a.em),L=all.filter(x=>{if(!q)return true;const o=pdOp(x.oid);return nrm(x.wn).includes(q)||(o&&(nrm(o.n).includes(q)||nrm(o.m)===q))});
+ const q=nrm($("#pdQ")?$("#pdQ").value:""),all=Object.values(by).filter(x=>{const o=pdOp(x.oid);return galOk(o&&o.g)}).sort((a,b)=>b.em-a.em),L=all.filter(x=>{if(!q)return true;const o=pdOp(x.oid);return nrm(x.wn).includes(q)||(o&&(nrm(o.n).includes(q)||nrm(o.m)===q))});
  const okW=all.filter(x=>x.st==="ok"&&!x.q).length,okQ=all.filter(x=>x.st==="ok"&&x.q).reduce((a,x)=>a+x.q,0),pend=all.filter(x=>x.st==="pend").length;
  $("#pdN").textContent=[okW?okW+(okW===1?" onda":" ondas"):"",okQ?fmt(okQ)+(okQ===1?" embalagem":" embalagens")+" (quantidade)":"",pend?pend+" pendente"+(pend>1?"s":""):""].filter(Boolean).join(", ");
  const st=x=>x.st==="ok"?(x.q?'<span class="pdSt ok">Sem onda</span>':x.col?'<span class="pdSt ok">Coletada</span>':'<span class="pdSt warn">Não coletada</span>'):x.st==="pend"||x.st==="env"?'<span class="pdSt pend">'+(x.st==="env"?"Enviando":"Pendente")+"</span>":x.st==="rep"?'<span class="pdSt err">Já embalada</span>':'<span class="pdSt err">Não registrada</span>';
@@ -3501,7 +3502,7 @@ function paSugest(){const q=nrm($("#paP").value),box=$("#paSug");PAI=-1;PAL=[];
  if(!q||PAsel){box.innerHTML="";$("#paP").setAttribute("aria-expanded","false");return}
  const all=opsBusca(q,pdOpsGal());PAL=all.slice(0,8);box.innerHTML=opsCartoes(PAL,all.length,"data-pasug");$("#paP").setAttribute("aria-expanded",String(PAL.length>0))}
 function paEscolher(o){PAsel=o;$("#paP").value=o.m;PAL=[];PAI=-1;$("#paSug").innerHTML="";$("#paP").setAttribute("aria-expanded","false");paWho();const b=$("#paMot button");if(b&&!PAM)b.focus({preventScroll:true})}
-function paLista(){const el=$("#paL");if(!el)return;const now=Date.now(),L=PAUS.slice().sort((a,b)=>(!!a.fim-!!b.fim)||(b.ini-a.ini)),fora=L.filter(a=>!a.fim||a.fim>now).length;
+function paLista(){const el=$("#paL");if(!el)return;const now=Date.now(),L=PAUS.filter(a=>{const o=pdOp(a.oid);return galOk(o&&o.g)}).sort((a,b)=>(!!a.fim-!!b.fim)||(b.ini-a.ini)),fora=L.filter(a=>!a.fim||a.fim>now).length;
  $("#paN").textContent=fora?fora+" fora agora":"";
  el.innerHTML=L.length?`<table class="ausT"><tr><th>Pessoa</th><th>Motivo</th><th>Saída</th><th>Volta</th></tr>`+L.map(a=>{const nm=paNome(a.oid),aberta=!a.fim;
   return`<tr${aberta?' class="ab"':""}><td><div class="who2">${av(nm)}<div>${esc(nm)}</div></div></td><td><span class="ausTag">${esc(a.mot)}</span></td><td>${hmT(a.ini)}</td><td>${aberta?`<button type="button" class="btn sm" data-pav="${esc(a.id)}">Voltei</button><br><small>há ${durA(now-a.ini)}</small>`:`${hmT(a.fim)}<br><small>${durA(a.fim-a.ini)}</small>`}</td></tr>`}).join("")+"</table>"
