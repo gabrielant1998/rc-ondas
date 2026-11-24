@@ -97,6 +97,8 @@ function fake(db){const cors={'access-control-allow-origin':'*','access-control-
   if(t==='rpc/encerrar_ausencia'){const a=(db.aus||[]).find(x=>x.id===body.p_id);if(!a)return J(route,400,{code:'23503',message:'Ausência não encontrada'});if(!a.fim)a.fim=body.p_fim;return J(route,200,'ok')}
   if(t==='ausencias'&&m==='GET'){if(!g)return J(route,200,[]);return J(route,200,(db.aus||[]).filter(a=>escopo(a.galpao_id)))}
   if(t==='ausencias'&&m==='DELETE'){const a=(db.aus||[]).find(x=>x.id===eq('id'));if(!a||!(g&&g.pode_registros&&escopo(a.galpao_id)))return J(route,200,[]);db.aus=db.aus.filter(x=>x!==a);return J(route,200,[a])}
+  if(t==='rpc/registrar_acesso'){if(g){db.aud=db.aud||[];db.aud.push({id:db.aud.length+1,em:new Date().toISOString(),email:g.email,nome:g.nome,galpao_id:g.galpao_id,acao:body.p_acao,tabela:null,registro:null,antes:null,depois:null})}return J(route,204,null)}
+  if(t==='rpc/auditoria_listar'){if(!(g&&g.admin))return J(route,403,{code:'42501',message:'Só o administrador vê a auditoria'});return J(route,200,(db.aud||[]).slice().reverse())}
   if(t==='rpc/ondas_removidas'){db.calls.rem=(db.calls.rem||0)+1;return J(route,200,(body.p_ids||[]).filter(i=>!db.ondas.some(x=>x.id===i)))}
   if(t==='rpc/registrar_ondas'){db.calls.rpc++;return J(route,200,body.lote.map(o=>{
     if(db.ondas.some(x=>x.id===o.id))return{id:o.id,resultado:'ja_existia',detalhe:null};
@@ -343,6 +345,22 @@ await T('S103 Aparelho público: escolher o galpão mostra só as pessoas e regi
  let L=await p.textContent('#last');ok(L.includes('7202')&&!L.includes('7101'),'últimos registros: '+L.slice(0,200));
  await p.reload();await p.waitForTimeout(900);await p.evaluate(()=>go('op'));await p.waitForTimeout(200);ok((await p.$eval('#gal',e=>e.value))==='Galpão 2','não guardou o galpão no aparelho');
  await p.fill('#opIn','Carla');await p.waitForTimeout(200);ok((await p.$$('#opSug [data-sug]')).length===1,'não achou a pessoa do galpão escolhido')});
+
+await T('S104 Auditoria: entrada e saída do gestor ficam registradas e só o administrador vê a aba',async()=>{const db=banco();
+ db.aud=[{id:900,em:new Date(Date.now()-6e4).toISOString(),email:'g2@x.com',nome:'Gestor G2',galpao_id:G2,acao:'alterou',tabela:'operadores',registro:'x',antes:{nome:'Carla Dias',codigo:'CL002'},depois:{nome:'Carla Dias Souza',codigo:'CL002'}}];
+ const p=await page(b,db);await login(p,'g2@x.com','senha1234');await p.waitForTimeout(400);ok(db.aud.some(r=>r.acao==='entrou'&&r.email==='g2@x.com'),'não registrou a entrada do gestor');
+ await p.evaluate(()=>go('cfg'));await p.waitForTimeout(200);ok(!(await p.isVisible('#csub [data-c="cau"]'))&&!(await p.isVisible('.ssub button:has-text("Auditoria")')),'gestor comum vê a auditoria');
+ await p.click('#logbtn');await p.waitForTimeout(600);ok(db.aud.some(r=>r.acao==='saiu'&&r.email==='g2@x.com'),'não registrou a saída');
+ await login(p,'adm@x.com','senha1234');await p.evaluate(()=>{go('cfg');document.querySelector('#csub [data-c="cau"]').click()});await p.waitForTimeout(600);
+ const t=(await p.textContent('#audBody')).replace(/\s+/g,' ');ok(t.includes('Entrou')&&t.includes('Saiu')&&t.includes('Alterou')&&t.includes('Pessoa da coleta')&&t.includes('Carla Dias Souza')&&t.includes('último acesso'),'auditoria: '+t.slice(0,400));
+ await p.fill('#audQ','Carla');await p.waitForTimeout(100);ok((await p.$$('#audBody table tr')).length===2,'busca não filtrou');ok(!p.errors.length,p.errors.join(';'))});
+
+await T('S105 Administrador com G2 escolhido no topo: lista de concluídas do dia mostra só o G2',async()=>{const db=banco();const t=Date.now()-6e5;
+ db.ondas.push({id:'00000000-0000-4000-8000-00000000bb01',wn:'7301',operador_id:db.operadores[0].id,galpao_id:G1,tipo:'Vários artigos',quantidade:5,status:0,registrada_em:new Date(t).toISOString(),concluida_em:new Date(t).toISOString(),procura_hist:[]},
+  {id:'00000000-0000-4000-8000-00000000bb02',wn:'7402',operador_id:db.operadores[1].id,galpao_id:G2,tipo:'Vários artigos',quantidade:5,status:0,registrada_em:new Date(t).toISOString(),concluida_em:new Date(t).toISOString(),procura_hist:[]});
+ const p=await page(b,db);await login(p,'adm@x.com','senha1234');await p.evaluate(()=>go('op'));await p.selectOption('#gal','Galpão 2');await p.waitForTimeout(300);
+ const L=await p.textContent('#aceL');ok(L.includes('7402')&&!L.includes('7301'),'concluídas: '+L.replace(/\s+/g,' ').slice(0,200));
+ await p.selectOption('#gal','__all');await p.waitForTimeout(200);const T2=await p.textContent('#aceL');ok(T2.includes('7402')&&T2.includes('7301'),'visão geral deveria mostrar os dois')});
 
 await T('S22 Gestor comum vê só "Metas" do seu galpão, sem Galpões; admin vê tudo',async()=>{const db=banco();const p=await page(b,db);
  await login(p,'g2@x.com','senha1234');await p.click('.tab[data-t="cfg"]');

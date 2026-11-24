@@ -502,6 +502,11 @@ body[data-v=cfg] #turnoF,body[data-v=cfg] #gal,body[data-v=cfg] #day{display:non
 .pnLr .sq{width:12px;height:12px;border-radius:3px;display:inline-block}.pnLr small{display:block;color:var(--mut);font-size:12.5px}.pnLr em{font-style:normal;font-weight:700;text-align:right;color:var(--ink)}.pnLr em small{display:inline;font-weight:400}
 .pnLg{font-size:12.5px;color:var(--mut);margin:10px 0 0;font-weight:700}
 .pnRk6{grid-template-columns:repeat(auto-fit,minmax(130px,1fr));margin-top:8px}
+.audTop{display:flex;justify-content:space-between;align-items:center;gap:8px}.audF{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end;margin:10px 0 12px}.audF label{display:flex;flex-direction:column;font-size:12.5px;color:var(--mut);gap:4px}.audQ{flex:1;min-width:180px}
+.audT td{vertical-align:top}.audA{display:inline-block;padding:2px 8px;border-radius:999px;font-size:12px;font-weight:700;white-space:nowrap;background:var(--line);color:var(--ink)}
+.audA.entrou,.audA.abriu{background:rgba(47,184,102,.16);color:var(--bom)}.audA.saiu{background:var(--line);color:var(--mut)}.audA.criou{background:rgba(43,108,255,.14);color:var(--g)}.audA.alterou{background:rgba(245,166,35,.16);color:var(--o)}.audA.excluiu{background:rgba(229,72,77,.15);color:#e5484d}
+.audT details summary{cursor:pointer;color:var(--mut);font-size:12.5px}.audT .dif{font-size:12.5px;margin-top:4px}.audT .dif div{padding:2px 0}.audT .dif s{color:var(--mut)}
+.audUlt{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:8px;margin:0 0 12px}.audUlt div{border:1px solid var(--line);border-radius:10px;padding:8px 10px;font-size:13px}.audUlt b{display:block}.audUlt small{color:var(--mut)}
 .pnGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px;align-items:start}@media(max-width:1000px){.pnGrid{grid-template-columns:minmax(0,1fr)}}
 .pnH{display:flex;align-items:center;gap:8px;font:700 19px var(--fd);margin:0 0 10px}.pnDot{width:10px;height:10px;border-radius:2px;display:inline-block}
 .pnLen{margin-top:8px;font-size:14px;color:var(--ink)}.pnDir{margin:10px 0 4px;font-weight:600}.pdSt4{grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
@@ -723,7 +728,7 @@ body[data-v=cfg] #turnoF,body[data-v=cfg] #gal,body[data-v=cfg] #day{display:non
 
 <!-- ======================= CONFIG ======================= -->
 <section id="cfg" class="hide">
- <div class="sub" id="csub"><button data-c="cop" class="on">Geral</button><button data-c="cho">Horários e paradas</button><button data-c="cus">Pessoas coleta</button><button data-c="cpd" id="csPd">Pessoas embalagem</button><button data-c="cme" data-merge="1">Metas</button><button data-c="cga">Galpões</button><button data-c="cge" data-merge="1">Gestores</button><button data-c="cma">Manutenção</button></div>
+ <div class="sub" id="csub"><button data-c="cop" class="on">Geral</button><button data-c="cho">Horários e paradas</button><button data-c="cus">Pessoas coleta</button><button data-c="cpd" id="csPd">Pessoas embalagem</button><button data-c="cme" data-merge="1">Metas</button><button data-c="cga">Galpões</button><button data-c="cge" data-merge="1">Gestores</button><button data-c="cma">Manutenção</button><button data-c="cau" id="csAud">Auditoria</button></div>
 
  <div id="cop" class="grid two">
   <div class="card"><h2>Limite por onda</h2><div class="f" id="lims"></div>
@@ -794,6 +799,13 @@ body[data-v=cfg] #turnoF,body[data-v=cfg] #gal,body[data-v=cfg] #day{display:non
   <div class="card"><h2>Galpões</h2><div class="tw" id="gL"></div><div class="legend" id="gLeg">As metas ficam na aba Metas. Renomear um galpão atualiza os registros já lançados.</div></div>
  </div>
 
+ <div id="cau" class="hide"><div class="card"><div class="audTop"><h2>Auditoria dos gestores</h2><span class="pill" id="audN"></span></div>
+  <div class="ctl audF"><label>De<input type="date" id="audDe"></label><label>Até<input type="date" id="audAte"></label>
+   <label>Gestor<select id="audGes"><option value="">Todos</option></select></label>
+   <label>Mostrar<select id="audTipo"><option value="">Acessos e ações</option><option value="acesso">Só acessos</option><option value="acao">Só ações</option></select></label>
+   <label class="audQ">Buscar<input id="audQ" placeholder="Onda, pessoa, galpão" autocomplete="off"></label></div>
+  <div id="audBody"><div class="empty">Escolha o período.</div></div>
+  <div class="legend">Registra quando cada gestor entra, abre o sistema já logado e sai, e tudo o que ele cria, altera ou exclui. Registros do aparelho público (sem login) não entram aqui. Só o administrador vê esta aba, e ninguém consegue apagar ou mudar a auditoria pelo sistema.</div></div></div>
  <div id="cma" class="grid two hide"><div class="card hide" id="usoCard"><h2>Uso do banco de dados</h2><div id="usoBody" class="legend">Carregando…</div></div><div class="card"><h2>Apagar registros do banco</h2>
  <p class="legend">Apaga as ondas registradas no período escolhido. Só o administrador vê esta opção. Não tem volta: use "Ver quantos" antes.</p>
  <div class="f"><label>De<input type="date" id="xDe"></label><label>Até<input type="date" id="xAte"></label>
@@ -1098,7 +1110,7 @@ async function entrar(){const email=$("#lU").value.trim().toLowerCase(),pw=$("#l
  if(!email||!pw){toast("Informe e-mail e senha.");return}
  try{setSess(tok(await raw("/auth/v1/token?grant_type=password",{method:"POST",auth:false,body:{email,password:pw}})));sess.email=email;setSess(sess);
   await pull();if(!me)return;
-  $("#login").classList.add("hide");primeiroMode=false;$("#lP").value="";toast("Bem-vindo, "+me.n);const t=pend||"painel";pend=null;go(t)}
+  $("#login").classList.add("hide");primeiroMode=false;$("#lP").value="";toast("Bem-vindo, "+me.n);audAcesso("entrou");const t=pend||"painel";pend=null;go(t)}
  catch(e){if(e.status)setSess(null);toast(errMsg(e),6000)}}
 async function primeiroAcesso(){const email=$("#lU").value.trim().toLowerCase(),pw=$("#lP").value;
  const nome=$("#lN").value.trim(),gal=$("#lG").value;
@@ -1113,7 +1125,7 @@ async function primeiroAcesso(){const email=$("#lU").value.trim().toLowerCase(),
 async function esqueci(){const email=$("#lU").value.trim().toLowerCase();if(!email){toast("Informe seu e-mail no campo acima.");return}
  try{await raw("/auth/v1/recover?redirect_to="+voltaPara(),{method:"POST",auth:false,body:{email}});toast("Se o e-mail estiver cadastrado, enviamos um link para criar nova senha.",9000)}
  catch(e){toast(errMsg(e),6000)}}
-async function sair(){try{await raw("/auth/v1/logout",{method:"POST"})}catch(e){}
+async function sair(){await audAcesso("saiu");try{await raw("/auth/v1/logout",{method:"POST"})}catch(e){}
  setSess(null);me=null;cacheLimpar();limparGestao();publicKey="";publicSeq++;publicLoading=false;S.ges=[];S.waves=S.waves.filter(w=>!w.srv);save();authUI();toast("Sessão encerrada");go("painel")}
 function loginUI(){const pa=primeiroMode&&!recMode;$("#lNomeL").classList.toggle("hide",!pa);$("#lGalL").classList.toggle("hide",!pa);
  if(pa)$("#lG").innerHTML='<option value="">Escolha o galpão</option>'+S.gals.map(g=>`<option value="${esc(g)}">${esc(g)}</option>`).join("");
@@ -1176,7 +1188,7 @@ async function bootSrv(){let tinhaSess=false;try{tinhaSess=!!localStorage.getIte
  if(!tinhaSess)go("painel");await lerRetorno();
  if(tinhaSess&&await cacheAbrir()){authUI();go("painel");renderAll();bootDone();const t=document.getElementById("bootT");}
  try{await pull()}catch(e){if(e.status)toast(errMsg(e),6000)}
- authUI();if(!me&&tinhaSess)go("painel");renderAll();if(me&&!recMode)go("painel");push();if(me||!publicLoading)bootDone();setTimeout(()=>recuperarLocal().catch(()=>{}),2500);
+ authUI();if(!me&&tinhaSess)go("painel");renderAll();if(me&&!recMode)go("painel");push();if(me||!publicLoading)bootDone();setTimeout(()=>recuperarLocal().catch(()=>{}),2500);if(me)audAcesso("abriu");
  setInterval(push,15000);
  setInterval(()=>{if(online()&&document.visibilityState==="visible"&&!pushing)pull().then(()=>{renderAll();if(view==="ind")loadManagement();if(view==="op"&&!$("#aus").classList.contains("hide"))ausAbrir()}).catch(()=>{})},60000)}
 
@@ -2523,7 +2535,7 @@ const ABAS_T=[["painel","Painel"],["op","Coleta"],["prs","Procurando"],["ind","E
 const isI=t=>t==="ind"||t==="his";
 /* aba só aparece se o perfil atual pode abri-la; o que não é acessível fica oculto */
 function podeVer(t){if(t==="painel"&&ON&&!me)return false;if(t==="prod")return true;if(ON&&me&&!me.adm&&me.ab&&!me.ab.includes(t))return false;if(t==="op"||t==="prod"||t==="painel"||t==="prs")return true;if(ON)return !!me&&(isI(t)?!!me.pI:t==='cfg'?!!(me.pC||me.pI):!!me.pC);if(t==="painel")return true;return !needAuth(t)}
-function updTabs(){$$(".tab[data-t]").forEach(b=>{b.style.display=podeVer(b.dataset.t)?"":"none"});$$('#csub [data-c="cga"]').forEach(b=>{b.style.display=soMeta()?"none":""});$$('#fCard').forEach(c=>c.classList.toggle("hide",soMeta()));$$('#csub [data-c="cpd"]').forEach(b=>{let g=false;try{g=pdGestor()}catch(e){}b.style.display=g?"":"none"});$$('#csub [data-c="cge"]').forEach(b=>{b.style.display=soMeta()?"none":""});$$('#csub [data-c="cma"]').forEach(b=>{b.style.display=(!ON||(me&&me.adm))?"":"none"});{const soHor=ON&&me&&!me.adm&&!me.pC;$$('#csub [data-c="cop"],#csub [data-c="cus"],#csub [data-c="cme"],#csub [data-c="cho"]').forEach(b=>{b.style.display=''});if(soHor)$$('#csub button').forEach(b=>{if(b.dataset.c!=='cho')b.style.display='none'})}if(!podeVer(view)){view="op";["painel","op","prs","ind","his","cfg"].forEach(s=>$("#"+s).classList.toggle("hide",s!=="op"));$$(".tab[data-t]").forEach(b=>b.classList.toggle("on",b.dataset.t==="op"))}}
+function updTabs(){$$(".tab[data-t]").forEach(b=>{b.style.display=podeVer(b.dataset.t)?"":"none"});$$('#csub [data-c="cga"]').forEach(b=>{b.style.display=soMeta()?"none":""});$$('#fCard').forEach(c=>c.classList.toggle("hide",soMeta()));$$('#csub [data-c="cpd"]').forEach(b=>{let g=false;try{g=pdGestor()}catch(e){}b.style.display=g?"":"none"});$$('#csub [data-c="cge"]').forEach(b=>{b.style.display=soMeta()?"none":""});$$('#csub [data-c="cma"]').forEach(b=>{b.style.display=(!ON||(me&&me.adm))?"":"none"});$$('#csub [data-c="cau"]').forEach(b=>{b.style.display=(ON&&me&&me.adm)?"":"none"});{const soHor=ON&&me&&!me.adm&&!me.pC;$$('#csub [data-c="cop"],#csub [data-c="cus"],#csub [data-c="cme"],#csub [data-c="cho"]').forEach(b=>{b.style.display=''});if(soHor)$$('#csub button').forEach(b=>{if(b.dataset.c!=='cho')b.style.display='none'})}if(!podeVer(view)){view="op";["painel","op","prs","ind","his","cfg"].forEach(s=>$("#"+s).classList.toggle("hide",s!=="op"));$$(".tab[data-t]").forEach(b=>b.classList.toggle("on",b.dataset.t==="op"))}}
 let hWho="";
 function authUI(){const w=me?me.n+"|"+(me.g||"")+"|"+(me.adm?1:0):"";if(w!==hWho){hWho=w;hKey="";HW=null;HPW=null}$("#who").textContent=me?"Gestor: "+me.n:"";const pub=ON&&!me;["#turnoF","#day"].forEach(i=>$(i).classList.toggle("hide",pub));$("#gal").classList.remove("hide");if(pub){$("#turnoF").value="";$("#day").value=dk(Date.now())}$("#logtx").textContent=me?"Sair":"Entrar";$("#pwbtn").classList.toggle("hide",!me);updTabs();if(ON&&!me&&view==="painel")go("op")}
 function go(t){if(t==="painel"&&ON&&!me)t="op";if(ON&&me&&!me.adm&&me.ab&&!podeVer(t)){const f=ABAS_T.find(([k])=>podeVer(k));if(f)t=f[0]}setTimeout(()=>{try{sideSubs()}catch(e){}},0);
@@ -2567,7 +2579,8 @@ function netUI(){const n=$("#net"),o=online(),p=S.waves.filter(w=>!w.sync).lengt
  const pc=Math.round(storeLen/LIM_STORE*100),e=$("#stor");e.classList.toggle("hide",pc<70);e.className="pill "+(pc>=90?"off":"warn")+(pc<70?" hide":"");e.textContent="Memória "+pc+"%";e.title="Uso do armazenamento deste aparelho"}
 const myG=()=>(me&&me.g&&S.gals.includes(me.g))?me.g:S.gal;
 const restricted=()=>ON?!!me&&!me.adm:S.ges.length>0&&!(me&&me.adm);
-const inView=w=>{if(ON&&!me){const g=galAtual();return !g||w.gal===g}return !restricted()||w.gal===myG()};
+/* o que aparece nas listas segue o galpão escolhido no topo (gestor comum: sempre o seu) */
+const inView=w=>{if(!(ON&&!me)&&restricted()&&w.gal!==myG())return false;const g=galAtual();return !g||w.gal===g};
 const galOk=g=>{const a=galAtual();return !a||!g||g===a};
 const visG=()=>restricted()?[myG()]:S.gals;
 const inTurno=w=>{const f=$("#turnoF").value;if(!f)return true;const o=opOf(w.op);return!!o&&String(o.t)===f};
@@ -2690,7 +2703,7 @@ document.addEventListener("click",e=>{const t=e.target;if(t.id==="prAdd"){const 
 function psub(k){window.__ps=k;$$("#psub button").forEach(b=>b.classList.toggle("on",b.dataset.p===(k==="sku"?"bip":k)));[["bip","pBip"],["sku","pSku"],["his","pHis"]].forEach(([a,id])=>$("#"+id).classList.toggle("hide",k==="his"?a!=="his":a==="his"));setTimeout(()=>{if(view!=="prs")return;const f=k==="bip"?$("#prBip"):k==="sku"?$("#prQ"):null;if(f)f.focus({preventScroll:true})},60)}
 $("#psub").onclick=e=>{const k=e.target.dataset.p;if(k)psub(k)};
 $("#sub").onclick=e=>{const s=e.target.dataset.s;if(!s)return;$$("#sub button").forEach(b=>b.classList.toggle("on",b===e.target));["reg","ctl","ace","aus"].forEach(x=>$("#"+x).classList.toggle("hide",x!==s));tick();if(s==="ace")aceLista();if(s==="aus")ausAbrir()};
-$("#csub").onclick=e=>{const c=e.target.dataset.c;if(!c)return;csub=c;$$("#csub button").forEach(b=>b.classList.toggle("on",b===e.target));{const G={cop:["cop","cme"],cme:["cop","cme"],cus:["cus","cge"],cge:["cus","cge"]}[c]||[c],gv=x=>x!=="cge"||!soMeta();["cop","cho","cus","cpd","cme","cga","cge","cma"].forEach(x=>$("#"+x).classList.toggle("hide",!(G.includes(x)&&gv(x))));$$("#csub button").forEach(b=>b.classList.toggle("on",b.dataset.c===({cme:"cop",cge:"cus"}[c]||c)))}if(c==="cus"&&ON&&me&&me.adm)pull().then(()=>cfgGes()).catch(()=>{});if(c==="cge"&&ON&&me&&me.adm)pull().then(()=>cfgGes()).catch(()=>{});if(c==="cma")cfgMan();if(c==="cho")cfgParadas();if(c==="cpd")pdAbrirDis()};
+$("#csub").onclick=e=>{const c=e.target.dataset.c;if(!c)return;csub=c;$$("#csub button").forEach(b=>b.classList.toggle("on",b===e.target));{const G={cop:["cop","cme"],cme:["cop","cme"],cus:["cus","cge"],cge:["cus","cge"]}[c]||[c],gv=x=>x!=="cge"||!soMeta();["cop","cho","cus","cpd","cme","cga","cge","cma","cau"].forEach(x=>$("#"+x).classList.toggle("hide",!(G.includes(x)&&gv(x))));$$("#csub button").forEach(b=>b.classList.toggle("on",b.dataset.c===({cme:"cop",cge:"cus"}[c]||c)))}if(c==="cus"&&ON&&me&&me.adm)pull().then(()=>cfgGes()).catch(()=>{});if(c==="cge"&&ON&&me&&me.adm)pull().then(()=>cfgGes()).catch(()=>{});if(c==="cma")cfgMan();if(c==="cau")audAbrir();if(c==="cho")cfgParadas();if(c==="cpd")pdAbrirDis()};
 $("#iPrint").onclick=imprimirFolhas;$("#iOp").onchange=()=>{mgShown=100;individual()};$("#iPer").onchange=()=>{mgShown=100;individual();coletiva();loadManagement()};
 $("#iBody").addEventListener("click",e=>{if(e.target.id==="mgMore"){mgShown+=100;individual()}if(e.target.id==="mgTurnoSave")mgSalvarTurno();if(e.target.id==="presSalvar")presSalvar();if(e.target.id==="presBaixa")presBaixa();if(e.target.id==="presAtrSalvar")presAtrSalvar();if(e.target.dataset&&e.target.dataset.cancel)presCancelar(e.target.dataset.cancel)});
 const hojeSemana=()=>mondayOf(dk(Date.now()));
@@ -3567,6 +3580,37 @@ async function pausRel(force){const el=$("#hPaus");if(!el)return;if(!PAUSR.de){c
  PAUSR.key=key;PAUSR.at=Date.now();if(HS==="paus")el.innerHTML=head+pausRelHtml()}
 document.addEventListener("change",e=>{const id=e.target.id;if(id==="prDe"||id==="prAte"){const de=$("#prDe").value,ate=$("#prAte").value;if(!de||!ate)return;if(ate<de){toast("A data final é anterior à inicial");return}PAUSR.de=de;PAUSR.ate=ate;pausRel(true)}else if(id==="prGal"){PAUSR.g=e.target.value;pausRel()}});
 
+
+/* ===== Auditoria dos gestores (só administrador) ===== */
+async function audAcesso(a){if(!ON||!me||!online())return;try{await Promise.race([api("/rest/v1/rpc/registrar_acesso",{method:"POST",body:{p_acao:a}}),new Promise(r=>setTimeout(r,2500))])}catch(e){}}
+var AUD={rows:[],key:""};
+const AUD_ACAO={entrou:"Entrou",abriu:"Abriu o sistema",saiu:"Saiu",criou:"Criou",alterou:"Alterou",excluiu:"Excluiu"};
+const AUD_TAB={ondas:"Onda",operadores:"Pessoa da coleta",gestores:"Gestor",galpoes:"Galpão",config:"Configurações",metas_diarias:"Meta do dia",tipos_onda:"Tipo de onda",ausencias:"Ausência da coleta",paradas:"Parada",presenca_registros:"Presença",presenca_baixas:"Baixa de presença",presenca_atrasos:"Atraso",solicitacoes_gestor:"Pedido de acesso",prod_pessoas:"Pessoa da embalagem",prod_atribuicoes:"Posto da embalagem",prod_metas:"Meta da embalagem",prod_turnos:"Turno da embalagem",prod_bipagens:"Embalagem",prod_ausencias:"Ausência da embalagem"};
+const AUD_IGN=new Set(["atualizado_em","criado_em","criada_em","wn_norm","procura_hist"]);
+function audResumo(r){const x=r.depois||r.antes||{},nm=v=>v&&(v.nome||v.n);
+ if(r.tabela==="ondas")return"Onda "+(x.wn||"")+" · "+fmt(x.quantidade||0)+" un."+(OPSALL[x.operador_id]?" · "+OPSALL[x.operador_id].nome:"");
+ if(r.tabela==="prod_bipagens")return(x.origem==="quantidade"?fmt(x.quantidade)+" embalagens":"Onda "+(x.wn||""))+(x.pessoa_id&&pdOp(x.pessoa_id)?" · "+pdOp(x.pessoa_id).n:"");
+ if((r.tabela==="ausencias"||r.tabela==="prod_ausencias"))return(x.motivo||"")+((OPSALL[x.operador_id]||{}).nome?" · "+OPSALL[x.operador_id].nome:"");
+ return nm(x)||x.email||x.wn||(x.dia?new Date(x.dia+"T12:00").toLocaleDateString("pt-BR"):"")||r.registro||""}
+function audDif(r){if(r.acao!=="alterou"||!r.antes||!r.depois)return"";const L=Object.keys(r.depois).filter(k=>!AUD_IGN.has(k)&&JSON.stringify(r.antes[k])!==JSON.stringify(r.depois[k]));
+ if(!L.length)return"";const v=x=>x==null||x===""?"vazio":typeof x==="object"?JSON.stringify(x).slice(0,80):String(x).slice(0,80);
+ return`<details><summary>${L.length} ${L.length===1?"campo mudou":"campos mudaram"}</summary><div class="dif">${L.slice(0,12).map(k=>`<div><b>${esc(k)}</b>: <s>${esc(v(r.antes[k]))}</s> → ${esc(v(r.depois[k]))}</div>`).join("")}</div></details>`}
+function audAbrir(){if(!(ON&&me&&me.adm))return;if(!$("#audDe").value){const d=new Date();$("#audAte").value=hoje();d.setDate(d.getDate()-6);$("#audDe").value=dk(d)}
+ const sel=$("#audGes"),v=sel.value;sel.innerHTML='<option value="">Todos</option>'+S.ges.map(g=>`<option value="${esc(g.u)}">${esc(g.n)}${g.g?" · "+esc(g.g):g.adm?" · administrador":""}</option>`).join("");sel.value=v;audCarregar()}
+async function audCarregar(){const de=$("#audDe").value,ate=$("#audAte").value,box=$("#audBody");if(!de||!ate)return;if(ate<de){toast("A data final é anterior à inicial");return}
+ box.innerHTML='<div class="skel" aria-label="Carregando auditoria"><i></i><i></i></div>';
+ try{AUD.rows=await api("/rest/v1/rpc/auditoria_listar",{method:"POST",body:{p_ini:de,p_fim:ate,p_email:$("#audGes").value||null,p_tipo:$("#audTipo").value||null}});audRender()}
+ catch(e){box.innerHTML='<div class="empty">Não foi possível carregar a auditoria. '+esc(errMsg(e))+"</div>"}}
+function audRender(){const box=$("#audBody");if(!box)return;const q=nrm($("#audQ").value||""),hr=t=>new Date(t).toLocaleString("pt-BR",{day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit",second:"2-digit"});
+ const R=AUD.rows.filter(r=>!q||nrm([r.nome,r.email,AUD_TAB[r.tabela],audResumo(r),GN[r.galpao_id]].join(" ")).includes(q));
+ $("#audN").textContent=R.length?fmt(R.length)+(R.length===1?" registro":" registros"):"";
+ const ult={};AUD.rows.filter(r=>/entrou|abriu/.test(r.acao)).forEach(r=>{if(!ult[r.email]||r.em>ult[r.email].em)ult[r.email]=r});
+ const U=Object.values(ult).sort((a,b)=>a.em<b.em?1:-1);
+ box.innerHTML=(U.length?`<div class="audUlt">${U.map(r=>`<div><b>${esc(r.nome||r.email)}</b><small>último acesso ${hr(r.em)}${r.galpao_id&&GN[r.galpao_id]?" · "+esc(GN[r.galpao_id]):""}</small></div>`).join("")}</div>`:"")
+  +(R.length?`<div class="tw"><table class="audT"><tr><th>Quando</th><th>Gestor</th><th>Ação</th><th>Onde</th><th>O quê</th></tr>${R.slice(0,1500).map(r=>`<tr><td>${hr(r.em)}</td><td><b>${esc(r.nome||r.email||"—")}</b>${r.galpao_id&&GN[r.galpao_id]?"<br><small>"+esc(GN[r.galpao_id])+"</small>":""}</td><td><span class="audA ${r.acao}">${AUD_ACAO[r.acao]||r.acao}</span></td><td>${esc(AUD_TAB[r.tabela]||r.tabela||"—")}</td><td>${esc(audResumo(r))}${audDif(r)}</td></tr>`).join("")}</table></div>${R.length>1500?'<div class="legend">Mostrando os 1.500 mais recentes. Use os filtros para ver o resto.</div>':""}`
+  :'<div class="empty">Nenhum acesso ou ação no período com esses filtros.</div>')}
+document.addEventListener("change",e=>{const id=e.target.id;if(id==="audDe"||id==="audAte"||id==="audGes"||id==="audTipo")audCarregar()});
+document.addEventListener("input",e=>{if(e.target.id==="audQ")audRender()});
 /* mini abas na lateral: espelham as abas internas de cada área */
 const SUBS={prod:["pasub","pa"],op:["sub","s"],ind:["gsub","gs"],prs:["psub","p"],his:["hsub","hs"],cfg:["csub","c"]};
 function sideSubs(){
