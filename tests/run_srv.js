@@ -90,6 +90,7 @@ function fake(db){const cors={'access-control-allow-origin':'*','access-control-
     const dia=new Date(Date.parse(x.bipada_em)-3*36e5).toISOString().slice(0,10);
     db.pb.push({id:x.id,wn:x.wn,pessoa_id:o.id,andar:a.andar,atividade:a.atividade,turno_id:a.turno_id,bipada_em:x.bipada_em,dia,quantidade:ehQ?x.quantidade:1,origem:ehQ?'quantidade':'bipagem'});
     if(!db.pp.some(z=>z.pessoa_id===o.id&&z.dia===dia)){db.pp.push({pessoa_id:o.id,dia,primeira_id:x.id});r.presenca_nova=true}return r}))}
+  if(t==='rpc/uso_banco'){if(!(g&&g.admin))return J(route,403,{code:'42501',message:'Sem permissão'});return J(route,200,{banco_bytes:18*1048576,ondas:db.ondas.length,ondas_bytes:9*1048576,auditoria_bytes:320000,limite_bytes:500*1048576})}
   if(t==='rpc/ausencias_publicas'){return J(route,200,(db.aus||[]).filter(a=>new Date(Date.parse(a.inicio)-3*36e5).toISOString().slice(0,10)===body.p_dia))}
   if(t==='rpc/registrar_ausencia'){const op=db.operadores.find(o=>o.id===body.p_operador&&!o.excluido_em);if(!op)return J(route,400,{code:'23503',message:'Pessoa não encontrada'});
    const ms=db.config[0].motivos_ausencia||['Ajudando na Rua','Embalando'];if(!ms.includes(body.p_motivo))return J(route,400,{code:'23514',message:'Motivo de ausência inválido'});
@@ -381,6 +382,29 @@ await T('S107 Aparelho do gestor guarda só a semana e as ondas abertas; dia ant
  const dia=new Date(Date.now()-20*864e5-3*36e5).toISOString().slice(0,10);await p.evaluate(dd=>{go('op');$('#day').value=dd;$('#day').dispatchEvent(new Event('change'))},dia);await p.waitForTimeout(900);
  w=await p.evaluate(()=>S.waves.filter(x=>x.srv).map(x=>x.wn));ok(w.includes('9101'),'não buscou o dia antigo: '+w+' chamadas '+JSON.stringify(db.calls.ondas));ok(db.calls.ondas.dias===1,'buscas do dia: '+JSON.stringify(db.calls.ondas));
  await p.evaluate(()=>renderAll());await p.waitForTimeout(300);ok(db.calls.ondas.dias===1,'buscou de novo o mesmo dia');ok(!p.errors.length,p.errors.join(';'))});
+
+await T('S108 Filtro de data: ausências da coleta e bipagens da embalagem seguem o dia escolhido no topo',async()=>{const db=banco();
+ const dk=ms=>new Date(ms-3*36e5).toISOString().slice(0,10),agora=Date.now(),ant=agora-3*864e5,o0=db.operadores[0],o1=db.operadores[1];
+ db.aus=[{id:'00000000-0000-4000-8000-0000000aa001',operador_id:o0.id,galpao_id:o0.galpao_id,motivo:'Banheiro',inicio:new Date(agora-6e5).toISOString(),fim:null},
+  {id:'00000000-0000-4000-8000-0000000aa002',operador_id:o1.id,galpao_id:o1.galpao_id,motivo:'Banheiro',inicio:new Date(ant).toISOString(),fim:new Date(ant+6e5).toISOString()}];
+ db.ppes=[{id:'00000000-0000-4000-8000-0000000bb001',codigo:'PR001',nome:'Bia Embalagem',galpao_id:G1,excluido_em:null}];
+ db.pb=[];db.pb.push({id:'00000000-0000-4000-8000-0000000cc001',wn:'7001',pessoa_id:'00000000-0000-4000-8000-0000000bb001',andar:'mezanino',atividade:'mesa',turno_id:1,bipada_em:new Date(agora-6e5).toISOString(),dia:dk(agora),quantidade:1,origem:'bipagem'},
+  {id:'00000000-0000-4000-8000-0000000cc002',wn:'7002',pessoa_id:'00000000-0000-4000-8000-0000000bb001',andar:'mezanino',atividade:'mesa',turno_id:1,bipada_em:new Date(ant).toISOString(),dia:dk(ant),quantidade:1,origem:'bipagem'});
+ const p=await page(b,db);await login(p,'adm@x.com','senha1234');await p.waitForTimeout(300);
+ await p.evaluate(()=>{go('op');document.querySelector('#sub [data-s="aus"]').click()});await p.waitForTimeout(500);
+ let t=await p.textContent('#ausL');ok(t.includes(o0.nome.split(' ')[0])&&!t.includes(o1.nome.split(' ')[0]),'hoje: '+t);
+ await p.evaluate(d=>{$('#day').value=d;$('#day').dispatchEvent(new Event('change'))},dk(ant));await p.waitForTimeout(600);
+ t=await p.textContent('#ausL');ok(t.includes(o1.nome.split(' ')[0])&&!t.includes(o0.nome.split(' ')[0]),'dia antigo: '+t);
+ const tit=await p.evaluate(()=>document.querySelector('#ausL').closest('.card').querySelector('h2').textContent);ok(/Ausentes em \d\d\/\d\d/.test(tit),'título: '+tit);
+ await p.evaluate(()=>go('prod'));await p.waitForTimeout(600);t=await p.textContent('#pdL');ok(t.includes('7002')&&!t.includes('7001'),'embalagem dia antigo: '+t);
+ await p.evaluate(d=>{$('#day').value=d;$('#day').dispatchEvent(new Event('change'))},dk(agora));await p.waitForTimeout(600);
+ t=await p.textContent('#pdL');ok(t.includes('7001')&&!t.includes('7002'),'embalagem hoje: '+t);ok(!p.errors.length,p.errors.join(';'))});
+
+await T('S109 Barra do banco vai enchendo em Manutenção e aparece na Auditoria',async()=>{const db=banco();const p=await page(b,db);await login(p,'adm@x.com','senha1234');
+ await p.evaluate(()=>{go('cfg');document.querySelector('#csub [data-c="cma"]').click()});await p.waitForTimeout(1800);
+ const w=await p.evaluate(()=>document.querySelector('#usoBody .usoBar b').style.width);ok(w==='3.6%','largura: '+w);ok((await p.textContent('#usoBody')).includes('auditoria ocupa'),'sem auditoria');
+ if(process.env.SHOT)await (await p.$('#usoCard')).screenshot({path:process.env.SHOT});
+ await p.evaluate(()=>document.querySelector('#csub [data-c="cau"]').click());await p.waitForTimeout(1500);ok((await p.textContent('#audUso')).includes('Banco de dados'),'sem barra na auditoria');ok((await p.textContent('#cau')).includes('guarda 1 ano'),'sem aviso de 1 ano');ok(!p.errors.length,p.errors.join(';'))});
 
 await T('S22 Gestor comum vê só "Metas" do seu galpão, sem Galpões; admin vê tudo',async()=>{const db=banco();const p=await page(b,db);
  await login(p,'g2@x.com','senha1234');await p.click('.tab[data-t="cfg"]');

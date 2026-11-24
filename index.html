@@ -323,7 +323,7 @@ td .btn.d:hover,td .pill.off[data-adel]:hover{background:var(--r);color:#fff;bor
 .pfh .pft{flex:1;min-width:200px}.pfh .pft h2{font:700 22px/1.1 var(--fd);margin:0 0 2px}.pfh .pfn{display:flex;align-items:center;gap:8px}
 .pfg{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);gap:12px;margin-top:12px;align-items:start}@media(max-width:900px){.pfg{grid-template-columns:minmax(0,1fr)}}.pfg>.card{min-width:0}
 .almC{font-size:13px;color:var(--mut);margin-top:4px;white-space:nowrap}.almC input{min-height:28px;padding:2px 4px;font-size:12px;width:auto}
-.cobig{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}.cobig b{font-size:34px;line-height:1}.cobig span{color:var(--mut);font-size:13px}.bar.cob{height:10px;margin-top:8px}
+.cobig{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}.cobig b{font-size:34px;line-height:1}.cobig span{color:var(--mut);font-size:13px}.bar.cob{height:10px;margin-top:8px}.usoW{display:block;width:100%;flex:1 0 100%}.usoBar{position:relative;height:14px;margin-top:10px;background:var(--line);border-radius:7px;overflow:hidden}.usoBar b{display:block;height:100%;border-radius:7px;transition:width 1.2s cubic-bezier(.2,.8,.2,1)}.usoBar i{position:absolute;top:0;bottom:0;width:2px;background:var(--mut);opacity:.55}.usoEsc{position:relative;height:16px;font-size:11px;color:var(--mut);margin-top:3px}.usoEsc span{position:absolute;left:0}.usoEsc span:last-child{left:auto;right:0}.usoEsc span[style]{transform:translateX(-50%)}.usoMini{margin:0 0 12px;font-size:13px;color:var(--mut)}.usoMini b{color:var(--ink,inherit)}
 .tw i.dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:7px;vertical-align:middle}
 .pg{display:flex;align-items:center;gap:10px;justify-content:flex-end;margin-top:8px;font-size:13px;color:var(--mut)}
 .pzB{grid-column:1/-1;border-top:1px dashed var(--line);padding-top:8px;margin-bottom:6px;display:grid;gap:6px}.hrG{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 14px}.hrG button{min-height:40px;padding:6px 14px;border:1px solid var(--line);border-radius:999px;background:none;color:var(--ink);font:600 14px var(--fb);cursor:pointer}.hrG button.on{background:var(--g);border-color:var(--g);color:#fff}
@@ -643,7 +643,7 @@ body[data-v=cfg] #turnoF,body[data-v=cfg] #gal,body[data-v=cfg] #day{display:non
     <button class="btn" type="submit" id="ausB">Registrar ausência</button>
    </form>
    <div class="legend">Use quando sair do posto por outro trabalho. Na volta, toque em “Voltei” na lista ao lado.</div></div>
-  <div class="card"><h2>Ausentes hoje <span class="pill" id="ausN"></span></h2><div class="tw" id="ausL"></div></div>
+  <div class="card"><h2>Ausentes <span class="diaT">hoje</span> <span class="pill" id="ausN"></span></h2><div class="tw" id="ausL"></div></div>
  </div>
 
   <div id="ace" class="grid two hide">
@@ -666,7 +666,7 @@ body[data-v=cfg] #turnoF,body[data-v=cfg] #gal,body[data-v=cfg] #day{display:non
     <button class="btn" type="submit" id="paB">Registrar ausência</button>
    </form>
    <div class="legend">Use quando a pessoa sair do posto da embalagem. Na volta, toque em “Voltei” na lista ao lado. Este registro é só do pessoal da embalagem e não mistura com a Coleta.</div></div>
-  <div class="card"><h2>Ausentes hoje <span class="pill" id="paN"></span></h2><div class="tw" id="paL"></div></div>
+  <div class="card"><h2>Ausentes <span class="diaT">hoje</span> <span class="pill" id="paN"></span></h2><div class="tw" id="paL"></div></div>
  </div>
  <div id="pdBipV" class="grid two">
   <div class="card"><h2>Embalar ondas</h2>
@@ -685,7 +685,7 @@ body[data-v=cfg] #turnoF,body[data-v=cfg] #gal,body[data-v=cfg] #day{display:non
    </div>
    <div class="legend">Bipe uma onda por vez, ou use “Só a quantidade” para lançar quantas embalagens a pessoa fez, sem bipar cada onda. O primeiro registro do dia marca a presença da pessoa. Ondas sem registro na Coleta ficam como “Não coletada”.</div>
   </div>
-  <div class="card"><h2>Bipagens de hoje <span class="pill" id="pdN"></span></h2>
+  <div class="card"><h2>Bipagens <span class="diaT">hoje</span> <span class="pill" id="pdN"></span></h2>
    <label class="hint" style="display:block;margin-bottom:8px">Pesquisar<input id="pdQ" type="search" placeholder="Número da onda ou nome" autocomplete="off"></label>
    <div class="tw" id="pdL"></div></div>
  </div>
@@ -804,8 +804,8 @@ body[data-v=cfg] #turnoF,body[data-v=cfg] #gal,body[data-v=cfg] #day{display:non
    <label>Gestor<select id="audGes"><option value="">Todos</option></select></label>
    <label>Mostrar<select id="audTipo"><option value="">Acessos e ações</option><option value="acesso">Só acessos</option><option value="acao">Só ações</option></select></label>
    <label class="audQ">Buscar<input id="audQ" placeholder="Onda, pessoa, galpão" autocomplete="off"></label></div>
-  <div id="audBody"><div class="empty">Escolha o período.</div></div>
-  <div class="legend">Registra quando cada gestor entra, abre o sistema já logado e sai, e tudo o que ele cria, altera ou exclui. Registros do aparelho público (sem login) não entram aqui. Só o administrador vê esta aba, e ninguém consegue apagar ou mudar a auditoria pelo sistema.</div></div></div>
+  <div id="audUso"></div><div id="audBody"><div class="empty">Escolha o período.</div></div>
+  <div class="legend">Registra quando cada gestor entra, abre o sistema já logado e sai, e tudo o que ele cria, altera ou exclui. Registros do aparelho público (sem login) não entram aqui. Só o administrador vê esta aba, e ninguém consegue apagar ou mudar a auditoria pelo sistema. A auditoria guarda 1 ano: registros com mais de 1 ano saem sozinhos.</div></div></div>
  <div id="cma" class="grid two hide"><div class="card hide" id="usoCard"><h2>Uso do banco de dados</h2><div id="usoBody" class="legend">Carregando…</div></div><div class="card"><h2>Apagar registros do banco</h2>
  <p class="legend">Apaga as ondas registradas no período escolhido. Só o administrador vê esta opção. Não tem volta: use "Ver quantos" antes.</p>
  <div class="f"><label>De<input type="date" id="xDe"></label><label>Até<input type="date" id="xAte"></label>
@@ -891,6 +891,9 @@ if(!S){ /* migra base antiga, se existir */
 Object.keys(DEF.cfg).forEach(k=>{if(S.cfg[k]==null)S.cfg[k]=JSON.parse(JSON.stringify(DEF.cfg[k]))});
 if(!S.metasDia)S.metasDia={};
 function hoje(){const d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")}
+function diaSel(){const e=document.getElementById("day");return(e&&e.value)||hoje()}
+function diaTxt(){const d=diaSel();return d===hoje()?"hoje":"em "+new Date(d+"T12:00:00").toLocaleDateString("pt-BR",{day:"2-digit",month:"2-digit"})}
+function diaTit(){document.querySelectorAll(".diaT").forEach(e=>e.textContent=diaTxt())}
 function MI(){S.metasInd=S.metasInd||{};return S.metasInd}
 /* Retrabalho não entra nas metas (do dia, coletiva e individual); tem meta individual própria */
 const RET='Retrabalho',semRet=a=>a.filter(w=>w.ty!==RET),soRet=a=>a.filter(w=>w.ty===RET),qtdOf=a=>a.reduce((s,w)=>s+w.qty,0);
@@ -2182,8 +2185,8 @@ const durA=ms=>{const m=Math.max(0,Math.round(ms/6e4));return m<60?m+" min":Math
 let ausSel=null,ausI=-1,ausL2=[];
 function ausFind(v){if(ausSel&&ausSel.m===String(v||"").trim()){const x=S.ops.find(o=>o===ausSel||(o.id&&o.id===ausSel.id));if(x)return x}const o=findOp(v);if(o)return o;const q=nrm(v);if(q.length<2)return null;const L=S.ops.filter(x=>nrm(x.n).includes(q)||nrm(x.m)===q);return L.length===1?L[0]:null}
 const ausMap=x=>({id:x.id,oid:x.operador_id,mot:x.motivo,ini:Date.parse(x.inicio),fim:x.fim?Date.parse(x.fim):null});
-async function ausCarregar(){if(!ON){AUS=(S.aus||[]).filter(a=>dk(a.ini)===hoje());return}
- if(!online())return;try{AUS=(await api("/rest/v1/rpc/ausencias_publicas",{method:"POST",body:{p_dia:hoje()}})).map(ausMap);AUS_AT=Date.now()}catch(e){}}
+async function ausCarregar(){diaTit();if(!ON){AUS=(S.aus||[]).filter(a=>dk(a.ini)===diaSel());return}
+ if(!online())return;try{AUS=(await api("/rest/v1/rpc/ausencias_publicas",{method:"POST",body:{p_dia:diaSel()}})).map(ausMap);AUS_AT=Date.now()}catch(e){}}
 async function ausAbrir(){ausForm();ausLista();await ausCarregar();ausLista()}
 function ausForm(){const M=motivos();if(!M.includes(AUSM))AUSM=null;
  $("#ausMot").innerHTML=M.map(m=>`<button type="button" class="ausC" data-ausm="${esc(m)}" aria-pressed="${m===AUSM}">${esc(m)}</button>`).join("");
@@ -2197,7 +2200,7 @@ function ausLista(){const el=$("#ausL");if(!el)return;const now=Date.now(),L=AUS
  $("#ausN").textContent=fora?fora+(fora===1?" fora agora":" fora agora"):"";
  el.innerHTML=L.length?`<table class="ausT"><tr><th>Pessoa</th><th>Motivo</th><th>Saída</th><th>Volta</th></tr>`+L.map(a=>{const o=OPSALL[a.oid],nm=o?o.nome:((S.ops.find(x=>x.id===a.oid)||{}).n||"—"),aberta=!a.fim;
   return`<tr${aberta?' class="ab"':""}><td><div class="who2">${av(nm)}<div>${esc(nm)}</div></div></td><td><span class="ausTag">${esc(a.mot)}</span></td><td>${hmT(a.ini)}</td><td>${aberta?`<button type="button" class="btn sm" data-ausv="${esc(a.id)}">Voltei</button><br><small>há ${durA(now-a.ini)}</small>`:`${hmT(a.fim)}<br><small>${durA(a.fim-a.ini)}</small>`}</td></tr>`}).join("")+"</table>"
-  :'<div class="empty">Ninguém ausente hoje.</div>'}
+  :'<div class="empty">Ninguém ausente '+diaTxt()+'.</div>'}
 function ausHora(v){const m=hm2m(v);if(m==null)return null;const d=new Date();d.setHours(0,0,0,0);return d.getTime()+m*6e4}
 async function ausSalvar(){const o=ausFind($("#ausP").value);if(!o){toast("Escolha o seu nome na lista.");$("#ausP").focus();return}
  if(!AUSM){toast("Escolha o motivo da ausência.");return}
@@ -2308,11 +2311,15 @@ function xMan(){const de=$("#xDe").value,ate=$("#xAte").value,gn=$("#xGal").valu
  if(ate<de){toast("A data final é anterior à inicial");return null}
  return{de,ate,gn,gid:gn&&ON?GID[gn]:null}}
 function xLocal(q){const a=new Date(q.de+"T00:00:00").getTime(),b=new Date(q.ate+"T00:00:00").getTime()+864e5;return S.waves.filter(w=>w.ts>=a&&w.ts<b&&(!q.gn||w.gal===q.gn))}
-async function usoBanco(){const c=$("#usoCard");if(!c)return;if(!ON||!me||!me.adm){c.classList.add("hide");return}c.classList.remove("hide");
- try{const u=await api("/rest/v1/rpc/uso_banco",{method:"POST",body:{}}),p=u.banco_bytes/u.limite_bytes*100,mb=b=>(b/1048576).toLocaleString('pt-BR',{maximumFractionDigits:1})+' MB';
-  $("#usoBody").innerHTML=`<div class="cobig"><b class="num">${Math.round(p)}%</b><span>${mb(u.banco_bytes)} de ${mb(u.limite_bytes)} do plano grátis</span></div><div class="bar cob"><b style="width:${Math.min(p,100)}%;--c:${p>=70?'var(--rx)':'var(--g)'}"></b></div>
-  <p style="margin:10px 0 0">${fmt(u.ondas)} ondas guardadas, ocupando ${mb(u.ondas_bytes)}.${p>=70?' <b style="color:var(--rx)">Passou de 70%: é hora de planejar o plano Pro ou resumir as ondas mais antigas.</b>':' Com o volume atual, cada ano de ondas ocupa cerca de 120 MB.'}</p>`;if(p>=70&&!usoAvisado){usoAvisado=1;toast("Banco de dados em "+Math.round(p)+"% do limite do plano grátis. Veja em Config › Manutenção.",9000)}}
- catch(e){$("#usoBody").textContent="Não foi possível consultar o uso agora."}}
+async function usoBanco(){const c=$("#usoCard"),A=$("#audUso");if(!c)return;if(!ON||!me||!me.adm){c.classList.add("hide");if(A)A.innerHTML="";return}c.classList.remove("hide");
+ try{const u=await api("/rest/v1/rpc/uso_banco",{method:"POST",body:{}}),p=u.banco_bytes/u.limite_bytes*100,mb=b=>(b/1048576).toLocaleString('pt-BR',{maximumFractionDigits:1})+' MB',cor=p>=90?'var(--rx)':p>=70?'#c98a12':'var(--g)',
+  barra=`<div class="usoW"><div class="usoBar" role="progressbar" aria-label="Espaço usado do banco de dados" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${Math.round(p)}"><b data-w="${Math.max(Math.min(p,100),1).toFixed(1)}" style="width:0;background:${cor}"></b><i style="left:70%" title="70%: hora de planejar"></i></div><div class="usoEsc"><span>0</span><span style="left:70%">70%</span><span>${mb(u.limite_bytes)}</span></div></div>`;
+  $("#usoBody").innerHTML=`<div class="cobig"><b class="num">${Math.round(p)}%</b><span>${mb(u.banco_bytes)} de ${mb(u.limite_bytes)} do plano grátis</span></div>${barra}
+  <p style="margin:10px 0 0">${fmt(u.ondas)} ondas guardadas, ocupando ${mb(u.ondas_bytes)}${u.auditoria_bytes!=null?"; auditoria ocupa "+mb(u.auditoria_bytes):""}.${p>=70?' <b style="color:var(--rx)">Passou de 70%: é hora de planejar o plano Pro ou resumir as ondas mais antigas.</b>':' A barra vai enchendo conforme as ondas entram; ao passar de 70% o sistema avisa.'}</p>`;
+  if(A)A.innerHTML=`<div class="usoMini"><span>Banco de dados: <b>${Math.round(p)}%</b> usado (${mb(u.banco_bytes)} de ${mb(u.limite_bytes)})${u.auditoria_bytes!=null?", auditoria "+mb(u.auditoria_bytes):""}</span>${barra}</div>`;
+  setTimeout(()=>$$(".usoBar b[data-w]").forEach(b=>b.style.width=b.dataset.w+"%"),40);
+  if(p>=70&&!usoAvisado){usoAvisado=1;toast("Banco de dados em "+Math.round(p)+"% do limite do plano grátis. Veja em Config › Manutenção.",9000)}}
+ catch(e){$("#usoBody").textContent="Não foi possível consultar o uso agora.";if(A)A.innerHTML=""}}
 let usoAvisado=0;
 const PAR_MOT=['Falta de energia','Sistema fora do ar','Falta de onda ou material','Manutenção de equipamento','Reunião','Treinamento','Urgência','Outro'];
 function cfgParadas(){const f=$("#parForm");if(!f)return;const pC=!ON||(me&&(me.adm||me.pC)),pode=!ON||(me&&(me.adm||me.pC||me.pI)),adm=!ON||(me&&me.adm);
@@ -2613,7 +2620,7 @@ $("#gal").onchange=e=>{if(e.target.value!=="__all"){S.gal=e.target.value;save()}
 $("#ctlQ").oninput=ctlLive;async function zerarTempo(ids){const L=S.waves.filter(w=>ids.includes(w.id));if(!L.length)return;
  if(ON){const wns=L.filter(w=>w.srv||w.sync).map(w=>w.wn);if(wns.length){try{await api("/rest/v1/rpc/zerar_tempo_ondas",{method:"POST",body:{p_wns:wns}})}catch(e){toast(errMsg(e));return}}}
  L.forEach(w=>{w.zt=1});save();renderAll();ctlLive();toast("Tempo zerado: as unidades continuam contando")}
-$("#ctlLive").onclick=e=>{const z=e.target.closest("[data-zt]");if(z){zerarTempo(z.dataset.zt.split(","));return}const b=e.target.closest("[data-x]");if(!b)return;const k=b.dataset.x;CTLX.has(k)?CTLX.delete(k):CTLX.add(k);ctlLive()};$("#day").onchange=()=>{renderAll();if(view==="ind"&&gsub==="chk"){const v=$("#day").value;if(CKV==="sem")semGo(SEMP,SEMP===7?addDias(mondayOf(v),6):v);else ckIr(v,true);return}if(view==="ind")loadManagement()};$("#turnoF").onchange=renderAll;$("#hBody").addEventListener("toggle",e=>{const d=e.target;if(!d.matches||!d.matches("details.hp"))return;const k=d.dataset.hp;d.open?HOPEN.add(k):HOPEN.delete(k);if(d.open)d.querySelector(".hpb").innerHTML=hpBody(k)},true);
+$("#ctlLive").onclick=e=>{const z=e.target.closest("[data-zt]");if(z){zerarTempo(z.dataset.zt.split(","));return}const b=e.target.closest("[data-x]");if(!b)return;const k=b.dataset.x;CTLX.has(k)?CTLX.delete(k):CTLX.add(k);ctlLive()};$("#day").onchange=()=>{diaTit();{const vis=id=>{const e=$(id);return!!(e&&e.offsetParent!==null)};if(vis("#ausL"))ausCarregar().then(ausLista);if(vis("#paL"))paCarregar().then(paLista);if(vis("#pdL")||vis("#pdDl"))pdCarregar().then(pdRender)}renderAll();if(view==="ind"&&gsub==="chk"){const v=$("#day").value;if(CKV==="sem")semGo(SEMP,SEMP===7?addDias(mondayOf(v),6):v);else ckIr(v,true);return}if(view==="ind")loadManagement()};$("#turnoF").onchange=renderAll;$("#hBody").addEventListener("toggle",e=>{const d=e.target;if(!d.matches||!d.matches("details.hp"))return;const k=d.dataset.hp;d.open?HOPEN.add(k):HOPEN.delete(k);if(d.open)d.querySelector(".hpb").innerHTML=hpBody(k)},true);
 $("#hsub").onclick=e=>{const k=e.target.dataset.hs;if(!k)return;HS=k;hsShow()};
 $("#hBody").addEventListener("click",e=>{if(e.target.closest("[data-hretry]"))loadHis(true)});
 $("#hBody").addEventListener("input",e=>{if(e.target.id==="hPq"){HPR=e.target.value;$("#hPt").innerHTML=hProcTable();return}const k=e.target.dataset&&e.target.dataset.hpq;if(k==null)return;HPQ[k]=e.target.value;const b=e.target.closest(".hpb"),pos=e.target.selectionStart;b.innerHTML=hpBody(k);const n=b.querySelector("input");n.focus();n.setSelectionRange(pos,pos)});
@@ -2984,11 +2991,11 @@ const m2=v=>{const m=hm2m(v);return m==null?null:m};
 function pdDia(ts,a){const t=pdTurno(a.tu)||{},h=a.ent?[a.ent,a.sai]:pdTHor(t,ts),e=m2(h[0]),s=m2(h[1]),d=new Date(ts),m=d.getHours()*60+d.getMinutes();
  if(e!=null&&s!=null&&s<=e&&m<s)return dk(ts-864e5);return dk(ts)}
 
-function pdLocalB(){const W=new Set(S.waves.filter(w=>!w.err).map(w=>normWN(w.wn)));return(S.prodB||[]).filter(b=>b.dia===hoje()).map(b=>Object.assign({},b,{st:"ok",col:W.has(normWN(b.wn))}))}
-async function pdCarregar(){
+function pdLocalB(){const W=new Set(S.waves.filter(w=>!w.err).map(w=>normWN(w.wn)));return(S.prodB||[]).filter(b=>b.dia===diaSel()).map(b=>Object.assign({},b,{st:"ok",col:W.has(normWN(b.wn))}))}
+async function pdCarregar(){diaTit();
  if(!ON){PDB=pdLocalB();return}
  if(!online())return;
- try{const [t,p,b,ps,mt]=await Promise.all([api("/rest/v1/prod_turnos?select=*&order=id"),api("/rest/v1/rpc/prod_postos",{method:"POST",body:{}}),api("/rest/v1/rpc/prod_bipagens_dia",{method:"POST",body:{p_dia:hoje()}}),api("/rest/v1/prod_pessoas?select=id,codigo,nome,galpao_id&excluido_em=is.null&order=nome&limit=2000"),api("/rest/v1/prod_metas?select=galpao_id,atividade,por_hora,por_dia,horas_dia,inicio,criado_por&order=inicio&limit=2000").catch(()=>null)]);
+ try{const [t,p,b,ps,mt]=await Promise.all([api("/rest/v1/prod_turnos?select=*&order=id"),api("/rest/v1/rpc/prod_postos",{method:"POST",body:{}}),api("/rest/v1/rpc/prod_bipagens_dia",{method:"POST",body:{p_dia:diaSel()}}),api("/rest/v1/prod_pessoas?select=id,codigo,nome,galpao_id&excluido_em=is.null&order=nome&limit=2000"),api("/rest/v1/prod_metas?select=galpao_id,atividade,por_hora,por_dia,horas_dia,inicio,criado_por&order=inicio&limit=2000").catch(()=>null)]);
   if(mt)PDM=mt.map(pdMmap);PDPES=ps.map(x=>({id:x.id,m:x.codigo,n:x.nome,g:GN[x.galpao_id]||""}));if(PDsel)PDsel=PDPES.find(o=>o.id===PDsel.id)||null;
   PDT=t.map(pdTmap);PDA=p.map(pdAmap);PDB=b.map(x=>({id:x.id,wn:x.wn,oid:x.pessoa_id,andar:x.andar,at:x.atividade,tu:x.turno_id,em:Date.parse(x.bipada_em),col:!!x.coletado,q:x.origem==="quantidade"?+x.quantidade:undefined,st:"ok"}));
   if(pdGestor()){try{PDH=(await api("/rest/v1/prod_atribuicoes?select=*&order=inicio.desc&limit=3000")).map(pdAmap)}catch(e){PDH=[]}}else PDH=[];
@@ -3028,7 +3035,7 @@ async function pdEnviar(L,avisar){
  try{const r=await api("/rest/v1/rpc/registrar_embalagens",{method:"POST",body:{lote:L.map(x=>Object.assign({id:x.id,wn:x.wn,pessoa_id:x.oid,bipada_em:new Date(x.em).toISOString()},x.q?{quantidade:x.q}:{}))}});
   (r||[]).forEach(res=>{const x=L.find(z=>z.id===res.id);if(x)pdAplicar(x,res)});
   const ids=new Set(L.filter(x=>x.st!=="pend").map(x=>x.id));pdFilaSet(pdFila().filter(f=>!ids.has(f.id)));
-  L.forEach(x=>{if(x.st==="ok"&&!PDB.some(b=>b.id===x.id))PDB.unshift({...x})})}
+  if(diaSel()===hoje())L.forEach(x=>{if(x.st==="ok"&&!PDB.some(b=>b.id===x.id))PDB.unshift({...x})})}
  catch(e){if(!e.status||e.status>=500||e.status===408||e.status===429){L.forEach(x=>{x.st="pend"});const F=pdFila();L.forEach(x=>{if(!F.some(f=>f.id===x.id))F.push({id:x.id,wn:x.wn,oid:x.oid,em:x.em,andar:x.andar,at:x.at,q:x.q})});pdFilaSet(F)}
   else L.forEach(x=>{x.st="rec";x.det=errMsg(e)})}
  if(avisar&&L.length)pdAvisar(L[L.length-1]);pdLista()}
@@ -3073,14 +3080,14 @@ async function pdBipar(){const o=PDsel;if(!o){toast("Escolha a pessoa primeiro."
  if(!online()){x.st="pend";const F=pdFila();F.push({id:x.id,wn,oid:k,em,andar:a.andar,at:a.at});pdFilaSet(F);pdAvisar(x);pdLista();$("#pdW").focus();return}
  pdMsg("pend","Enviando onda "+wn+"…","");await pdEnviar([x],true);$("#pdW").focus()}
 function pdLista(){const el=$("#pdL");if(!el)return;const by={};
- PDB.forEach(b=>{by[b.id]=Object.assign({st:"ok"},b)});PDLOC.forEach(x=>{if(x.st!=="ok"||!by[x.id])by[x.id]=Object.assign({},by[x.id]||{},x)});
+ PDB.forEach(b=>{by[b.id]=Object.assign({st:"ok"},b)});(diaSel()===hoje()?PDLOC:[]).forEach(x=>{if(x.st!=="ok"||!by[x.id])by[x.id]=Object.assign({},by[x.id]||{},x)});
  const q=nrm($("#pdQ")?$("#pdQ").value:""),all=Object.values(by).filter(x=>{const o=pdOp(x.oid);return galOk(o&&o.g)}).sort((a,b)=>b.em-a.em),L=all.filter(x=>{if(!q)return true;const o=pdOp(x.oid);return nrm(x.wn).includes(q)||(o&&(nrm(o.n).includes(q)||nrm(o.m)===q))});
  const okW=all.filter(x=>x.st==="ok"&&!x.q).length,okQ=all.filter(x=>x.st==="ok"&&x.q).reduce((a,x)=>a+x.q,0),pend=all.filter(x=>x.st==="pend").length;
  $("#pdN").textContent=[okW?okW+(okW===1?" onda":" ondas"):"",okQ?fmt(okQ)+(okQ===1?" embalagem":" embalagens")+" (quantidade)":"",pend?pend+" pendente"+(pend>1?"s":""):""].filter(Boolean).join(", ");
  const st=x=>x.st==="ok"?(x.q?'<span class="pdSt ok">Sem onda</span>':x.col?'<span class="pdSt ok">Coletada</span>':'<span class="pdSt warn">Não coletada</span>'):x.st==="pend"||x.st==="env"?'<span class="pdSt pend">'+(x.st==="env"?"Enviando":"Pendente")+"</span>":x.st==="rep"?'<span class="pdSt err">Já embalada</span>':'<span class="pdSt err">Não registrada</span>';
  el.innerHTML=L.length?`<table class="pdT"><tr><th>Hora</th><th>Registro</th><th>Pessoa</th><th class="pdHm">Posto</th><th>Status</th></tr>`+L.slice(0,150).map(x=>{const o=pdOp(x.oid),nm=o?o.n:"—";
   return`<tr><td>${hmT(x.em)}</td><td class="wn">${x.q?'<span class="pdTag">Quantidade</span> '+fmt(x.q)+(x.q===1?" embalagem":" embalagens"):'<span class="pdTag t">Onda</span> '+esc(x.wn)}</td><td>${esc(nm)}</td><td class="pdHm">${x.andar?PD_AND[x.andar]+", "+PD_AT[x.at]:"—"}</td><td>${st(x)}</td></tr>`}).join("")+"</table>"+(L.length>150?`<div class="legend">Mostrando as 150 mais recentes de ${L.length}.</div>`:"")
-  :`<div class="empty">${q?"Nenhuma bipagem encontrada.":"Nenhuma onda bipada hoje."}</div>`}
+  :`<div class="empty">${q?"Nenhuma bipagem encontrada.":"Nenhuma onda bipada "+diaTxt()+"."}</div>`}
 
 /* ---------- Distribuição ---------- */
 function pdDisLista(){const el=$("#pdDl");if(!el)return;const ops=pdOps(),now=Date.now(),post=o=>{const a=pdPosto(pdK(o),now);return a&&a.sit==="ativo"?a:null};
@@ -3525,8 +3532,8 @@ const paMap=x=>({id:x.id,oid:x.pessoa_id,mot:x.motivo,ini:Date.parse(x.inicio),f
 const paNome=id=>{const o=pdOps().find(x=>pdK(x)===id);return o?o.n:"Pessoa removida"};
 function paSub(s,quiet){PAsub=s==="aus"?"aus":"bip";$("#paV").classList.toggle("hide",PAsub!=="aus");$("#pdBipV").classList.toggle("hide",PAsub==="aus");$$("#pasub button").forEach(b=>b.classList.toggle("on",b.dataset.pa===PAsub));
  if(PAsub==="aus"&&!quiet){paForm();paLista();(async()=>{if(!pdOps().length&&ON)await pdCarregar();await paCarregar();paForm();paLista()})()}}
-async function paCarregar(){if(!ON){PAUS=(S.prodAus||[]).filter(a=>dk(a.ini)===hoje());return}
- if(!online())return;try{PAUS=(await api("/rest/v1/rpc/prod_ausencias_dia",{method:"POST",body:{p_dia:hoje()}})).map(paMap)}catch(e){}}
+async function paCarregar(){diaTit();if(!ON){PAUS=(S.prodAus||[]).filter(a=>dk(a.ini)===diaSel());return}
+ if(!online())return;try{PAUS=(await api("/rest/v1/rpc/prod_ausencias_dia",{method:"POST",body:{p_dia:diaSel()}})).map(paMap)}catch(e){}}
 function paForm(){const M=motivosP();if(!M.includes(PAM))PAM=null;
  $("#paMot").innerHTML=M.map(m=>`<button type="button" class="ausC" data-pam="${esc(m)}" aria-pressed="${m===PAM}">${esc(m)}</button>`).join("");
  if(!$("#paI").value)$("#paI").value=hmT(Date.now());paWho()}
@@ -3540,7 +3547,7 @@ function paLista(){const el=$("#paL");if(!el)return;const now=Date.now(),L=PAUS.
  $("#paN").textContent=fora?fora+" fora agora":"";
  el.innerHTML=L.length?`<table class="ausT"><tr><th>Pessoa</th><th>Motivo</th><th>Saída</th><th>Volta</th></tr>`+L.map(a=>{const nm=paNome(a.oid),aberta=!a.fim;
   return`<tr${aberta?' class="ab"':""}><td><div class="who2">${av(nm)}<div>${esc(nm)}</div></div></td><td><span class="ausTag">${esc(a.mot)}</span></td><td>${hmT(a.ini)}</td><td>${aberta?`<button type="button" class="btn sm" data-pav="${esc(a.id)}">Voltei</button><br><small>há ${durA(now-a.ini)}</small>`:`${hmT(a.fim)}<br><small>${durA(a.fim-a.ini)}</small>`}</td></tr>`}).join("")+"</table>"
-  :'<div class="empty">Ninguém ausente hoje.</div>'}
+  :'<div class="empty">Ninguém ausente '+diaTxt()+'.</div>'}
 async function paSalvar(){const o=paFind($("#paP").value);if(!o){toast("Escolha o nome da pessoa na lista.");$("#paP").focus();return}
  if(!PAM){toast("Escolha o motivo da ausência.");return}
  const ini=ausHora($("#paI").value),fim=$("#paV2").value?ausHora($("#paV2").value):null;
@@ -3616,7 +3623,7 @@ function audResumo(r){const x=r.depois||r.antes||{},nm=v=>v&&(v.nome||v.n);
 function audDif(r){if(r.acao!=="alterou"||!r.antes||!r.depois)return"";const L=Object.keys(r.depois).filter(k=>!AUD_IGN.has(k)&&JSON.stringify(r.antes[k])!==JSON.stringify(r.depois[k]));
  if(!L.length)return"";const v=x=>x==null||x===""?"vazio":typeof x==="object"?JSON.stringify(x).slice(0,80):String(x).slice(0,80);
  return`<details><summary>${L.length} ${L.length===1?"campo mudou":"campos mudaram"}</summary><div class="dif">${L.slice(0,12).map(k=>`<div><b>${esc(k)}</b>: <s>${esc(v(r.antes[k]))}</s> → ${esc(v(r.depois[k]))}</div>`).join("")}</div></details>`}
-function audAbrir(){if(!(ON&&me&&me.adm))return;if(!$("#audDe").value){const d=new Date();$("#audAte").value=hoje();d.setDate(d.getDate()-6);$("#audDe").value=dk(d)}
+function audAbrir(){if(!(ON&&me&&me.adm))return;usoBanco();if(!$("#audDe").value){const d=new Date();$("#audAte").value=hoje();d.setDate(d.getDate()-6);$("#audDe").value=dk(d)}
  const sel=$("#audGes"),v=sel.value;sel.innerHTML='<option value="">Todos</option>'+S.ges.map(g=>`<option value="${esc(g.u)}">${esc(g.n)}${g.g?" · "+esc(g.g):g.adm?" · administrador":""}</option>`).join("");sel.value=v;audCarregar()}
 async function audCarregar(){const de=$("#audDe").value,ate=$("#audAte").value,box=$("#audBody");if(!de||!ate)return;if(ate<de){toast("A data final é anterior à inicial");return}
  box.innerHTML='<div class="skel" aria-label="Carregando auditoria"><i></i><i></i></div>';
