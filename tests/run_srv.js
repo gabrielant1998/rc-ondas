@@ -454,6 +454,12 @@ await T('S112 Editar pessoa: nome e meta individual própria; admin muda permiss
  await p.click('[data-uedit="CL002"]');await p.waitForTimeout(150);ok(!(await p.$('[data-uef="CL002"] [name="n"]'))&&await p.$('[data-uef="CL002"] [name="mo"]'),'só a meta fica editável');
  ok(!p.errors.length,p.errors.join(';'))});
 
+await T('S113 Lista longa: recolher e mostrar de novo não repete o seletor de página',async()=>{const db=banco();for(let i=10;i<70;i++)db.operadores.push({id:'00000000-0000-4000-8000-0000000c'+String(i).padStart(4,'0'),codigo:'CL0'+i,nome:'Pessoa Teste '+i,turno:1,galpao_id:G1,excluido_em:null});
+ const p=await page(b,db);await login(p,'adm@x.com','senha1234');await p.evaluate(()=>go('cfg'));await p.click('#cfgNav [data-c="cus"]');await p.waitForTimeout(300);
+ for(let i=0;i<3;i++){await p.evaluate(()=>document.querySelector('[data-uall="1"]').click());await p.waitForTimeout(250);await p.evaluate(()=>document.querySelector('[data-uall="0"]').click());await p.waitForTimeout(250)}
+ await p.evaluate(()=>document.querySelector('[data-uall="1"]').click());await p.waitForTimeout(300);
+ const n=await p.$$eval('#cus .pg',a=>a.length);ok(n===1,'seletores de página: '+n);ok(!p.errors.length,p.errors.join(';'))});
+
 await T('S22 Gestor comum vê só "Metas" do seu galpão, sem Galpões; admin vê tudo',async()=>{const db=banco();const p=await page(b,db);
  await login(p,'g2@x.com','senha1234');await p.click('.tab[data-t="cfg"]');
  await p.click('[data-c="cme"]');const g=await p.evaluate(()=>({cga:getComputedStyle(document.querySelector('#csub [data-c="cga"]')).display,tab:document.querySelector('#csub [data-c="cme"]').textContent,fcard:document.querySelector('#fCard').classList.contains('hide'),linhas:document.querySelectorAll('#mtL tr').length,txt:document.querySelector('#mtL').textContent}));
