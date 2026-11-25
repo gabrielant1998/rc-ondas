@@ -1,6 +1,7 @@
 // Testes do modo servidor do RC Ondas, com um Supabase de mentira (em memória).
 // As regras reais do banco são testadas em supabase/tests/rls_test.sql.
 const {chromium}=require('playwright');
+const abrirAdd=async p=>{await p.evaluate(()=>document.querySelectorAll('.cfgAddOff').forEach(x=>x.classList.remove('cfgAddOff')))};
 const PAGE='http://127.0.0.1:8765/'+(process.argv[2]||'index.html')+'?srv=1';
 const HOST='https://fiqintmclivzckmfjeml.supabase.co';
 const R=[];const ok=(c,m)=>{if(!c)throw new Error(m)};
@@ -173,7 +174,7 @@ function fake(db){const cors={'access-control-allow-origin':'*','access-control-
    if(!body.p_so_contar)db.ondas=db.ondas.filter(o=>!alvo.includes(o));
    return J(route,200,alvo.length)}
   return J(route,404,{message:'rota não simulada: '+m+' '+p})}}
-async function page(b,db,opts={}){const ctx=await b.newContext({viewport:opts.vp||{width:1366,height:900}});const p=await ctx.newPage();if(!opts.festa)await p.addInitScript(()=>{window.__semFesta=1});if(!opts.sidebarSubs)await p.addInitScript(()=>{document.addEventListener('DOMContentLoaded',()=>{const s=document.createElement('style');s.textContent='#sub,#gsub,#psub,#hsub,#csub{display:flex!important}';document.head.appendChild(s)})});
+async function page(b,db,opts={}){const ctx=await b.newContext({viewport:opts.vp||{width:1366,height:900}});const p=await ctx.newPage();if(!opts.festa)await p.addInitScript(()=>{window.__semFesta=1});if(!opts.sidebarSubs)await p.addInitScript(()=>{document.addEventListener('DOMContentLoaded',()=>{const s=document.createElement('style');s.textContent='#sub,#gsub,#psub,#hsub{display:flex!important}';document.head.appendChild(s)})});
  p.errors=[];p.on('pageerror',e=>p.errors.push(e.message));p.on('dialog',d=>d.accept());
  await p.route(/fonts\.(googleapis|gstatic)\.com/,r=>r.abort());await p.route(HOST+'/**',fake(db));
  if(opts.antigo)await ctx.addInitScript(s=>{if(!sessionStorage.__a){sessionStorage.__a=1;localStorage.setItem('rcondas.v2',s)}},JSON.stringify(opts.antigo));
@@ -237,23 +238,23 @@ await T('S09 Sessão continua após recarregar e renova quando o acesso vence',a
  await p.reload();await p.waitForTimeout(700);ok((await p.evaluate(()=>me&&me.adm&&view==='painel')),'sessão não voltou');ok(db.calls.refresh>=1,'não renovou o acesso vencido')});
 
 await T('S10 Admin cadastra operador; excluir libera o código para o próximo',async()=>{const db=banco();const p=await page(b,db);await login(p,'adm@x.com','senha1234');
- await p.click('.tab[data-t="cfg"]');await p.click('[data-c="cus"]');await p.fill('#uN','Diego Rocha');await p.click('#uB');await p.waitForTimeout(1000);
+ await p.click('.tab[data-t="cfg"]');await p.click('[data-c="cus"]');await abrirAdd(p);await p.fill('#uN','Diego Rocha');await p.click('#uB');await p.waitForTimeout(1000);
  ok(db.operadores.some(o=>o.nome==='Diego Rocha'&&o.codigo==='CL003'),'não criou CL003: '+JSON.stringify(db.operadores.map(o=>o.codigo+o.nome)));
  ok(await p.isHidden('[data-udel="CL001"]'),'lista deveria começar recolhida');await p.fill('#uQ','ana');await p.waitForTimeout(150);
  await p.click('[data-udel="CL001"]');await p.waitForTimeout(500);ok(db.operadores.find(o=>o.nome==='Ana Souza').excluido_em,'não excluiu');
- await p.fill('#uN','Eva Lima');await p.click('#uB');await p.waitForTimeout(1000);ok(db.operadores.some(o=>o.nome==='Eva Lima'&&o.codigo==='CL001'),'código CL001 não foi reaproveitado');
+ await abrirAdd(p);await p.fill('#uN','Eva Lima');await p.click('#uB');await p.waitForTimeout(1000);ok(db.operadores.some(o=>o.nome==='Eva Lima'&&o.codigo==='CL001'),'código CL001 não foi reaproveitado');
  ok(p.errors.length===0,p.errors.join(';'))});
 
 await T('S11 Gestor comum: não altera limites nem cria operador em outro galpão',async()=>{const db=banco();const p=await page(b,db);await login(p,'g2@x.com','senha1234');
  await p.click('.tab[data-t="cfg"]');await p.fill('[data-lim="Retrabalho"]','5');await p.press('[data-lim="Retrabalho"]','Tab');await p.waitForTimeout(450);
  ok(db.tipos.find(t=>t.nome==='Retrabalho').limite===1000,'alterou limite');ok(/Sem permissão/.test(await p.textContent('#toast')),await p.textContent('#toast'));
  ok((await p.$eval('[data-lim="Retrabalho"]',e=>e.value))==='1000','campo ficou com valor que não foi salvo');
- await p.click('[data-c="cus"]');await p.evaluate(()=>{const o=document.querySelector('#uG');o.innerHTML='<option>Galpão 1</option>';o.value='Galpão 1'});await p.fill('#uN','Fulano G1');await p.click('#uB');await p.waitForTimeout(450);
+ await p.click('[data-c="cus"]');await p.evaluate(()=>{const o=document.querySelector('#uG');o.innerHTML='<option>Galpão 1</option>';o.value='Galpão 1'});await abrirAdd(p);await p.fill('#uN','Fulano G1');await p.click('#uB');await p.waitForTimeout(450);
  ok(!db.operadores.some(o=>o.nome==='Fulano G1'),'criou em outro galpão')});
 
 await T('S18 Admin libera pedido de acesso: aparece em Pedidos, aceita com galpão e o gestor passa a entrar',async()=>{const db=banco();db.pedidos.push('fora@x.com');db.users['fora@x.com'].ok=true;const p=await page(b,db);await login(p,'adm@x.com','senha1234');await p.click('.tab[data-t="cfg"]');
  await p.click('[data-c="cge"]');await p.waitForTimeout(500);const visto=(await p.textContent('#pedL')).includes('fora@x.com');
-await p.fill('#mN','Fora Gestora');await p.click('[data-sacc="fora@x.com"]');await p.waitForTimeout(600);
+await abrirAdd(p);await p.fill('#mN','Fora Gestora');await p.click('[data-sacc="fora@x.com"]');await p.waitForTimeout(600);
  const criado=db.gestores.find(x=>x.email==='fora@x.com');const sumiu=!db.pedidos.includes('fora@x.com');
  ok(visto&&criado&&criado.galpao_id===G1&&criado.nome==='Fora Gestora'&&sumiu,'visto '+visto+', criado '+!!criado+', pedido apagado '+sumiu);});
 await T('S19 Abas: sem login aparecem Coleta e Produção, sem Painel; com login, as abas do perfil',async()=>{const db=banco();const p=await page(b,db);
@@ -266,9 +267,9 @@ await T('S20 Manutenção: só o administrador vê; apaga o período escolhido d
  db.ondas.push({id:'m1',wn:'M1',operador_id:db.operadores[0].id,galpao_id:G1,tipo:'Vários artigos',quantidade:5,status:0,registrada_em:'2026-11-05T12:00:00-03:00',concluida_em:'2026-11-05T12:05:00-03:00',encerrada_auto:false});
  db.ondas.push({id:'m2',wn:'M2',operador_id:db.operadores[0].id,galpao_id:G1,tipo:'Vários artigos',quantidade:5,status:0,registrada_em:'2026-11-20T12:00:00-03:00',concluida_em:'2026-11-20T12:05:00-03:00',encerrada_auto:false});
  const pg=await page(b,db);await login(pg,'g2@x.com','senha1234');await pg.waitForTimeout(300);
- const gestorVe=await pg.isVisible('#csub [data-c="cma"]');
+ const gestorVe=await pg.isVisible('#cfgNav [data-c="cma"]');
  const p=await page(b,db);await login(p,'adm@x.com','senha1234');await p.click('.tab[data-t="cfg"]');
- const admVe=await p.isVisible('#csub [data-c="cma"]');
+ const admVe=await p.isVisible('#cfgNav [data-c="cma"]');
  await p.click('[data-c="cma"]');await p.fill('#xDe','2026-11-01');await p.fill('#xAte','2026-11-10');await p.click('#xCont');await p.waitForTimeout(400);
  const contou=(await p.textContent('#xRes')).includes('1 registro');
  const travado=await p.isDisabled('#xDel');
@@ -277,7 +278,7 @@ await T('S20 Manutenção: só o administrador vê; apaga o período escolhido d
 await T('S21 Administrador cria gestor com senha e ele entra direto, sem pedido',async()=>{const db=banco();
  const pa=await page(b,db);await login(pa,'adm@x.com','senha1234');await pa.click('.tab[data-t="cfg"]');await pa.click('[data-c="cge"]');await pa.waitForTimeout(300);
  ok(await pa.isHidden('#pedCard'),'cartão de pedidos deveria sumir');
- await pa.fill('#mN','Nova Pessoa');await pa.fill('#mU','nova@x.com');await pa.selectOption('#mG','Galpão 2');await pa.click('#mB');await pa.waitForTimeout(300);
+ await abrirAdd(pa);await pa.fill('#mN','Nova Pessoa');await pa.fill('#mU','nova@x.com');await pa.selectOption('#mG','Galpão 2');await pa.click('#mB');await pa.waitForTimeout(300);
  ok(!db.gestores.some(x=>x.email==='nova@x.com'),'criou sem senha');
  await pa.fill('#mP2','senha123');await pa.click('#mB');await pa.waitForTimeout(600);
  const g=db.gestores.find(x=>x.email==='nova@x.com');ok(g&&g.nome==='Nova Pessoa'&&g.galpao_id===G2&&db.users['nova@x.com'].pw==='senha123','gestor: '+JSON.stringify(g));
@@ -287,11 +288,11 @@ await T('S21 Administrador cria gestor com senha e ele entra direto, sem pedido'
 await T('S12 Admin: galpão, meta, limite, turno e gestor gravam no banco',async()=>{const db=banco();const p=await page(b,db);await login(p,'adm@x.com','senha1234');await p.click('.tab[data-t="cfg"]');
  await p.fill('[data-lim="Itens Únicos"]','250');await p.press('[data-lim="Itens Únicos"]','Tab');await p.waitForTimeout(400);
  await p.click('[data-c="cho"]');await p.waitForTimeout(150);await p.click('[data-hgal="Galpão 1"]');await p.fill('form[data-hr="1"] [data-hk="fim"]','17:00');await p.click('form[data-hr="1"] [type="submit"]');await p.waitForTimeout(450);
- await p.click('[data-c="cga"]');await p.fill('#gN','Galpão Norte');await p.click('#gB');await p.waitForTimeout(450);
+ await p.click('[data-c="cga"]');await abrirAdd(p);await p.fill('#gN','Galpão Norte');await p.click('#gB');await p.waitForTimeout(450);
  await p.click('[data-c="cme"]');await p.fill('[data-gmeta="Galpão 2"]','3000');await p.press('[data-gmeta="Galpão 2"]','Tab');await p.waitForTimeout(450);
  await p.fill('#fmin','500');await p.press('#fmin','Tab');await p.waitForTimeout(450);const mmin=db.config[0].meta_minima;
  await p.click('[data-c="cga"]');await p.click('[data-gdel="0"]');await p.waitForTimeout(450);const tg=await p.textContent('#toast');
- await p.click('[data-c="cge"]');await p.fill('#mN','Nova Gestora');await p.fill('#mU','Nova@X.com');await p.fill('#mP2','senha1234');await p.click('#mB');await p.waitForTimeout(450);
+ await p.click('[data-c="cge"]');await abrirAdd(p);await p.fill('#mN','Nova Gestora');await p.fill('#mU','Nova@X.com');await p.fill('#mP2','senha1234');await p.click('#mB');await p.waitForTimeout(450);
  ok(mmin===500,'meta mínima '+mmin);ok(db.tipos.find(t=>t.nome==='Itens Únicos').limite===250,'limite');ok(db.galpoes.find(x=>x.id===G1).horarios[1].fim===17,'turno do galpão: '+JSON.stringify(db.galpoes.find(x=>x.id===G1).horarios));
  ok(db.galpoes.some(g=>g.nome==='Galpão Norte'),'galpão novo');ok(db.metas.some(m=>m.galpao_id===G2&&m.data===HJ&&m.meta===3000),'meta do dia salva');
  ok(db.galpoes.some(g=>g.id===G1)&&/Não dá para excluir/.test(tg),'excluiu galpão com operadores: '+tg);
@@ -356,7 +357,7 @@ await T('S103 Aparelho público: escolher o galpão mostra só as pessoas e regi
 await T('S104 Auditoria: entrada e saída do gestor ficam registradas e só o administrador vê a aba',async()=>{const db=banco();
  db.aud=[{id:900,em:new Date(Date.now()-6e4).toISOString(),email:'g2@x.com',nome:'Gestor G2',galpao_id:G2,acao:'alterou',tabela:'operadores',registro:'x',antes:{nome:'Carla Dias',codigo:'CL002'},depois:{nome:'Carla Dias Souza',codigo:'CL002'}}];
  const p=await page(b,db);await login(p,'g2@x.com','senha1234');await p.waitForTimeout(400);ok(db.aud.some(r=>r.acao==='entrou'&&r.email==='g2@x.com'),'não registrou a entrada do gestor');
- await p.evaluate(()=>go('cfg'));await p.waitForTimeout(200);ok(!(await p.isVisible('#csub [data-c="cau"]'))&&!(await p.isVisible('.ssub button:has-text("Auditoria")')),'gestor comum vê a auditoria');
+ await p.evaluate(()=>go('cfg'));await p.waitForTimeout(200);ok(!(await p.isVisible('#cfgNav [data-c="cau"]'))&&!(await p.isVisible('.ssub button:has-text("Auditoria")')),'gestor comum vê a auditoria');
  await p.click('#logbtn');await p.waitForTimeout(600);ok(db.aud.some(r=>r.acao==='saiu'&&r.email==='g2@x.com'),'não registrou a saída');
  await login(p,'adm@x.com','senha1234');await p.evaluate(()=>{go('cfg');document.querySelector('#csub [data-c="cau"]').click()});await p.waitForTimeout(600);
  const t=(await p.textContent('#audBody')).replace(/\s+/g,' ');ok(t.includes('Entrou')&&t.includes('Saiu')&&t.includes('Alterou')&&t.includes('Pessoa da coleta')&&t.includes('Carla Dias Souza')&&t.includes('último acesso'),'auditoria: '+t.slice(0,400));
@@ -371,9 +372,9 @@ await T('S105 Administrador com G2 escolhido no topo: lista de concluídas do di
 
 await T('S106 Gestor de um galpão cadastra pessoa nova sem repetir código de outro galpão; nome repetido explica o motivo',async()=>{const db=banco();
  const p=await page(b,db);await login(p,'g2@x.com','senha1234');await p.evaluate(()=>{go('cfg');document.querySelector('#csub [data-c="cus"]').click()});await p.waitForTimeout(300);
- await p.fill('#uN','Pessoa Nova G2');await p.click('#uB');await p.waitForTimeout(600);const o=db.operadores.find(x=>x.nome==='Pessoa Nova G2');
+ await abrirAdd(p);await p.fill('#uN','Pessoa Nova G2');await p.click('#uB');await p.waitForTimeout(600);const o=db.operadores.find(x=>x.nome==='Pessoa Nova G2');
  ok(o&&!db.operadores.some(x=>x!==o&&!x.excluido_em&&x.codigo===o.codigo),'código repetido ou não criou: '+JSON.stringify(o));ok((await p.textContent('#toast')).includes(o&&o.codigo),'aviso com o código errado: '+await p.textContent('#toast'));
- await p.fill('#uN','Ana Souza');await p.click('#uB');await p.waitForTimeout(500);ok(/outro galpão|Já existe/.test(await p.textContent('#toast'))&&db.operadores.filter(x=>x.nome==='Ana Souza').length===1,'mensagem do nome repetido: '+await p.textContent('#toast'))});
+ await abrirAdd(p);await p.fill('#uN','Ana Souza');await p.click('#uB');await p.waitForTimeout(500);ok(/outro galpão|Já existe/.test(await p.textContent('#toast'))&&db.operadores.filter(x=>x.nome==='Ana Souza').length===1,'mensagem do nome repetido: '+await p.textContent('#toast'))});
 
 await T('S107 Aparelho do gestor guarda só a semana e as ondas abertas; dia antigo vem do banco quando abre',async()=>{const db=banco();const d=n=>new Date(Date.now()-n*864e5).toISOString();
  db.ondas.push({id:'00000000-0000-4000-8000-00000000cc01',wn:'9101',operador_id:db.operadores[0].id,galpao_id:G1,tipo:'Vários artigos',quantidade:7,status:0,registrada_em:d(20),concluida_em:d(20),procura_hist:[]},
@@ -410,16 +411,16 @@ await T('S109 Barra do banco vai enchendo em Manutenção e aparece na Auditoria
 
 await T('S110 Bipador: admin cria com gestor responsável, pessoa entra com usuário e só vê o liberado; responsável ajusta',async()=>{const db=banco();const p=await page(b,db);await login(p,'adm@x.com','senha1234');
  await p.evaluate(()=>{go('cfg');document.querySelector('#csub [data-c="cge"]').click()});await p.waitForTimeout(400);
- await p.selectOption('#mTipo','bipador');await p.fill('#mN','João Bipador');await p.fill('#mU','joao.bip');await p.selectOption('#mResp','g2@x.com');
+ await abrirAdd(p);await p.selectOption('#mTipo','bipador');await abrirAdd(p);await p.fill('#mN','João Bipador');await p.fill('#mU','joao.bip');await p.selectOption('#mResp','g2@x.com');
  ok(await p.inputValue('#mG')==='Galpão 2','galpão não veio do responsável: '+await p.inputValue('#mG'));ok(!(await p.isVisible('#mC')),'permissões de gestor aparecendo para bipador');
  await p.check('#mBipA [data-bipk="prod"]');await p.fill('#mP2','senha1234');if(process.env.SHOT){await p.setViewportSize({width:1280,height:1000});await p.waitForTimeout(200);await (await p.$('#mNovo')).screenshot({path:process.env.SHOT})}await p.click('#mB');await p.waitForTimeout(700);
  const bp=db.gestores.find(x=>x.email==='joao.bip@rcondas.bip');ok(bp&&bp.perfil==='bipador'&&bp.responsavel==='g2@x.com'&&bp.galpao_id===G2&&bp.abas.join()==='op,prod','criado: '+JSON.stringify(bp));
- ok((await p.textContent('#mL')).includes('João Bipador'),'lista sem o bipador');
+ ok((await p.textContent('#mL')).includes('João Bipador'),'lista sem o bipador');if(process.env.SHOT2){await p.evaluate(()=>{document.querySelector('.cfgAddB[data-add="mNovo"]').click()});await p.waitForTimeout(300);await p.screenshot({path:process.env.SHOT2+'/ges.png'});await p.evaluate(()=>{document.querySelector('.cfgAddB[data-add="mNovo"]').click();document.querySelector('#csub [data-c="cma"]').click()});await p.waitForTimeout(1500);await p.screenshot({path:process.env.SHOT2+'/cma.png'})}
  await p.click('#logbtn');await p.waitForTimeout(300);await login(p,'joao.bip','senha1234');await p.waitForTimeout(500);
  let v=await p.evaluate(()=>({who:$('#who').textContent,tabs:[...document.querySelectorAll('.tab[data-t]')].filter(x=>x.style.display!=='none').map(x=>x.dataset.t),subs:[...document.querySelectorAll('#sub button')].filter(x=>x.style.display!=='none').map(x=>x.dataset.s),view}));
  ok(v.who.startsWith('Bipador')&&v.tabs.sort().join()==='op,prod'&&v.subs.join()==='reg'&&v.view==='op',JSON.stringify(v));
  await p.click('#logbtn');await p.waitForTimeout(300);await login(p,'g2@x.com','senha1234');await p.evaluate(()=>{go('cfg')});await p.waitForTimeout(300);
- const bt=await p.evaluate(()=>{const x=document.querySelector('#csub [data-c="cge"]');return{d:x.style.display,t:x.textContent}});ok(bt.d!=='none'&&bt.t==='Bipadores','aba do responsável: '+JSON.stringify(bt));
+ const bt=await p.evaluate(()=>{const x=document.querySelector('#csub [data-c="cge"]');return{d:x.style.display,t:x.textContent}});ok(bt.d!=='none'&&bt.t==='Seus bipadores','aba do responsável: '+JSON.stringify(bt));
  await p.evaluate(()=>document.querySelector('#csub [data-c="cge"]').click());await p.waitForTimeout(500);ok(!(await p.isVisible('#mNovo')),'gestor comum vendo o formulário de criar');
  const lt=await p.textContent('#mL');ok(lt.includes('João Bipador')&&!lt.includes('Admin'),'lista do responsável: '+lt);
  await p.click('[data-mabas="joao.bip@rcondas.bip"]');await p.check('#mAbas [data-abk="op.aus"]');await p.click('#mAbas [data-abs="salvar"]');await p.waitForTimeout(500);
@@ -462,7 +463,7 @@ await T('S25 Gestor comum: Usuários só do galpão dele, cria usuário nele e a
  const ver=()=>p.evaluate(()=>{uAll=true;cfgUsers();return 0}).then(()=>p.evaluate(()=>({lista:document.querySelector('#uL').textContent,sel:document.querySelector('#uG').closest('label').classList.contains('hide'),ges:getComputedStyle(document.querySelector('#csub [data-c="cge"]')).display})));
  await login(p,'g2@x.com','senha1234');await p.click('.tab[data-t="cfg"]');await p.click('[data-c="cus"]');
  const x=await ver();ok(x.lista.includes('Carla Dias')&&!x.lista.includes('Ana Souza')&&x.sel&&x.ges==='none',JSON.stringify(x));
- await p.fill('#uN','Novo Op');await p.click('#uB');await p.waitForTimeout(500);
+ await abrirAdd(p);await p.fill('#uN','Novo Op');await p.click('#uB');await p.waitForTimeout(500);
  const n=db.operadores.find(o=>o.nome==='Novo Op');ok(n&&n.galpao_id===G2,JSON.stringify(n));
  await p.click('#logbtn');await login(p,'adm@x.com','senha1234');await p.click('.tab[data-t="cfg"]');await p.click('[data-c="cus"]');
  const a=await ver();ok(a.lista.includes('Ana Souza')&&a.lista.includes('Carla Dias')&&!a.sel&&a.ges!=='none',JSON.stringify(a))});
@@ -577,7 +578,7 @@ await T('S92 Modo público vê ondas em andamento e concluídas de todos os apar
  ok(db.calls.pub>=1,'não chamou ondas_publicas');ok(/9901/.test(ace)&&/Carla Dias/.test(ace),'concluídas: '+ace.slice(0,200));ok(/9902/.test(ctl),'em andamento: '+ctl.slice(0,300));
  ok(!(await p.$('#aceL [data-adel]')),'público não pode excluir');ok(p.errors.length===0,p.errors.join(';'))});
 await T('S93 Ausente: pessoa registra motivo e horário, volta, e o relatório mostra os tipos',async()=>{const db=banco();
- const pa=await page(b,db);await login(pa,'adm@x.com','senha1234');await pa.click('.tab[data-t="cfg"]');await pa.click('[data-c="cho"]');await pa.fill('#motN','Inventário');await pa.click('#motF button');await pa.waitForTimeout(450);
+ const pa=await page(b,db);await login(pa,'adm@x.com','senha1234');await pa.click('.tab[data-t="cfg"]');await pa.click('[data-c="cmo"]');await pa.fill('#motN','Inventário');await pa.click('#motF button');await pa.waitForTimeout(450);
  ok((db.config[0].motivos_ausencia||[]).join('|')==='Ajudando na Rua|Embalando|Inventário','motivos: '+JSON.stringify(db.config[0].motivos_ausencia));
  const p=await page(b,db);await p.click('.tab[data-t="op"]');await p.click('#sub [data-s="aus"]');await p.waitForTimeout(300);
  ok((await p.textContent('#ausMot')).includes('Inventário'),'motivo novo não chegou na operação');
@@ -605,9 +606,9 @@ await T('S95 Produção: gestor define posto e turno, aparelho público bipa, pr
  db.ondas.push({id:'00000000-0000-4000-8000-00000000c001',wn:'8001',operador_id:'00000000-0000-4000-8000-0000000000b1',galpao_id:G1,tipo:'Vários artigos',quantidade:2,status:0,registrada_em:new Date().toISOString()});
  const pa=await page(b,db);await login(pa,'adm@x.com','senha1234');await pa.click('.tab[data-t="prod"]');await pa.waitForTimeout(300);
  await pa.evaluate(()=>{go('cfg');document.querySelector('#csub [data-c="cpd"]').click();document.getElementById('cpdTu').open=true});await pa.waitForTimeout(400);ok(await pa.isVisible('#cpd'),'admin deveria ver o cadastro da embalagem na Config');ok((await pa.$$('#pdNovaF [name="pdT"] option[value]:not([value=""])')).length>0,'turnos no cadastro da embalagem');
- await pa.fill('[data-pdt="1"] [name="s"]','15:00');await pa.click('[data-pdt="1"] [type="submit"]');await pa.waitForTimeout(400);ok(db.pt[0].saida==='15:00','turno não salvo: '+JSON.stringify(db.pt[0]));
+ await pa.evaluate(()=>{document.querySelector('#csub [data-c="cho"]').click();document.getElementById('cpdTu').open=true});await pa.waitForTimeout(300);await pa.fill('[data-pdt="1"] [name="s"]','15:00');await pa.click('[data-pdt="1"] [type="submit"]');await pa.waitForTimeout(400);ok(db.pt[0].saida==='15:00','turno não salvo: '+JSON.stringify(db.pt[0]));
  ok((await pa.textContent('#pdDl')).includes('Nenhuma pessoa cadastrada'),'pessoas da Coleta apareceram na Produção');
- await pa.fill('#pdNovaF [name="n"]','Ana Embalagem');await pa.check('#pdNovaF input[name="pdAn"][value="mezanino"]');await pa.check('#pdNovaF input[name="pdAt"][value="maquina"]');await pa.click('#pdNovaF [type="submit"]');await pa.waitForTimeout(450);
+ await pa.evaluate(()=>document.querySelector('#csub [data-c="cpd"]').click());await pa.waitForTimeout(300);await abrirAdd(pa);await pa.fill('#pdNovaF [name="n"]','Ana Embalagem');await pa.check('#pdNovaF input[name="pdAn"][value="mezanino"]');await pa.check('#pdNovaF input[name="pdAt"][value="maquina"]');await pa.click('#pdNovaF [type="submit"]');await pa.waitForTimeout(450);
  ok(db.ppes.length===1&&db.ppes[0].codigo==='PR001'&&db.ppes[0].galpao_id===G1,'cadastro: '+JSON.stringify(db.ppes));
  ok(db.pa.length===1&&db.pa[0].andar==='mezanino'&&db.pa[0].criado_por==='adm@x.com','posto: '+JSON.stringify(db.pa));
  ok((await pa.textContent('#pdDl')).includes('Mezanino'),'lista não atualizou');
@@ -637,7 +638,7 @@ await T('S97 Produção: admin grava metas por hora e o desempenho do período v
  const neg=await p.evaluate(async()=>{try{await api("/rest/v1/rpc/prod_bipagens_periodo",{method:"POST",body:{p_ini:hoje(),p_fim:hoje()}});return 200}catch(e){return e.status||0}});ok(neg===403,'público leu o desempenho: '+neg);
  await p.evaluate(()=>go('painel'));await p.waitForTimeout(500);ok(!(await p.isVisible('#pnSeg'))&&!(await p.isVisible('#pnDuo')),'público vendo o painel da Embalagem');
  const pa=await page(b,db);await login(pa,'adm@x.com','senha1234');await pa.evaluate(()=>{go('cfg');document.querySelector('#csub [data-c="cpd"]').click()});await pa.waitForTimeout(600);
- ok((await pa.textContent('#pdMt')).includes('Metas diárias'),'metas na Config');
+ await pa.evaluate(()=>document.querySelector('#csub [data-c="cme"]').click());await pa.waitForTimeout(300);ok((await pa.textContent('#pdMt')).includes('Metas diárias'),'metas na Config');
  await pa.fill('#pdMetaF [name="mesa"]','96');await pa.click('#pdMetaF [type="submit"]');await pa.waitForTimeout(600);
  ok(db.pm.length===1&&db.pm[0].atividade==='mesa'&&db.pm[0].por_dia===96&&db.pm[0].horas_dia===8&&db.pm[0].por_hora===12&&db.pm[0].galpao_id===G1,'meta gravada '+JSON.stringify(db.pm));
  await pa.waitForTimeout(200);

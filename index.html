@@ -538,6 +538,46 @@ body[data-v=cfg] #turnoF,body[data-v=cfg] #gal,body[data-v=cfg] #day{display:non
 .pdTF .pdAc .chk{display:flex;gap:6px;align-items:center;margin-right:auto;font-size:14px}
 @media (max-width:760px){.pdRow{grid-template-columns:1fr auto}.pdRow .pdPc,.pdRow .pdH{grid-column:1/2}.pdTF{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}.pdTF>label:first-child,.pdTF .pdDiasW,.pdTF>label:nth-child(4){grid-column:1/-1}
  .pdT .pdHm{display:none}}
+
+/* Config: menu lateral agrupado + páginas de uma coluna */
+#csub{display:none!important}
+#cfg:not(.hide){display:grid;grid-template-columns:208px minmax(0,1fr);gap:28px;align-items:start}
+#cfgNav{position:sticky;top:14px}
+#cfgNavS{display:none}
+#cfgNav .cnG{margin:0 0 16px}
+#cfgNav .cnT{font-size:12px;font-weight:600;color:var(--mut);padding:0 12px 6px}
+#cfgNav button{display:block;width:100%;text-align:left;background:none;border:0;border-radius:8px;padding:8px 12px;min-height:38px;font:inherit;font-size:14.5px;color:var(--ink);cursor:pointer}
+#cfgNav button:hover{background:color-mix(in srgb,var(--ink) 6%,transparent)}
+#cfgNav button.on{background:var(--card);color:var(--g);font-weight:600;box-shadow:inset 0 0 0 1px var(--line)}
+#cfgNav button:focus-visible{outline:2px solid var(--g);outline-offset:1px}
+.cfgM{min-width:0;max-width:900px}
+.cfgP{display:grid;gap:16px}
+.cfgP.hide{display:none}
+.cfgH{padding:2px 0 4px}
+.cfgH h2{font:600 22px/1.25 var(--fb);margin:0;color:var(--ink)}
+.cfgH p{margin:6px 0 0;color:var(--mut);font-size:14.5px;line-height:1.45;max-width:64ch}
+.cfgP>.card{margin:0;border-radius:10px;padding:18px 20px}
+.cfgP>.card>h2,.cfgLH h2{font-size:16px}
+.cfgP .legend{font-size:13px}
+.cfgLH{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 0 12px}
+.cfgLH h2{margin:0}
+.cfgAddOff{display:none!important}
+.cfgAdd{border-color:var(--g)!important}
+.cfgPerigo{border-color:color-mix(in srgb,var(--rx) 45%,var(--line))!important}
+.cfgPerigo>h2{color:var(--rx)}
+@media(min-width:761px){.cfgP .f>label:not(.row):not(.hide){grid-template-columns:minmax(150px,230px) minmax(0,1fr);align-items:center;column-gap:16px}}
+@media(max-width:760px){
+ #cfg:not(.hide){grid-template-columns:minmax(0,1fr);gap:14px}
+ #cfgNav{position:static}
+ #cfgNavD{border:1px solid var(--line);border-radius:10px;background:var(--card)}
+ #cfgNavS{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;font-weight:600;cursor:pointer;list-style:none;min-height:44px}
+ #cfgNavS::-webkit-details-marker{display:none}
+ #cfgNavS::after{content:"Trocar";font-weight:500;font-size:13px;color:var(--g)}
+ #cfgNavD[open] #cfgNavS{border-bottom:1px solid var(--line)}
+ #cfgNav .cnG{margin:10px 6px}
+ #cfgNav button{min-height:44px}
+ .cfgH h2{font-size:20px}
+}
 </style>
 </head>
 <body>
@@ -728,9 +768,10 @@ body[data-v=cfg] #turnoF,body[data-v=cfg] #gal,body[data-v=cfg] #day{display:non
 
 <!-- ======================= CONFIG ======================= -->
 <section id="cfg" class="hide">
- <div class="sub" id="csub"><button data-c="cop" class="on">Geral</button><button data-c="cho">Horários e paradas</button><button data-c="cus">Pessoas coleta</button><button data-c="cpd" id="csPd">Pessoas embalagem</button><button data-c="cme" data-merge="1">Metas</button><button data-c="cga">Galpões</button><button data-c="cge" data-merge="1">Gestores</button><button data-c="cma">Manutenção</button><button data-c="cau" id="csAud">Auditoria</button></div>
-
- <div id="cop" class="grid two">
+ <nav id="cfgNav" aria-label="Seções da configuração"><details id="cfgNavD" open><summary id="cfgNavS">Ondas e limites</summary><div class="cnG" data-g="Operação"><div class="cnT">Operação</div><button type="button" data-c="cop" class="on" aria-current="true">Ondas e limites</button><button type="button" data-c="cme">Metas</button><button type="button" data-c="cho">Horários e hora extra</button><button type="button" data-c="cpa">Paradas</button><button type="button" data-c="cmo">Motivos de ausência</button></div><div class="cnG" data-g="Pessoas"><div class="cnT">Pessoas</div><button type="button" data-c="cus">Coleta</button><button type="button" data-c="cpd">Embalagem</button></div><div class="cnG" data-g="Acessos"><div class="cnT">Acessos</div><button type="button" data-c="cge">Gestores e bipadores</button><button type="button" data-c="cga">Galpões</button></div><div class="cnG" data-g="Sistema"><div class="cnT">Sistema</div><button type="button" data-c="cma">Banco de dados</button><button type="button" data-c="cau">Auditoria</button></div></details></nav>
+ <div class="sub" id="csub"><button data-c="cop" class="on">Ondas e limites</button><button data-c="cme">Metas</button><button data-c="cho">Horários e hora extra</button><button data-c="cpa">Paradas</button><button data-c="cmo">Motivos de ausência</button><button data-c="cus">Coleta</button><button data-c="cpd" id="csPd">Embalagem</button><button data-c="cge">Gestores e bipadores</button><button data-c="cga">Galpões</button><button data-c="cma">Banco de dados</button><button data-c="cau" id="csAud">Auditoria</button></div>
+ <div class="cfgM">
+ <div id="cop" class="cfgP"><header class="cfgH"><h2>Ondas e limites</h2><p>Limite de unidades por tipo de onda e como as ondas são lançadas.</p></header>
   <div class="card"><h2>Limite por onda</h2><div class="f" id="lims"></div>
    <div style="margin-top:22px"><strong>Várias ondas no mesmo lançamento</strong>
     <div class="legend">Ative para bipar várias ondas do mesmo tipo de uma vez. Os números das ondas devem ser diferentes; no retrabalho, informe o SKU.</div>
@@ -741,81 +782,61 @@ body[data-v=cfg] #turnoF,body[data-v=cfg] #gal,body[data-v=cfg] #day{display:non
 </div></div>
  </div>
 
- <div id="cho" class="grid two hide">
-  <div class="card" id="parCard"><h2>Registrar parada da operação</h2><div class="f" id="parForm"></div>
-   <div class="legend">Use quando a operação ficou parada (falta de energia, sistema fora do ar, falta de onda, urgência). O tempo parado não conta como pausa nem como atraso de ninguém e aparece no Painel e na linha do dia.</div></div>
-  <div class="card" style="grid-column:1/-1"><h2>Horários do galpão</h2><div id="turnos"></div><div class="legend">Cada galpão tem o seu horário. Bipagens fora do expediente contam como hora extra. Café, almoço e outras pausas não contam como pausa, atraso nem hora extra. Sábado e domingo em branco seguem o horário de segunda a sexta. O almoço de cada pessoa pode ser ajustado na Presença.</div></div>
-  <div class="card" id="motCard"><h2>Motivos de ausência</h2><div id="motL" class="ausChips"></div>
-   <form id="motF" class="motF"><input id="motN" maxlength="40" placeholder="Novo motivo" aria-label="Novo motivo de ausência" autocomplete="off"><button class="btn sm" type="submit">Adicionar</button></form>
-   <div class="legend">Aparecem na mini aba Ausente da Coleta e no relatório de Ausências. Remover um motivo não apaga as ausências já registradas.</div></div>
-  <div class="card" id="tempoCard"><h2>Tempo das ondas e hora extra</h2><div class="f">
-   <label>Intervalo máximo entre ondas do mesmo operador para contar como tempo de onda (min, até 60)<input type="number" id="gap" min="1" max="60"></label>
-   <label>Tolerância de hora extra (min)<input type="number" id="tol" min="0" max="120"></label></div>
-   <div class="legend">Pausas maiores que o intervalo máximo ficam fora do tempo. A tolerância vale antes do início e depois do fim do turno.</div></div>
-  <div class="card" style="grid-column:1/-1"><h2>Paradas registradas <span class="pill" id="parTot"></span></h2><div class="tw" id="parList"></div><div class="legend">Últimos 120 dias.</div></div>
- </div>
-
- <div id="cus" class="grid two hide">
-  <div class="card"><h2>Novo usuário <span id="nextCode" class="tag"></span></h2><div class="f">
-   <label>Nome<input id="uN" placeholder="Nome do operador" autocomplete="off"></label>
-   <div class="seg" id="uT"></div>
-   <label>Galpão<select id="uG"></select></label>
-   <button class="btn" id="uB">Criar usuário</button></div>
-   <div class="legend">Usuários de operação não usam senha. O código segue a sequência CL001 e um código excluído volta a ficar disponível.</div></div>
-  <div class="card"><h2>Usuários <span id="uCnt"></span></h2><div class="uBusca"><input id="uQ" type="search" placeholder="Pesquisar por nome ou código" aria-label="Pesquisar usuários" autocomplete="off"></div><div class="tw" id="uL"></div></div>
- </div>
-
-
- <div id="cpd" class="hide">
-  <div class="cpdG">
-   <div class="cpdC">
-    <div class="card"><h2>Cadastrar pessoa da embalagem</h2><div id="pdNova"></div></div>
-    <div id="pdMt"></div>
-   </div>
-   <div class="card"><h2>Pessoas da embalagem <span id="pdCnt" class="pill"></span></h2>
-    <div class="pdTools"><input id="pdDq" type="search" placeholder="Pesquisar nome ou código" aria-label="Pesquisar pessoa" autocomplete="off"><div id="pdDf" class="pdChips" role="group" aria-label="Filtrar por posto (andar e atividade)"></div></div>
-    <div id="pdDl"></div>
-    <div class="legend">O cadastro de quem embala é separado do cadastro da Coleta. Cada mudança de posto vale a partir do horário informado; as ondas já bipadas continuam com o andar, a atividade e o turno da época.</div></div>
-  </div>
-  <div class="card" id="paMotCard"><h2>Motivos de ausência da embalagem</h2><div id="paMotL" class="ausChips"></div>
-   <form id="paMotF" class="motF"><input id="paMotN" maxlength="40" placeholder="Novo motivo" aria-label="Novo motivo de ausência da embalagem" autocomplete="off"><button class="btn sm" type="submit">Adicionar</button></form>
-   <div class="legend">Aparecem na mini aba Ausente da Produção. São separados dos motivos da Coleta. Remover um motivo não apaga as ausências já registradas.</div></div>
-  <details class="card pnDet" id="cpdTu"><summary>Turnos da embalagem</summary><div id="pdTl"></div>
-   <div class="legend">Saída em branco = ainda não configurada; as horas trabalhadas só são calculadas com a saída preenchida. Saída menor que a entrada = turno que passa da meia-noite. Sábado e domingo: preencha só se o horário for diferente da semana, e marque S e D nos dias do turno.</div></details>
- </div>
-
- <div id="cme" class="grid two">
+ <div id="cme" class="cfgP hide"><header class="cfgH"><h2>Metas</h2><p>Meta do dia de cada galpão, metas da embalagem e a animação de meta batida.</p></header>
   <div class="card"><h2 id="mTit">Meta de hoje</h2><div class="tw" id="mtL"></div><div class="legend" id="mLeg"></div></div>
+  <div id="pdMt"></div>
   <div class="card" id="fCard"><h2>Animação de meta batida</h2>
    <div class="f"><label>Meta mínima para mostrar a animação (unidades)<input type="number" id="fmin" min="0" max="10000000" step="1" placeholder="0 = sempre que bater a meta"></label></div>
    <div class="legend" id="fLeg"></div>
    <div style="margin-top:12px"><button class="btn alt sm" id="fTeste" type="button">Ver a animação agora</button></div></div>
  </div>
 
- <div id="cga" class="grid two hide">
-  <div class="card" id="gNovo"><h2>Novo galpão</h2><div class="f">
-   <label>Nome<input id="gN" placeholder="Galpão 4" autocomplete="off"></label>
-    <button class="btn" id="gB">Criar galpão</button></div></div>
-  <div class="card"><h2>Galpões</h2><div class="tw" id="gL"></div><div class="legend" id="gLeg">As metas ficam na aba Metas. Renomear um galpão atualiza os registros já lançados.</div></div>
+ <div id="cho" class="cfgP hide"><header class="cfgH"><h2>Horários e hora extra</h2><p>Turnos de cada galpão e da embalagem, e quanto tempo conta como pausa ou hora extra.</p></header>
+  <div class="card" style="grid-column:1/-1"><h2>Horários do galpão</h2><div id="turnos"></div><div class="legend">Cada galpão tem o seu horário. Bipagens fora do expediente contam como hora extra. Café, almoço e outras pausas não contam como pausa, atraso nem hora extra. Sábado e domingo em branco seguem o horário de segunda a sexta. O almoço de cada pessoa pode ser ajustado na Presença.</div></div>
+  <div class="card" id="tempoCard"><h2>Tempo das ondas e hora extra</h2><div class="f">
+   <label>Intervalo máximo entre ondas do mesmo operador para contar como tempo de onda (min, até 60)<input type="number" id="gap" min="1" max="60"></label>
+   <label>Tolerância de hora extra (min)<input type="number" id="tol" min="0" max="120"></label></div>
+   <div class="legend">Pausas maiores que o intervalo máximo ficam fora do tempo. A tolerância vale antes do início e depois do fim do turno.</div></div>
+  <details class="card pnDet" id="cpdTu"><summary>Turnos da embalagem</summary><div id="pdTl"></div>
+   <div class="legend">Saída em branco = ainda não configurada; as horas trabalhadas só são calculadas com a saída preenchida. Saída menor que a entrada = turno que passa da meia-noite. Sábado e domingo: preencha só se o horário for diferente da semana, e marque S e D nos dias do turno.</div></details>
  </div>
 
- <div id="cau" class="hide"><div class="card"><div class="audTop"><h2>Auditoria dos gestores</h2><span class="pill" id="audN"></span></div>
-  <div class="ctl audF"><label>De<input type="date" id="audDe"></label><label>Até<input type="date" id="audAte"></label>
-   <label>Gestor<select id="audGes"><option value="">Todos</option></select></label>
-   <label>Mostrar<select id="audTipo"><option value="">Acessos e ações</option><option value="acesso">Só acessos</option><option value="acao">Só ações</option></select></label>
-   <label class="audQ">Buscar<input id="audQ" placeholder="Onda, pessoa, galpão" autocomplete="off"></label></div>
-  <div id="audUso"></div><div id="audBody"><div class="empty">Escolha o período.</div></div>
-  <div class="legend">Registra quando cada gestor entra, abre o sistema já logado e sai, e tudo o que ele cria, altera ou exclui. Registros do aparelho público (sem login) não entram aqui. Só o administrador vê esta aba, e ninguém consegue apagar ou mudar a auditoria pelo sistema. A auditoria guarda 1 ano: registros com mais de 1 ano saem sozinhos.</div></div></div>
- <div id="cma" class="grid two hide"><div class="card hide" id="usoCard"><h2>Uso do banco de dados</h2><div id="usoBody" class="legend">Carregando…</div></div><div class="card"><h2>Apagar registros do banco</h2>
- <p class="legend">Apaga as ondas registradas no período escolhido. Só o administrador vê esta opção. Não tem volta: use "Ver quantos" antes.</p>
- <div class="f"><label>De<input type="date" id="xDe"></label><label>Até<input type="date" id="xAte"></label>
- <label>Galpão<select id="xGal"></select></label></div>
- <div class="ctl2"><button class="btn alt" id="xCont">Ver quantos</button></div>
- <div id="xRes" class="legend" aria-live="polite"></div>
- <div class="f"><label>Digite APAGAR para liberar o botão<input id="xCon" autocomplete="off"></label></div>
- <button class="btn d" id="xDel" disabled>Apagar registros</button></div></div>
-<div id="cge" class="grid two hide">
-  <div class="card" id="mNovo"><h2 id="mNovoT">Novo gestor</h2><div class="f">
+ <div id="cpa" class="cfgP hide"><header class="cfgH"><h2>Paradas</h2><p>Registre quando a operação parou. O tempo parado não conta como pausa nem como atraso.</p></header>
+  <div class="card" id="parCard"><h2>Registrar parada</h2><div class="f" id="parForm"></div>
+   <div class="legend">Use quando a operação ficou parada (falta de energia, sistema fora do ar, falta de onda, urgência). O tempo parado não conta como pausa nem como atraso de ninguém e aparece no Painel e na linha do dia.</div></div>
+  <div class="card" style="grid-column:1/-1"><h2>Paradas registradas <span class="pill" id="parTot"></span></h2><div class="tw" id="parList"></div><div class="legend">Últimos 120 dias.</div></div>
+ </div>
+
+ <div id="cmo" class="cfgP hide"><header class="cfgH"><h2>Motivos de ausência</h2><p>Motivos que aparecem na aba Ausente da Coleta e da Embalagem.</p></header>
+  <div class="card" id="motCard"><h2>Motivos de ausência</h2><div id="motL" class="ausChips"></div>
+   <form id="motF" class="motF"><input id="motN" maxlength="40" placeholder="Novo motivo" aria-label="Novo motivo de ausência" autocomplete="off"><button class="btn sm" type="submit">Adicionar</button></form>
+   <div class="legend">Aparecem na mini aba Ausente da Coleta e no relatório de Ausências. Remover um motivo não apaga as ausências já registradas.</div></div>
+  <div class="card" id="paMotCard"><h2>Motivos de ausência da embalagem</h2><div id="paMotL" class="ausChips"></div>
+   <form id="paMotF" class="motF"><input id="paMotN" maxlength="40" placeholder="Novo motivo" aria-label="Novo motivo de ausência da embalagem" autocomplete="off"><button class="btn sm" type="submit">Adicionar</button></form>
+   <div class="legend">Aparecem na mini aba Ausente da Produção. São separados dos motivos da Coleta. Remover um motivo não apaga as ausências já registradas.</div></div>
+ </div>
+
+ <div id="cus" class="cfgP hide"><header class="cfgH"><h2>Pessoas da coleta</h2><p>Quem bipa na Coleta. Não usam senha e o código segue a sequência CL001.</p></header>
+  <div class="card cfgAdd cfgAddOff" id="uAdd"><h2>Nova pessoa da coleta <span id="nextCode" class="tag"></span></h2><div class="f">
+   <label>Nome<input id="uN" placeholder="Nome do operador" autocomplete="off"></label>
+   <div class="seg" id="uT"></div>
+   <label>Galpão<select id="uG"></select></label>
+   <button class="btn" id="uB">Criar usuário</button></div>
+   <div class="legend">Usuários de operação não usam senha. O código segue a sequência CL001 e um código excluído volta a ficar disponível.</div></div>
+  <div class="card"><div class="cfgLH"><h2>Todas as pessoas <span id="uCnt"></span></h2><button class="btn sm cfgAddB" type="button" data-add="uAdd">Adicionar pessoa</button></div><div class="uBusca"><input id="uQ" type="search" placeholder="Pesquisar por nome ou código" aria-label="Pesquisar usuários" autocomplete="off"></div><div class="tw" id="uL"></div></div>
+ </div>
+
+ <div id="cpd" class="cfgP hide"><header class="cfgH"><h2>Pessoas da embalagem</h2><p>Quem embala, com posto (andar e atividade) e turno.</p></header>
+  <div class="card cfgAdd cfgAddOff" id="pdAdd"><h2>Nova pessoa da embalagem</h2><div id="pdNova"></div></div>
+  <div class="card"><div class="cfgLH"><h2>Todas as pessoas <span id="pdCnt" class="pill"></span></h2><button class="btn sm cfgAddB" type="button" data-add="pdAdd">Adicionar pessoa</button></div>
+    <div class="pdTools"><input id="pdDq" type="search" placeholder="Pesquisar nome ou código" aria-label="Pesquisar pessoa" autocomplete="off"><div id="pdDf" class="pdChips" role="group" aria-label="Filtrar por posto (andar e atividade)"></div></div>
+    <div id="pdDl"></div>
+    <div class="legend">O cadastro de quem embala é separado do cadastro da Coleta. Cada mudança de posto vale a partir do horário informado; as ondas já bipadas continuam com o andar, a atividade e o turno da época.</div></div>
+ </div>
+
+ <div id="cge" class="cfgP hide"><header class="cfgH"><h2>Gestores e bipadores</h2><p id="cgeD">Quem entra com login e o que cada um pode ver.</p></header>
+  <div class="card" id="pedCard"><h2>Pedidos de acesso</h2><div class="tw" id="pedL"></div><div class="legend">Para liberar, preencha nome, galpão e permissões em "Adicionar acesso" e clique em Aceitar.</div></div>
+  <div class="card cfgAdd cfgAddOff" id="mNovo"><h2 id="mNovoT">Novo gestor</h2><div class="f">
    <label id="mTipoL" class="hide">Tipo de acesso<select id="mTipo"><option value="gestor">Gestor</option><option value="bipador">Bipador (pessoa comum, só o que você liberar)</option></select></label>
    <label>Nome<input id="mN" placeholder="Nome do gestor" autocomplete="off"></label>
    <label><span id="mUl">Usuário de login</span><input id="mU" placeholder="gabriel" autocomplete="off"></label>
@@ -828,8 +849,35 @@ body[data-v=cfg] #turnoF,body[data-v=cfg] #gal,body[data-v=cfg] #day{display:non
    <label class="row mGesP"><input type="checkbox" id="mR" checked style="min-height:auto"> Pode alterar e excluir registros</label>
    <label class="row mGesP"><input type="checkbox" id="mA" style="min-height:auto"> Administrador (vê todos os galpões)</label>
    <button class="btn" id="mB">Criar gestor</button></div></div>
-  <div class="card" id="pedCard"><h2>Pedidos de acesso</h2><div class="tw" id="pedL"></div><div class="legend">Para liberar, preencha nome, galpão e permissões no formulário ao lado e clique em Aceitar.</div></div>
-  <div class="card"><h2 id="mLT">Gestores</h2><div class="tw" id="mL"></div><div id="mSen"></div><div id="mAbas"></div><div id="mGalE"></div><div class="legend">Enquanto não existir nenhum gestor, Configurações e Individual ficam abertos. Depois do primeiro gestor, passam a exigir login.</div></div>
+  <div class="card"><div class="cfgLH"><h2 id="mLT">Gestores</h2><button class="btn sm cfgAddB" type="button" data-add="mNovo" id="mAddB">Adicionar acesso</button></div><div class="tw" id="mL"></div><div id="mSen"></div><div id="mAbas"></div><div id="mGalE"></div><div class="legend">Enquanto não existir nenhum gestor, Configurações e Individual ficam abertos. Depois do primeiro gestor, passam a exigir login.</div></div>
+ </div>
+
+ <div id="cga" class="cfgP hide"><header class="cfgH"><h2>Galpões</h2><p>Galpões da operação. Renomear um galpão atualiza os registros já lançados.</p></header>
+  <div class="card cfgAdd cfgAddOff" id="gNovo"><h2>Novo galpão</h2><div class="f">
+   <label>Nome<input id="gN" placeholder="Galpão 4" autocomplete="off"></label>
+    <button class="btn" id="gB">Criar galpão</button></div></div>
+  <div class="card"><div class="cfgLH"><h2>Todos os galpões</h2><button class="btn sm cfgAddB" type="button" data-add="gNovo">Adicionar galpão</button></div><div class="tw" id="gL"></div><div class="legend" id="gLeg">As metas ficam na aba Metas. Renomear um galpão atualiza os registros já lançados.</div></div>
+ </div>
+
+ <div id="cma" class="cfgP hide"><header class="cfgH"><h2>Banco de dados</h2><p>Espaço usado e limpeza de registros por período.</p></header>
+  <div class="card hide" id="usoCard"><h2>Uso do banco de dados</h2><div id="usoBody" class="legend">Carregando…</div></div>
+  <div class="card cfgPerigo"><h2>Apagar registros do banco</h2>
+ <p class="legend">Apaga as ondas registradas no período escolhido. Só o administrador vê esta opção. Não tem volta: use "Ver quantos" antes.</p>
+ <div class="f"><label>De<input type="date" id="xDe"></label><label>Até<input type="date" id="xAte"></label>
+ <label>Galpão<select id="xGal"></select></label></div>
+ <div class="ctl2"><button class="btn alt" id="xCont">Ver quantos</button></div>
+ <div id="xRes" class="legend" aria-live="polite"></div>
+ <div class="f"><label>Digite APAGAR para liberar o botão<input id="xCon" autocomplete="off"></label></div>
+ <button class="btn d" id="xDel" disabled>Apagar registros</button></div>
+ </div>
+
+ <div id="cau" class="cfgP hide"><header class="cfgH"><h2>Auditoria</h2><p>Quando cada gestor entrou e o que criou, alterou ou excluiu.</p></header><div class="card"><div class="audTop"><h2>Registros</h2><span class="pill" id="audN"></span></div>
+  <div class="ctl audF"><label>De<input type="date" id="audDe"></label><label>Até<input type="date" id="audAte"></label>
+   <label>Gestor<select id="audGes"><option value="">Todos</option></select></label>
+   <label>Mostrar<select id="audTipo"><option value="">Acessos e ações</option><option value="acesso">Só acessos</option><option value="acao">Só ações</option></select></label>
+   <label class="audQ">Buscar<input id="audQ" placeholder="Onda, pessoa, galpão" autocomplete="off"></label></div>
+  <div id="audUso"></div><div id="audBody"><div class="empty">Escolha o período.</div></div>
+  <div class="legend">Registra quando cada gestor entra, abre o sistema já logado e sai, e tudo o que ele cria, altera ou exclui. Registros do aparelho público (sem login) não entram aqui. Só o administrador vê esta aba, e ninguém consegue apagar ou mudar a auditoria pelo sistema. A auditoria guarda 1 ano: registros com mais de 1 ano saem sozinhos.</div></div></div>
  </div>
 </section>
 </main>
@@ -2284,7 +2332,7 @@ let uAll=false;
 document.addEventListener("input",e=>{if(e.target.id==="uQ")cfgUsers()});
 document.addEventListener("click",e=>{const b=e.target.closest&&e.target.closest("[data-uall]");if(b){uAll=b.dataset.uall==="1";cfgUsers()}});
 function soMeta(){return ON&&!!me&&!me.adm}
-function cfgGals(){const gest=soMeta();$("#gNovo").classList.toggle("hide",gest);
+function cfgGals(){const gest=soMeta();$("#gNovo").classList.toggle("hide",gest);$$('[data-add="gNovo"]').forEach(b=>b.classList.toggle("hide",gest));
  $("#gL").innerHTML=`<table><tr><th>Galpão</th><th>Registros</th><th></th></tr>`+S.gals.map((g,i)=>[g,i]).filter(x=>!gest||x[0]===me.g).map(([g,i])=>{const n=S.waves.filter(w=>w.gal===g).length;
   return`<tr><td>${gest?`<b>${esc(g)}</b>`:`<input data-gre="${i}" value="${esc(g)}" aria-label="Nome do galpão">`}</td><td>${n}</td><td>${gest?"":`<button class="btn d sm" data-gdel="${i}"${S.gals.length<2?" disabled style='opacity:.4'":""}>Excluir</button>`}</td></tr>`}).join("")+"</table>"}
 /* aba Metas: meta do dia, metas individuais e meta mínima da animação */
@@ -2302,7 +2350,7 @@ function mTipoUI(){const adm=ON&&me&&me.adm,bip=adm&&$("#mTipo").value==="bipado
  if(bip){const r=$("#mResp"),v=r.value,G=S.ges.filter(x=>!x.bip);r.innerHTML='<option value="">Escolha o gestor</option>'+G.map(x=>`<option value="${esc(x.u)}">${esc(x.n)}${x.g?" · "+esc(x.g):x.adm?" · administrador":""}</option>`).join("");r.value=G.some(x=>x.u===v)?v:"";
   const a=$("#mBipA");if(!a.dataset.ok){a.dataset.ok=1;a.innerHTML=`<fieldset class="bipF"><legend>O que essa pessoa pode acessar</legend>${BIP_A.map(([k,l])=>`<label class="row"><input type="checkbox" data-bipk="${k}" style="min-height:auto"${k==="op"?" checked":""}> ${l}</label>`).join("")}<div class="legend">Ela vê só o galpão do gestor responsável e não altera configurações nem registros. O gestor responsável também pode mudar esses acessos.</div></fieldset>`}}}
 function cfgGes(){
- if(ON){mTipoUI();const adm=!!(me&&me.adm);$("#mNovo").classList.toggle("hide",!adm);$("#mLT").textContent=adm?"Gestores e bipadores":"Seus bipadores";$("#mPl").textContent="Senha de acesso";$("#mP2").placeholder="mínimo 8 caracteres";
+ if(ON){mTipoUI();const adm=!!(me&&me.adm);$("#mNovo").classList.toggle("hide",!adm);$("#mAddB").classList.toggle("hide",!adm);$("#cgeD").textContent=adm?"Quem entra com login e o que cada um pode ver.":"Pessoas ligadas a você que entram para bipar. Você escolhe o que cada uma acessa.";$("#mLT").textContent=adm?"Todos os acessos":"Bipadores";$("#mPl").textContent="Senha de acesso";$("#mP2").placeholder="mínimo 8 caracteres";
   $("#pedCard").classList.toggle("hide",!SOL.length||!adm);
   const ms=$("#mSen"),sm=mSenU?S.ges.find(x=>x.u===mSenU):null;ms.innerHTML=sm?`<div class="f" style="margin-top:14px;padding-top:12px;border-top:1px solid var(--line)"><b>Nova senha para ${esc(sm.n)}</b><div class="legend">${esc(sm.u)}. Passe a senha para o gestor; ele entra direto com o e-mail e esta senha.</div><label>Nova senha<input type="password" id="mSenP" autocomplete="new-password" placeholder="mínimo 8 caracteres"></label><div class="ctl"><button class="btn sm" type="button" id="mSenOk">Salvar senha</button><button class="btn alt sm" type="button" id="mSenX">Cancelar</button></div></div>`:""}
  const mb=$("#mAbas");if(mb){const m=mAbasU?S.ges.find(x=>x.u===mAbasU):null;if(!m)mb.innerHTML="";else if(m.bip){const cur=m.ab||[];mb.innerHTML=`<div class="f" style="margin-top:14px;padding-top:12px;border-top:1px solid var(--line)"><b>O que ${esc(m.n)} pode acessar</b><div class="legend">Bipador vê só o galpão ${esc(m.g||"")} e não altera configurações nem registros.</div>${BIP_A.map(([k,l])=>`<label class="row"><input type="checkbox" data-abk="${k}" style="min-height:auto"${cur.includes(k)?" checked":""}> ${l}</label>`).join("")}<div class="ctl"><button class="btn sm" data-abs="salvar" type="button">Salvar acessos</button> <button class="btn alt sm" data-abs="fechar" type="button">Fechar</button></div></div>`}else{const cur=m.ab||ABAS_T.map(a=>a[0]);mb.innerHTML=`<div class="f" style="margin-top:14px;padding-top:12px;border-top:1px solid var(--line)"><b>Abas que ${esc(m.n)} pode ver</b><div class="legend">Administradores veem todas as abas. Desmarque para esconder abas deste gestor.</div>${ABAS_T.map(([k,l])=>`<label class="row"><input type="checkbox" data-abk="${k}" style="min-height:auto"${cur.includes(k)?" checked":""}> ${l}</label>`).join("")}<div class="ctl"><button class="btn sm" data-abs="salvar" type="button">Salvar abas</button> <button class="btn alt sm" data-abs="todas" type="button">Liberar todas</button> <button class="btn alt sm" data-abs="fechar" type="button">Fechar</button></div></div>`}}
@@ -2580,7 +2628,7 @@ const ABAS_T=[["painel","Painel"],["op","Coleta"],["prs","Procurando"],["ind","E
 const isI=t=>t==="ind"||t==="his";
 /* aba só aparece se o perfil atual pode abri-la; o que não é acessível fica oculto */
 function podeVer(t){if(ON&&me&&me.bip){const ab=me.ab||[];return ab.includes(t)||ab.some(k=>k.indexOf(t+".")===0)}if(t==="painel"&&ON&&!me)return false;if(t==="prod")return true;if(ON&&me&&!me.adm&&me.ab&&!me.ab.includes(t))return false;if(t==="op"||t==="prod"||t==="painel"||t==="prs")return true;if(ON)return !!me&&(isI(t)?!!me.pI:t==='cfg'?!!(me.pC||me.pI):!!me.pC);if(t==="painel")return true;return !needAuth(t)}
-function updTabs(){$$(".tab[data-t]").forEach(b=>{b.style.display=podeVer(b.dataset.t)?"":"none"});$$('#csub [data-c="cga"]').forEach(b=>{b.style.display=soMeta()?"none":""});$$('#fCard').forEach(c=>c.classList.toggle("hide",soMeta()));$$('#csub [data-c="cpd"]').forEach(b=>{let g=false;try{g=pdGestor()}catch(e){}b.style.display=g?"":"none"});$$('#csub [data-c="cge"]').forEach(b=>{const tb=temBip();b.style.display=soMeta()&&!tb?"none":"";b.textContent=soMeta()?"Bipadores":"Gestores";if(soMeta())delete b.dataset.merge;else b.dataset.merge="1"});$$('#csub [data-c="cma"]').forEach(b=>{b.style.display=(!ON||(me&&me.adm))?"":"none"});$$('#csub [data-c="cau"]').forEach(b=>{b.style.display=(ON&&me&&me.adm)?"":"none"});{const soHor=ON&&me&&!me.adm&&!me.pC;$$('#csub [data-c="cop"],#csub [data-c="cus"],#csub [data-c="cme"],#csub [data-c="cho"]').forEach(b=>{b.style.display=''});if(soHor)$$('#csub button').forEach(b=>{if(b.dataset.c!=='cho'&&!(b.dataset.c==='cge'&&temBip()))b.style.display='none'})}if(!podeVer(view)){const f=["op","prod","prs","painel"].find(k=>podeVer(k))||"op";if(f!=="op"){setTimeout(()=>go(f),0)}else{view="op";["painel","op","prod","prs","ind","his","cfg"].forEach(s=>{const x=$("#"+s);if(x)x.classList.toggle("hide",s!=="op")});$$(".tab[data-t]").forEach(b=>b.classList.toggle("on",b.dataset.t==="op"))}}bipSubs()}
+function updTabs(){$$(".tab[data-t]").forEach(b=>{b.style.display=podeVer(b.dataset.t)?"":"none"});cfgVis();if(!podeVer(view)){const f=["op","prod","prs","painel"].find(k=>podeVer(k))||"op";if(f!=="op"){setTimeout(()=>go(f),0)}else{view="op";["painel","op","prod","prs","ind","his","cfg"].forEach(s=>{const x=$("#"+s);if(x)x.classList.toggle("hide",s!=="op")});$$(".tab[data-t]").forEach(b=>b.classList.toggle("on",b.dataset.t==="op"))}}bipSubs()}
 let hWho="";
 function authUI(){const w=me?me.n+"|"+(me.g||"")+"|"+(me.adm?1:0):"";if(w!==hWho){hWho=w;hKey="";HW=null;HPW=null}$("#who").textContent=me?(me.bip?"Bipador: ":"Gestor: ")+me.n:"";const pub=ON&&!me;["#turnoF","#day"].forEach(i=>$(i).classList.toggle("hide",pub));$("#gal").classList.remove("hide");if(pub){$("#turnoF").value="";$("#day").value=dk(Date.now())}$("#logtx").textContent=me?"Sair":"Entrar";$("#pwbtn").classList.toggle("hide",!me);updTabs();if(ON&&!me&&view==="painel")go("op")}
 function go(t){if(t==="painel"&&ON&&!me)t="op";if(ON&&me&&!me.adm&&me.ab&&!podeVer(t)){const f=["op","prod","prs","painel","ind","his","cfg"].find(k=>podeVer(k));if(f)t=f}setTimeout(()=>{try{sideSubs()}catch(e){}},0);
@@ -2748,7 +2796,28 @@ document.addEventListener("click",e=>{const t=e.target;if(t.id==="prAdd"){const 
 function psub(k){window.__ps=k;$$("#psub button").forEach(b=>b.classList.toggle("on",b.dataset.p===(k==="sku"?"bip":k)));[["bip","pBip"],["sku","pSku"],["his","pHis"]].forEach(([a,id])=>$("#"+id).classList.toggle("hide",k==="his"?a!=="his":a==="his"));setTimeout(()=>{if(view!=="prs")return;const f=k==="bip"?$("#prBip"):k==="sku"?$("#prQ"):null;if(f)f.focus({preventScroll:true})},60)}
 $("#psub").onclick=e=>{const k=e.target.dataset.p;if(k)psub(k)};
 $("#sub").onclick=e=>{const s=e.target.dataset.s;if(!s)return;$$("#sub button").forEach(b=>b.classList.toggle("on",b===e.target));["reg","ctl","ace","aus"].forEach(x=>$("#"+x).classList.toggle("hide",x!==s));tick();if(s==="ace")aceLista();if(s==="aus")ausAbrir()};
-$("#csub").onclick=e=>{const c=e.target.dataset.c;if(!c)return;csub=c;$$("#csub button").forEach(b=>b.classList.toggle("on",b===e.target));{const G=(c==="cge"&&soMeta())?["cge"]:({cop:["cop","cme"],cme:["cop","cme"],cus:["cus","cge"],cge:["cus","cge"]}[c]||[c]),gv=x=>x!=="cge"||!soMeta()||c==="cge";["cop","cho","cus","cpd","cme","cga","cge","cma","cau"].forEach(x=>$("#"+x).classList.toggle("hide",!(G.includes(x)&&gv(x))));$$("#csub button").forEach(b=>b.classList.toggle("on",b.dataset.c===({cme:"cop",cge:"cus"}[c]||c)))}if(c==="cus"&&ON&&me&&me.adm)pull().then(()=>cfgGes()).catch(()=>{});if(c==="cge"&&ON&&me)pull().then(()=>cfgGes()).catch(()=>{});if(c==="cma")cfgMan();if(c==="cau")audAbrir();if(c==="cho")cfgParadas();if(c==="cpd")pdAbrirDis()};
+const CFG_P=["cop","cme","cho","cpa","cmo","cus","cpd","cge","cga","cma","cau"];
+$("#csub").onclick=e=>{const c=e.target.dataset.c;if(!c||!CFG_P.includes(c))return;csub=c;
+ CFG_P.forEach(x=>{const el=$("#"+x);if(el)el.classList.toggle("hide",x!==c)});
+ $$("#csub button,#cfgNav [data-c]").forEach(b=>{const on=b.dataset.c===c;b.classList.toggle("on",on);if(b.closest("#cfgNav")){if(on)b.setAttribute("aria-current","page");else b.removeAttribute("aria-current")}});
+ {const nb=$('#cfgNav [data-c="'+c+'"]');$("#cfgNavS").textContent=nb?nb.textContent:"";if(window.matchMedia&&matchMedia("(max-width:760px)").matches)$("#cfgNavD").open=false}
+ if(c==="cus"&&ON&&me&&me.adm)pull().then(()=>cfgGes()).catch(()=>{});if(c==="cge"&&ON&&me)pull().then(()=>cfgGes()).catch(()=>{});if(c==="cma")cfgMan();if(c==="cau")audAbrir();if(c==="cho"||c==="cpa")cfgParadas();
+ if(["cpd","cho","cme","cmo"].includes(c)){let pg=false;try{pg=pdGestor()}catch(e){}if(pg)pdAbrirDis()}};
+$("#cfgNav").onclick=e=>{const b=e.target.closest("[data-c]");if(!b)return;const x=$('#csub [data-c="'+b.dataset.c+'"]');if(x)x.click()};
+function cfgNavAbre(){const d=$("#cfgNavD");if(d&&!(window.matchMedia&&matchMedia("(max-width:760px)").matches))d.open=true}
+cfgNavAbre();window.addEventListener("resize",cfgNavAbre);
+document.addEventListener("click",e=>{const b=e.target.closest(".cfgAddB");if(!b)return;const f=$("#"+b.dataset.add);if(!f)return;if(!b.dataset.t0)b.dataset.t0=b.textContent;
+ const fechado=f.classList.toggle("cfgAddOff");b.textContent=fechado?b.dataset.t0:"Fechar";b.setAttribute("aria-expanded",String(!fechado));
+ if(!fechado){const i=f.querySelector("input:not([type=hidden]):not([type=checkbox]),select");try{f.scrollIntoView({block:"nearest",behavior:"smooth"})}catch(x){}if(i)setTimeout(()=>i.focus(),60)}});
+function cfgVis(){const sm=soMeta(),tb=temBip();let pg=false;try{pg=pdGestor()}catch(e){}
+ const V={cop:1,cme:1,cho:1,cpa:1,cmo:1,cus:1,cpd:pg,cge:!sm||tb,cga:!sm,cma:!ON||!!(me&&me.adm),cau:!!(ON&&me&&me.adm)};
+ if(ON&&me&&!me.adm&&!me.pC)Object.keys(V).forEach(k=>{if(!["cho","cpa","cmo"].includes(k)&&!(k==="cge"&&tb))V[k]=false});
+ $$("#csub [data-c],#cfgNav [data-c]").forEach(b=>{b.style.display=V[b.dataset.c]?"":"none"});
+ $$('#csub [data-c="cge"],#cfgNav [data-c="cge"]').forEach(b=>{b.textContent=sm?"Seus bipadores":"Gestores e bipadores"});
+ $$("#cfgNav .cnG").forEach(g=>{g.style.display=[...g.querySelectorAll("[data-c]")].some(b=>b.style.display!=="none")?"":"none"});
+ {const f=$("#fCard");if(f)f.classList.toggle("hide",sm)}
+ ["cpdTu","pdMt","paMotCard"].forEach(id=>{const x=$("#"+id);if(x)x.classList.toggle("hide",!pg)});
+ if(!V[csub]&&view==="cfg"){const f=CFG_P.find(k=>V[k]);if(f)setTimeout(()=>{const b=$('#csub [data-c="'+f+'"]');if(b)b.click()},0)}}
 $("#iPrint").onclick=imprimirFolhas;$("#iOp").onchange=()=>{mgShown=100;individual()};$("#iPer").onchange=()=>{mgShown=100;individual();coletiva();loadManagement()};
 $("#iBody").addEventListener("click",e=>{if(e.target.id==="mgMore"){mgShown+=100;individual()}if(e.target.id==="mgTurnoSave")mgSalvarTurno();if(e.target.id==="presSalvar")presSalvar();if(e.target.id==="presBaixa")presBaixa();if(e.target.id==="presAtrSalvar")presAtrSalvar();if(e.target.dataset&&e.target.dataset.cancel)presCancelar(e.target.dataset.cancel)});
 const hojeSemana=()=>mondayOf(dk(Date.now()));
@@ -3040,7 +3109,7 @@ function pdSubPr(){PDpr=PDsub="bip";
 async function pdAbrir(){pdSubPr(PDpr);paSub(PAsub,1);pdRender();await pdCarregar();pdRender();pdFilaEnviar()}
 async function pdAbrirDis(){PDsub="dis";PDD.t=0;pdRender();await pdCarregar();pdRender()}
 function pdCfgRender(){paCfgMot();pdDisLista();pdTurnosLista();const m=$("#pdMt");if(m&&!(document.activeElement&&m.contains(document.activeElement)&&document.activeElement.matches("input,select")))m.innerHTML=pdMetasHtml()}
-function pdRender(){if(view==="cfg"){if(csub==="cpd")pdCfgRender();return}if(PDsub==="dis")pdEqRender();else{pdWho();pdLista();if(PAsub==="aus"){paForm();paLista()}}}
+function pdRender(){if(view==="cfg"){if(["cpd","cho","cme","cmo"].includes(csub))pdCfgRender();return}if(PDsub==="dis")pdEqRender();else{pdWho();pdLista();if(PAsub==="aus"){paForm();paLista()}}}
 
 /* ---------- Bipar ---------- */
 function pdSugest(){const q=nrm($("#pdP").value),box=$("#pdSug");PDsI=-1;PDsL=[];
@@ -3675,7 +3744,7 @@ function audRender(){const box=$("#audBody");if(!box)return;const q=nrm($("#audQ
 document.addEventListener("change",e=>{const id=e.target.id;if(id==="audDe"||id==="audAte"||id==="audGes"||id==="audTipo")audCarregar()});
 document.addEventListener("input",e=>{if(e.target.id==="audQ")audRender()});
 /* mini abas na lateral: espelham as abas internas de cada área */
-const SUBS={prod:["pasub","pa"],op:["sub","s"],ind:["gsub","gs"],prs:["psub","p"],his:["hsub","hs"],cfg:["csub","c"]};
+const SUBS={prod:["pasub","pa"],op:["sub","s"],ind:["gsub","gs"],prs:["psub","p"],his:["hsub","hs"]};
 function sideSubs(){
  $$(".ssub").forEach(e=>e.remove());const k=SUBS[view];if(!k)return;const bar=document.getElementById(k[0]),tab=document.querySelector('nav.side .tab[data-t="'+view+'"]');if(!bar||!tab)return;
  const box=document.createElement("div");box.className="ssub";box.setAttribute("role","group");box.setAttribute("aria-label","Abas de "+tab.textContent.trim());

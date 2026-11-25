@@ -1,5 +1,6 @@
 // Bateria de testes do RC Ondas (Playwright). Uso: node run.js [arquivo.html]
 const {chromium}=require('playwright');const path=require('path');
+const abrirAdd=async p=>{await p.evaluate(()=>document.querySelectorAll('.cfgAddOff').forEach(x=>x.classList.remove('cfgAddOff')))};
 const FILE='http://127.0.0.1:8765/'+(process.argv[2]||'index.html');
 const R=[];const ok=(c,m)=>{if(!c)throw new Error(m)};
 const DAY=new Date();DAY.setHours(0,0,0,0);const D0=DAY.getTime(),H=36e5;
@@ -13,7 +14,7 @@ function bigState(N){const TY=["Vários","Múltiplos","Itens Únicos","Maiores/P
  for(let k=0;k<N;k++){const o=ops[k%60],day=Math.floor(k/(N/60)),t=D0-day*24*H+(7+(k%14))*H+(k%60)*6e4;
   waves.push({id:"w"+k,wn:String(100000+k),op:o.m,opn:o.n,gal:o.g,ty:TY[k%4],qty:1+(k*7)%90,st:0,ts:t,fin:t,sync:1})}
  return base({ops,waves})}
-async function page(b,state,opts={}){const ctx=await b.newContext({viewport:opts.vp||{width:1366,height:900}});const p=await ctx.newPage();if(!opts.festa)await p.addInitScript(()=>{window.__semFesta=1});if(!opts.sidebarSubs)await p.addInitScript(()=>{document.addEventListener('DOMContentLoaded',()=>{const s=document.createElement('style');s.textContent='#sub,#gsub,#psub,#hsub,#csub{display:flex!important}';document.head.appendChild(s)})});
+async function page(b,state,opts={}){const ctx=await b.newContext({viewport:opts.vp||{width:1366,height:900}});const p=await ctx.newPage();if(!opts.festa)await p.addInitScript(()=>{window.__semFesta=1});if(!opts.sidebarSubs)await p.addInitScript(()=>{document.addEventListener('DOMContentLoaded',()=>{const s=document.createElement('style');s.textContent='#sub,#gsub,#psub,#hsub{display:flex!important}';document.head.appendChild(s)})});
  p.errors=[];p.on('pageerror',e=>p.errors.push(e.message));
  await ctx.addInitScript(([s])=>{if(!sessionStorage.__seeded){sessionStorage.__seeded=1;localStorage.clear();localStorage.setItem("rcondas.pnv","col");if(s)localStorage.setItem("rcondas.v2",s)}},[state?JSON.stringify(state):null]);
  await p.route(/fonts\.(googleapis|gstatic)\.com/,r=>r.abort());
@@ -101,14 +102,14 @@ await T("16 Virada do dia: 23h59 e 00h01 caem em dias diferentes",async()=>{cons
 
 await T("17 Excluir usuário libera o código e mantém o histórico",async()=>{const S=base({waves:[{id:"a",wn:"1",op:"CL002",opn:"Bruno Lima",gal:"Galpão 1",ty:"Vários",qty:5,st:0,ts:Date.now(),fin:Date.now(),sync:1}]});
  const p=await page(b,S);p.on('dialog',d=>d.accept());await p.click('.tab[data-t="cfg"]');await p.click('[data-c="cus"]');await p.fill('#uQ','Bruno');await p.click('[data-udel="CL002"]');await p.waitForTimeout(150);
- await p.fill('#uN','Diego Rocha');await p.click('#uB');await p.waitForTimeout(150);const s=await st(p);
+ await abrirAdd(p);await p.fill('#uN','Diego Rocha');await p.click('#uB');await p.waitForTimeout(150);const s=await st(p);
  ok(s.ops.find(o=>o.n==="Diego Rocha").m==="CL002","código novo: "+s.ops.find(o=>o.n==="Diego Rocha").m);ok(s.waves.length===1&&s.waves[0].opn==="Bruno Lima","histórico mudou");
  await p.evaluate(()=>{go("ind");go("painel");go("op")});ok(p.errors.length===0,"erro JS: "+p.errors.join(";"));
  const name=await p.evaluate(()=>document.querySelector("#last").textContent);return name.includes("Bruno Lima")?"registro antigo ainda mostra Bruno Lima":"?"});
 
 await T("18 Código reutilizado não herda a produção do usuário excluído",async()=>{const S=base({waves:[{id:"a",wn:"1",op:"CL002",opn:"Bruno Lima",gal:"Galpão 1",ty:"Vários",qty:55,st:0,ts:Date.now(),fin:Date.now(),sync:1}]});
  const p=await page(b,S);p.on('dialog',d=>d.accept());await p.click('.tab[data-t="cfg"]');await p.click('[data-c="cus"]');await p.fill('#uQ','Bruno');await p.click('[data-udel="CL002"]');await p.waitForTimeout(100);
- await p.fill('#uN','Diego Rocha');await p.click('#uB');await p.waitForTimeout(100);
+ await abrirAdd(p);await p.fill('#uN','Diego Rocha');await p.click('#uB');await p.waitForTimeout(100);
  const r=await p.evaluate(()=>{go("ind");$("#iOp").value="CL002";individual();return document.querySelector("#iBody .kpi .num").textContent});
  const tot=await p.evaluate(()=>{go("painel");return document.querySelector("#kpis .num").textContent});
  ok(r.trim()==="0","Diego (CL002 novo) aparece com "+r);ok(tot.trim()==="55","painel perdeu a produção antiga: "+tot);return "Diego 0 · painel ainda soma 55 do Bruno"});
@@ -118,8 +119,8 @@ await T("19 Renomear galpão leva junto registros e meta",async()=>{const S=base
  const s=await st(p);ok(s.gals[0]==="Galpão Norte"&&s.waves[0].gal==="Galpão Norte"&&s.metasDia[HJ]["Galpão Norte"]===10000&&s.ops[0].g==="Galpão Norte","não acompanhou: "+JSON.stringify({g:s.gals[0],w:s.waves[0].gal,m:s.metasDia}))});
 
 await T("20 Nome malicioso não executa código (XSS)",async()=>{const p=await page(b,base());await p.click('.tab[data-t="cfg"]');await p.click('[data-c="cus"]');
- await p.fill('#uN','<img src=x onerror="window.__x=1">');await p.click('#uB');await p.waitForTimeout(100);
- await p.click('[data-c="cga"]');await p.fill('#gN','<svg onload="window.__x=2">');await p.click('#gB');await p.waitForTimeout(100);
+ await abrirAdd(p);await p.fill('#uN','<img src=x onerror="window.__x=1">');await p.click('#uB');await p.waitForTimeout(100);
+ await p.click('[data-c="cga"]');await abrirAdd(p);await p.fill('#gN','<svg onload="window.__x=2">');await p.click('#gB');await p.waitForTimeout(100);
  await p.evaluate(()=>{go("op");go("ind");go("painel")});await openReg(p,"CL004","Vários");await typeRows(p,[[6900,1]]);await p.click('#save');await p.waitForTimeout(150);
  await p.evaluate(()=>{go("ind");go("painel")});ok(!(await p.evaluate(()=>window.__x)),"executou código injetado")});
 
@@ -203,9 +204,9 @@ await T("33 Gestão: falta sem bipagem e hora extra estimada",async()=>{const no
 
 await T("40 Configurações: cartões da Operação recolhem e expandem",async()=>{const p=await page(b,base());await p.click('.tab[data-t="cfg"]');
  const cartoes=await p.evaluate(()=>document.querySelectorAll('#cop > .card').length);
- await p.click('#cop > .card:nth-child(1) .ch');await p.waitForTimeout(100);
+ await p.click('#cop > div.card:nth-of-type(1) .ch');await p.waitForTimeout(100);
  const recolheu=await p.isHidden('#lims');
- await p.click('#cop > .card:nth-child(1) .ch');await p.waitForTimeout(100);
+ await p.click('#cop > div.card:nth-of-type(1) .ch');await p.waitForTimeout(100);
  const abriu=await p.isVisible('#lims');
  ok(cartoes===2&&recolheu&&abriu,'cartões '+cartoes+', recolheu '+recolheu+', abriu '+abriu)});
 
@@ -713,7 +714,7 @@ await T("95 Café do galpão: Config salva e o intervalo do café não vira paus
  await p.fill(f+'[data-hk="ci"]','');await p.fill(f+'[data-hk="cf"]','');await p.click(f+'[data-pzdel="0"]');await p.click(f+'[type="submit"]');await p.waitForTimeout(200);ok((await p.evaluate(()=>pausasT(1,'Galpão 1').length))===0,'remover')});
 await T("96 Paradas da operação: registro em Config, aviso no Painel e o tempo parado não vira pausa",async()=>{const D=864e5,y=HR(0,0)-D,at=(h,m)=>y+h*36e5+m*6e4;
  const st=base({waves:[WV('a','1','Itens Únicos',10,at(13,50)),WV('b','2','Itens Únicos',10,at(14,50))]});const p=await page(b,st);p.on('dialog',d=>d.accept());
- await p.evaluate(()=>{go('cfg');document.querySelector('[data-c="cho"]').click()});await p.waitForTimeout(150);
+ await p.evaluate(()=>{go('cfg');document.querySelector('#csub [data-c="cpa"]').click()});await p.waitForTimeout(150);
  await p.evaluate(y=>{$("#parDia").value=dk(y)},y);await p.fill('#parIni','14:00');await p.fill('#parFim','14:40');await p.selectOption('#parMot','Falta de energia');await p.click('#parSalvar');await p.waitForTimeout(200);
  const r=await p.evaluate(y=>{const d=dk(y);return{n:S.paradas.length,sp:mgSplit(S.ops[0],d,S.waves).nMs/6e4,lista:document.querySelector('#parList').textContent}},y);
  ok(r.n===1&&/Falta de energia/.test(r.lista),'registro: '+JSON.stringify(r));ok(r.sp===20,'60 min entre ondas menos 40 de parada = 20: '+r.sp);
