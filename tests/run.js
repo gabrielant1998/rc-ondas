@@ -396,6 +396,9 @@ await T("57 Histórico: ondas por pessoa recolhidas, pesquisa por número dentro
  ok((await p.$$('#hBody details.hp')).length===2,'duas pessoas');ok(!(await p.textContent('#hBody')).includes('WN22A48089'),'deveria vir recolhido');
  await p.click('#hBody details.hp[data-hp="CL001"] summary');await p.waitForTimeout(100);let t=await p.textContent('#hBody');ok(t.includes('WN22A48089')&&t.includes('WN22A48090')&&!t.includes('WN22A99999'),'abre só a pessoa');
  await p.fill('#hBody [data-hpq="CL001"]','48090');t=await p.textContent('#hBody details.hp[data-hp="CL001"]');ok(t.includes('WN22A48090')&&!t.includes('WN22A48089'),'pesquisa na pessoa');
+ {const c=await p.evaluate(()=>{const r=document.querySelector('#hBody details.hp[data-hp="CL001"] summary');return[...r.children].map(x=>x.textContent.trim())});ok(c.length===6&&c[1]==='—'&&c[2]==='1'&&c[3]==='1'&&c[4]==='2','colunas por tipo: '+JSON.stringify(c))}
+ await p.click('#hBody [data-hps="Vários artigos"]');await p.waitForTimeout(150);ok((await p.$$eval('#hBody details.hp',d=>d.map(x=>x.dataset.hp)))[0]==='CL002','ordenar pela coluna');
+ if(process.env.SHOT)await (await p.$('#hBody .hpW')).screenshot({path:process.env.SHOT+'/hp.png'});
  await p.fill('#hUni','WN22A999');await p.keyboard.press('Enter');ok((await p.textContent('#hUniRes')).includes('pelo menos 9'),'menos de 9 não busca');
  await p.fill('#hUni','WN22A99999');ok(!(await p.textContent('#hUniRes')).includes('Bruno'),'não busca sem Enter');
  await p.keyboard.press('Enter');await p.waitForTimeout(150);t=await p.textContent('#hUniRes');ok(t.includes('Bruno Lima')&&t.includes('Vários artigos')&&t.includes('30'),'busca universal: '+t.slice(0,200))});
