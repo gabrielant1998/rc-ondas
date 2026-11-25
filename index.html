@@ -323,7 +323,7 @@ td .btn.d:hover,td .pill.off[data-adel]:hover{background:var(--r);color:#fff;bor
 .pfh .pft{flex:1;min-width:200px}.pfh .pft h2{font:700 22px/1.1 var(--fd);margin:0 0 2px}.pfh .pfn{display:flex;align-items:center;gap:8px}
 .pfg{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);gap:12px;margin-top:12px;align-items:start}@media(max-width:900px){.pfg{grid-template-columns:minmax(0,1fr)}}.pfg>.card{min-width:0}
 .almC{font-size:13px;color:var(--mut);margin-top:4px;white-space:nowrap}.almC input{min-height:28px;padding:2px 4px;font-size:12px;width:auto}
-.cobig{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}.cobig b{font-size:34px;line-height:1}.cobig span{color:var(--mut);font-size:13px}.bar.cob{height:10px;margin-top:8px}.usoW{display:block;width:100%;flex:1 0 100%}.usoBar{position:relative;height:14px;margin-top:10px;background:var(--line);border-radius:7px;overflow:hidden}.usoBar b{display:block;height:100%;border-radius:7px;transition:width 1.2s cubic-bezier(.2,.8,.2,1)}.usoBar i{position:absolute;top:0;bottom:0;width:2px;background:var(--mut);opacity:.55}.usoEsc{position:relative;height:16px;font-size:11px;color:var(--mut);margin-top:3px}.usoEsc span{position:absolute;left:0}.usoEsc span:last-child{left:auto;right:0}.usoEsc span[style]{transform:translateX(-50%)}.usoMini{margin:0 0 12px;font-size:13px;color:var(--mut)}.usoMini b{color:var(--ink,inherit)}
+.cobig{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}.cobig b{font-size:34px;line-height:1}.cobig span{color:var(--mut);font-size:13px}.bar.cob{height:10px;margin-top:8px}.bipF{border:1px solid var(--line);border-radius:10px;padding:10px 12px 8px;margin:2px 0 4px}.bipF legend{font-size:13px;font-weight:600;padding:0 6px}.bipF .row{padding:3px 0}.bipF .legend{margin-top:6px;font-size:12.5px}.usoW{display:block;width:100%;flex:1 0 100%}.usoBar{position:relative;height:14px;margin-top:10px;background:var(--line);border-radius:7px;overflow:hidden}.usoBar b{display:block;height:100%;border-radius:7px;transition:width 1.2s cubic-bezier(.2,.8,.2,1)}.usoBar i{position:absolute;top:0;bottom:0;width:2px;background:var(--mut);opacity:.55}.usoEsc{position:relative;height:16px;font-size:11px;color:var(--mut);margin-top:3px}.usoEsc span{position:absolute;left:0}.usoEsc span:last-child{left:auto;right:0}.usoEsc span[style]{transform:translateX(-50%)}.usoMini{margin:0 0 12px;font-size:13px;color:var(--mut)}.usoMini b{color:var(--ink,inherit)}
 .tw i.dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:7px;vertical-align:middle}
 .pg{display:flex;align-items:center;gap:10px;justify-content:flex-end;margin-top:8px;font-size:13px;color:var(--mut)}
 .pzB{grid-column:1/-1;border-top:1px dashed var(--line);padding-top:8px;margin-bottom:6px;display:grid;gap:6px}.hrG{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 14px}.hrG button{min-height:40px;padding:6px 14px;border:1px solid var(--line);border-radius:999px;background:none;color:var(--ink);font:600 14px var(--fb);cursor:pointer}.hrG button.on{background:var(--g);border-color:var(--g);color:#fff}
@@ -815,18 +815,21 @@ body[data-v=cfg] #turnoF,body[data-v=cfg] #gal,body[data-v=cfg] #day{display:non
  <div class="f"><label>Digite APAGAR para liberar o botão<input id="xCon" autocomplete="off"></label></div>
  <button class="btn d" id="xDel" disabled>Apagar registros</button></div></div>
 <div id="cge" class="grid two hide">
-  <div class="card"><h2>Novo gestor</h2><div class="f">
+  <div class="card" id="mNovo"><h2 id="mNovoT">Novo gestor</h2><div class="f">
+   <label id="mTipoL" class="hide">Tipo de acesso<select id="mTipo"><option value="gestor">Gestor</option><option value="bipador">Bipador (pessoa comum, só o que você liberar)</option></select></label>
    <label>Nome<input id="mN" placeholder="Nome do gestor" autocomplete="off"></label>
    <label><span id="mUl">Usuário de login</span><input id="mU" placeholder="gabriel" autocomplete="off"></label>
-   <label>Galpão do gestor<select id="mG"></select></label>
+   <label id="mRespL" class="hide">Gestor responsável<select id="mResp"></select></label>
+   <label><span id="mGl">Galpão do gestor</span><select id="mG"></select></label>
    <label><span id="mPl">Senha (opcional)</span><input id="mP2" type="password" placeholder="deixe vazio para entrar só com o usuário" autocomplete="new-password"></label>
-   <label class="row"><input type="checkbox" id="mC" checked style="min-height:auto"> Pode alterar configurações</label>
-   <label class="row"><input type="checkbox" id="mI" checked style="min-height:auto"> Pode ver acompanhamento individual</label>
-   <label class="row"><input type="checkbox" id="mR" checked style="min-height:auto"> Pode alterar e excluir registros</label>
-   <label class="row"><input type="checkbox" id="mA" style="min-height:auto"> Administrador (vê todos os galpões)</label>
+   <div id="mBipA" class="hide"></div>
+   <label class="row mGesP"><input type="checkbox" id="mC" checked style="min-height:auto"> Pode alterar configurações</label>
+   <label class="row mGesP"><input type="checkbox" id="mI" checked style="min-height:auto"> Pode ver acompanhamento individual</label>
+   <label class="row mGesP"><input type="checkbox" id="mR" checked style="min-height:auto"> Pode alterar e excluir registros</label>
+   <label class="row mGesP"><input type="checkbox" id="mA" style="min-height:auto"> Administrador (vê todos os galpões)</label>
    <button class="btn" id="mB">Criar gestor</button></div></div>
   <div class="card" id="pedCard"><h2>Pedidos de acesso</h2><div class="tw" id="pedL"></div><div class="legend">Para liberar, preencha nome, galpão e permissões no formulário ao lado e clique em Aceitar.</div></div>
-  <div class="card"><h2>Gestores</h2><div class="tw" id="mL"></div><div id="mSen"></div><div id="mAbas"></div><div id="mGalE"></div><div class="legend">Enquanto não existir nenhum gestor, Configurações e Individual ficam abertos. Depois do primeiro gestor, passam a exigir login.</div></div>
+  <div class="card"><h2 id="mLT">Gestores</h2><div class="tw" id="mL"></div><div id="mSen"></div><div id="mAbas"></div><div id="mGalE"></div><div class="legend">Enquanto não existir nenhum gestor, Configurações e Individual ficam abertos. Depois do primeiro gestor, passam a exigir login.</div></div>
  </div>
 </section>
 </main>
@@ -990,7 +993,7 @@ async function pullReal(opt){
  if(sess){
   const mt=await api("/rest/v1/metas_diarias?select=galpao_id,meta&data=eq."+hoje());const dh=hoje();S.metasDia[dh]={};mt.forEach(x=>{const n=GN[x.galpao_id];if(n)S.metasDia[dh][n]=x.meta});
   const g=await api("/rest/v1/gestores?select=*&order=nome");
-  S.ges=g.map(x=>({n:x.nome,u:x.email,g:x.galpao_id?GN[x.galpao_id]:null,adm:x.admin,pC:x.pode_config,pI:x.pode_individual,pR:x.pode_registros,ab:x.abas||null}));
+  S.ges=g.map(x=>({n:x.nome,u:x.email,g:x.galpao_id?GN[x.galpao_id]:null,adm:x.admin,pC:x.pode_config,pI:x.pode_individual,pR:x.pode_registros,ab:x.abas||null,bip:x.perfil==="bipador",rs:x.responsavel||null}));
   me=S.ges.find(x=>x.u===sess.email)||null;
   if(!me){S.ges=[];SOL=[];const pd=pedidoPendente();try{await api("/rest/v1/rpc/solicitar_acesso",{method:"POST",body:{p_nome:pd?pd.nome:null,p_galpao:(pd&&GID[pd.galpao])||null}});localStorage.removeItem("rcondas.pedido");pedidoDados=null}catch(e){}setSess(null);cacheLimpar();toast("Ainda sem acesso. Pedido enviado ao administrador: quando ele liberar, entre de novo.",8000)}
   else{if(me.g)S.gal=me.g;SOL=[];if(me.adm)try{SOL=await api("/rest/v1/solicitacoes_gestor?select=email,criado_em,nome,galpao_id&order=criado_em")}catch(e){}}}
@@ -1123,7 +1126,7 @@ function remWave(d){const id=d.fin||d.sd||d.del,w=S.waves.find(x=>x.id===id);if(
  return rem(()=>mut("/rest/v1/ondas?id=eq."+id,"PATCH",d.fin?{status:0,concluida_em:new Date().toISOString()}:{status:2,concluida_em:null}),d.fin?"Onda concluída":"Onda marcada como difícil acesso")}
 /* entrada de gestores */
 const voltaPara=()=>encodeURIComponent(location.origin+location.pathname);
-async function entrar(){const email=$("#lU").value.trim().toLowerCase(),pw=$("#lP").value;
+async function entrar(){const email=loginEmail($("#lU").value),pw=$("#lP").value;
  if(recMode){if(pw.length<8){toast("Use pelo menos 8 caracteres.");return}
   try{await api("/auth/v1/user",{method:"PUT",body:{password:pw}});recMode=false;loginUI();$("#login").classList.add("hide");primeiroMode=false;$("#lP").value="";toast("Senha criada. Você já está dentro.");await pull();go("painel")}catch(e){toast(errMsg(e),6000)}return}
  if(!email||!pw){toast("Informe e-mail e senha.");return}
@@ -1131,7 +1134,7 @@ async function entrar(){const email=$("#lU").value.trim().toLowerCase(),pw=$("#l
   await pull();if(!me)return;
   $("#login").classList.add("hide");primeiroMode=false;$("#lP").value="";toast("Bem-vindo, "+me.n);audAcesso("entrou");const t=pend||"painel";pend=null;go(t)}
  catch(e){if(e.status)setSess(null);toast(errMsg(e),6000)}}
-async function primeiroAcesso(){const email=$("#lU").value.trim().toLowerCase(),pw=$("#lP").value;
+async function primeiroAcesso(){const email=loginEmail($("#lU").value),pw=$("#lP").value;
  const nome=$("#lN").value.trim(),gal=$("#lG").value;
  if(nome.length<2){toast("Informe seu nome.");$("#lN").focus();return}
  if(!gal){toast("Escolha o galpão onde você trabalha.");$("#lG").focus();return}
@@ -1149,7 +1152,7 @@ async function sair(){await audAcesso("saiu");try{await raw("/auth/v1/logout",{m
 function loginUI(){const pa=primeiroMode&&!recMode;$("#lNomeL").classList.toggle("hide",!pa);$("#lGalL").classList.toggle("hide",!pa);
  if(pa)$("#lG").innerHTML='<option value="">Escolha o galpão</option>'+S.gals.map(g=>`<option value="${esc(g)}">${esc(g)}</option>`).join("");
  $("#lNew").textContent=pa?"Criar acesso":"Primeiro acesso";
- $("#lT").textContent=recMode?"Criar nova senha":(pa?"Primeiro acesso":"Entrar como gestor");$("#lUl").textContent="E-mail";$("#lPl").textContent=recMode?"Nova senha":"Senha";
+ $("#lT").textContent=recMode?"Criar nova senha":(pa?"Primeiro acesso":"Entrar");$("#lUl").textContent="E-mail ou usuário";$("#lPl").textContent=recMode?"Nova senha":"Senha";
  $("#lU").closest("label").classList.toggle("hide",recMode);$("#lExtra").classList.toggle("hide",recMode);$("#lB").textContent=recMode?"Salvar senha":"Entrar";$("#lU").type="email"}
 /* volta do link de e-mail (confirmação ou nova senha) */
 async function lerRetorno(){const h=location.hash.slice(1);if(!/access_token=|error_description=/.test(h))return;
@@ -2292,18 +2295,26 @@ function cfgMetas(){const gest=soMeta();
  const fm=$("#fmin");if(fm&&document.activeElement!==fm)fm.value=S.cfg.metaMin||"";
  const mn=+S.cfg.metaMin||0;$("#fLeg").textContent=mn?"A festa abre sozinha, uma vez por dia, quando a produção do dia chegar à meta e a pelo menos "+fmt(mn)+" unidades. Abaixo disso o placar só fica dourado.":"Sem mínimo: a festa abre sozinha, uma vez por dia, assim que a produção do dia chegar à meta. Informe um valor para só comemorar metas a partir dele."}
 let mSenU=null;
+function mTipoUI(){const adm=ON&&me&&me.adm,bip=adm&&$("#mTipo").value==="bipador";
+ $("#mTipoL").classList.toggle("hide",!adm);$("#mRespL").classList.toggle("hide",!bip);$("#mBipA").classList.toggle("hide",!bip);$$("#mNovo .mGesP").forEach(x=>x.classList.toggle("hide",bip));
+ $("#mNovoT").textContent=bip?"Novo bipador":"Novo gestor";$("#mGl").textContent=bip?"Galpão (vem do gestor responsável)":"Galpão do gestor";$("#mB").textContent=bip?"Criar bipador":"Criar gestor";$("#mN").placeholder=bip?"Nome e sobrenome da pessoa":"Nome do gestor";
+ $("#mUl").textContent=bip?"Usuário de login (ou e-mail)":"E-mail do gestor";$("#mU").type=bip?"text":"email";$("#mU").placeholder=bip?"joao.silva":"nome@empresa.com";
+ if(bip){const r=$("#mResp"),v=r.value,G=S.ges.filter(x=>!x.bip);r.innerHTML='<option value="">Escolha o gestor</option>'+G.map(x=>`<option value="${esc(x.u)}">${esc(x.n)}${x.g?" · "+esc(x.g):x.adm?" · administrador":""}</option>`).join("");r.value=G.some(x=>x.u===v)?v:"";
+  const a=$("#mBipA");if(!a.dataset.ok){a.dataset.ok=1;a.innerHTML=`<fieldset class="bipF"><legend>O que essa pessoa pode acessar</legend>${BIP_A.map(([k,l])=>`<label class="row"><input type="checkbox" data-bipk="${k}" style="min-height:auto"${k==="op"?" checked":""}> ${l}</label>`).join("")}<div class="legend">Ela vê só o galpão do gestor responsável e não altera configurações nem registros. O gestor responsável também pode mudar esses acessos.</div></fieldset>`}}}
 function cfgGes(){
- if(ON){$("#mUl").textContent="E-mail do gestor";$("#mU").placeholder="nome@empresa.com";$("#mU").type="email";$("#mPl").textContent="Senha de acesso";$("#mP2").placeholder="mínimo 8 caracteres";
-  $("#pedCard").classList.toggle("hide",!SOL.length);
+ if(ON){mTipoUI();const adm=!!(me&&me.adm);$("#mNovo").classList.toggle("hide",!adm);$("#mLT").textContent=adm?"Gestores e bipadores":"Seus bipadores";$("#mPl").textContent="Senha de acesso";$("#mP2").placeholder="mínimo 8 caracteres";
+  $("#pedCard").classList.toggle("hide",!SOL.length||!adm);
   const ms=$("#mSen"),sm=mSenU?S.ges.find(x=>x.u===mSenU):null;ms.innerHTML=sm?`<div class="f" style="margin-top:14px;padding-top:12px;border-top:1px solid var(--line)"><b>Nova senha para ${esc(sm.n)}</b><div class="legend">${esc(sm.u)}. Passe a senha para o gestor; ele entra direto com o e-mail e esta senha.</div><label>Nova senha<input type="password" id="mSenP" autocomplete="new-password" placeholder="mínimo 8 caracteres"></label><div class="ctl"><button class="btn sm" type="button" id="mSenOk">Salvar senha</button><button class="btn alt sm" type="button" id="mSenX">Cancelar</button></div></div>`:""}
- const mb=$("#mAbas");if(mb){const m=mAbasU?S.ges.find(x=>x.u===mAbasU):null;if(!m)mb.innerHTML="";else{const cur=m.ab||ABAS_T.map(a=>a[0]);mb.innerHTML=`<div class="f" style="margin-top:14px;padding-top:12px;border-top:1px solid var(--line)"><b>Abas que ${esc(m.n)} pode ver</b><div class="legend">Administradores veem todas as abas. Desmarque para esconder abas deste gestor.</div>${ABAS_T.map(([k,l])=>`<label class="row"><input type="checkbox" data-abk="${k}" style="min-height:auto"${cur.includes(k)?" checked":""}> ${l}</label>`).join("")}<div class="ctl"><button class="btn sm" data-abs="salvar" type="button">Salvar abas</button> <button class="btn alt sm" data-abs="todas" type="button">Liberar todas</button> <button class="btn alt sm" data-abs="fechar" type="button">Fechar</button></div></div>`}}
+ const mb=$("#mAbas");if(mb){const m=mAbasU?S.ges.find(x=>x.u===mAbasU):null;if(!m)mb.innerHTML="";else if(m.bip){const cur=m.ab||[];mb.innerHTML=`<div class="f" style="margin-top:14px;padding-top:12px;border-top:1px solid var(--line)"><b>O que ${esc(m.n)} pode acessar</b><div class="legend">Bipador vê só o galpão ${esc(m.g||"")} e não altera configurações nem registros.</div>${BIP_A.map(([k,l])=>`<label class="row"><input type="checkbox" data-abk="${k}" style="min-height:auto"${cur.includes(k)?" checked":""}> ${l}</label>`).join("")}<div class="ctl"><button class="btn sm" data-abs="salvar" type="button">Salvar acessos</button> <button class="btn alt sm" data-abs="fechar" type="button">Fechar</button></div></div>`}else{const cur=m.ab||ABAS_T.map(a=>a[0]);mb.innerHTML=`<div class="f" style="margin-top:14px;padding-top:12px;border-top:1px solid var(--line)"><b>Abas que ${esc(m.n)} pode ver</b><div class="legend">Administradores veem todas as abas. Desmarque para esconder abas deste gestor.</div>${ABAS_T.map(([k,l])=>`<label class="row"><input type="checkbox" data-abk="${k}" style="min-height:auto"${cur.includes(k)?" checked":""}> ${l}</label>`).join("")}<div class="ctl"><button class="btn sm" data-abs="salvar" type="button">Salvar abas</button> <button class="btn alt sm" data-abs="todas" type="button">Liberar todas</button> <button class="btn alt sm" data-abs="fechar" type="button">Fechar</button></div></div>`}}
  {const el=$("#mGalE"),m=mGalU?S.ges.find(x=>x.u===mGalU):null;if(el)el.innerHTML=m?`<div class="f" style="margin-top:14px;padding-top:12px;border-top:1px solid var(--line)"><b>Galpão de ${esc(m.n)}</b><div class="legend">${esc(m.u)}. O gestor passa a ver e alterar só o galpão escolhido; a mudança vale no próximo acesso dele.${m.adm?" Administrador também pode ficar com todos os galpões.":""}</div><label>Galpão<select id="mGalS">${m.adm?`<option value=""${m.g?"":" selected"}>Todos os galpões</option>`:""}${S.gals.map(g=>`<option${g===m.g?" selected":""}>${esc(g)}</option>`).join("")}</select></label><div class="ctl"><button class="btn sm" type="button" id="mGalOk">Salvar galpão</button><button class="btn alt sm" type="button" id="mGalX">Cancelar</button></div></div>`:""}
  $("#mG").innerHTML=S.gals.map(g=>`<option>${esc(g)}</option>`).join("");
  $("#pedL").innerHTML=SOL.length?`<table><tr><th>E-mail</th><th></th></tr>`+SOL.map(s=>`<tr><td><b>${esc(s.nome||"Sem nome")}</b><br>${esc(s.email)}<br><small style="color:var(--mut)">${esc((s.galpao_id&&GN[s.galpao_id])||"sem galpão")}, pediu em ${new Date(s.criado_em).toLocaleDateString("pt-BR")}</small></td><td style="white-space:nowrap"><button class="btn sm" data-sacc="${esc(s.email)}">Aceitar</button> <button class="btn d sm" data-srec="${esc(s.email)}">Recusar</button></td></tr>`).join("")+"</table>"
   :'<div class="empty">Nenhum pedido de acesso pendente.</div>';
- $("#mL").innerHTML=S.ges.length?`<table><tr><th>Gestor</th><th>Login</th><th>Permissões</th><th></th></tr>`+S.ges.map((m,i)=>
+ const adm0=!ON||!!(me&&me.adm),LG=S.ges.map((m,i)=>[m,i]).filter(([m])=>adm0||(m.bip&&me&&m.rs===me.u)),nomeG=u=>{const x=S.ges.find(z=>z.u===u);return x?x.n:"sem responsável"};
+ $("#mL").innerHTML=LG.length?`<table><tr><th>${adm0?"Gestor":"Bipador"}</th><th>Login</th><th>${adm0?"Permissões":"Acessos"}</th><th></th></tr>`+LG.map(([m,i])=>m.bip?
+  `<tr><td>${esc(m.n)} <span class="tag t2">bipador</span><br><small style="color:var(--mut)">${esc(m.g||"sem galpão")} · responsável: ${esc(nomeG(m.rs))}</small></td><td>${esc(loginMostra(m.u))}</td><td style="font-size:12px">${esc(bipTxt(m.ab))}</td><td style="white-space:nowrap"><button class="btn alt sm" data-mabas="${esc(m.u)}">Acessos</button>${adm0?` <button class="btn alt sm" data-mgal="${esc(m.u)}">Galpão</button> <button class="btn alt sm" data-msen="${esc(m.u)}">Trocar senha</button> <button class="btn d sm" data-mdel="${i}">Excluir</button>`:""}</td></tr>`:
   `<tr><td>${esc(m.n)}<br><small style="color:var(--mut)">${esc(m.g||"sem galpão")}</small>${m.adm?' <span class="tag">admin</span>':""}</td><td>${esc(m.u)}${ON?"":m.p?' <span class="tag">senha</span>':' <span class="tag t2">sem senha</span>'}</td><td style="font-size:12px">${[m.pC&&"config",m.pI&&"individual",m.pR&&"registros"].filter(Boolean).join(", ")||"—"}<br><small style="color:var(--mut)">Abas: ${m.ab?ABAS_T.filter(a=>m.ab.includes(a[0])).map(a=>a[1]).join(", "):"todas"}</small></td><td style="white-space:nowrap">${(!ON||(me&&me.adm))?`<button class="btn alt sm" data-mgal="${esc(m.u)}">Galpão</button> <button class="btn alt sm" data-mabas="${esc(m.u)}">Abas</button> `:""}${ON&&me&&me.adm?`<button class="btn alt sm" data-msen="${esc(m.u)}">Trocar senha</button> `:""}<button class="btn d sm" data-mdel="${i}">Excluir</button></td></tr>`).join("")+"</table>"
-  :'<div class="empty">Nenhum gestor cadastrado. Configurações e Individual estão abertos.</div>'}
+  :(adm0?'<div class="empty">Nenhum gestor cadastrado. Configurações e Individual estão abertos.</div>':'<div class="empty">Nenhum bipador ligado a você.</div>')}
 function cfgRender(){cfgOp();cfgParadas();cfgUsers();cfgMetas();cfgGals();cfgGes();cfgMan();cfgMot()}
 /* manutenção: só o administrador apaga registros por período; o servidor confere a permissão */
 function xMan(){const de=$("#xDe").value,ate=$("#xAte").value,gn=$("#xGal").value;
@@ -2555,14 +2566,24 @@ function hisRender(){
 
 /* ===================== acesso ===================== */
 const needAuth=k=>ON?!me:S.ges.length>0&&!(me&&(k==="cfg"?me.pC:me.pI));
+const BIP_DOM="rcondas.bip";
+function loginEmail(v){v=String(v||"").trim().toLowerCase();return v&&!v.includes("@")?v.replace(/[^a-z0-9._-]/g,"")+"@"+BIP_DOM:v}
+function loginMostra(u){return String(u||"").endsWith("@"+BIP_DOM)?u.slice(0,-(BIP_DOM.length+1)):u}
+/* acessos possíveis do bipador: a chave sem ponto é a aba; com ponto, a sub-aba */
+const BIP_A=[["op","Coleta: registrar ondas"],["op.ctl","Coleta: em andamento"],["op.ace","Coleta: concluídas do dia"],["op.aus","Coleta: ausência"],["prod","Embalagem: embalar ondas"],["prod.aus","Embalagem: ausência"],["prs","Procurando"],["painel","Painel"]];
+function bipTxt(ab){return(ab||[]).length?BIP_A.filter(a=>ab.includes(a[0])).map(a=>a[1]).join(", "):"nenhum"}
+function temBip(){return!!(ON&&me&&!me.adm&&!me.bip&&S.ges.some(x=>x.bip&&x.rs===me.u))}
+function bipSubs(){const B=ON&&me&&me.bip,ab=(me&&me.ab)||[];
+ [["#sub",'reg',"op","s"],["#sub","ctl","op.ctl","s"],["#sub","ace","op.ace","s"],["#sub","aus","op.aus","s"],["#pasub","bip","prod","pa"],["#pasub","aus","prod.aus","pa"]].forEach(([bar,v,k,ds])=>{const b=document.querySelector(bar+' [data-'+ds+'="'+v+'"]');if(!b)return;if(B)b.style.display=ab.includes(k)?"":"none";else if(b.dataset.bipH)b.style.display="";b.dataset.bipH=B?"1":""});
+ if(B)["#sub","#pasub"].forEach(bar=>{const on=document.querySelector(bar+" button.on");if(on&&on.style.display==="none"){const f=[...document.querySelectorAll(bar+" button")].find(x=>x.style.display!=="none");if(f)f.click()}})}
 const ABAS_T=[["painel","Painel"],["op","Coleta"],["prs","Procurando"],["ind","Equipe"],["his","Relatórios"],["cfg","Config"]];let mAbasU=null,mGalU=null;
 const isI=t=>t==="ind"||t==="his";
 /* aba só aparece se o perfil atual pode abri-la; o que não é acessível fica oculto */
-function podeVer(t){if(t==="painel"&&ON&&!me)return false;if(t==="prod")return true;if(ON&&me&&!me.adm&&me.ab&&!me.ab.includes(t))return false;if(t==="op"||t==="prod"||t==="painel"||t==="prs")return true;if(ON)return !!me&&(isI(t)?!!me.pI:t==='cfg'?!!(me.pC||me.pI):!!me.pC);if(t==="painel")return true;return !needAuth(t)}
-function updTabs(){$$(".tab[data-t]").forEach(b=>{b.style.display=podeVer(b.dataset.t)?"":"none"});$$('#csub [data-c="cga"]').forEach(b=>{b.style.display=soMeta()?"none":""});$$('#fCard').forEach(c=>c.classList.toggle("hide",soMeta()));$$('#csub [data-c="cpd"]').forEach(b=>{let g=false;try{g=pdGestor()}catch(e){}b.style.display=g?"":"none"});$$('#csub [data-c="cge"]').forEach(b=>{b.style.display=soMeta()?"none":""});$$('#csub [data-c="cma"]').forEach(b=>{b.style.display=(!ON||(me&&me.adm))?"":"none"});$$('#csub [data-c="cau"]').forEach(b=>{b.style.display=(ON&&me&&me.adm)?"":"none"});{const soHor=ON&&me&&!me.adm&&!me.pC;$$('#csub [data-c="cop"],#csub [data-c="cus"],#csub [data-c="cme"],#csub [data-c="cho"]').forEach(b=>{b.style.display=''});if(soHor)$$('#csub button').forEach(b=>{if(b.dataset.c!=='cho')b.style.display='none'})}if(!podeVer(view)){view="op";["painel","op","prs","ind","his","cfg"].forEach(s=>$("#"+s).classList.toggle("hide",s!=="op"));$$(".tab[data-t]").forEach(b=>b.classList.toggle("on",b.dataset.t==="op"))}}
+function podeVer(t){if(ON&&me&&me.bip){const ab=me.ab||[];return ab.includes(t)||ab.some(k=>k.indexOf(t+".")===0)}if(t==="painel"&&ON&&!me)return false;if(t==="prod")return true;if(ON&&me&&!me.adm&&me.ab&&!me.ab.includes(t))return false;if(t==="op"||t==="prod"||t==="painel"||t==="prs")return true;if(ON)return !!me&&(isI(t)?!!me.pI:t==='cfg'?!!(me.pC||me.pI):!!me.pC);if(t==="painel")return true;return !needAuth(t)}
+function updTabs(){$$(".tab[data-t]").forEach(b=>{b.style.display=podeVer(b.dataset.t)?"":"none"});$$('#csub [data-c="cga"]').forEach(b=>{b.style.display=soMeta()?"none":""});$$('#fCard').forEach(c=>c.classList.toggle("hide",soMeta()));$$('#csub [data-c="cpd"]').forEach(b=>{let g=false;try{g=pdGestor()}catch(e){}b.style.display=g?"":"none"});$$('#csub [data-c="cge"]').forEach(b=>{const tb=temBip();b.style.display=soMeta()&&!tb?"none":"";b.textContent=soMeta()?"Bipadores":"Gestores";if(soMeta())delete b.dataset.merge;else b.dataset.merge="1"});$$('#csub [data-c="cma"]').forEach(b=>{b.style.display=(!ON||(me&&me.adm))?"":"none"});$$('#csub [data-c="cau"]').forEach(b=>{b.style.display=(ON&&me&&me.adm)?"":"none"});{const soHor=ON&&me&&!me.adm&&!me.pC;$$('#csub [data-c="cop"],#csub [data-c="cus"],#csub [data-c="cme"],#csub [data-c="cho"]').forEach(b=>{b.style.display=''});if(soHor)$$('#csub button').forEach(b=>{if(b.dataset.c!=='cho'&&!(b.dataset.c==='cge'&&temBip()))b.style.display='none'})}if(!podeVer(view)){const f=["op","prod","prs","painel"].find(k=>podeVer(k))||"op";if(f!=="op"){setTimeout(()=>go(f),0)}else{view="op";["painel","op","prod","prs","ind","his","cfg"].forEach(s=>{const x=$("#"+s);if(x)x.classList.toggle("hide",s!=="op")});$$(".tab[data-t]").forEach(b=>b.classList.toggle("on",b.dataset.t==="op"))}}bipSubs()}
 let hWho="";
-function authUI(){const w=me?me.n+"|"+(me.g||"")+"|"+(me.adm?1:0):"";if(w!==hWho){hWho=w;hKey="";HW=null;HPW=null}$("#who").textContent=me?"Gestor: "+me.n:"";const pub=ON&&!me;["#turnoF","#day"].forEach(i=>$(i).classList.toggle("hide",pub));$("#gal").classList.remove("hide");if(pub){$("#turnoF").value="";$("#day").value=dk(Date.now())}$("#logtx").textContent=me?"Sair":"Entrar";$("#pwbtn").classList.toggle("hide",!me);updTabs();if(ON&&!me&&view==="painel")go("op")}
-function go(t){if(t==="painel"&&ON&&!me)t="op";if(ON&&me&&!me.adm&&me.ab&&!podeVer(t)){const f=ABAS_T.find(([k])=>podeVer(k));if(f)t=f[0]}setTimeout(()=>{try{sideSubs()}catch(e){}},0);
+function authUI(){const w=me?me.n+"|"+(me.g||"")+"|"+(me.adm?1:0):"";if(w!==hWho){hWho=w;hKey="";HW=null;HPW=null}$("#who").textContent=me?(me.bip?"Bipador: ":"Gestor: ")+me.n:"";const pub=ON&&!me;["#turnoF","#day"].forEach(i=>$(i).classList.toggle("hide",pub));$("#gal").classList.remove("hide");if(pub){$("#turnoF").value="";$("#day").value=dk(Date.now())}$("#logtx").textContent=me?"Sair":"Entrar";$("#pwbtn").classList.toggle("hide",!me);updTabs();if(ON&&!me&&view==="painel")go("op")}
+function go(t){if(t==="painel"&&ON&&!me)t="op";if(ON&&me&&!me.adm&&me.ab&&!podeVer(t)){const f=["op","prod","prs","painel","ind","his","cfg"].find(k=>podeVer(k));if(f)t=f}setTimeout(()=>{try{sideSubs()}catch(e){}},0);
  updTabs();
  if((t==="cfg"||isI(t))&&needAuth(t)){$("#login").classList.remove("hide");$("#lU").focus();pend=t;return}
  if(ON&&me&&((t==="cfg"&&!me.pC&&!me.pI)||(isI(t)&&!me.pI))){toast("Seu acesso não inclui esta área.");return}
@@ -2727,7 +2748,7 @@ document.addEventListener("click",e=>{const t=e.target;if(t.id==="prAdd"){const 
 function psub(k){window.__ps=k;$$("#psub button").forEach(b=>b.classList.toggle("on",b.dataset.p===(k==="sku"?"bip":k)));[["bip","pBip"],["sku","pSku"],["his","pHis"]].forEach(([a,id])=>$("#"+id).classList.toggle("hide",k==="his"?a!=="his":a==="his"));setTimeout(()=>{if(view!=="prs")return;const f=k==="bip"?$("#prBip"):k==="sku"?$("#prQ"):null;if(f)f.focus({preventScroll:true})},60)}
 $("#psub").onclick=e=>{const k=e.target.dataset.p;if(k)psub(k)};
 $("#sub").onclick=e=>{const s=e.target.dataset.s;if(!s)return;$$("#sub button").forEach(b=>b.classList.toggle("on",b===e.target));["reg","ctl","ace","aus"].forEach(x=>$("#"+x).classList.toggle("hide",x!==s));tick();if(s==="ace")aceLista();if(s==="aus")ausAbrir()};
-$("#csub").onclick=e=>{const c=e.target.dataset.c;if(!c)return;csub=c;$$("#csub button").forEach(b=>b.classList.toggle("on",b===e.target));{const G={cop:["cop","cme"],cme:["cop","cme"],cus:["cus","cge"],cge:["cus","cge"]}[c]||[c],gv=x=>x!=="cge"||!soMeta();["cop","cho","cus","cpd","cme","cga","cge","cma","cau"].forEach(x=>$("#"+x).classList.toggle("hide",!(G.includes(x)&&gv(x))));$$("#csub button").forEach(b=>b.classList.toggle("on",b.dataset.c===({cme:"cop",cge:"cus"}[c]||c)))}if(c==="cus"&&ON&&me&&me.adm)pull().then(()=>cfgGes()).catch(()=>{});if(c==="cge"&&ON&&me&&me.adm)pull().then(()=>cfgGes()).catch(()=>{});if(c==="cma")cfgMan();if(c==="cau")audAbrir();if(c==="cho")cfgParadas();if(c==="cpd")pdAbrirDis()};
+$("#csub").onclick=e=>{const c=e.target.dataset.c;if(!c)return;csub=c;$$("#csub button").forEach(b=>b.classList.toggle("on",b===e.target));{const G=(c==="cge"&&soMeta())?["cge"]:({cop:["cop","cme"],cme:["cop","cme"],cus:["cus","cge"],cge:["cus","cge"]}[c]||[c]),gv=x=>x!=="cge"||!soMeta()||c==="cge";["cop","cho","cus","cpd","cme","cga","cge","cma","cau"].forEach(x=>$("#"+x).classList.toggle("hide",!(G.includes(x)&&gv(x))));$$("#csub button").forEach(b=>b.classList.toggle("on",b.dataset.c===({cme:"cop",cge:"cus"}[c]||c)))}if(c==="cus"&&ON&&me&&me.adm)pull().then(()=>cfgGes()).catch(()=>{});if(c==="cge"&&ON&&me)pull().then(()=>cfgGes()).catch(()=>{});if(c==="cma")cfgMan();if(c==="cau")audAbrir();if(c==="cho")cfgParadas();if(c==="cpd")pdAbrirDis()};
 $("#iPrint").onclick=imprimirFolhas;$("#iOp").onchange=()=>{mgShown=100;individual()};$("#iPer").onchange=()=>{mgShown=100;individual();coletiva();loadManagement()};
 $("#iBody").addEventListener("click",e=>{if(e.target.id==="mgMore"){mgShown+=100;individual()}if(e.target.id==="mgTurnoSave")mgSalvarTurno();if(e.target.id==="presSalvar")presSalvar();if(e.target.id==="presBaixa")presBaixa();if(e.target.id==="presAtrSalvar")presAtrSalvar();if(e.target.dataset&&e.target.dataset.cancel)presCancelar(e.target.dataset.cancel)});
 const hojeSemana=()=>mondayOf(dk(Date.now()));
@@ -2869,6 +2890,9 @@ $("#mSen").onclick=e=>{if(e.target.id==="mSenX"){mSenU=null;cfgGes();return}if(e
 $("#mSen").onkeydown=e=>{if(e.key==="Enter"&&e.target.id==="mSenP"){e.preventDefault();$("#mSenOk").click()}};
 $("#mAbas").onclick=async e=>{const b=e.target.closest("[data-abs]");if(!b)return;const m=S.ges.find(x=>x.u===mAbasU);if(!m)return;
  if(b.dataset.abs==="fechar"){mAbasU=null;cfgGes();return}
+ if(m.bip){const ab=[...document.querySelectorAll("#mAbas [data-abk]")].filter(c=>c.checked).map(c=>c.dataset.abk);if(!ab.length){toast("Escolha pelo menos um acesso");return}
+  if(ab.some(k=>k.indexOf("op.")===0)&&!ab.includes("op")||ab.some(k=>k.indexOf("prod.")===0)&&!ab.includes("prod")){toast("Para liberar uma parte da Coleta ou da Embalagem, marque também o registro dela.");return}
+  b.disabled=true;const ok=await rem(()=>api("/rest/v1/rpc/bipador_acessos",{method:"POST",body:{p_email:m.u,p_abas:ab}}),"Acessos de "+m.n+" atualizados");b.disabled=false;if(ok){m.ab=ab;mAbasU=null;cfgGes()}return}
  let abas=null;if(b.dataset.abs==="salvar"){abas=[...document.querySelectorAll("#mAbas [data-abk]")].filter(c=>c.checked).map(c=>c.dataset.abk);if(!abas.length){toast("Escolha pelo menos uma aba");return}if(abas.length===ABAS_T.length)abas=null}
  if(ON){const ok=await rem(()=>mut("/rest/v1/gestores?email=eq."+encodeURIComponent(m.u),"PATCH",{abas}),"Abas de "+m.n+" atualizadas");if(ok){mAbasU=null;cfgGes()}}
  else{m.ab=abas;save();mAbasU=null;cfgGes();toast("Abas de "+m.n+" atualizadas")}};
@@ -2881,6 +2905,15 @@ $("#mGalE").onclick=async e=>{const m=S.ges.find(x=>x.u===mGalU);if(!m)return;
  if(ON){e.target.disabled=true;const ok=await rem(()=>mut("/rest/v1/gestores?email=eq."+encodeURIComponent(m.u),"PATCH",{galpao_id:nome?(GID[nome]||null):null}),msg);if(ok){mGalU=null;cfgGes()}else e.target.disabled=false;return}
  m.g=nome||null;save();mGalU=null;cfgGes();toast(msg)};
 $("#mB").onclick=()=>{const n=$("#mN").value.trim(),u=$("#mU").value.trim(),p=$("#mP2").value;
+ if(ON&&$("#mTipo").value==="bipador"){const em=loginEmail(u),rs=$("#mResp").value,gg=$("#mG").value,ab=[...document.querySelectorAll("#mBipA [data-bipk]")].filter(c=>c.checked).map(c=>c.dataset.bipk);
+  if(n.length<2){toast("Informe o nome da pessoa.");$("#mN").focus();return}
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em)||em.split("@")[0].length<3){toast("Informe um usuário de login com pelo menos 3 letras (ou um e-mail).");$("#mU").focus();return}
+  if(!rs){toast("Escolha o gestor responsável.");$("#mResp").focus();return}
+  if(!ab.length){toast("Marque pelo menos um acesso.");return}
+  if(ab.some(k=>k.indexOf("op.")===0)&&!ab.includes("op")||ab.some(k=>k.indexOf("prod.")===0)&&!ab.includes("prod")){toast("Para liberar uma parte da Coleta ou da Embalagem, marque também o registro dela.");return}
+  if(p.length<8){toast("Defina uma senha de pelo menos 8 caracteres.");$("#mP2").focus();return}
+  const bt=$("#mB");bt.disabled=true;
+  rem(()=>api("/functions/v1/gestor-conta",{method:"POST",body:{acao:"criar",perfil:"bipador",email:em,senha:p,nome:n,responsavel:rs,galpao_id:GID[gg]||null,abas:ab}}),"Bipador criado. "+n+" entra com o usuário "+loginMostra(em)+" e a senha definida.").then(ok=>{bt.disabled=false;if(ok){$("#mN").value=$("#mU").value=$("#mP2").value="";pull().then(()=>cfgGes()).catch(()=>{})}});return}
  if(ON){const em=u.toLowerCase(),adm=$("#mA").checked,gg0=$("#mG").value;
   if(n.length<2||!/^\S+@\S+\.\S+$/.test(em)){toast("Informe o nome e um e-mail válido.");return}
   if(!adm&&!gg0){toast("Crie um galpão antes de cadastrar gestores.");return}
@@ -2894,6 +2927,8 @@ $("#mB").onclick=()=>{const n=$("#mN").value.trim(),u=$("#mU").value.trim(),p=$(
  $("#mN").value=$("#mU").value=$("#mP2").value="";save();cfgGes();authUI();
  toast("Gestor criado"+(p?" com senha":" sem senha"))};
 
+$("#mTipo").onchange=()=>mTipoUI();
+$("#mResp").onchange=()=>{const r=S.ges.find(x=>x.u===$("#mResp").value);if(r&&r.g)$("#mG").value=r.g};
 /* config: alterações */
 document.addEventListener("change",e=>{const d=e.target.dataset,id=e.target.id;let r=false;
  if(ON){remChange(e);return}

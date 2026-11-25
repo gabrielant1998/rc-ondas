@@ -1,4 +1,5 @@
 // Cria a conta do gestor já com senha (sem pedido nem e-mail de confirmação) ou troca a senha de um gestor.
+// Também cria o acesso "Bipador" (pessoa comum que só bipa, ligada a um gestor responsável).
 // Só o administrador do RC Ondas pode chamar. A chave de serviço fica no servidor.
 import { createClient } from "npm:@supabase/supabase-js@2.45.4";
 
@@ -31,8 +32,19 @@ Deno.serve(async (req) => {
     if (b.acao === "criar") {
       const nome = String(b.nome || "").trim().slice(0, 80);
       if (nome.length < 2) return resp(400, { erro: "Informe o nome do gestor." });
-      const admin = !!b.admin;
+      const bip = b.perfil === "bipador";
+      const admin = bip ? false : !!b.admin;
       let galpao_id: string | null = admin ? null : (b.galpao_id ? String(b.galpao_id) : null);
+      let responsavel: string | null = null, abas: string[] | null = null;
+      if (bip) {
+        responsavel = String(b.responsavel || "").trim().toLowerCase();
+        const { data: r } = await adm.from("gestores").select("email,galpao_id,perfil").eq("email", responsavel).maybeSingle();
+        if (!r || r.perfil === "bipador") return resp(400, { erro: "Escolha o gestor responsável." });
+        if (!galpao_id) galpao_id = r.galpao_id;
+        const ok = ["painel", "op", "op.ctl", "op.ace", "op.aus", "prod", "prod.aus", "prs"];
+        abas = Array.isArray(b.abas) ? [...new Set((b.abas as unknown[]).map(String))].filter((x) => ok.includes(x)) : [];
+        if (!abas.length) return resp(400, { erro: "Escolha pelo menos um acesso para o bipador." });
+      }
       if (!admin && !galpao_id) return resp(400, { erro: "Escolha o galpão do gestor." });
       if (galpao_id) {
         const { data: g } = await adm.from("galpoes").select("id").eq("id", galpao_id).maybeSingle();
@@ -51,7 +63,9 @@ Deno.serve(async (req) => {
       }
       const { error: ei } = await adm.from("gestores").insert({
         email, nome, galpao_id, admin,
-        pode_config: b.pode_config !== false, pode_individual: b.pode_individual !== false, pode_registros: b.pode_registros !== false,
+        ...(bip
+          ? { perfil: "bipador", responsavel, abas, pode_config: false, pode_individual: false, pode_registros: false }
+          : { pode_config: b.pode_config !== false, pode_individual: b.pode_individual !== false, pode_registros: b.pode_registros !== false }),
       });
       if (ei) return resp(400, { erro: ei.message });
       await adm.from("solicitacoes_gestor").delete().eq("email", email);

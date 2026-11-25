@@ -39,6 +39,7 @@ function fake(db){const cors={'access-control-allow-origin':'*','access-control-
   if(p==='/functions/v1/gestor-conta'){db.calls.fn=(db.calls.fn||0)+1;if(!g||!g.admin)return J(route,403,{erro:'Só o administrador pode criar gestores ou trocar senhas.'});
    const em=String(body.email||'').toLowerCase();if((body.senha||'').length<8)return J(route,400,{erro:'A senha precisa ter de 8 a 72 caracteres.'});
    if(body.acao==='criar'){if(db.gestores.some(x=>x.email===em))return J(route,409,{erro:'Já existe um gestor com este e-mail. Use Trocar senha na lista.'});
+    if(body.perfil==='bipador'){const r=db.gestores.find(x=>x.email===body.responsavel&&x.perfil!=='bipador');if(!r)return J(route,400,{erro:'Escolha o gestor responsável.'});db.users[em]={pw:body.senha,ok:true};db.gestores.push({email:em,nome:body.nome,galpao_id:body.galpao_id||r.galpao_id,admin:false,pode_config:false,pode_individual:false,pode_registros:false,perfil:'bipador',responsavel:r.email,abas:body.abas});return J(route,200,{ok:true})}
     db.users[em]={pw:body.senha,ok:true};db.gestores.push({email:em,nome:body.nome,galpao_id:body.admin?null:body.galpao_id,admin:!!body.admin,pode_config:body.pode_config!==false,pode_individual:body.pode_individual!==false,pode_registros:body.pode_registros!==false});return J(route,200,{ok:true})}
    if(body.acao==='senha'){if(!db.gestores.some(x=>x.email===em))return J(route,404,{erro:'Gestor não encontrado.'});db.users[em]={pw:body.senha,ok:true};return J(route,200,{ok:true})}
    return J(route,400,{erro:'Ação desconhecida.'})}
@@ -90,6 +91,7 @@ function fake(db){const cors={'access-control-allow-origin':'*','access-control-
     const dia=new Date(Date.parse(x.bipada_em)-3*36e5).toISOString().slice(0,10);
     db.pb.push({id:x.id,wn:x.wn,pessoa_id:o.id,andar:a.andar,atividade:a.atividade,turno_id:a.turno_id,bipada_em:x.bipada_em,dia,quantidade:ehQ?x.quantidade:1,origem:ehQ?'quantidade':'bipagem'});
     if(!db.pp.some(z=>z.pessoa_id===o.id&&z.dia===dia)){db.pp.push({pessoa_id:o.id,dia,primeira_id:x.id});r.presenca_nova=true}return r}))}
+  if(t==='rpc/bipador_acessos'){const o=db.gestores.find(x=>x.email===body.p_email&&x.perfil==='bipador');if(!o)return J(route,400,{code:'23503',message:'Bipador não encontrado'});if(!(g&&(g.admin||o.responsavel===g.email)))return J(route,403,{code:'42501',message:'Só o administrador ou o gestor responsável muda os acessos'});o.abas=body.p_abas.slice().sort();return J(route,200,'ok')}
   if(t==='rpc/uso_banco'){if(!(g&&g.admin))return J(route,403,{code:'42501',message:'Sem permissão'});return J(route,200,{banco_bytes:18*1048576,ondas:db.ondas.length,ondas_bytes:9*1048576,auditoria_bytes:320000,limite_bytes:500*1048576})}
   if(t==='rpc/ausencias_publicas'){return J(route,200,(db.aus||[]).filter(a=>new Date(Date.parse(a.inicio)-3*36e5).toISOString().slice(0,10)===body.p_dia))}
   if(t==='rpc/registrar_ausencia'){const op=db.operadores.find(o=>o.id===body.p_operador&&!o.excluido_em);if(!op)return J(route,400,{code:'23503',message:'Pessoa não encontrada'});
@@ -114,7 +116,7 @@ function fake(db){const cors={'access-control-allow-origin':'*','access-control-
    if(t==='tipos_onda')return J(route,200,db.tipos);
    if(t==='config')return J(route,200,db.config);
    if(t==='operadores')return J(route,200,db.operadores.filter(o=>!o.excluido_em||escopo(o.galpao_id)).sort((a,b)=>a.codigo.localeCompare(b.codigo)));
-   if(t==='gestores')return J(route,200,!g?[]:g.admin?db.gestores:[g]);
+   if(t==='gestores')return J(route,200,!g?[]:g.admin?db.gestores:[g].concat(db.gestores.filter(x=>x.responsavel===g.email)));
    if(t==='presenca_registros'){if(!email)return J(route,401,{message:'permission denied',code:'42501'});return J(route,200,(db.presenca||[]).filter(r=>!r.cancelado_em&&escopo(db.operadores.find(o=>o.id===r.operador_id).galpao_id)))}
    if(/^presenca_(baixas|atrasos|historico|alteracoes)$/.test(t))return J(route,200,[]);
    if(t==='ondas'){if(!email)return J(route,401,{message:'permission denied for table ondas',code:'42501'});
@@ -405,6 +407,27 @@ await T('S109 Barra do banco vai enchendo em Manutenção e aparece na Auditoria
  const w=await p.evaluate(()=>document.querySelector('#usoBody .usoBar b').style.width);ok(w==='3.6%','largura: '+w);ok((await p.textContent('#usoBody')).includes('auditoria ocupa'),'sem auditoria');
  if(process.env.SHOT)await (await p.$('#usoCard')).screenshot({path:process.env.SHOT});
  await p.evaluate(()=>document.querySelector('#csub [data-c="cau"]').click());await p.waitForTimeout(1500);ok((await p.textContent('#audUso')).includes('Banco de dados'),'sem barra na auditoria');ok((await p.textContent('#cau')).includes('guarda 1 ano'),'sem aviso de 1 ano');ok(!p.errors.length,p.errors.join(';'))});
+
+await T('S110 Bipador: admin cria com gestor responsável, pessoa entra com usuário e só vê o liberado; responsável ajusta',async()=>{const db=banco();const p=await page(b,db);await login(p,'adm@x.com','senha1234');
+ await p.evaluate(()=>{go('cfg');document.querySelector('#csub [data-c="cge"]').click()});await p.waitForTimeout(400);
+ await p.selectOption('#mTipo','bipador');await p.fill('#mN','João Bipador');await p.fill('#mU','joao.bip');await p.selectOption('#mResp','g2@x.com');
+ ok(await p.inputValue('#mG')==='Galpão 2','galpão não veio do responsável: '+await p.inputValue('#mG'));ok(!(await p.isVisible('#mC')),'permissões de gestor aparecendo para bipador');
+ await p.check('#mBipA [data-bipk="prod"]');await p.fill('#mP2','senha1234');if(process.env.SHOT){await p.setViewportSize({width:1280,height:1000});await p.waitForTimeout(200);await (await p.$('#mNovo')).screenshot({path:process.env.SHOT})}await p.click('#mB');await p.waitForTimeout(700);
+ const bp=db.gestores.find(x=>x.email==='joao.bip@rcondas.bip');ok(bp&&bp.perfil==='bipador'&&bp.responsavel==='g2@x.com'&&bp.galpao_id===G2&&bp.abas.join()==='op,prod','criado: '+JSON.stringify(bp));
+ ok((await p.textContent('#mL')).includes('João Bipador'),'lista sem o bipador');
+ await p.click('#logbtn');await p.waitForTimeout(300);await login(p,'joao.bip','senha1234');await p.waitForTimeout(500);
+ let v=await p.evaluate(()=>({who:$('#who').textContent,tabs:[...document.querySelectorAll('.tab[data-t]')].filter(x=>x.style.display!=='none').map(x=>x.dataset.t),subs:[...document.querySelectorAll('#sub button')].filter(x=>x.style.display!=='none').map(x=>x.dataset.s),view}));
+ ok(v.who.startsWith('Bipador')&&v.tabs.sort().join()==='op,prod'&&v.subs.join()==='reg'&&v.view==='op',JSON.stringify(v));
+ await p.click('#logbtn');await p.waitForTimeout(300);await login(p,'g2@x.com','senha1234');await p.evaluate(()=>{go('cfg')});await p.waitForTimeout(300);
+ const bt=await p.evaluate(()=>{const x=document.querySelector('#csub [data-c="cge"]');return{d:x.style.display,t:x.textContent}});ok(bt.d!=='none'&&bt.t==='Bipadores','aba do responsável: '+JSON.stringify(bt));
+ await p.evaluate(()=>document.querySelector('#csub [data-c="cge"]').click());await p.waitForTimeout(500);ok(!(await p.isVisible('#mNovo')),'gestor comum vendo o formulário de criar');
+ const lt=await p.textContent('#mL');ok(lt.includes('João Bipador')&&!lt.includes('Admin'),'lista do responsável: '+lt);
+ await p.click('[data-mabas="joao.bip@rcondas.bip"]');await p.check('#mAbas [data-abk="op.aus"]');await p.click('#mAbas [data-abs="salvar"]');await p.waitForTimeout(500);
+ ok(bp.abas.join()==='op,op.aus,prod','acessos: '+bp.abas);
+ await p.click('#logbtn');await p.waitForTimeout(300);await login(p,'joao.bip','senha1234');await p.waitForTimeout(400);
+ v=await p.evaluate(()=>[...document.querySelectorAll('#sub button')].filter(x=>x.style.display!=='none').map(x=>x.dataset.s));ok(v.join()==='reg,aus','subs depois: '+v);
+ await p.click('#logbtn');await p.waitForTimeout(300);v=await p.evaluate(()=>[...document.querySelectorAll('#sub button')].filter(x=>x.style.display!=='none').map(x=>x.dataset.s));ok(v.length===4,'público ficou com abas escondidas: '+v);
+ ok(!p.errors.length,p.errors.join(';'))});
 
 await T('S22 Gestor comum vê só "Metas" do seu galpão, sem Galpões; admin vê tudo',async()=>{const db=banco();const p=await page(b,db);
  await login(p,'g2@x.com','senha1234');await p.click('.tab[data-t="cfg"]');
