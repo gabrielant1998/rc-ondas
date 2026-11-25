@@ -304,11 +304,12 @@ await T("71 Onda que passou por Procurando não entra no tempo do conjunto (unid
  const p=await page(b,base({waves:W}));
  const r=await p.evaluate(()=>{const a=durs(S.waves).length;S.waves.find(w=>w.id==='b').hist=[{e:'m',q:'x',t:Date.now()-5e5},{e:'a',q:'',t:Date.now()-4e5}];const c=conjuntos(S.waves);return{a,n:c.length,q:prod(S.waves).reduce((s,w)=>s+w.qty,0)}});
  ok(r.a===3&&r.n===3&&r.q===42,'esperava 3→3 conjuntos sem a onda de procurando e 42 un.: '+JSON.stringify(r))});
-await T("73 Mini abas na lateral: aparecem sob a aba ativa e abrem de forma independente",async()=>{
+await T("73 Abas internas: no topo da página e, nos Relatórios, menu agrupado ao lado",async()=>{
  const p=await page(b,base(),{sidebarSubs:true});
  ok(!(await p.isVisible('#hsub')),'barra interna deveria sumir no computador');
  await p.evaluate(()=>go('his'));await p.waitForSelector('.ssub [data-v="pes"]');
- const n=await p.$$eval('.ssub button',a=>a.map(x=>x.textContent));ok(n.length===6&&n[0].includes('Evolução')&&n[4].includes('Ausências')&&n[5].includes('embalagem'),'abas laterais: '+n);
+ const n=await p.$$eval('.ssub button',a=>a.map(x=>x.textContent));ok(n.length===6&&n[0].includes('Evolução')&&n[3]==='Ausências'&&n[4].includes('embalagem')&&n[5]==='Procurando','abas laterais: '+n);ok((await p.$$eval('#his .ssub .snT',a=>a.map(x=>x.textContent))).join()==='Produção,Presença,Procurando','grupos');
+ await p.evaluate(()=>go('op'));await p.waitForTimeout(150);ok(await p.$eval('#op .ssub',e=>e.classList.contains('stop'))&&!(await p.$('nav.side .ssub')),'abas no topo da Coleta, nada na lateral');await p.evaluate(()=>go('his'));await p.waitForTimeout(150);
  await p.click('.ssub [data-v="pes"]');await p.waitForTimeout(200);ok(await p.$eval('.ssub [data-v="pes"]',e=>e.classList.contains('on')),'marca a aba ativa');
  ok(await p.$eval('#hsub [data-hs="pes"]',e=>e.classList.contains('on')),'a aba interna acompanha');
  await p.evaluate(()=>go('prs'));await p.waitForTimeout(200);ok((await p.$$('.ssub')).length===1&&(await p.$$eval('.ssub button',a=>a.length))===2,'só as abas da área ativa aparecem (Pendentes e Histórico)');
@@ -645,6 +646,8 @@ await T("86 Lista de presença: colunas Horário justificado e Motivo do atraso 
 
 await T("87 Painel denso: 7 gráficos (área, colunas, funil, dispersão, radar, ranking, mapa de calor), cartões de tipo e tabelas",async()=>{const p=await page(b,base({waves:[WV('q1','Q1','Vários artigos',50,HR(9,10)),WV('q2','Q2','Itens Únicos',30,HR(10,5)),WV('q3','Q3','Pacote do mesmo',20,HR(10,40))]}));
  await p.evaluate(()=>go('painel'));await p.waitForTimeout(250);
+ {let t=0;for(const v of ['col','pes','ond']){await p.click('#pnSeg [data-pnv="'+v+'"]');await p.waitForTimeout(120);t+=await p.$$eval('#painel .pc',a=>a.filter(e=>e.offsetParent).length)}ok(t===8,'cartões somando as abas: '+t)}
+ await p.evaluate(()=>{$('#pnColW').dataset.pnv='all'});await p.waitForTimeout(150);
  const r=await p.evaluate(()=>{const v=s=>document.querySelector(s),box=e=>e.getBoundingClientRect();return{n:[...document.querySelectorAll('#painel .pc')].filter(e=>e.offsetParent).length,area:!!v('#vivoC polygon'),bars:!!v('#chH svg'),rosca:!!v('#pFil .pf'),tmp:!!v('#chP .gal')||!!v('#chP svg')||!!v('#chP .bar'),t1:!!v('#tTipos table tr td'),t2:!!v('#gals table tr td'),dir:box(v('#pRank')).left>box(v('#pHeat')).right-1&&box(v('#pGar')).left>box(v('#pHora')).right-1&&box(v('#pGal')).left>box(v('#pTip')).right-1&&Math.abs(box(v('#pRank')).top-box(v('#pHeat')).top)<2,fun:document.querySelectorAll('#chF .fu-r').length,dis:document.querySelectorAll('#chD circle').length,rad:document.querySelectorAll('#chR polygon').length}});
  ok(r.n===8,'cartões de gráfico (7 antigos + gargalo da Coleta): '+r.n);ok(r.area&&r.bars&&r.rosca&&r.tmp,'gráficos: '+JSON.stringify(r));ok(r.t1&&r.t2,'tabelas: '+JSON.stringify(r));ok(r.dir,'grade sem buracos: ranking ao lado de pessoas por hora, galpões ao lado de tipos');ok(r.fun===5,'funil: '+r.fun);ok(r.rad>=3,'radar: '+r.rad)});
 await T("88 Painel: cartões de tipo filtram tudo, Limpar filtros volta, e hora extra filtra pelo KPI",async()=>{const p=await page(b,base({waves:[WV('q1','Q1','Vários artigos',50,HR(9,10)),WV('q2','Q2','Itens Únicos',30,HR(10,5)),WV('q3','Q3','Pacote do mesmo',20,HR(10,40),'CL002','Bruno Lima')]}));
@@ -655,9 +658,9 @@ await T("88 Painel: cartões de tipo filtram tudo, Limpar filtros volta, e hora 
  ok(await big()==='30','filtrado: '+await big());
  const r=await p.evaluate(()=>({on:document.querySelector('#pFil [data-pft="Itens Únicos"]').getAttribute('aria-pressed'),fil:!!document.querySelector('#pFil .pfa'),stk:[...document.querySelectorAll('#chH .stk rect')].length,rank:document.querySelector('#chP').textContent,pessoas:document.querySelector('#rankN').textContent}));
  ok(r.on==='true'&&r.fil,'cartão ativo e indicador: '+JSON.stringify(r));ok(r.stk>0,'colunas empilhadas');ok(/1 pessoa/.test(r.pessoas),'ranking refiltrado: '+r.pessoas);
- await p.click('#tTipos [data-pft="Vários artigos"]');await p.waitForTimeout(200);ok(await big()==='80','dois tipos: '+await big());
+ await p.click('#pnSeg [data-pnv="ond"]');await p.waitForTimeout(150);await p.click('#tTipos [data-pft="Vários artigos"]');await p.waitForTimeout(200);ok(await big()==='80','dois tipos: '+await big());
  await p.click('#pFil [data-pfx]');await p.waitForTimeout(200);ok(await big()==='100','limpar: '+await big());ok(!(await p.$('#pFil .pfa')),'indicador some');
- await p.click('.kpi[data-pfk="ot"]');await p.waitForTimeout(200);ok(await p.evaluate(()=>document.querySelector('.kpi[data-pfk="ot"]').getAttribute('aria-pressed'))==='true','KPI hora extra ativo');
+ await p.click('#pnSeg [data-pnv="col"]');await p.waitForTimeout(150);await p.click('.kpi[data-pfk="ot"]');await p.waitForTimeout(200);ok(await p.evaluate(()=>document.querySelector('.kpi[data-pfk="ot"]').getAttribute('aria-pressed'))==='true','KPI hora extra ativo');
  await p.click('.kpi[data-pfk="ot"]');await p.waitForTimeout(200);ok(await big()==='100','hora extra desligada: '+await big())});
 await T("89 Painel: ritmo esperado, ranking de pessoas e mapa de calor pessoa x hora",async()=>{const p=await page(b,base({waves:[WV('q1','Q1','Vários artigos',50,HR(9,10)),WV('q2','Q2','Itens Únicos',30,HR(10,5),'CL002','Bruno Lima')]}));
  await p.evaluate(()=>go('painel'));await p.waitForTimeout(250);

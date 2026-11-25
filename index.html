@@ -292,13 +292,20 @@ a[data-pick]{display:inline-block;padding:8px 0 2px;color:var(--gx);font-weight:
 @keyframes mbIn{from{opacity:0}to{opacity:1}}@keyframes mbOut{to{opacity:0}}
 @media(prefers-reduced-motion:reduce){.placar.win:after,.mbBadge{animation:none}}
 /* mini abas na lateral (computador): cada uma abre sozinha */
-.ssub{display:flex;flex-direction:column;gap:2px;margin:4px 0 10px 22px;padding-left:10px;border-left:2px solid rgba(255,255,255,.14)}
-.ssub button{all:unset;box-sizing:border-box;cursor:pointer;display:flex;align-items:center;min-height:36px;padding:6px 12px;font-size:14px;font-weight:500;line-height:1.25;border-radius:6px;color:#c2cde3}
-.ssub button:hover{color:#fff;background:rgba(255,255,255,.07)}
-.ssub button.on{color:#fff;background:rgba(255,255,255,.16);font-weight:700;box-shadow:inset 3px 0 0 #8fb4ff}
-.ssub button:focus-visible{outline:2px solid #8fb4ff;outline-offset:1px}
+.navG{font-size:11px;font-weight:600;color:#8ea2c8;padding:14px 12px 4px}
+.ssub.stop{display:flex;flex-wrap:wrap;gap:2px;border-bottom:1px solid var(--line);margin:0 0 16px}
+.ssub.stop button{all:unset;box-sizing:border-box;cursor:pointer;padding:10px 14px;min-height:42px;font-size:14.5px;font-weight:500;color:var(--mut);border-bottom:2px solid transparent;margin-bottom:-1px}
+.ssub.stop button:hover{color:var(--ink)}
+.ssub.stop button.on{color:var(--ink);font-weight:600;border-bottom-color:var(--g)}
+.ssub.snav{display:flex;flex-direction:column;gap:2px;position:sticky;top:14px}
+.ssub.snav .snT{font-size:12px;font-weight:600;color:var(--mut);padding:12px 12px 6px}.ssub.snav .snT:first-child{padding-top:0}
+.ssub.snav button{all:unset;box-sizing:border-box;cursor:pointer;display:block;padding:8px 12px;min-height:38px;border-radius:8px;font-size:14.5px;color:var(--ink)}
+.ssub.snav button:hover{background:color-mix(in srgb,var(--ink) 6%,transparent)}
+.ssub.snav button.on{background:var(--card);color:var(--g);font-weight:600;box-shadow:inset 0 0 0 1px var(--line)}
+.ssub button:focus-visible{outline:2px solid var(--g);outline-offset:1px}
+@media(min-width:761px){#his:not(.hide){display:grid;grid-template-columns:208px minmax(0,1fr);column-gap:28px;align-items:start}#his>*{grid-column:2;min-width:0}#his>.ssub.snav{grid-column:1;grid-row:1/span 30}}
 @media(min-width:761px){#sub,#gsub,#psub,#hsub,#csub,#pasub{display:none}}
-@media(max-width:760px){.ssub{display:none}}
+@media(max-width:760px){.ssub,.ssub.stop,.ssub.snav{display:none}.navG{display:none}}
 
 /* ===== modo compacto (computador) e limpeza visual ===== */
 @media(min-width:761px){
@@ -511,7 +518,7 @@ body[data-v=cfg] #turnoF,body[data-v=cfg] #gal,body[data-v=cfg] #day{display:non
 .pnH{display:flex;align-items:center;gap:8px;font:700 19px var(--fd);margin:0 0 10px}.pnDot{width:10px;height:10px;border-radius:2px;display:inline-block}
 .pnLen{margin-top:8px;font-size:14px;color:var(--ink)}.pnDir{margin:10px 0 4px;font-weight:600}.pdSt4{grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
 #pnDuo .placar{margin-top:0}.pnDet{margin-top:14px}.pnDet>summary{cursor:pointer;font-weight:600;padding:2px 0}.pnDet[open]>summary{margin-bottom:12px}
-#painel.pub #pnDet,#painel.pub #pGar{display:none}
+#painel.pub #pFun,#painel.pub #pDis,#painel.pub #pRad,#painel.pub #pGar{display:none}
 .pnRkG{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:22px}@media(max-width:900px){.pnRkG{grid-template-columns:minmax(0,1fr)}}
 .pnRk h3{font:700 16px var(--fd);margin:0 0 8px;display:flex;gap:8px;align-items:center}.pnRkL{list-style:none;margin:0;padding:0;display:grid;gap:10px}
 .pnRkL li{display:grid;grid-template-columns:30px minmax(0,1fr) auto;gap:10px;align-items:center}.pnRkN{font:700 15px var(--fd);color:var(--mut)}
@@ -578,6 +585,16 @@ body[data-v=cfg] #turnoF,body[data-v=cfg] #gal,body[data-v=cfg] #day{display:non
  #cfgNav button{min-height:44px}
  .cfgH h2{font-size:20px}
 }
+
+/* Painel em partes */
+.pnTabs{display:flex;flex-wrap:wrap;gap:2px;border-bottom:1px solid var(--line);margin:0 0 16px}
+.pnTabs.hide{display:none}
+.pnTabs button{all:unset;box-sizing:border-box;cursor:pointer;padding:10px 14px;min-height:42px;font-size:14.5px;font-weight:500;color:var(--mut);border-bottom:2px solid transparent;margin-bottom:-1px}
+.pnTabs button:hover{color:var(--ink)}
+.pnTabs button.on{color:var(--ink);font-weight:600;border-bottom-color:var(--g)}
+.pnTabs button:focus-visible{outline:2px solid var(--g);outline-offset:1px}
+#pnColW[data-pnv="col"] [data-pnp]:not([data-pnp="col"]),#pnColW[data-pnv="pes"] [data-pnp]:not([data-pnp="pes"]),#pnColW[data-pnv="ond"] [data-pnp]:not([data-pnp="ond"]){display:none!important}
+@media(max-width:760px){.pnTabs{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none}.pnTabs button{white-space:nowrap;padding:10px 12px}}
 </style>
 </head>
 <body>
@@ -589,12 +606,15 @@ body[data-v=cfg] #turnoF,body[data-v=cfg] #gal,body[data-v=cfg] #day{display:non
 <div class="app">
 <nav class="side" aria-label="Principal">
  <div class="brand"><i><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 9c3-4 5 4 10 0s7 4 10 0M2 16c3-4 5 4 10 0s7 4 10 0"/></svg></i><span>RC Ondas<small>Gestão de produção</small></span></div>
+ <div class="navG">Agora</div>
  <button class="tab on" data-t="painel"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20V11M10 20V5M16 20v-6M2 20h20"/></svg>Painel</button>
  <button class="tab" data-t="op"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13 2 4 14h7l-1 8 9-12h-7z"/></svg>Coleta</button>
- <button class="tab" data-t="prod"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 8 12 3 3 8v8l9 5 9-5zM3 8l9 5 9-5M12 13v8"/></svg>Produção</button>
+ <button class="tab" data-t="prod"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 8 12 3 3 8v8l9 5 9-5zM3 8l9 5 9-5M12 13v8"/></svg>Embalagem</button>
  <button class="tab" data-t="prs"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6"/><path d="m20 20-4.2-4.2"/></svg>Procurando</button>
+ <div class="navG">Gestão</div>
  <button class="tab" data-t="ind"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3.5"/><path d="M5 21c0-4 3.5-6 7-6s7 2 7 6"/></svg><span class="nav-long">Equipe</span><span class="nav-short">Equipe</span></button>
  <button class="tab" data-t="his"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19V5M4 19h16"/><path d="M8 15l3-4 3 2 5-6"/></svg>Relatórios</button>
+ <div class="navG">Ajustes</div>
  <button class="tab" data-t="cfg"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/></svg>Config</button>
  <div class="sp"></div>
  <div class="who" id="who"></div>
@@ -617,26 +637,25 @@ body[data-v=cfg] #turnoF,body[data-v=cfg] #gal,body[data-v=cfg] #day{display:non
 
 <!-- ======================= PAINEL ======================= -->
 <section id="painel">
- <div class="pdTabs hide" id="pnSeg" role="group" aria-label="Painel da operação" style="margin-bottom:12px"><button type="button" data-pnv="duo">Coleta e Embalagem</button><button type="button" data-pnv="col">Coleta</button><button type="button" data-pnv="emb">Embalagem</button></div>
+ <div class="pnTabs hide" id="pnSeg" role="group" aria-label="Partes do Painel"><button type="button" data-pnv="duo">Resumo</button><button type="button" data-pnv="col">Coleta</button><button type="button" data-pnv="pes">Pessoas</button><button type="button" data-pnv="ond">Ondas e tipos</button><button type="button" data-pnv="emb">Embalagem</button></div>
  <div id="pnDuo" class="hide"></div>
  <div id="pnColW">
- <div id="kpis"></div>
+ <div id="kpis" data-pnp="col"></div>
  <div id="pFil" class="pfil" aria-label="Filtrar por tipo de onda"></div>
  <div class="pgrid">
-  <div class="card pc" id="vivo"><h2>Acumulado do dia <span class="pill" id="vivoN"></span><span class="pill" id="concN"></span></h2><div id="vivoC"></div>
+  <div class="card pc" id="vivo" data-pnp="col"><h2>Acumulado do dia <span class="pill" id="vivoN"></span><span class="pill" id="concN"></span></h2><div id="vivoC"></div>
     <div class="legend" id="vivoLeg"><span><i style="background:var(--t);opacity:.6"></i>Quantidade bipada (área)</span><span><i class="ln" style="background:var(--g)"></i>Quantidade concluída (linha)</span><span id="vivoRit" class="hide"><i class="dash"></i>Ritmo esperado para a meta</span></div></div>
-  <div class="card pc" id="pHora"><h2><span id="hTit">Produção por hora</span> <span id="peak"></span><span class="hm" id="hSeg" role="group" aria-label="Intervalo do gráfico"><button data-m="h" class="on">Hora</button><button data-m="m">30 min</button></span></h2><div id="chH"></div><div id="pace"></div></div>
-  <div class="card pc" id="pGar"><h2>Gargalo da Coleta <span class="tag">por pessoa e por hora</span></h2><div id="pGarB"></div></div>
-  <div class="card pc" id="pRank"><h2>Ranking de pessoas <span class="pill" id="rankN"></span></h2><div id="chP"></div></div>
-  <div class="card pc" id="pHeat"><h2>Pessoas por hora</h2><div id="chM"></div></div>
-  <div class="card" id="pTip"><h2>Tipos de onda</h2><div class="tw" id="tTipos"></div></div>
-  <div class="card" id="pGal"><h2>Galpões</h2><div class="tw" id="gals"></div></div>
+  <div class="card pc" id="pHora" data-pnp="col"><h2><span id="hTit">Produção por hora</span> <span id="peak"></span><span class="hm" id="hSeg" role="group" aria-label="Intervalo do gráfico"><button data-m="h" class="on">Hora</button><button data-m="m">30 min</button></span></h2><div id="chH"></div><div id="pace"></div></div>
+  <div class="card pc" id="pGar" data-pnp="col"><h2>Gargalo da Coleta <span class="tag">por pessoa e por hora</span></h2><div id="pGarB"></div></div>
+  <div class="card pc" id="pRank" data-pnp="pes"><h2>Ranking de pessoas <span class="pill" id="rankN"></span></h2><div id="chP"></div></div>
+  <div class="card pc" id="pHeat" data-pnp="pes"><h2>Pessoas por hora</h2><div id="chM"></div></div>
+  <div class="card" id="pTip" data-pnp="ond"><h2>Tipos de onda</h2><div class="tw" id="tTipos"></div></div>
+  <div class="card" id="pGal" data-pnp="ond"><h2>Galpões</h2><div class="tw" id="gals"></div></div>
+
+  <div class="card pc" id="pFun" data-pnp="ond"><h2>Funil das ondas <span class="tag">do bipe à produção válida</span></h2><div id="chF"></div></div>
+  <div class="card pc" id="pDis" data-pnp="ond"><h2>Tempo × unidades <span class="tag">cada ponto é um conjunto</span></h2><div id="chD"></div></div>
+  <div class="card pc" id="pRad" data-pnp="ond"><h2>Mix de tipos por galpão <span class="tag">% das unidades</span></h2><div id="chR"></div></div>
  </div>
- <details class="card pnDet" id="pnDet"><summary>Ver detalhes: funil das ondas, tempo × unidades e mix por galpão</summary><div class="pgrid">
-  <div class="card pc" id="pFun"><h2>Funil das ondas <span class="tag">do bipe à produção válida</span></h2><div id="chF"></div></div>
-  <div class="card pc" id="pDis"><h2>Tempo × unidades <span class="tag">cada ponto é um conjunto</span></h2><div id="chD"></div></div>
-  <div class="card pc" id="pRad"><h2>Mix de tipos por galpão <span class="tag">% das unidades</span></h2><div id="chR"></div></div>
- </div></details>
  </div>
 </section>
 
@@ -2650,7 +2669,7 @@ function go(t){if(t==="painel"&&ON&&!me)t="op";if(ON&&me&&!me.adm&&me.ab&&!podeV
  if(ON&&me&&((t==="cfg"&&!me.pC&&!me.pI)||(isI(t)&&!me.pI))){toast("Seu acesso não inclui esta área.");return}
  view=t;document.body.dataset.v=t;if(t==="cfg"&&ON&&me&&!me.adm&&!me.pC)setTimeout(()=>{const b=$('#csub [data-c="cho"]');if(b)b.click()},0);["painel","op","prod","prs","ind","his","cfg"].forEach(s=>$("#"+s).classList.toggle("hide",s!==t));
  $$(".tab[data-t]").forEach(b=>b.classList.toggle("on",b.dataset.t===t));
- $("#ttl").textContent={painel:"Painel",op:"Coleta",prod:"Produção",ind:"Equipe",his:"Relatórios",prs:"Procurando",cfg:"Configurações"}[t];
+ $("#ttl").textContent={painel:"Painel",op:"Coleta",prod:"Embalagem",ind:"Equipe",his:"Relatórios",prs:"Procurando",cfg:"Configurações"}[t];
  if(t==="cfg")cfgRender();if(t==="his")hisOpen();if(t==="prs"){procurando();psub(window.__ps||"bip")}if(t==="ind"){if(gsub==="pd")pdAbrirDis();else{individual();loadManagement({cache:true})}}if(t==="prod")pdAbrir();renderAll();
  if(t==="op"&&!$("#s1").classList.contains("hide"))setTimeout(()=>{if(view==="op")$("#opIn").focus({preventScroll:true})},60)}
 let pend=null;
@@ -3432,7 +3451,7 @@ function pdEqRender(){pdEqSeg();pdDesempenho()}
 var PNV="duo",PNE={key:"",t:0,B:[],err:""},PNEl=false;
 try{PNV=localStorage.getItem("rcondas.pnv")||"duo"}catch(e){}
 function pnPode(){return!ON||!!me}
-function pnView(){return pnPode()?(["duo","col","emb"].includes(PNV)?PNV:"duo"):"col"}
+function pnView(){return pnPode()?(["duo","col","pes","ond","emb"].includes(PNV)?PNV:"duo"):"col"}
 function pnHr(ms){return String(new Date(ms).getHours()).padStart(2,"0")+"h"}
 /* M: Map hora(ms) -> {n, pes:Set, m?}; devolve barras */
 function pnItens(M,dec){const hs=[...M.keys()].sort((a,b)=>a-b);if(!hs.length)return[];const it=[],h0=Math.floor(Date.now()/36e5)*36e5;
@@ -3497,7 +3516,7 @@ function pnCarregar(d,force){if(PNEl)return;const stale=PNE.key!==d||(force||d==
  pdDesCarregar(dk(Date.parse(d+"T12:00:00")-864e5),d).then(B=>{PNE={key:d,t:Date.now(),B,err:""}},e=>{PNE={key:d,t:Date.now(),B:[],err:errMsg(e)}}).then(()=>{PNEl=false;if(view==="painel")pnRender()})}
 function pnRender(){const seg=$("#pnSeg");if(!seg)return;const ok=pnPode(),v=pnView();seg.classList.toggle("hide",!ok);
  $$("#pnSeg button").forEach(b=>{const on=b.dataset.pnv===v;b.classList.toggle("on",on);b.setAttribute("aria-pressed",on)});
- $("#pnColW").classList.toggle("hide",v!=="col");$("#pnDuo").classList.toggle("hide",v==="col");if(v==="col")return;
+ {const cw=["col","pes","ond"].includes(v);$("#pnColW").classList.toggle("hide",!cw);$("#pnColW").dataset.pnv=ok?v:"all";$("#pnDuo").classList.toggle("hide",cw);if(cw)return}
  const el=$("#pnDuo"),d=$("#day").value||hoje();pnCarregar(d);
  if(PNE.key!==d){el.innerHTML='<div class="skel" aria-label="Carregando"><i></i><i></i></div>';return}
  if(PNE.err){el.innerHTML=`<div class="card"><div class="empty">Não foi possível carregar a Embalagem: ${esc(PNE.err)}</div></div>`;return}
@@ -3623,7 +3642,7 @@ document.addEventListener("click",e=>{const t=e.target.closest&&e.target.closest
  if(t.dataset.pdrm){const o=pdOp(t.dataset.pdrm);if(!o)return;if(t.dataset.ok!=="1"){t.dataset.ok="1";t.textContent="Confirmar remoção de "+o.n.split(" ")[0];setTimeout(()=>{if(t.isConnected){t.dataset.ok="";t.textContent="Remover da produção"}},5000);return}pdRemover(t.dataset.pdrm);return}
  if(t.dataset.pdsug){const o=PDsL.find(x=>x.m===t.dataset.pdsug);if(o)pdEscolher(o);return}
  if(t.dataset.pnu){try{localStorage.setItem("rcondas.pnu",t.dataset.pnu)}catch(e){}pnRender();return}
- if(t.dataset.pnv){PNV=t.dataset.pnv;try{localStorage.setItem("rcondas.pnv",PNV)}catch(e){}pnRender();return}
+ if(t.dataset.pnv){PNV=t.dataset.pnv;try{localStorage.setItem("rcondas.pnv",PNV)}catch(e){}pnRender();if(["col","pes","ond"].includes(PNV)&&typeof renderAll==="function")renderAll();return}
  if(t.dataset.pdfp){PDfp=t.dataset.pdfp;pdRender();return}
  if(t.dataset.pde){PDE=t.dataset.pde;PDed=null;pdEqRender();return}
  if(t.dataset.pdf){PDf=t.dataset.pdf;pdDisLista();if(PDf.includes("-")){const [fa,fx]=PDf.split("-");[["pdAn",fa],["pdAt",fx]].forEach(([n,v])=>{const r=document.querySelector('#pdNovaF input[name="'+n+'"][value="'+v+'"]');if(r)r.checked=true})}return}
@@ -3759,11 +3778,17 @@ document.addEventListener("change",e=>{const id=e.target.id;if(id==="audDe"||id=
 document.addEventListener("input",e=>{if(e.target.id==="audQ")audRender()});
 /* mini abas na lateral: espelham as abas internas de cada área */
 const SUBS={prod:["pasub","pa"],op:["sub","s"],ind:["gsub","gs"],prs:["psub","p"],his:["hsub","hs"]};
+const HIS_G=[["Produção",["evo","tipo","pes"]],["Presença",["aus","paus","trn"]],["Procurando",["pro"]]];
 function sideSubs(){
  $$(".ssub").forEach(e=>e.remove());const k=SUBS[view];if(!k)return;const bar=document.getElementById(k[0]),tab=document.querySelector('nav.side .tab[data-t="'+view+'"]');if(!bar||!tab)return;
- const box=document.createElement("div");box.className="ssub";box.setAttribute("role","group");box.setAttribute("aria-label","Abas de "+tab.textContent.trim());
- [...bar.querySelectorAll("button")].filter(b=>!b.classList.contains("hide")&&b.style.display!=="none"&&!b.dataset.merge).forEach(b=>{const x=document.createElement("button");x.type="button";x.textContent=b.textContent;x.className=b.classList.contains("on")?"on":"";x.dataset.v=b.dataset[k[1]];x.onclick=()=>{b.click();sideSubs()};box.appendChild(x)});
- tab.insertAdjacentElement("afterend",box)}
+ const box=document.createElement("div"),lateral=view==="his";box.className="ssub "+(lateral?"snav":"stop");box.setAttribute("role","group");box.setAttribute("aria-label","Abas de "+tab.textContent.trim());
+ const B=[...bar.querySelectorAll("button")].filter(b=>!b.classList.contains("hide")&&b.style.display!=="none"&&!b.dataset.merge);
+ const mk=b=>{const x=document.createElement("button");x.type="button";x.textContent=b.textContent;x.className=b.classList.contains("on")?"on":"";if(x.className)x.setAttribute("aria-current","page");x.dataset.v=b.dataset[k[1]];x.onclick=()=>{b.click();sideSubs()};return x};
+ if(lateral){HIS_G.forEach(([g,ks])=>{const L=B.filter(b=>ks.includes(b.dataset[k[1]]));if(!L.length)return;const t=document.createElement("div");t.className="snT";t.textContent=g;box.appendChild(t);L.forEach(b=>box.appendChild(mk(b)))});
+  B.filter(b=>!HIS_G.some(([,ks])=>ks.includes(b.dataset[k[1]]))).forEach(b=>box.appendChild(mk(b)))}
+ else B.forEach(b=>box.appendChild(mk(b)));
+ if(B.length<2&&!lateral)return;
+ bar.insertAdjacentElement("afterend",box)}
 (function(){let tm=0;const re=()=>{clearTimeout(tm);tm=setTimeout(sideSubs,30)};Object.values(SUBS).forEach(([id])=>{const b=document.getElementById(id);if(b)new MutationObserver(re).observe(b,{attributes:true,subtree:true,childList:true,attributeFilter:["class","style"]})});sideSubs()})();
 
 /* ===== Meta batida: comemoração (versão 2: logo, número dourado, estatísticas, pódio e trilha sonora) ===== */

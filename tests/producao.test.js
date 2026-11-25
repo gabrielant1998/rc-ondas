@@ -24,8 +24,8 @@ async function bipar(p,cod,wns){await p.click('.tab[data-t="prod"]');await p.eva
 (async()=>{const b=await chromium.launch();const SHOT=process.env.SHOT;
 
 await T("P01 Abas: Operação virou Coleta e Produção aparece com Bipar e Distribuição",async()=>{const p=await page(b,base());
- const tabs=await p.$$eval('.tab[data-t]',x=>x.map(e=>e.textContent.trim()));ok(tabs.includes("Coleta")&&tabs.includes("Produção")&&!tabs.includes("Operação"),"abas: "+tabs);
- await p.click('.tab[data-t="prod"]');ok(await p.isVisible('#pdP'),'campo do operador');ok((await p.textContent('#ttl')).includes('Produção'),'título');ok(!(await p.isVisible('#pdDisV')),'Produção não deveria mostrar o cadastro');
+ const tabs=await p.$$eval('.tab[data-t]',x=>x.map(e=>e.textContent.trim()));ok(tabs.includes("Coleta")&&tabs.includes("Embalagem")&&!tabs.includes("Operação"),"abas: "+tabs);
+ await p.click('.tab[data-t="prod"]');ok(await p.isVisible('#pdP'),'campo do operador');ok((await p.textContent('#ttl')).includes('Embalagem'),'título');ok(!(await p.isVisible('#pdDisV')),'Produção não deveria mostrar o cadastro');
  await dis(p);ok(await p.isVisible('#cpd'),'cadastro da embalagem na Config');ok(!(await p.evaluate(()=>document.getElementById('gsPd').classList.contains('hide'))),'subaba escondida');
  ok(!p.errors.length,p.errors.join(';'))});
 
@@ -146,7 +146,9 @@ await T("P15 Painel: Coleta e Embalagem visão geral só com os gráficos novos;
  await p.click('#pnDuo [data-pnu="o"]');await p.waitForTimeout(100);t=(await p.textContent('#pnDuo')).replace(/\s+/g,' ');ok(t.includes('Ondas por hora')&&t.includes('Ondas por pessoa por hora')&&await p.evaluate(()=>localStorage.getItem('rcondas.pnu')==='o'),'alterna para ondas');
  await p.click('#pnDuo [data-pnu="u"]');await p.waitForTimeout(100);
  await p.click('#pnSeg [data-pnv="col"]');ok(await p.isVisible('#pnColW')&&!(await p.isVisible('#pnDuo')),'só Coleta');ok(await p.isVisible('#pGar'),'gargalo da Coleta');
- ok(!(await p.evaluate(()=>document.getElementById('pnDet').open)),'detalhes antigos recolhidos');ok((await p.$$('#pnDet #chF')).length===1,'funil guardado nos detalhes');
+ ok(!(await p.isVisible('#pFun'))&&!(await p.isVisible('#pRank')),'Coleta mostra só o essencial');
+ await p.click('#pnSeg [data-pnv="pes"]');await p.waitForTimeout(100);ok(await p.isVisible('#pRank')&&await p.isVisible('#pHeat')&&!(await p.isVisible('#pGar')),'aba Pessoas');
+ await p.click('#pnSeg [data-pnv="ond"]');await p.waitForTimeout(100);ok(await p.isVisible('#pFun')&&await p.isVisible('#pTip')&&!(await p.isVisible('#pRank')),'aba Ondas e tipos');
  await p.click('#pnSeg [data-pnv="emb"]');await p.waitForTimeout(150);t=(await p.textContent('#pnDuo')).replace(/\s+/g,' ');ok(await p.isVisible('#pnDuo')&&(await p.$$('#pnDuo .pnSide')).length===1&&t.includes('Postos'),'só Embalagem');
  await p.click('#pnSeg [data-pnv="duo"]');if(SHOT)await p.screenshot({path:SHOT+'/p_duo.png',fullPage:true});
  ok(!p.errors.length,p.errors.join(';'))});
