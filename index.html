@@ -604,6 +604,13 @@ body[data-v=cfg] #turnoF,body[data-v=cfg] #gal,body[data-v=cfg] #day{display:non
 .uMeta{color:var(--mut)}.uAc{white-space:nowrap;text-align:right}
 
 .pdMtT th{font-size:12.5px;white-space:nowrap}.pdMtT td input{width:100%;min-width:90px;box-sizing:border-box}.pdMtT td.num{text-align:right}
+.pdCadTop{margin:0 0 14px;padding:0 0 12px;border-bottom:1px solid var(--line)}.pdSubT{display:block;margin:0 0 8px}
+
+.selC{width:34px;text-align:center}.selC input{width:18px;height:18px;min-height:auto;cursor:pointer}
+.mLote{display:flex;flex-wrap:wrap;align-items:center;gap:10px 16px;padding:10px 12px;margin:0 0 10px;border:1px dashed var(--line);border-radius:10px}
+.mLote.on{border-style:solid;border-color:var(--g);background:color-mix(in srgb,var(--g) 7%,transparent)}
+.mLoteT{display:flex;flex-direction:column;gap:2px;min-width:200px}.mLoteT span{font-size:13px;color:var(--mut)}
+.mLoteF{display:flex;flex-wrap:wrap;align-items:flex-end;gap:8px 10px}.mLoteF label{display:grid;gap:4px;font-size:13px;font-weight:500}.mLoteF input{width:130px}
 </style>
 </head>
 <body>
@@ -2370,17 +2377,48 @@ function cfgUsers(){
  const q=nrm(($("#uQ")||{}).value||"").trim(),F=OPS.filter(o=>!q||nrm(o.n).includes(q)||nrm(o.m).includes(q)).sort((a,b)=>a.m.localeCompare(b.m)),V=q||uAll?F:[];
  if(!OPS.length){$("#uL").innerHTML='<div class="empty">Nenhum usuário cadastrado.</div>';return}
  const rodape=q?`<div class="uRod">${F.length?F.length+(F.length===1?" encontrado":" encontrados"):"Ninguém encontrado com “"+esc(($("#uQ")||{}).value)+"”."}</div>`:uAll?`<div class="uRod"><button type="button" class="lk" data-uall="0">Recolher lista</button></div>`:`<div class="uRod"><span>Lista recolhida. Pesquise acima ou</span> <button type="button" class="lk" data-uall="1">mostrar todos os ${OPS.length}</button></div>`;
- $("#uL").innerHTML=(V.length?`<table class="uTab"><tr><th>Código</th><th>Nome</th><th>Turno</th><th>Galpão</th><th>Ondas</th><th></th></tr>`+
+ const pm=podeM();USEL.forEach(c=>{if(!OPS.some(o=>o.m===c))USEL.delete(c)});
+ $("#uL").innerHTML=(pm&&V.length?metaLoteBar("col",USEL.size,V.length&&V.every(o=>USEL.has(o.m))):"")+(V.length?`<table class="uTab"><tr>${pm?`<th class="selC"><input type="checkbox" data-uselall aria-label="Selecionar todas as pessoas da lista"${V.every(o=>USEL.has(o.m))?" checked":""}></th>`:""}<th>Código</th><th>Nome</th><th>Turno</th><th>Galpão</th><th>Ondas</th><th></th></tr>`+
   V.map(o=>{const n=S.waves.filter(w=>w.op===o.m).length;
    const pp=podeP(),mi=MIP(o),mg=(MI()[o.g]||{});
-   return`<tr${uEd===o.m?' class="uEdOn"':''}><td><b>${o.m}</b></td><td>${esc(o.n)}${o.mo||o.mq?`<br><small class="uMeta">meta própria: ${[o.mo?fmt(o.mo)+" ondas":"",o.mq?fmt(o.mq)+" un.":""].filter(Boolean).join(" e ")} por dia</small>`:""}</td><td><select data-ut2="${o.m}" aria-label="Turno de ${esc(o.n)}"${pp?"":" disabled"}><option value="1"${o.t===1?" selected":""}>1º turno</option><option value="2"${o.t===2?" selected":""}>2º turno</option></select></td><td>${lim?esc(o.g):`<select data-ug2="${o.m}" aria-label="Galpão de ${esc(o.n)}">${S.gals.map(g=>`<option${g===o.g?" selected":""}>${esc(g)}</option>`).join("")}</select>`}</td><td>${n}</td><td class="uAc">${pp||podeM()?`<button class="btn alt sm" type="button" data-uedit="${o.m}" aria-expanded="${uEd===o.m}">${uEd===o.m?"Fechar":"Editar"}</button> `:""}${pp?`<button class="btn d sm" data-udel="${o.m}">Excluir</button>`:""}</td></tr>`+(uEd===o.m?`<tr class="uEdR"><td colspan="6"><form class="uEdF" data-uef="${o.m}">
+   return`<tr${uEd===o.m?' class="uEdOn"':''}>${pm?`<td class="selC"><input type="checkbox" data-usel="${o.m}" aria-label="Selecionar ${esc(o.n)}"${USEL.has(o.m)?" checked":""}></td>`:""}<td><b>${o.m}</b></td><td>${esc(o.n)}${o.mo||o.mq?`<br><small class="uMeta">meta própria: ${[o.mo?fmt(o.mo)+" ondas":"",o.mq?fmt(o.mq)+" un.":""].filter(Boolean).join(" e ")} por dia</small>`:""}</td><td><select data-ut2="${o.m}" aria-label="Turno de ${esc(o.n)}"${pp?"":" disabled"}><option value="1"${o.t===1?" selected":""}>1º turno</option><option value="2"${o.t===2?" selected":""}>2º turno</option></select></td><td>${lim?esc(o.g):`<select data-ug2="${o.m}" aria-label="Galpão de ${esc(o.n)}">${S.gals.map(g=>`<option${g===o.g?" selected":""}>${esc(g)}</option>`).join("")}</select>`}</td><td>${n}</td><td class="uAc">${pp||podeM()?`<button class="btn alt sm" type="button" data-uedit="${o.m}" aria-expanded="${uEd===o.m}">${uEd===o.m?"Fechar":"Editar"}</button> `:""}${pp?`<button class="btn d sm" data-udel="${o.m}">Excluir</button>`:""}</td></tr>`+(uEd===o.m?`<tr class="uEdR"><td colspan="${pm?7:6}"><form class="uEdF" data-uef="${o.m}">
     ${pp?`<label>Nome e sobrenome<input name="n" value="${esc(o.n)}" maxlength="80" autocomplete="off" required></label>`:""}
     ${podeM()?`<label>Meta individual: ondas por dia<input name="mo" type="number" min="1" step="1" value="${o.mo||""}" placeholder="${mg.o?"do galpão: "+fmt(mg.o):"sem meta"}"></label><label>Meta individual: unidades por dia<input name="mq" type="number" min="1" step="1" value="${o.mq||""}" placeholder="${mg.q?"do galpão: "+fmt(mg.q):"sem meta"}"></label>`:""}
     <div class="uEdB"><button class="btn sm" type="submit">Salvar</button><button class="btn alt sm" type="button" data-uedit="${o.m}">Cancelar</button></div>
-    <div class="legend">${podeM()?"Deixe a meta em branco para usar a meta individual do galpão"+(mg.o||mg.q?" ("+[mg.o?fmt(mg.o)+" ondas":"",mg.q?fmt(mg.q)+" un.":""].filter(Boolean).join(" e ")+" por dia)":"")+". ":""}As ondas já registradas continuam com a mesma pessoa.</div></form></td></tr>`:"")}).join("")+"</table>":"")+rodape}
-let uEd=null;
+    <div class="legend">${podeM()?"Deixe a meta em branco para usar a meta individual do galpão"+(mg.o||mg.q?" ("+[mg.o?fmt(mg.o)+" ondas":"",mg.q?fmt(mg.q)+" un.":""].filter(Boolean).join(" e ")+" por dia)":"")+". ":""}Mudar o nome não altera a produtividade: as ondas, a presença e as metas continuam ligadas à mesma pessoa.</div></form></td></tr>`:"")}).join("")+"</table>":"")+rodape}
+let uEd=null;const USEL=new Set(),PSEL=new Set();
+/* barra para mudar a meta individual de uma ou mais pessoas de uma vez */
+function metaLoteBar(t,n,todas){const col=t==="col",ids=col?"mlc":"mle";
+ return`<div class="mLote${n?" on":""}" data-mlote="${t}" role="region" aria-label="Meta individual em lote"><div class="mLoteT"><b>${n?n+(n===1?" pessoa selecionada":" pessoas selecionadas"):"Meta individual"}</b><span>${n?"Defina a meta própria de quem está marcado.":"Marque uma ou mais pessoas na lista para mudar a meta individual delas."}</span></div>
+ ${n?`<div class="mLoteF">${col?`<label>Ondas por dia<input id="${ids}O" type="text" inputmode="numeric" maxlength="7" placeholder="sem mudar"></label><label>Unidades por dia<input id="${ids}Q" type="text" inputmode="numeric" maxlength="10" placeholder="sem mudar"></label>`:`<label>Unidades por dia<input id="${ids}Q" type="text" inputmode="decimal" maxlength="9" placeholder="ex.: 1.500"></label>`}
+ <button type="button" class="btn sm" data-mlok="${t}">Aplicar a ${n}</button><button type="button" class="btn alt sm" data-mlvolta="${t}" title="Apaga a meta própria e volta a usar a meta ${col?"do galpão":"do posto"}">Usar a ${col?"do galpão":"do posto"}</button><button type="button" class="lk" data-mlx="${t}">Limpar seleção</button></div>`:""}</div>`}
+document.addEventListener("change",e=>{const t=e.target;if(!t.dataset)return;
+ if(t.dataset.usel!==undefined){t.checked?USEL.add(t.dataset.usel):USEL.delete(t.dataset.usel);cfgUsers();return}
+ if(t.dataset.uselall!==undefined){const q=nrm(($("#uQ")||{}).value||"").trim(),V=S.ops.filter(o=>(!q||nrm(o.n).includes(q)||nrm(o.m).includes(q))&&(!$("#gal")||true));[...document.querySelectorAll("#uL [data-usel]")].forEach(c=>{t.checked?USEL.add(c.dataset.usel):USEL.delete(c.dataset.usel)});cfgUsers();return}
+ if(t.dataset.psel!==undefined){t.checked?PSEL.add(t.dataset.psel):PSEL.delete(t.dataset.psel);pdDisLista();return}
+ if(t.dataset.pselall!==undefined){[...document.querySelectorAll("#pdDl [data-psel]")].forEach(c=>{t.checked?PSEL.add(c.dataset.psel):PSEL.delete(c.dataset.psel)});pdDisLista();return}},true);
+document.addEventListener("click",async e=>{const b=e.target.closest&&e.target.closest("[data-mlok],[data-mlvolta],[data-mlx]");if(!b)return;const t=b.dataset.mlok||b.dataset.mlvolta||b.dataset.mlx,col=t==="col";
+ if(b.dataset.mlx){(col?USEL:PSEL).clear();col?cfgUsers():pdDisLista();return}
+ const volta=!!b.dataset.mlvolta;
+ if(col){const os=S.ops.filter(o=>USEL.has(o.m));if(!os.length)return;const lo=$("#mlcO"),lq=$("#mlcQ"),num=x=>{const v=String(x||"").trim().replace(/\./g,"");return v===""?null:(/^\d+$/.test(v)?+v:NaN)};
+  let o1=null,q1=null,mo=volta,mq=volta;if(!volta){o1=num(lo&&lo.value);q1=num(lq&&lq.value);
+   if(o1===null&&q1===null){toast("Preencha a meta de ondas, de unidades ou as duas.");if(lo)lo.focus();return}
+   if(o1!==null&&!(o1>=1&&o1<=100000)){toast("Meta de ondas inválida: use um número inteiro de 1 a 100.000.");lo.focus();return}
+   if(q1!==null&&!(q1>=1&&q1<=10000000)){toast("Meta de unidades inválida: use um número inteiro de 1 a 10.000.000.");lq.focus();return}
+   mo=o1!==null;mq=q1!==null}
+  const msg=volta?os.length+(os.length===1?" pessoa voltou":" pessoas voltaram")+" a usar a meta do galpão.":"Meta individual de "+os.length+(os.length===1?" pessoa":" pessoas")+" salva: "+[mo?fmt(o1)+" ondas":"",mq?fmt(q1)+" unidades":""].filter(Boolean).join(" e ")+" por dia.";
+  if(ON){b.disabled=true;try{await api("/rest/v1/rpc/metas_individuais_coleta",{method:"POST",body:{p_ids:os.map(o=>o.id),p_ondas:volta?null:o1,p_unidades:volta?null:q1,p_mudar_ondas:mo,p_mudar_unidades:mq}})}catch(err){b.disabled=false;toast(errMsg(err),8000);return}
+   USEL.clear();try{await pull()}catch(x){}cfgUsers();renderAll();toast(msg,6000);return}
+  os.forEach(o=>{if(mo)o.mo=volta?0:o1;if(mq)o.mq=volta?0:q1});USEL.clear();save();cfgUsers();renderAll();toast(msg,6000);return}
+ const ps=pdOps().filter(o=>PSEL.has(pdK(o)));if(!ps.length)return;let v=null;
+ if(!volta){const i=$("#mleQ");v=pdNum(i&&i.value);if(v===null){toast("Preencha a meta de unidades por dia.");if(i)i.focus();return}v=Math.round(v*10)/10;if(!(v>0&&v<=20000)){toast("Meta inválida: use um número maior que zero e até 20.000. Para milhar use ponto, como 1.500.",7000);i.focus();return}}
+ const msg=volta?ps.length+(ps.length===1?" pessoa voltou":" pessoas voltaram")+" a usar a meta do posto.":"Meta individual de "+ps.length+(ps.length===1?" pessoa":" pessoas")+" salva: "+nf1(v)+" unidades por dia.";
+ if(ON){b.disabled=true;try{await api("/rest/v1/rpc/metas_individuais_embalagem",{method:"POST",body:{p_ids:ps.map(o=>o.id),p_meta_dia:volta?null:v}})}catch(err){b.disabled=false;toast(errMsg(err),8000);return}
+  PSEL.clear();await pdCarregar();pdRender();toast(msg,6000);return}
+ ps.forEach(o=>{o.md=volta?0:v});PSEL.clear();save();pdRender();toast(msg,6000)});
 let uAll=false;
 document.addEventListener("click",e=>{const b=e.target.closest&&e.target.closest("[data-uedit]");if(!b)return;uEd=uEd===b.dataset.uedit?null:b.dataset.uedit;cfgUsers();if(uEd)setTimeout(()=>{const f=document.querySelector('[data-uef="'+uEd+'"] input');if(f)f.focus()},30)});
+document.addEventListener("keydown",e=>{const t=e.target;if(e.key!=="Enter"||!t.dataset||!t.dataset.pdenter)return;e.preventDefault();const b=document.querySelector('[data-pdcad="'+CSS.escape(t.dataset.pdenter)+'"]');if(b)b.click()});
 document.addEventListener("submit",async e=>{const f=e.target.closest&&e.target.closest("[data-uef]");if(!f)return;e.preventDefault();const o=S.ops.find(x=>x.m===f.dataset.uef);if(!o)return;
  const get=n=>f.querySelector('[name="'+n+'"]'),body={};
  if(get("n")){const n=get("n").value.trim().replace(/\s+/g," ");if(n.length<2){toast("Escreva o nome com pelo menos 2 letras.");get("n").focus();return}
@@ -3189,8 +3227,8 @@ function pdLocalB(){const W=new Set(S.waves.filter(w=>!w.err).map(w=>normWN(w.wn
 async function pdCarregar(){diaTit();
  if(!ON){PDB=pdLocalB();return}
  if(!online())return;
- try{const [t,p,b,ps,mt]=await Promise.all([api("/rest/v1/prod_turnos?select=*&order=id"),api("/rest/v1/rpc/prod_postos",{method:"POST",body:{}}),api("/rest/v1/rpc/prod_bipagens_dia",{method:"POST",body:{p_dia:diaSel()}}),api("/rest/v1/prod_pessoas?select=id,codigo,nome,galpao_id&excluido_em=is.null&order=nome&limit=2000"),api("/rest/v1/prod_metas?select=galpao_id,atividade,andar,por_hora,por_dia,horas_dia,inicio,criado_por&order=inicio&limit=2000").catch(()=>null)]);
-  if(mt)PDM=mt.map(pdMmap);PDPES=ps.map(x=>({id:x.id,m:x.codigo,n:x.nome,g:GN[x.galpao_id]||""}));if(PDsel)PDsel=PDPES.find(o=>o.id===PDsel.id)||null;
+ try{const [t,p,b,ps,mt]=await Promise.all([api("/rest/v1/prod_turnos?select=*&order=id"),api("/rest/v1/rpc/prod_postos",{method:"POST",body:{}}),api("/rest/v1/rpc/prod_bipagens_dia",{method:"POST",body:{p_dia:diaSel()}}),api("/rest/v1/prod_pessoas?select=id,codigo,nome,galpao_id,meta_dia&excluido_em=is.null&order=nome&limit=2000"),api("/rest/v1/prod_metas?select=galpao_id,atividade,andar,por_hora,por_dia,horas_dia,inicio,criado_por&order=inicio&limit=2000").catch(()=>null)]);
+  if(mt)PDM=mt.map(pdMmap);PDPES=ps.map(x=>({id:x.id,m:x.codigo,n:x.nome,g:GN[x.galpao_id]||"",md:+x.meta_dia||0}));if(PDsel)PDsel=PDPES.find(o=>o.id===PDsel.id)||null;
   PDT=t.map(pdTmap);PDA=p.map(pdAmap);PDB=b.map(x=>({id:x.id,wn:x.wn,oid:x.pessoa_id,andar:x.andar,at:x.atividade,tu:x.turno_id,em:Date.parse(x.bipada_em),col:!!x.coletado,q:x.origem==="quantidade"?+x.quantidade:undefined,st:"ok"}));
   if(pdGestor()){try{PDH=(await api("/rest/v1/prod_atribuicoes?select=*&order=inicio.desc&limit=3000")).map(pdAmap)}catch(e){PDH=[]}}else PDH=[];
   PD_AT0=Date.now()}catch(e){}}
@@ -3290,14 +3328,14 @@ function pdDisLista(){const el=$("#pdDl");if(!el)return;const ops=pdOps(),now=Da
  $("#pdDf").innerHTML=[["todos","Todos"]].concat(PD_POS.map(([a,x])=>[a+"-"+x,PD_AND[a]+" "+PD_AT[x]]),[["sem","Sem posto"]]).map(([k,t])=>`<button type="button" data-pdf="${k}" aria-pressed="${PDf===k}">${t} <span class="pdCn">${n[k]}</span></button>`).join("");
  const q=nrm($("#pdDq").value),L=ops.filter(o=>{const a=post(o);if(PDf==="sem"&&a)return false;if(PDf!=="todos"&&PDf!=="sem"&&(!a||a.andar+"-"+a.at!==PDf))return false;return!q||nrm(o.n).includes(q)||nrm(o.m).includes(q)}).sort((a,b)=>a.n.localeCompare(b.n));
  pdNovaForm();{const c=$("#pdCnt");if(c)c.textContent=ops.length}
- const pp=podeP();
- el.innerHTML=L.length?`<div class="tw"><table class="uTab pdTab"><tr><th>Código</th><th>Nome</th><th>Posto</th><th>Turno</th><th>Hoje</th><th></th></tr>`+L.map(o=>{const k=pdK(o),a=pdPosto(k,now),t=a?pdTurno(a.tu):null,nb=bip[o.id||k]||0,ab=PDed===k;
-  return`<tr${ab?' class="uEdOn"':''}><td><b>${esc(o.m)}</b></td><td>${esc(o.n)}</td>
+ const pp=podeP(),pm=podeM()&&pdGestor();PSEL.forEach(k=>{if(!ops.some(o=>pdK(o)===k))PSEL.delete(k)});
+ el.innerHTML=(pm&&L.length?metaLoteBar("emb",PSEL.size,L.every(o=>PSEL.has(pdK(o)))):"")+(L.length?`<div class="tw"><table class="uTab pdTab"><tr>${pm?`<th class="selC"><input type="checkbox" data-pselall aria-label="Selecionar todas as pessoas da lista"${L.every(o=>PSEL.has(pdK(o)))?" checked":""}></th>`:""}<th>Código</th><th>Nome</th><th>Posto</th><th>Turno</th><th>Hoje</th><th></th></tr>`+L.map(o=>{const k=pdK(o),a=pdPosto(k,now),t=a?pdTurno(a.tu):null,nb=bip[o.id||k]||0,ab=PDed===k;
+  return`<tr${ab?' class="uEdOn"':''}>${pm?`<td class="selC"><input type="checkbox" data-psel="${esc(k)}" aria-label="Selecionar ${esc(o.n)}"${PSEL.has(k)?" checked":""}></td>`:""}<td><b>${esc(o.m)}</b></td><td>${esc(o.n)}${o.md?`<br><small class="uMeta">meta própria: ${nf1(o.md)} un. por dia</small>`:""}</td>
    <td>${a?(a.sit==="ativo"?`<span class="pdTag ${a.andar==="terreo"?"t":"m"}">${PD_AND[a.andar]} ${PD_AT[a.at]}</span>`:'<span class="pdSt err">Inativo</span>'):'<span class="pdH">Sem posto</span>'}</td>
    <td>${a?esc(t?t.nome:"Turno "+a.tu)+(a.ent?`<br><small class="uMeta">${esc(pdHorario(a))} (individual)</small>`:""):"—"}</td>
    <td class="num">${nb?fmt(nb):'<span class="pdH">—</span>'}</td>
-   <td class="uAc"><button type="button" class="btn alt sm" data-pded="${esc(k)}" aria-expanded="${ab}">${ab?"Fechar":a?"Editar":"Definir posto"}</button>${pp?` <button type="button" class="btn d sm" data-pdrm="${esc(k)}" data-t0="Excluir">Excluir</button>`:""}</td></tr>`+(ab?`<tr class="uEdR"><td colspan="6">${pdEditor(o,a)}</td></tr>`:"")}).join("")+"</table></div>"
-  :`<div class="empty">${ops.length?"Ninguém neste filtro.":"Nenhuma pessoa cadastrada na embalagem. Use Adicionar pessoa."}</div>`}
+   <td class="uAc"><button type="button" class="btn alt sm" data-pded="${esc(k)}" aria-expanded="${ab}">${ab?"Fechar":a?"Editar":"Definir posto"}</button>${pp?` <button type="button" class="btn d sm" data-pdrm="${esc(k)}" data-t0="Excluir">Excluir</button>`:""}</td></tr>`+(ab?`<tr class="uEdR"><td colspan="${pm?7:6}">${pdEditor(o,a)}</td></tr>`:"")}).join("")+"</table></div>"
+  :`<div class="empty">${ops.length?"Ninguém neste filtro.":"Nenhuma pessoa cadastrada na embalagem. Use Adicionar pessoa."}</div>`)}
 const pdPosR=cur=>{const [ca,cx]=(cur||"-").split("-"),r=(n,v,t,c)=>`<label><input type="radio" name="${n}" value="${v}"${c===v?" checked":""}>${t}</label>`;
  return`<fieldset><legend>Andar <small>(obrigatório)</small></legend><div class="pdSeg pdSeg2">${Object.keys(PD_AND).map(a=>r("pdAn",a,PD_AND[a],ca)).join("")}</div></fieldset>
  <fieldset><legend>Atividade <small>(obrigatório)</small></legend><div class="pdSeg pdSeg2">${Object.keys(PD_AT).map(x=>r("pdAt",x,PD_AT[x],cx)).join("")}</div></fieldset>`};
@@ -3337,6 +3375,10 @@ function pdLocalDT(t){const d=new Date(t);d.setSeconds(0,0);return dk(d.getTime(
 function pdEditor(o,a){const k=pdK(o),T=pdTurnos().filter(t=>t.ativo||(a&&t.id===a.tu)),r=(n,v,lab,cur)=>`<label><input type="radio" name="${n}" value="${v}"${cur===v?" checked":""}>${lab}</label>`;
  const H=pdAtribs().filter(x=>x.oid===k).sort((x,y)=>y.ini-x.ini).slice(0,8),fd=t=>new Date(t).toLocaleString("pt-BR",{day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"});
  return`<form class="pdEd" data-pdform="${esc(k)}" novalidate>
+  <div class="pdCad pdCadTop"><b>Nome e crachá</b><div class="pdG"><label>Nome e sobrenome<input name="n" value="${esc(o.n)}" maxlength="80" autocomplete="off" data-pdenter="${esc(k)}"></label><label>Código do crachá<input name="c" value="${esc(o.m)}" maxlength="12" autocomplete="off" data-pdenter="${esc(k)}"></label></div>
+   <div class="legend" style="margin:0 0 8px">Mudar o nome não altera a produtividade: as ondas embaladas, a presença e as metas continuam ligadas à mesma pessoa.</div>
+   <div class="ctl2"><button type="button" class="btn alt sm d" data-pdrm="${esc(k)}">Remover da produção</button><button type="button" class="btn sm" data-pdcad="${esc(k)}">Salvar nome e crachá</button></div></div>
+  <b class="pdSubT">Posto e turno</b>
   ${pdPosR(a?a.andar+"-"+a.at:"")}
   <div class="pdG"><label>Turno<select name="pdT">${T.map(t=>`<option value="${t.id}"${a&&a.tu===t.id?" selected":""}>${esc(t.nome)} (${t.ent}${t.sai?" às "+t.sai:""})</option>`).join("")}</select></label>
    <label>Entrada individual<input type="time" name="pdE" value="${a?a.ent:""}"></label><label>Saída individual<input type="time" name="pdS" value="${a?a.sai:""}"></label>
@@ -3344,8 +3386,6 @@ function pdEditor(o,a){const k=pdK(o),T=pdTurnos().filter(t=>t.ativo||(a&&t.id==
    <label>Vale a partir de<input type="datetime-local" name="pdD" value="${pdLocalDT(Date.now())}"></label></div>
   <div class="legend" style="margin:0 0 10px">Horário individual em branco = usa o horário do turno. Ele continua valendo nos dias seguintes até ser alterado.</div>
   <div class="ctl2"><button type="button" class="btn alt sm" data-pded="${esc(k)}">Cancelar</button><button type="submit" class="btn">Salvar posto de ${esc(o.n.split(" ")[0])}</button></div>
-  <div class="pdCad"><b>Cadastro</b><div class="pdG"><label>Nome<input name="n" value="${esc(o.n)}" maxlength="80" autocomplete="off"></label><label>Código do crachá<input name="c" value="${esc(o.m)}" maxlength="12" autocomplete="off"></label></div>
-   <div class="ctl2"><button type="button" class="btn alt sm d" data-pdrm="${esc(k)}">Remover da produção</button><button type="button" class="btn alt sm" data-pdcad="${esc(k)}">Salvar cadastro</button></div></div>
   ${H.length?`<ul class="pdHist" aria-label="Histórico de postos">${H.map(x=>{const t=pdTurno(x.tu);return`<li>${fd(x.ini)} até ${x.fim?fd(x.fim):"agora"}: ${PD_AND[x.andar]}, ${PD_AT[x.at]}, ${esc(t?t.nome:"Turno "+x.tu)}${x.sit!=="ativo"?" (inativo)":""}</li>`}).join("")}</ul>`:""}
  </form>`}
 async function pdAtribuir(f){const k=f.dataset.pdform,o=pdOp(k);if(!o)return;const g=n=>{const e=f.querySelector(`[name="${n}"]:checked`)||f.querySelector(`[name="${n}"]`);return e?e.value:""};
@@ -3406,6 +3446,8 @@ function pdGid(){return ON?(GID[pdGalpao()]||null):pdGalpao()}
 function pdGidDe(nome){return ON?(GID[nome]||null):nome}
 function pdMetaR(at,dia,an,g){g=g||pdGid();let r=null,rg=null;pdMetas().forEach(m=>{if(m.g!==g||m.at!==at||m.ini>dia)return;if(an&&m.an===an){if(!r||m.ini>r.ini)r=m}else if(!m.an){if(!rg||m.ini>rg.ini)rg=m}});return r||rg}
 function pdMetaH(at,dia,an,g){const r=pdMetaR(at,dia,an,g);return r?+r.h:0}
+/* meta por hora da pessoa da embalagem: a meta própria dela (por dia ÷ horas do posto), senão a do posto */
+function pdMetaPesH(po,at,dia,an){const g=po&&po.g?pdGidDe(po.g):undefined;if(po&&po.md>0){const r=pdMetaR(at,dia,an,g);return po.md/((r&&+r.hd)||8)}return pdMetaH(at,dia,an,g)}
 function pdNome(oid){const o=pdOps().find(x=>pdK(x)===oid)||(S.prodPesEx||[]).find(x=>pdK(x)===oid);return o?{nm:o.n,cod:o.m}:{nm:"Pessoa removida",cod:""}}
 const pdFiltroP=B=>PDfp==="todos"?B:B.filter(b=>b.andar+"-"+b.at===PDfp);
 function pdStats(B){const now=Date.now(),P=new Map(),H=new Map(),D=new Map(),Q=new Map(),vis=new Set(),fr=h=>Math.max(0,Math.min(1,(now-h)/36e5));
@@ -3415,7 +3457,7 @@ function pdStats(B){const now=Date.now(),P=new Map(),H=new Map(),D=new Map(),Q=n
   let d=D.get(b.dia);if(!d)D.set(b.dia,d={dia:b.dia,n:0,pes:new Set(),meta:0});d.n+=w;d.pes.add(b.oid);
   let q=Q.get(k);if(!q)Q.set(k,q={n:0,pes:new Set(),hrs:0,meta:0});q.n+=w;q.pes.add(b.oid);
   let pd=p.dias.get(b.dia);if(!pd)p.dias.set(b.dia,pd={n:0,meta:0});pd.n+=w;
-  const sk=b.oid+"|"+h;if(!vis.has(sk)){vis.add(sk);const f=fr(h),po=pdOp(b.oid),m=pdMetaH(b.at,b.dia,b.andar,po&&po.g?pdGidDe(po.g):undefined)*f;p.hrs+=f;p.meta+=m;pd.meta+=m;x.meta+=m;d.meta+=m;q.hrs+=f;q.meta+=m}});
+  const sk=b.oid+"|"+h;if(!vis.has(sk)){vis.add(sk);const f=fr(h),po=pdOp(b.oid),m=pdMetaPesH(po,b.at,b.dia,b.andar)*f;p.hrs+=f;p.meta+=m;pd.meta+=m;x.meta+=m;d.meta+=m;q.hrs+=f;q.meta+=m}});
  const L=[...P.values()];return{n:B.reduce((a,b)=>a+(b.q||1),0),col:B.reduce((a,b)=>a+(b.col||b.q?(b.q||1):0),0),meta:L.reduce((a,p)=>a+p.meta,0),hrs:L.reduce((a,p)=>a+p.hrs,0),P:L,H,D,Q}}
 const pdAbaixo=p=>{const hj=hoje(),F=p?[...p.dias].filter(([k,d])=>k<hj&&d.meta):[];return F.length?F.filter(([k,d])=>d.n<d.meta).length+" de "+F.length:"—"};
 const pdPct=(n,m)=>m?n/m*100:null,pdStC=pc=>pc>=100?"ok":pc>=80?"warn":"err";

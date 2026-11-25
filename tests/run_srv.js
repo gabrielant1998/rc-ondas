@@ -93,6 +93,8 @@ function fake(db){const cors={'access-control-allow-origin':'*','access-control-
     db.pb.push({id:x.id,wn:x.wn,pessoa_id:o.id,andar:a.andar,atividade:a.atividade,turno_id:a.turno_id,bipada_em:x.bipada_em,dia,quantidade:ehQ?x.quantidade:1,origem:ehQ?'quantidade':'bipagem'});
     if(!db.pp.some(z=>z.pessoa_id===o.id&&z.dia===dia)){db.pp.push({pessoa_id:o.id,dia,primeira_id:x.id});r.presenca_nova=true}return r}))}
   if(t==='rpc/bipador_acessos'){const o=db.gestores.find(x=>x.email===body.p_email&&x.perfil==='bipador');if(!o)return J(route,400,{code:'23503',message:'Bipador não encontrado'});if(!(g&&(g.admin||o.responsavel===g.email)))return J(route,403,{code:'42501',message:'Só o administrador ou o gestor responsável muda os acessos'});o.abas=body.p_abas.slice().sort();return J(route,200,'ok')}
+  if(t==='rpc/metas_individuais_coleta'){if(!(g&&(g.admin||g.pode_metas!==false)))return J(route,403,{code:'42501',message:'Sem permissão para alterar metas. Peça ao administrador para liberar "Pode alterar metas".'});let n=0;db.operadores.forEach(o=>{if(body.p_ids.includes(o.id)&&!o.excluido_em){if(body.p_mudar_ondas)o.meta_ind_ondas=body.p_ondas;if(body.p_mudar_unidades)o.meta_ind_qtd=body.p_unidades;n++}});return J(route,200,n)}
+  if(t==='rpc/metas_individuais_embalagem'){let n=0;(db.ppes||[]).forEach(o=>{if(body.p_ids.includes(o.id)){o.meta_dia=body.p_meta_dia;n++}});return J(route,200,n)}
   if(t==='rpc/uso_banco'){if(!(g&&g.admin))return J(route,403,{code:'42501',message:'Sem permissão'});return J(route,200,{banco_bytes:18*1048576,ondas:db.ondas.length,ondas_bytes:9*1048576,auditoria_bytes:320000,limite_bytes:500*1048576})}
   if(t==='rpc/ausencias_publicas'){return J(route,200,(db.aus||[]).filter(a=>new Date(Date.parse(a.inicio)-3*36e5).toISOString().slice(0,10)===body.p_dia))}
   if(t==='rpc/registrar_ausencia'){const op=db.operadores.find(o=>o.id===body.p_operador&&!o.excluido_em);if(!op)return J(route,400,{code:'23503',message:'Pessoa não encontrada'});
@@ -459,6 +461,17 @@ await T('S113 Lista longa: recolher e mostrar de novo não repete o seletor de p
  for(let i=0;i<3;i++){await p.evaluate(()=>document.querySelector('[data-uall="1"]').click());await p.waitForTimeout(250);await p.evaluate(()=>document.querySelector('[data-uall="0"]').click());await p.waitForTimeout(250)}
  await p.evaluate(()=>document.querySelector('[data-uall="1"]').click());await p.waitForTimeout(300);
  const n=await p.$$eval('#cus .pg',a=>a.length);ok(n===1,'seletores de página: '+n);ok(!p.errors.length,p.errors.join(';'))});
+
+await T('S114 Meta individual de uma ou mais pessoas de uma vez (Coleta) e voltar a usar a do galpão',async()=>{const db=banco();db.operadores.push({id:'00000000-0000-4000-8000-0000000000b3',codigo:'CL003',nome:'Bia Rocha',turno:1,galpao_id:G1,excluido_em:null});
+ const p=await page(b,db);await login(p,'adm@x.com','senha1234');await p.evaluate(()=>go('cfg'));await p.click('#cfgNav [data-c="cus"]');await p.evaluate(()=>{const b=document.querySelector('[data-uall="1"]');if(b)b.click()});await p.waitForTimeout(200);
+ ok((await p.textContent('[data-mlote="col"]')).includes('Marque uma ou mais'),'barra avisa');
+ await p.check('[data-usel="CL001"]');await p.waitForTimeout(100);await p.check('[data-usel="CL003"]');await p.waitForTimeout(100);ok((await p.textContent('[data-mlote="col"]')).includes('2 pessoas selecionadas'),'contagem');if(process.env.SHOT)await (await p.$('#cus')).screenshot({path:process.env.SHOT+'/lote.png'});
+ await p.fill('#mlcO','30');await p.fill('#mlcQ','1.200');await p.click('[data-mlok="col"]');await p.waitForTimeout(500);
+ const a1=db.operadores.find(x=>x.codigo==='CL001'),a3=db.operadores.find(x=>x.codigo==='CL003'),a2=db.operadores.find(x=>x.codigo==='CL002');ok(a1.meta_ind_ondas===30&&a3.meta_ind_qtd===1200&&!a2.meta_ind_ondas,'lote salvo: '+JSON.stringify([a1,a3]));
+ ok((await p.$$eval('[data-usel]:checked',a=>a.length))===0,'seleção limpa');
+ await p.check('[data-usel="CL001"]');await p.waitForTimeout(100);await p.click('[data-mlvolta="col"]');await p.waitForTimeout(500);ok(a1.meta_ind_ondas===null&&a1.meta_ind_qtd===null&&a3.meta_ind_ondas===30,'voltou à do galpão');
+ await p.check('[data-uselall]');await p.waitForTimeout(150);ok((await p.textContent('[data-mlote="col"]')).includes((await p.$$eval('[data-usel]',a=>a.length))+' pessoas'),'selecionar todas');
+ ok(!p.errors.length,p.errors.join(';'))});
 
 await T('S22 Gestor comum vê só "Metas" do seu galpão, sem Galpões; admin vê tudo',async()=>{const db=banco();const p=await page(b,db);
  await login(p,'g2@x.com','senha1234');await p.click('.tab[data-t="cfg"]');

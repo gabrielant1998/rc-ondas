@@ -98,6 +98,14 @@ await T("P11 Cadastro da produção: cadastrar, código repetido recusado, edita
 await T("P09 Gestor sem permissão de configuração não vê Distribuição",async()=>{const p=await page(b,base({ges:[{n:"Gil",u:"gil@x",g:"RC",adm:false,pC:false,pI:true,pR:true}]}));await p.click('.tab[data-t="prod"]');
  ok(!(await p.evaluate(()=>pdGestor())),'gestor sem permissão');ok(!(await p.$('#prod #pdDisV')),'distribuição dentro da Produção');ok(await p.isVisible('#pdP'),'bipar deveria continuar público')});
 
+await T("P20 Meta individual da embalagem para uma ou mais pessoas e voltar à do posto",async()=>{const p=await page(b,base());await p.click('.tab[data-t="prod"]');await dis(p);
+ await abrirAdd(p);await p.fill('#pdNovaF [name="n"]','Rita Lima');await p.check('#pdNovaF input[name="pdAn"][value="terreo"]');await p.check('#pdNovaF input[name="pdAt"][value="mesa"]');await p.click('#pdNovaF [type="submit"]');await p.waitForTimeout(120);
+ const ks=await p.$$eval('#pdDl [data-psel]',a=>a.map(x=>x.dataset.psel));ok(ks.length>=2,'pessoas na lista: '+ks.length);
+ await p.check('[data-psel="'+ks[0]+'"]');await p.check('[data-psel="'+ks[1]+'"]');await p.waitForTimeout(80);await p.fill('#mleQ','1.500');await p.click('[data-mlok="emb"]');await p.waitForTimeout(150);
+ let s=await st(p);ok(s.prodPes.filter(o=>o.md===1500).length===2,'meta própria em 2: '+JSON.stringify(s.prodPes));ok((await p.textContent('#pdDl')).includes('meta própria: 1.500'),'mostra na lista');
+ await p.check('[data-psel="'+ks[0]+'"]');await p.click('[data-mlvolta="emb"]');await p.waitForTimeout(120);s=await st(p);ok(s.prodPes.filter(o=>o.md===1500).length===1,'voltou à do posto');
+ ok(await p.evaluate(k=>{const o=pdOp(k);return Math.abs(pdMetaPesH(o,"mesa",hoje(),"terreo")-1500/8)<0.01||o.md===0},ks[1]),'meta por hora da pessoa');ok(!p.errors.length,p.errors.join(';'))});
+
 await T("P10 Celular: sem rolagem horizontal na Produção",async()=>{const p=await page(b,base(),{width:390,height:844});await p.click('.tab[data-t="prod"]');
  await posto(p,'Ana','terreo','mesa');await bipar(p,'PR001',['123456789']);let w=await p.evaluate(()=>document.documentElement.scrollWidth);ok(w<=391,'bipar '+w);
  if(SHOT)await p.screenshot({path:SHOT+'/p_cel.png'});
