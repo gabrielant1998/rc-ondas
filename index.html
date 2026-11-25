@@ -531,7 +531,7 @@ body[data-v=cfg] #turnoF,body[data-v=cfg] #gal,body[data-v=cfg] #day{display:non
 .pdNf fieldset{border:0;padding:0;margin:0 0 12px}.pdNf legend{font-size:13px;color:var(--mut);margin-bottom:6px;padding:0}.pdNf .pdG{margin-bottom:12px}
 .pdHist{margin-top:12px;font-size:13.5px;color:var(--mut)}.pdHist li{margin:3px 0}
 .cpdG{display:grid;grid-template-columns:minmax(300px,1fr) minmax(0,1.35fr);gap:14px;align-items:start}.cpdC{display:grid;gap:14px;min-width:0}.cpdC>.card{margin:0}
-#cpd .pdRow{grid-template-columns:minmax(0,1fr) auto;gap:4px 12px;padding:10px 4px}#cpd .pdRow .who2{grid-column:1;grid-row:1}#cpd .pdRow>.btn{grid-column:2;grid-row:1}#cpd .pdRow .pdPc,#cpd .pdRow .pdH{grid-column:1/-1}#cpd .pdRow .pdH:empty{display:none}.pdNf .pdSeg4{grid-template-columns:1fr 1fr}#cpd #pdDl{max-height:640px;overflow:auto}
+#cpd .pdRow{grid-template-columns:minmax(0,1fr) auto;gap:4px 12px;padding:10px 4px}#cpd .pdRow .who2{grid-column:1;grid-row:1}#cpd .pdRow>.btn{grid-column:2;grid-row:1}#cpd .pdRow .pdPc,#cpd .pdRow .pdH{grid-column:1/-1}#cpd .pdRow .pdH:empty{display:none}.pdNf .pdSeg4{grid-template-columns:1fr 1fr}#cpd #pdDl{max-height:none}.pdTab .uEdR .pdEd{margin:0}@media(max-width:760px){.pdTab .uEdR>td{min-width:0}.pdTab{min-width:560px}.pdTab .uEdR .pdEd{max-width:calc(100vw - 64px);position:sticky;left:0}}.pdTab td{vertical-align:middle}
 @media (max-width:900px){.cpdG{grid-template-columns:minmax(0,1fr)}#cpd #pdDl{max-height:none}}
 .pdTF{display:grid;grid-template-columns:minmax(110px,1.2fr) repeat(2,minmax(96px,.8fr)) minmax(190px,1.4fr);gap:10px;align-items:end;padding:12px 0;border-bottom:1px solid var(--line)}
 .pdTF .pdDias{display:flex;gap:4px;flex-wrap:wrap}.pdTF .pdDias label{display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;border:1px solid var(--line);border-radius:4px;cursor:pointer;font-size:13px;font-weight:600}
@@ -559,7 +559,7 @@ body[data-v=cfg] #turnoF,body[data-v=cfg] #gal,body[data-v=cfg] #day{display:non
 #cfgNav button:focus-visible{outline:2px solid var(--g);outline-offset:1px}
 .cfgM{min-width:0;max-width:900px}
 .cfgP{display:grid;gap:16px}
-.cfgP.hide{display:none}
+.cfgP.hide{display:none}.cfgP>*{min-width:0}
 .cfgH{padding:2px 0 4px}
 .cfgH h2{font:600 22px/1.25 var(--fb);margin:0;color:var(--ink)}
 .cfgH p{margin:6px 0 0;color:var(--mut);font-size:14.5px;line-height:1.45;max-width:64ch}
@@ -3290,12 +3290,14 @@ function pdDisLista(){const el=$("#pdDl");if(!el)return;const ops=pdOps(),now=Da
  $("#pdDf").innerHTML=[["todos","Todos"]].concat(PD_POS.map(([a,x])=>[a+"-"+x,PD_AND[a]+" "+PD_AT[x]]),[["sem","Sem posto"]]).map(([k,t])=>`<button type="button" data-pdf="${k}" aria-pressed="${PDf===k}">${t} <span class="pdCn">${n[k]}</span></button>`).join("");
  const q=nrm($("#pdDq").value),L=ops.filter(o=>{const a=post(o);if(PDf==="sem"&&a)return false;if(PDf!=="todos"&&PDf!=="sem"&&(!a||a.andar+"-"+a.at!==PDf))return false;return!q||nrm(o.n).includes(q)||nrm(o.m).includes(q)}).sort((a,b)=>a.n.localeCompare(b.n));
  pdNovaForm();{const c=$("#pdCnt");if(c)c.textContent=ops.length}
- el.innerHTML=L.length?L.map(o=>{const k=pdK(o),a=pdPosto(k,now),t=a?pdTurno(a.tu):null,nb=bip[o.id||k]||0;
-  return`<div class="pdRow"><div class="who2">${av(o.n)}<div>${esc(o.n)}<small>${o.m}</small></div></div>
-   <div class="pdPc">${a?(a.sit==="ativo"?`<span class="pdTag ${a.andar==="terreo"?"t":"m"}">${PD_AND[a.andar]} ${PD_AT[a.at]}</span>`:'<span class="pdSt err">Inativo</span>'):'<span class="pdH">Sem posto</span>'}${nb?` <span class="pdH">${nb} ${nb===1?"onda":"ondas"} hoje</span>`:""}</div>
-   <div class="pdH">${a?esc(t?t.nome:"Turno "+a.tu)+", "+esc(pdHorario(a))+(a.ent?" (individual)":"")+"<br>desde "+new Date(a.ini).toLocaleString("pt-BR",{day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"}):""}</div>
-   <button type="button" class="btn alt sm" data-pded="${esc(k)}" aria-expanded="${PDed===k}">${PDed===k?"Fechar":a?"Alterar":"Definir posto"}</button></div>`+(PDed===k?pdEditor(o,a):"")}).join("")
-  :`<div class="empty">${ops.length?"Ninguém neste filtro.":"Nenhuma pessoa cadastrada na embalagem. Use o formulário ao lado."}</div>`}
+ const pp=podeP();
+ el.innerHTML=L.length?`<div class="tw"><table class="uTab pdTab"><tr><th>Código</th><th>Nome</th><th>Posto</th><th>Turno</th><th>Hoje</th><th></th></tr>`+L.map(o=>{const k=pdK(o),a=pdPosto(k,now),t=a?pdTurno(a.tu):null,nb=bip[o.id||k]||0,ab=PDed===k;
+  return`<tr${ab?' class="uEdOn"':''}><td><b>${esc(o.m)}</b></td><td>${esc(o.n)}</td>
+   <td>${a?(a.sit==="ativo"?`<span class="pdTag ${a.andar==="terreo"?"t":"m"}">${PD_AND[a.andar]} ${PD_AT[a.at]}</span>`:'<span class="pdSt err">Inativo</span>'):'<span class="pdH">Sem posto</span>'}</td>
+   <td>${a?esc(t?t.nome:"Turno "+a.tu)+(a.ent?`<br><small class="uMeta">${esc(pdHorario(a))} (individual)</small>`:""):"—"}</td>
+   <td class="num">${nb?fmt(nb):'<span class="pdH">—</span>'}</td>
+   <td class="uAc"><button type="button" class="btn alt sm" data-pded="${esc(k)}" aria-expanded="${ab}">${ab?"Fechar":a?"Editar":"Definir posto"}</button>${pp?` <button type="button" class="btn d sm" data-pdrm="${esc(k)}" data-t0="Excluir">Excluir</button>`:""}</td></tr>`+(ab?`<tr class="uEdR"><td colspan="6">${pdEditor(o,a)}</td></tr>`:"")}).join("")+"</table></div>"
+  :`<div class="empty">${ops.length?"Ninguém neste filtro.":"Nenhuma pessoa cadastrada na embalagem. Use Adicionar pessoa."}</div>`}
 const pdPosR=cur=>{const [ca,cx]=(cur||"-").split("-"),r=(n,v,t,c)=>`<label><input type="radio" name="${n}" value="${v}"${c===v?" checked":""}>${t}</label>`;
  return`<fieldset><legend>Andar <small>(obrigatório)</small></legend><div class="pdSeg pdSeg2">${Object.keys(PD_AND).map(a=>r("pdAn",a,PD_AND[a],ca)).join("")}</div></fieldset>
  <fieldset><legend>Atividade <small>(obrigatório)</small></legend><div class="pdSeg pdSeg2">${Object.keys(PD_AT).map(x=>r("pdAt",x,PD_AT[x],cx)).join("")}</div></fieldset>`};
@@ -3702,7 +3704,7 @@ document.addEventListener("keydown",e=>{const id=e.target.id;
  if((id==="pdQn"||id==="pdQh")&&e.key==="Enter"){e.preventDefault();pdQtdPedir()}});
 document.addEventListener("click",e=>{const t=e.target.closest&&e.target.closest("[data-pdsug],[data-pnv],[data-pnu],[data-pdfp],[data-pde],[data-pdf],[data-pded],[data-pdtn],[data-pdtx],[data-pdnx],[data-pdcad],[data-pdrm],[data-pdq],[data-pdqc],[data-pdtroca],#pdQb,#pdNovaB,#pdTroca,#pdEnv");if(!t)return;
  if(t.dataset.pdcad){pdCadastrar(t.closest("form"),t.dataset.pdcad);return}
- if(t.dataset.pdrm){const o=pdOp(t.dataset.pdrm);if(!o)return;if(t.dataset.ok!=="1"){t.dataset.ok="1";t.textContent="Confirmar remoção de "+o.n.split(" ")[0];setTimeout(()=>{if(t.isConnected){t.dataset.ok="";t.textContent="Remover da produção"}},5000);return}pdRemover(t.dataset.pdrm);return}
+ if(t.dataset.pdrm){const o=pdOp(t.dataset.pdrm);if(!o)return;if(t.dataset.ok!=="1"){t.dataset.ok="1";t.textContent=t.dataset.t0?"Confirmar":"Confirmar remoção de "+o.n.split(" ")[0];setTimeout(()=>{if(t.isConnected){t.dataset.ok="";t.textContent=t.dataset.t0||"Remover da produção"}},5000);return}pdRemover(t.dataset.pdrm);return}
  if(t.dataset.pdsug){const o=PDsL.find(x=>x.m===t.dataset.pdsug);if(o)pdEscolher(o);return}
  if(t.dataset.pnu){try{localStorage.setItem("rcondas.pnu",t.dataset.pnu)}catch(e){}pnRender();return}
  if(t.dataset.pnv){PNV=t.dataset.pnv;try{localStorage.setItem("rcondas.pnv",PNV)}catch(e){}pnRender();if(["col","pes","ond"].includes(PNV)&&typeof renderAll==="function")renderAll();return}

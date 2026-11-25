@@ -90,7 +90,7 @@ await T("P11 Cadastro da produção: cadastrar, código repetido recusado, edita
  s=await st(p);ok(s.prodPes.length===1,'aceitou código repetido');await abrirAdd(p);await p.fill('#pdNovaF [name="c"]','PR002');await p.click('#pdNovaF [type="submit"]');await p.waitForTimeout(80);s=await st(p);ok(s.prodPes.length===2,'segunda pessoa');
  await p.fill('#pdDq','Diego');await p.locator('#pdDl [data-pded]').first().click();await p.check('.pdEd input[name="pdAn"][value="terreo"]');await p.check('.pdEd input[name="pdAt"][value="mesa"]');await p.click('.pdEd [type="submit"]');await p.waitForTimeout(80);
  await p.locator('#pdDl [data-pded]').first().click();await p.fill('.pdEd [name="n"]','Diego R. Ramos');await p.click('.pdEd [data-pdcad]');await p.waitForTimeout(80);s=await st(p);ok(s.prodPes[0].n==='Diego R. Ramos','editar nome');
- await bipar(p,'PR001',['555']);await dis(p);await p.fill('#pdDq','Diego');if(!(await p.isVisible('.pdEd [data-pdrm]')))await p.locator('#pdDl [data-pded]').first().click();
+ await bipar(p,'PR001',['555']);await dis(p);if(SHOT)await (await p.$('#cpd')).screenshot({path:SHOT+'/cpd.png'});await p.fill('#pdDq','Diego');if(!(await p.isVisible('.pdEd [data-pdrm]')))await p.locator('#pdDl [data-pded]').first().click();
  await p.click('.pdEd [data-pdrm]');await p.click('.pdEd [data-pdrm]');await p.waitForTimeout(80);s=await st(p);
  ok(s.prodPes.length===1&&!s.prodPes.some(x=>x.m==='PR001'),'não removeu');ok(s.prodB.length===1,'apagou bipagem');ok(s.prodA.filter(a=>!s.prodPes.some(x=>x.id===a.oid)).every(a=>a.fim),'posto ficou aberto');
  if(SHOT){await abrirAdd(p);await p.fill('#pdNovaF [name="n"]','Fabiana Costa');await p.screenshot({path:SHOT+'/p_cad.png'})}});
