@@ -595,6 +595,15 @@ body[data-v=cfg] #turnoF,body[data-v=cfg] #gal,body[data-v=cfg] #day{display:non
 .pnTabs button:focus-visible{outline:2px solid var(--g);outline-offset:1px}
 #pnColW[data-pnv="col"] [data-pnp]:not([data-pnp="col"]),#pnColW[data-pnv="pes"] [data-pnp]:not([data-pnp="pes"]),#pnColW[data-pnv="ond"] [data-pnp]:not([data-pnp="ond"]){display:none!important}
 @media(max-width:760px){.pnTabs{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none}.pnTabs button{white-space:nowrap;padding:10px 12px}}
+
+.uEdOn>td{background:color-mix(in srgb,var(--g) 6%,transparent)}
+.uEdR>td{background:color-mix(in srgb,var(--g) 6%,transparent);padding:4px 12px 14px}
+.uEdF{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;align-items:end}
+.uEdF label{display:grid;gap:5px;font-size:14px;font-weight:500}
+.uEdF .uEdB{display:flex;gap:8px}.uEdF .legend{grid-column:1/-1;margin:0}
+.uMeta{color:var(--mut)}.uAc{white-space:nowrap;text-align:right}
+
+.pdMtT th{font-size:12.5px;white-space:nowrap}.pdMtT td input{width:100%;min-width:90px;box-sizing:border-box}.pdMtT td.num{text-align:right}
 </style>
 </head>
 <body>
@@ -866,9 +875,11 @@ body[data-v=cfg] #turnoF,body[data-v=cfg] #gal,body[data-v=cfg] #day{display:non
    <label class="row mGesP"><input type="checkbox" id="mC" checked style="min-height:auto"> Pode alterar configurações</label>
    <label class="row mGesP"><input type="checkbox" id="mI" checked style="min-height:auto"> Pode ver acompanhamento individual</label>
    <label class="row mGesP"><input type="checkbox" id="mR" checked style="min-height:auto"> Pode alterar e excluir registros</label>
+   <label class="row mGesP"><input type="checkbox" id="mPp" checked style="min-height:auto"> Pode cadastrar e editar pessoas</label>
+   <label class="row mGesP"><input type="checkbox" id="mPm" checked style="min-height:auto"> Pode alterar metas</label>
    <label class="row mGesP"><input type="checkbox" id="mA" style="min-height:auto"> Administrador (vê todos os galpões)</label>
    <button class="btn" id="mB">Criar gestor</button></div></div>
-  <div class="card"><div class="cfgLH"><h2 id="mLT">Gestores</h2><button class="btn sm cfgAddB" type="button" data-add="mNovo" id="mAddB">Adicionar acesso</button></div><div class="tw" id="mL"></div><div id="mSen"></div><div id="mAbas"></div><div id="mGalE"></div><div class="legend">Enquanto não existir nenhum gestor, Configurações e Individual ficam abertos. Depois do primeiro gestor, passam a exigir login.</div></div>
+  <div class="card"><div class="cfgLH"><h2 id="mLT">Gestores</h2><button class="btn sm cfgAddB" type="button" data-add="mNovo" id="mAddB">Adicionar acesso</button></div><div class="tw" id="mL"></div><div id="mSen"></div><div id="mPerm"></div><div id="mAbas"></div><div id="mGalE"></div><div class="legend">Enquanto não existir nenhum gestor, Configurações e Individual ficam abertos. Depois do primeiro gestor, passam a exigir login.</div></div>
  </div>
 
  <div id="cga" class="cfgP hide"><header class="cfgH"><h2>Galpões</h2><p>Galpões da operação. Renomear um galpão atualiza os registros já lançados.</p></header>
@@ -965,6 +976,10 @@ function diaSel(){const e=document.getElementById("day");return(e&&e.value)||hoj
 function diaTxt(){const d=diaSel();return d===hoje()?"hoje":"em "+new Date(d+"T12:00:00").toLocaleDateString("pt-BR",{day:"2-digit",month:"2-digit"})}
 function diaTit(){document.querySelectorAll(".diaT").forEach(e=>e.textContent=diaTxt())}
 function MI(){S.metasInd=S.metasInd||{};return S.metasInd}
+/* meta individual da pessoa: a dela, se tiver; senão a do galpão */
+function MIP(o){const g=(o&&MI()[o.g])||{};return{o:(o&&+o.mo)||g.o||0,q:(o&&+o.mq)||g.q||0,r:g.r||0}}
+function podeP(){return!ON||!!(me&&(me.adm||me.pP))}
+function podeM(){return!ON||!!(me&&(me.adm||me.pM))}
 /* Retrabalho não entra nas metas (do dia, coletiva e individual); tem meta individual própria */
 const RET='Retrabalho',semRet=a=>a.filter(w=>w.ty!==RET),soRet=a=>a.filter(w=>w.ty===RET),qtdOf=a=>a.reduce((s,w)=>s+w.qty,0);
 function MT(){S.metasDia=S.metasDia||{};const k=hoje();if(!S.metasDia[k]){S.metasDia[k]={};Object.keys(S.metasDia).sort().slice(0,-60).forEach(x=>{if(x!==k)delete S.metasDia[x]})}return S.metasDia[k]}
@@ -987,7 +1002,7 @@ const av=n=>{const p=String(n||"?").trim().split(/\s+/);return'<span class="av" 
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const dk=t=>{const d=new Date(t);return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")};
 const fmt=n=>Math.round(n).toLocaleString("pt-BR");
-const mm=ms=>{ms=Math.max(0,ms)/1e3|0;const h=ms/3600|0,m=(ms%3600)/60|0,s=ms%60;return(h?h+":":"")+String(m).padStart(2,"0")+":"+String(s).padStart(2,"0")};
+const mm=ms=>{ms=Math.max(0,ms)/1e3|0;const h=ms/3600|0,m=(ms%3600)/60|0,s=ms%60,p2=x=>String(x).padStart(2,"0");if(h>=24){const d=h/24|0;return d+(d===1?" dia ":" dias ")+p2(h%24)+":"+p2(m)+":"+p2(s)}return(h?h+":":"")+p2(m)+":"+p2(s)};
 const hh=ms=>{const m=Math.round(Math.max(0,ms)/6e4);return(m/60|0)+"h"+String(m%60).padStart(2,"0")};
 const uid=()=>crypto.randomUUID?crypto.randomUUID():"10000000-1000-4000-8000-100000000000".replace(/[018]/g,c=>(+c^crypto.getRandomValues(new Uint8Array(1))[0]&15>>+c/4).toString(16));
 function toast(m,ms){const t=$("#toast");t.textContent=m;t.classList.add("on");clearTimeout(toast.h);toast.h=setTimeout(()=>t.classList.remove("on"),ms||2400)}
@@ -1003,7 +1018,7 @@ async function raw(path,o){o=o||{};
  const h={apikey:SRV.key,Authorization:"Bearer "+(o.auth!==false&&sess?sess.access_token:SRV.key),"Content-Type":"application/json"};if(o.prefer)h.Prefer=o.prefer;
  const r=await fetch(SRV.url+path,{method:o.method||"GET",headers:h,body:o.body==null?undefined:JSON.stringify(o.body)});
  const t=await r.text();let j=null;try{j=t?JSON.parse(t):null}catch(e){}
- if(!r.ok){const e=new Error((j&&(j.erro||j.message||j.msg||j.error_description||j.error))||("Erro "+r.status));e.status=r.status;e.code=j&&(j.code||j.error_code);if(j&&j.erro)e.erro=j.erro;throw e}
+ if(!r.ok){const e=new Error((j&&(j.erro||j.message||j.msg||j.error_description||j.error))||("Erro "+r.status));e.status=r.status;e.code=j&&(j.code||j.error_code);e.details=j&&(j.details||j.hint)||"";if(j&&j.erro)e.erro=j.erro;throw e}
  return j}
 let refP=null;
 function refresh(){ /* uma renovação por vez: várias chamadas juntas esperam a mesma */
@@ -1014,16 +1029,27 @@ async function api(path,o){if(sess&&sess.exp<Date.now()+60000)await refresh();
  try{return await raw(path,o)}catch(e){if(e.status===401&&sess){await refresh();return raw(path,o)}throw e}}
 async function mut(path,method,body){const r=await api(path,{method,body,prefer:"return=representation"});
  if(Array.isArray(r)&&!r.length){const e=new Error("Sem permissão para esta alteração");e.status=403;throw e}return r}
-function errMsg(e){if(!e.status)return"Sem conexão com o servidor. Tente de novo.";if(e.erro)return e.erro;
- const c=String(e.code||"");
- if(c==="23505")return"Já existe um cadastro igual a este.";
- if(c==="23503")return"Não dá para excluir: há operadores ou registros ligados a este item.";
- if(c==="invalid_credentials"||/invalid login/i.test(e.message))return"E-mail ou senha inválidos.";
- if(c==="email_not_confirmed")return"Confirme o e-mail pelo link que enviamos antes de entrar.";
- if(c==="weak_password")return"Senha fraca. Use pelo menos 8 caracteres.";
- if(c==="over_email_send_rate_limit")return"Muitos pedidos seguidos. Espere um minuto e tente de novo.";
- if(c==="42501"||e.status===401||e.status===403)return"Sem permissão para esta ação.";
- return e.message}
+/* mensagens de erro com o nome do problema e o que fazer, para quem está usando entender */
+const ERR_PT=/[ãõçáéíóúâêô]|Sem permissão|Peça|precisa|não /i;
+function errMsg(e){if(!e||!e.status&&!e.code)return"Sem conexão com o servidor: confira a internet do aparelho e tente de novo.";if(e.erro)return e.erro;
+ const c=String(e.code||""),m=String(e.message||""),d=String(e.details||"")+" "+m;
+ if(c==="23505"){if(/operadores_nome/.test(d))return"Nome repetido: já existe uma pessoa da Coleta com esse nome. Use o sobrenome para diferenciar.";
+  if(/operadores_codigo|codigo/.test(d))return"Código repetido: esse código já está em uso. Tente de novo para o sistema escolher o próximo livre.";
+  if(/prod_pessoas/.test(d))return"Nome ou código repetido: já existe uma pessoa da Embalagem igual.";
+  if(/galpoes/.test(d))return"Galpão repetido: já existe um galpão com esse nome.";
+  if(/gestores/.test(d))return"Acesso repetido: já existe um gestor ou bipador com esse e-mail ou usuário.";
+  return"Cadastro repetido: já existe um registro igual a este.";}
+ if(c==="23503")return ERR_PT.test(m)?m:"Item ligado a outros registros: não dá para excluir porque há pessoas ou ondas ligadas a ele.";
+ if(c==="23514"){if(ERR_PT.test(m))return m;if(/meta_ind/.test(d))return"Meta inválida: use um número inteiro maior que zero.";if(/nome_check/.test(d))return"Nome inválido: use de 2 a 80 letras.";return"Valor não aceito: confira os campos e tente de novo.";}
+ if(c==="22023"||c==="23502")return ERR_PT.test(m)?m:"Dado faltando ou inválido: confira os campos e tente de novo.";
+ if(c==="invalid_credentials"||/invalid login/i.test(m))return"Usuário ou senha incorretos: confira o que foi digitado. Se esqueceu, peça ao administrador para trocar a senha.";
+ if(c==="email_not_confirmed")return"E-mail não confirmado: abra o link que enviamos antes de entrar.";
+ if(c==="weak_password")return"Senha fraca: use pelo menos 8 caracteres.";
+ if(c==="over_email_send_rate_limit"||e.status===429)return"Muitos pedidos seguidos: espere um minuto e tente de novo.";
+ if(c==="PGRST301"||/JWT expired/i.test(m))return"Sessão expirada: saia e entre de novo.";
+ if(c==="42501"||e.status===401||e.status===403)return ERR_PT.test(m)?m:"Sem permissão: seu acesso não permite fazer isso. Peça ao administrador para liberar em Config › Gestores e bipadores.";
+ if(e.status>=500)return"Servidor com problema agora: tente de novo em alguns segundos.";
+ return ERR_PT.test(m)?m:"Não deu certo ("+(c||e.status)+"): tente de novo. Se continuar, avise o administrador com este código.";}
 /* sincronização: na 1ª vez (ou a cada 6 h) baixa as ondas da última semana e as ainda abertas; no resto só o que mudou desde a última vez */
 const FULL_EVERY=6*36e5,PRES_EVERY=10*6e4;let SYNC={at:null,full:0},PRES_AT=0,pullP=null,pullNext=null;
 function pull(o){if(!pullP){pullP=pullReal(o||{}).finally(()=>{pullP=null});return pullP}
@@ -1054,13 +1080,13 @@ async function pullReal(opt){
  ts.forEach(t=>{S.cfg.lim[t.nome]=t.limite;if(typeof t.multiplas_no_lancamento==="boolean")S.cfg.multi[t.nome]=t.multiplas_no_lancamento});
  const c=cf[0];if(c){S.cfg.turnos={1:{ini:c.turno1_ini,fim:c.turno1_fim},2:{ini:c.turno2_ini,fim:c.turno2_fim}};S.cfg.gap=Math.min(+c.intervalo_max_min||30,60);S.cfg.tol=c.tolerancia_min;S.cfg.metaMin=+c.meta_minima||0;S.cfg.and=c.ondas_em_andamento;S.cfg.alm={1:{ini:c.almoco1_ini,fim:c.almoco1_fim},2:{ini:c.almoco2_ini,fim:c.almoco2_fim}};S.cfg.pz=c.pausas||{};S.cfg.fds=c.fds||{};if(Array.isArray(c.motivos_ausencia)&&c.motivos_ausencia.length)S.cfg.motA=c.motivos_ausencia;if(Array.isArray(c.motivos_ausencia_prod)&&c.motivos_ausencia_prod.length)S.cfg.motP=c.motivos_ausencia_prod}
  OPSALL={};os.forEach(o=>{OPSALL[o.id]=o});
- S.ops=os.filter(o=>!o.excluido_em).map(o=>({id:o.id,m:o.codigo,n:o.nome,t:o.turno,ini:o.inicio,fim:o.fim,al:{ini:o.almoco_ini,fim:o.almoco_fim},g:GN[o.galpao_id],criado:o.criado_em}));
+ S.ops=os.filter(o=>!o.excluido_em).map(o=>({id:o.id,m:o.codigo,n:o.nome,t:o.turno,mo:o.meta_ind_ondas||0,mq:o.meta_ind_qtd||0,ini:o.inicio,fim:o.fim,al:{ini:o.almoco_ini,fim:o.almoco_fim},g:GN[o.galpao_id],criado:o.criado_em}));
  if(!S.gals.includes(S.gal))S.gal=S.gals[0];
  S.metasDia={};
  if(sess){
   const mt=await api("/rest/v1/metas_diarias?select=galpao_id,meta&data=eq."+hoje());const dh=hoje();S.metasDia[dh]={};mt.forEach(x=>{const n=GN[x.galpao_id];if(n)S.metasDia[dh][n]=x.meta});
   const g=await api("/rest/v1/gestores?select=*&order=nome");
-  S.ges=g.map(x=>({n:x.nome,u:x.email,g:x.galpao_id?GN[x.galpao_id]:null,adm:x.admin,pC:x.pode_config,pI:x.pode_individual,pR:x.pode_registros,ab:x.abas||null,bip:x.perfil==="bipador",rs:x.responsavel||null}));
+  S.ges=g.map(x=>({n:x.nome,u:x.email,g:x.galpao_id?GN[x.galpao_id]:null,adm:x.admin,pC:x.pode_config,pI:x.pode_individual,pR:x.pode_registros,pP:x.pode_pessoas!==false,pM:x.pode_metas!==false,ab:x.abas||null,bip:x.perfil==="bipador",rs:x.responsavel||null}));
   me=S.ges.find(x=>x.u===sess.email)||null;
   if(!me){S.ges=[];SOL=[];const pd=pedidoPendente();try{await api("/rest/v1/rpc/solicitar_acesso",{method:"POST",body:{p_nome:pd?pd.nome:null,p_galpao:(pd&&GID[pd.galpao])||null}});localStorage.removeItem("rcondas.pedido");pedidoDados=null}catch(e){}setSess(null);cacheLimpar();toast("Ainda sem acesso. Pedido enviado ao administrador: quando ele liberar, entre de novo.",8000)}
   else{if(me.g)S.gal=me.g;SOL=[];if(me.adm)try{SOL=await api("/rest/v1/solicitacoes_gestor?select=email,criado_em,nome,galpao_id&order=criado_em")}catch(e){}}}
@@ -1138,7 +1164,7 @@ async function push(){
 /* cadastros: grava no servidor, recarrega e só então mostra */
 async function rem(fn,msg){
  if(!online()){toast("Sem internet. Cadastros e alterações precisam de conexão.",5000);if(view==="cfg")cfgRender();return false}
- try{await fn();await pull();if(view==="cfg")cfgRender();renderAll();if(msg)toast(msg);return true}
+ try{const r=await fn();if(Array.isArray(r)&&!r.length)throw{status:403,code:"42501",message:"Não foi salvo: seu acesso não permite alterar este item, ou ele não existe mais. Peça ao administrador para liberar em Config › Gestores e bipadores."};await pull();if(view==="cfg")cfgRender();renderAll();if(msg)toast(msg);return true}
  catch(e){toast(errMsg(e),6000);if(view==="cfg")cfgRender();return false}}
 function fdsBloco(t){const F=((S.cfg.fds||{})[t])||{},row=(k,nome)=>{const x=F[k]||{},a=`data-fd="${t}" data-w="${k}"`;return`<div class="fdsR"><b>${nome}</b><div class="fdsL"><label>Início (h)<input type="number" min="0" max="23" ${a} data-k="ini" value="${x.ini??''}" placeholder="—" aria-label="${nome}: início (hora)"></label><label>Fim (h)<input type="number" min="1" max="24" ${a} data-k="fim" value="${x.fim??''}" placeholder="—" aria-label="${nome}: fim (hora)"></label><label>Almoço<input type="time" ${a} data-k="ai" value="${m2hm(x.ai)}" aria-label="${nome}: início do almoço"></label><label>até<input type="time" ${a} data-k="af" value="${m2hm(x.af)}" aria-label="${nome}: fim do almoço"></label></div></div>`};
  return`<div class="pzB fdsB"><div class="pzH">Fim de semana do ${t}º turno <small>em branco = igual à semana</small></div>${row('s','Sábado')}${row('d','Domingo')}</div>`}
@@ -1757,7 +1783,7 @@ async function presBaixa(){
  if(ok)await loadManagement();
 }
 function mgReference(o,data){let sum=0,has=false;for(const d of data.days){const own=data.byOpDay.get(d+'|'+o.m)||[],people=data.byGalDay.get(d+'|'+o.g),meta=+MT()[o.g]||0;if(own.length&&people&&people.size&&meta){sum+=meta/people.size;has=true}}return has?sum:null}
-function metaInd(o,L){const m=MI()[o.g]||{},dias=Math.max(new Set(prod(L).map(w=>dk(w.ts))).size,1);return{o:m.o?m.o*dias:0,q:m.q?m.q*dias:0,r:m.r?m.r*dias:0}}
+function metaInd(o,L){const m=MIP(o),dias=Math.max(new Set(prod(L).map(w=>dk(w.ts))).size,1);return{o:m.o?m.o*dias:0,q:m.q?m.q*dias:0,r:m.r?m.r*dias:0}}
 const vsMeta=(v,m)=>m?`${fmt(v)} / ${fmt(m)} <small>${Math.round(v/m*100)}%</small>`:"—";
 const mgK=(t,v,sub)=>`<div class="kpi"><dt>${t}</dt><dd class="num">${v}</dd><dd class="sm">${sub||''}</dd></div>`;
 const mn=ms=>{const m=Math.floor(ms/6e4),sg=Math.round(ms%6e4/1e3);return m+" min"+(sg?" "+String(sg).padStart(2,"0")+" s":"")};
@@ -1953,7 +1979,7 @@ function folhaInsights(o,data,L,P,qty,mi,single){
  const el=data.days.filter(d=>mgEligible(o,d)),faltas=el.filter(d=>mgStatus(o,d,data.byOpDay.get(d+'|'+o.m)||[],data).startsWith('Falta')).length;
  const proc=L.filter(w=>(w.hist||[]).some(e=>e.e==='m')).length,ajud=data.waves.filter(w=>w.pn&&String(w.pn).toLowerCase()===String(o.n).toLowerCase()&&(w.hist||[]).some(e=>e.e==='b')).length;
  const pos=[],mel=[];
- const ref=mgReference(o,data),pctR=ref?Math.round(qty/ref*100):0,pctO=mi.o?Math.round(PM.length/mi.o*100):0,mdU=(MI()[o.g]||{}).q||0,avgD=nd?qty/nd:0;
+ const ref=mgReference(o,data),pctR=ref?Math.round(qty/ref*100):0,pctO=mi.o?Math.round(PM.length/mi.o*100):0,mdU=MIP(o).q||0,avgD=nd?qty/nd:0;
  if(mi.q){const dif=qM-mi.q;
   if(pctM>=100)pos.push(pk(['Bateu a meta de unidades: '+fmt(qM)+' de '+fmt(mi.q)+' ('+pctM+'%), '+fmt(dif)+' a mais que o previsto.','Meta de unidades superada ('+pctM+'%): +'+fmt(dif)+' unidades. Ritmo e constância aparecem no resultado.'],1));
   else if(pctM>=90)pos.push('Muito perto da meta de unidades ('+pctM+'%): faltaram só '+fmt(-dif)+' unidades.');}
@@ -2031,7 +2057,7 @@ function mgSplit(o,d,L){const P=prod(L),times=L.map(w=>w.fin||w.ts).filter(Numbe
  const fora=w=>{const k=w.fin||w.ts;return k<start||k>end},X=P.filter(fora),N=P.filter(w=>!fora(w));
  return{nMs,xMs,nO:N.length,xO:X.length,nQ:N.reduce((s,w)=>s+w.qty,0),xQ:X.reduce((s,w)=>s+w.qty,0)}}
 /* dias com bipagem em que a pessoa não bateu a meta individual (unidades e/ou ondas por dia) */
-function mgAbaixo(o,data){const m=MI()[o.g]||{};if(!m.q&&!m.o)return null;const dias=[];
+function mgAbaixo(o,data){const m=MIP(o);if(!m.q&&!m.o)return null;const dias=[];
  data.days.forEach(k=>{const P0=prod(data.byOpDay.get(k+'|'+o.m)||[]);if(!P0.length)return;const P=semRet(P0),q=P.reduce((a,w)=>a+w.qty,0),fq=m.q&&q<m.q,fo=m.o&&P.length<m.o;dias.push({d:k,ab:!!(fq||fo),fq:fq?m.q-q:0,fo:fo?m.o-P.length:0})});
  return{n:dias.filter(x=>x.ab).length,d:dias.length,dias}}
 const mgAbTxt=a=>a===null?'<span class="note">sem meta</span>':a.d?`<b style="color:${a.n?'var(--rx)':'var(--k)'}">${a.n}</b> de ${a.d}`:'—';
@@ -2340,14 +2366,33 @@ function cfgUsers(){
  $("#uT").innerHTML=[1,2].map(t=>`<button data-ut="${t}" class="${uT===t?"on":""}" style="--c:${t===1?"var(--g)":"var(--v)"}">${t}º turno</button>`).join("");
  const lim=ON&&restricted(),GS=lim?[myG()]:S.gals,OPS=lim?S.ops.filter(o=>o.g===myG()):S.ops;
  $("#uG").innerHTML=GS.map(g=>`<option>${esc(g)}</option>`).join("");$("#uG").closest("label").classList.toggle("hide",lim);
- $("#uCnt").textContent=OPS.length+" cadastrados";
+ $("#uCnt").textContent=OPS.length+" cadastrados";$$('[data-add="uAdd"]').forEach(b=>b.classList.toggle("hide",!podeP()));if(!podeP())$("#uAdd").classList.add("cfgAddOff");
  const q=nrm(($("#uQ")||{}).value||"").trim(),F=OPS.filter(o=>!q||nrm(o.n).includes(q)||nrm(o.m).includes(q)).sort((a,b)=>a.m.localeCompare(b.m)),V=q||uAll?F:[];
  if(!OPS.length){$("#uL").innerHTML='<div class="empty">Nenhum usuário cadastrado.</div>';return}
  const rodape=q?`<div class="uRod">${F.length?F.length+(F.length===1?" encontrado":" encontrados"):"Ninguém encontrado com “"+esc(($("#uQ")||{}).value)+"”."}</div>`:uAll?`<div class="uRod"><button type="button" class="lk" data-uall="0">Recolher lista</button></div>`:`<div class="uRod"><span>Lista recolhida. Pesquise acima ou</span> <button type="button" class="lk" data-uall="1">mostrar todos os ${OPS.length}</button></div>`;
  $("#uL").innerHTML=(V.length?`<table class="uTab"><tr><th>Código</th><th>Nome</th><th>Turno</th><th>Galpão</th><th>Ondas</th><th></th></tr>`+
   V.map(o=>{const n=S.waves.filter(w=>w.op===o.m).length;
-   return`<tr><td><b>${o.m}</b></td><td>${esc(o.n)}</td><td><select data-ut2="${o.m}" aria-label="Turno de ${esc(o.n)}"><option value="1"${o.t===1?" selected":""}>1º turno</option><option value="2"${o.t===2?" selected":""}>2º turno</option></select></td><td>${lim?esc(o.g):`<select data-ug2="${o.m}" aria-label="Galpão de ${esc(o.n)}">${S.gals.map(g=>`<option${g===o.g?" selected":""}>${esc(g)}</option>`).join("")}</select>`}</td><td>${n}</td><td><button class="btn d sm" data-udel="${o.m}">Excluir</button></td></tr>`}).join("")+"</table>":"")+rodape}
+   const pp=podeP(),mi=MIP(o),mg=(MI()[o.g]||{});
+   return`<tr${uEd===o.m?' class="uEdOn"':''}><td><b>${o.m}</b></td><td>${esc(o.n)}${o.mo||o.mq?`<br><small class="uMeta">meta própria: ${[o.mo?fmt(o.mo)+" ondas":"",o.mq?fmt(o.mq)+" un.":""].filter(Boolean).join(" e ")} por dia</small>`:""}</td><td><select data-ut2="${o.m}" aria-label="Turno de ${esc(o.n)}"${pp?"":" disabled"}><option value="1"${o.t===1?" selected":""}>1º turno</option><option value="2"${o.t===2?" selected":""}>2º turno</option></select></td><td>${lim?esc(o.g):`<select data-ug2="${o.m}" aria-label="Galpão de ${esc(o.n)}">${S.gals.map(g=>`<option${g===o.g?" selected":""}>${esc(g)}</option>`).join("")}</select>`}</td><td>${n}</td><td class="uAc">${pp||podeM()?`<button class="btn alt sm" type="button" data-uedit="${o.m}" aria-expanded="${uEd===o.m}">${uEd===o.m?"Fechar":"Editar"}</button> `:""}${pp?`<button class="btn d sm" data-udel="${o.m}">Excluir</button>`:""}</td></tr>`+(uEd===o.m?`<tr class="uEdR"><td colspan="6"><form class="uEdF" data-uef="${o.m}">
+    ${pp?`<label>Nome e sobrenome<input name="n" value="${esc(o.n)}" maxlength="80" autocomplete="off" required></label>`:""}
+    ${podeM()?`<label>Meta individual: ondas por dia<input name="mo" type="number" min="1" step="1" value="${o.mo||""}" placeholder="${mg.o?"do galpão: "+fmt(mg.o):"sem meta"}"></label><label>Meta individual: unidades por dia<input name="mq" type="number" min="1" step="1" value="${o.mq||""}" placeholder="${mg.q?"do galpão: "+fmt(mg.q):"sem meta"}"></label>`:""}
+    <div class="uEdB"><button class="btn sm" type="submit">Salvar</button><button class="btn alt sm" type="button" data-uedit="${o.m}">Cancelar</button></div>
+    <div class="legend">${podeM()?"Deixe a meta em branco para usar a meta individual do galpão"+(mg.o||mg.q?" ("+[mg.o?fmt(mg.o)+" ondas":"",mg.q?fmt(mg.q)+" un.":""].filter(Boolean).join(" e ")+" por dia)":"")+". ":""}As ondas já registradas continuam com a mesma pessoa.</div></form></td></tr>`:"")}).join("")+"</table>":"")+rodape}
+let uEd=null;
 let uAll=false;
+document.addEventListener("click",e=>{const b=e.target.closest&&e.target.closest("[data-uedit]");if(!b)return;uEd=uEd===b.dataset.uedit?null:b.dataset.uedit;cfgUsers();if(uEd)setTimeout(()=>{const f=document.querySelector('[data-uef="'+uEd+'"] input');if(f)f.focus()},30)});
+document.addEventListener("submit",async e=>{const f=e.target.closest&&e.target.closest("[data-uef]");if(!f)return;e.preventDefault();const o=S.ops.find(x=>x.m===f.dataset.uef);if(!o)return;
+ const get=n=>f.querySelector('[name="'+n+'"]'),body={};
+ if(get("n")){const n=get("n").value.trim().replace(/\s+/g," ");if(n.length<2){toast("Escreva o nome com pelo menos 2 letras.");get("n").focus();return}
+  if(S.ops.some(x=>x!==o&&nrm(x.n)===nrm(n))){toast("Já existe outra pessoa com o nome "+n+". Use o sobrenome para diferenciar.",7000);get("n").focus();return}if(n!==o.n)body.nome=n}
+ for(const[k,c,lim]of[["mo","meta_ind_ondas",100000],["mq","meta_ind_qtd",10000000]]){const i=get(k);if(!i)continue;const v=i.value.trim();if(v===""){if(o[k])body[c]=null;continue}
+  const x=Math.floor(+v);if(!(x>=1&&x<=lim)){toast("A meta precisa ser um número inteiro de 1 a "+fmt(lim)+".");i.focus();return}if(x!==+o[k])body[c]=x}
+ if(!Object.keys(body).length){uEd=null;cfgUsers();toast("Nada mudou.");return}
+ const btn=f.querySelector('[type="submit"]');btn.disabled=true;
+ if(ON){try{const r=await mut("/rest/v1/operadores?id=eq."+encodeURIComponent(o.id),"PATCH",body);if(Array.isArray(r)&&!r.length)throw{status:403,code:"42501"}}catch(err){btn.disabled=false;toast(errMsg(err),9000);return}
+  uEd=null;toast("Cadastro de "+(body.nome||o.n)+" salvo.");try{await pull()}catch(x){}cfgUsers();renderAll();return}
+ if(body.nome!==undefined)o.n=body.nome;if(body.meta_ind_ondas!==undefined)o.mo=body.meta_ind_ondas||0;if(body.meta_ind_qtd!==undefined)o.mq=body.meta_ind_qtd||0;
+ S.waves.forEach(w=>{if(w.op===o.m&&body.nome)w.opn=body.nome});uEd=null;save();cfgUsers();renderAll();toast("Cadastro de "+o.n+" salvo.")});
 document.addEventListener("input",e=>{if(e.target.id==="uQ")cfgUsers()});
 document.addEventListener("click",e=>{const b=e.target.closest&&e.target.closest("[data-uall]");if(b){uAll=b.dataset.uall==="1";cfgUsers()}});
 function soMeta(){return ON&&!!me&&!me.adm}
@@ -2357,10 +2402,10 @@ function cfgGals(){const gest=soMeta();$("#gNovo").classList.toggle("hide",gest)
 /* aba Metas: meta do dia, metas individuais e meta mínima da animação */
 function cfgMetas(){const gest=soMeta();
  $("#mTit").textContent=gest?"Meta de hoje":"Metas por galpão";
- $("#mtL").innerHTML=`<table><tr><th>Galpão</th><th>Meta de hoje<br><small>unidades no dia</small></th><th>Meta individual<br><small>ondas por dia</small></th><th>Meta individual<br><small>unidades por dia, sem retrabalho</small></th><th>Meta de retrabalho<br><small>unidades por dia</small></th></tr>`+S.gals.filter(g=>!gest||g===me.g).map(g=>`<tr><td><b>${esc(g)}</b></td><td><input type="number" min="0" data-gmeta="${esc(g)}" aria-label="Meta de hoje de ${esc(g)}" value="${MT()[g]||""}" placeholder="sem meta" style="width:130px"></td><td><input type="number" min="0" data-gmo="${esc(g)}" aria-label="Meta individual de ondas por dia em ${esc(g)}" value="${(MI()[g]||{}).o||""}" placeholder="sem meta" style="width:110px"></td><td><input type="number" min="0" data-gmq="${esc(g)}" aria-label="Meta individual de unidades por dia em ${esc(g)}" value="${(MI()[g]||{}).q||""}" placeholder="sem meta" style="width:110px"></td><td><input type="number" min="0" data-gmr="${esc(g)}" aria-label="Meta individual de retrabalho por dia em ${esc(g)}" value="${(MI()[g]||{}).r||""}" placeholder="sem meta" style="width:110px"></td></tr>`).join("")+"</table>";
+ $("#mtL").innerHTML=`<table><tr><th>Galpão</th><th>Meta de hoje<br><small>unidades no dia</small></th><th>Meta de ondas por pessoa<br><small>ondas por dia</small></th><th>Meta de unidades por pessoa<br><small>por dia, sem retrabalho</small></th><th>Meta de retrabalho<br><small>unidades por dia</small></th></tr>`+S.gals.filter(g=>!gest||g===me.g).map(g=>`<tr><td><b>${esc(g)}</b></td><td><input type="number" min="0" data-gmeta="${esc(g)}" aria-label="Meta de hoje de ${esc(g)}" value="${MT()[g]||""}" placeholder="sem meta" style="width:130px"></td><td><input type="number" min="0" data-gmo="${esc(g)}" aria-label="Meta individual de ondas por dia em ${esc(g)}" value="${(MI()[g]||{}).o||""}" placeholder="sem meta" style="width:110px"></td><td><input type="number" min="0" data-gmq="${esc(g)}" aria-label="Meta individual de unidades por dia em ${esc(g)}" value="${(MI()[g]||{}).q||""}" placeholder="sem meta" style="width:110px"></td><td><input type="number" min="0" data-gmr="${esc(g)}" aria-label="Meta individual de retrabalho por dia em ${esc(g)}" value="${(MI()[g]||{}).r||""}" placeholder="sem meta" style="width:110px"></td></tr>`).join("")+"</table>";
  $("#mLeg").textContent="A meta de hoje vale só para o dia de hoje: cada dia começa sem meta e você preenche de novo, e os dias anteriores ficam salvos. As metas individuais valem para cada dia com bipagem.";
  const fm=$("#fmin");if(fm&&document.activeElement!==fm)fm.value=S.cfg.metaMin||"";
- const mn=+S.cfg.metaMin||0;$("#fLeg").textContent=mn?"A festa abre sozinha, uma vez por dia, quando a produção do dia chegar à meta e a pelo menos "+fmt(mn)+" unidades. Abaixo disso o placar só fica dourado.":"Sem mínimo: a festa abre sozinha, uma vez por dia, assim que a produção do dia chegar à meta. Informe um valor para só comemorar metas a partir dele."}
+ const mn=+S.cfg.metaMin||0;$("#fLeg").textContent=mn?"A festa abre sozinha, uma vez por dia, quando a produção do dia chegar à meta e a pelo menos "+fmt(mn)+" unidades. Abaixo disso o placar só fica dourado.":"Sem mínimo: a festa abre sozinha, uma vez por dia, assim que a produção do dia chegar à meta. Informe um valor para só comemorar metas a partir dele.";$$("#mtL input").forEach(x=>{x.disabled=!podeM();if(!podeM())x.title="Seu acesso não permite alterar metas"})}
 let mSenU=null;
 function mTipoUI(){const adm=ON&&me&&me.adm,bip=adm&&$("#mTipo").value==="bipador";
  $("#mTipoL").classList.toggle("hide",!adm);$("#mRespL").classList.toggle("hide",!bip);$("#mBipA").classList.toggle("hide",!bip);$$("#mNovo .mGesP").forEach(x=>x.classList.toggle("hide",bip));
@@ -2368,7 +2413,7 @@ function mTipoUI(){const adm=ON&&me&&me.adm,bip=adm&&$("#mTipo").value==="bipado
  $("#mUl").textContent=bip?"Usuário de login (ou e-mail)":"E-mail do gestor";$("#mU").type=bip?"text":"email";$("#mU").placeholder=bip?"joao.silva":"nome@empresa.com";
  if(bip){const r=$("#mResp"),v=r.value,G=S.ges.filter(x=>!x.bip);r.innerHTML='<option value="">Escolha o gestor</option>'+G.map(x=>`<option value="${esc(x.u)}">${esc(x.n)}${x.g?" · "+esc(x.g):x.adm?" · administrador":""}</option>`).join("");r.value=G.some(x=>x.u===v)?v:"";
   const a=$("#mBipA");if(!a.dataset.ok){a.dataset.ok=1;a.innerHTML=`<fieldset class="bipF"><legend>O que essa pessoa pode acessar</legend>${BIP_A.map(([k,l])=>`<label class="row"><input type="checkbox" data-bipk="${k}" style="min-height:auto"${k==="op"?" checked":""}> ${l}</label>`).join("")}<div class="legend">Ela vê só o galpão do gestor responsável e não altera configurações nem registros. O gestor responsável também pode mudar esses acessos.</div></fieldset>`}}}
-function cfgGes(){
+function cfgGes(){try{cfgPerm()}catch(e){}
  if(ON){mTipoUI();const adm=!!(me&&me.adm);$("#mNovo").classList.toggle("hide",!adm);$("#mAddB").classList.toggle("hide",!adm);$("#cgeD").textContent=adm?"Quem entra com login e o que cada um pode ver.":"Pessoas ligadas a você que entram para bipar. Você escolhe o que cada uma acessa.";$("#mLT").textContent=adm?"Todos os acessos":"Bipadores";$("#mPl").textContent="Senha de acesso";$("#mP2").placeholder="mínimo 8 caracteres";
   $("#pedCard").classList.toggle("hide",!SOL.length||!adm);
   const ms=$("#mSen"),sm=mSenU?S.ges.find(x=>x.u===mSenU):null;ms.innerHTML=sm?`<div class="f" style="margin-top:14px;padding-top:12px;border-top:1px solid var(--line)"><b>Nova senha para ${esc(sm.n)}</b><div class="legend">${esc(sm.u)}. Passe a senha para o gestor; ele entra direto com o e-mail e esta senha.</div><label>Nova senha<input type="password" id="mSenP" autocomplete="new-password" placeholder="mínimo 8 caracteres"></label><div class="ctl"><button class="btn sm" type="button" id="mSenOk">Salvar senha</button><button class="btn alt sm" type="button" id="mSenX">Cancelar</button></div></div>`:""}
@@ -2380,7 +2425,7 @@ function cfgGes(){
  const adm0=!ON||!!(me&&me.adm),LG=S.ges.map((m,i)=>[m,i]).filter(([m])=>adm0||(m.bip&&me&&m.rs===me.u)),nomeG=u=>{const x=S.ges.find(z=>z.u===u);return x?x.n:"sem responsável"};
  $("#mL").innerHTML=LG.length?`<table><tr><th>${adm0?"Gestor":"Bipador"}</th><th>Login</th><th>${adm0?"Permissões":"Acessos"}</th><th></th></tr>`+LG.map(([m,i])=>m.bip?
   `<tr><td>${esc(m.n)} <span class="tag t2">bipador</span><br><small style="color:var(--mut)">${esc(m.g||"sem galpão")} · responsável: ${esc(nomeG(m.rs))}</small></td><td>${esc(loginMostra(m.u))}</td><td style="font-size:12px">${esc(bipTxt(m.ab))}</td><td style="white-space:nowrap"><button class="btn alt sm" data-mabas="${esc(m.u)}">Acessos</button>${adm0?` <button class="btn alt sm" data-mgal="${esc(m.u)}">Galpão</button> <button class="btn alt sm" data-msen="${esc(m.u)}">Trocar senha</button> <button class="btn d sm" data-mdel="${i}">Excluir</button>`:""}</td></tr>`:
-  `<tr><td>${esc(m.n)}<br><small style="color:var(--mut)">${esc(m.g||"sem galpão")}</small>${m.adm?' <span class="tag">admin</span>':""}</td><td>${esc(m.u)}${ON?"":m.p?' <span class="tag">senha</span>':' <span class="tag t2">sem senha</span>'}</td><td style="font-size:12px">${[m.pC&&"config",m.pI&&"individual",m.pR&&"registros"].filter(Boolean).join(", ")||"—"}<br><small style="color:var(--mut)">Abas: ${m.ab?ABAS_T.filter(a=>m.ab.includes(a[0])).map(a=>a[1]).join(", "):"todas"}</small></td><td style="white-space:nowrap">${(!ON||(me&&me.adm))?`<button class="btn alt sm" data-mgal="${esc(m.u)}">Galpão</button> <button class="btn alt sm" data-mabas="${esc(m.u)}">Abas</button> `:""}${ON&&me&&me.adm?`<button class="btn alt sm" data-msen="${esc(m.u)}">Trocar senha</button> `:""}<button class="btn d sm" data-mdel="${i}">Excluir</button></td></tr>`).join("")+"</table>"
+  `<tr><td>${esc(m.n)}<br><small style="color:var(--mut)">${esc(m.g||"sem galpão")}</small>${m.adm?' <span class="tag">admin</span>':""}</td><td>${esc(m.u)}${ON?"":m.p?' <span class="tag">senha</span>':' <span class="tag t2">sem senha</span>'}</td><td style="font-size:12px">${m.adm?"tudo (administrador)":PERM_T.filter(([k])=>m[k]).map(([,,c])=>c).join(", ")||"nenhuma"}<br><small style="color:var(--mut)">Abas: ${m.ab?ABAS_T.filter(a=>m.ab.includes(a[0])).map(a=>a[1]).join(", "):"todas"}</small></td><td style="white-space:nowrap">${(!ON||(me&&me.adm))?`${m.adm?"":`<button class="btn alt sm" data-mperm="${esc(m.u)}">Permissões</button> `}<button class="btn alt sm" data-mgal="${esc(m.u)}">Galpão</button> <button class="btn alt sm" data-mabas="${esc(m.u)}">Abas</button> `:""}${ON&&me&&me.adm?`<button class="btn alt sm" data-msen="${esc(m.u)}">Trocar senha</button> `:""}<button class="btn d sm" data-mdel="${i}">Excluir</button></td></tr>`).join("")+"</table>"
   :(adm0?'<div class="empty">Nenhum gestor cadastrado. Configurações e Individual estão abertos.</div>':'<div class="empty">Nenhum bipador ligado a você.</div>')}
 function cfgRender(){cfgOp();cfgParadas();cfgUsers();cfgMetas();cfgGals();cfgGes();cfgMan();cfgMot()}
 /* manutenção: só o administrador apaga registros por período; o servidor confere a permissão */
@@ -2656,6 +2701,17 @@ function temBip(){return!!(ON&&me&&!me.adm&&!me.bip&&S.ges.some(x=>x.bip&&x.rs==
 function bipSubs(){const B=ON&&me&&me.bip,ab=(me&&me.ab)||[];
  [["#sub",'reg',"op","s"],["#sub","ctl","op.ctl","s"],["#sub","ace","op.ace","s"],["#sub","aus","op.aus","s"],["#pasub","bip","prod","pa"],["#pasub","aus","prod.aus","pa"]].forEach(([bar,v,k,ds])=>{const b=document.querySelector(bar+' [data-'+ds+'="'+v+'"]');if(!b)return;if(B)b.style.display=ab.includes(k)?"":"none";else if(b.dataset.bipH)b.style.display="";b.dataset.bipH=B?"1":""});
  if(B)["#sub","#pasub"].forEach(bar=>{const on=document.querySelector(bar+" button.on");if(on&&on.style.display==="none"){const f=[...document.querySelectorAll(bar+" button")].find(x=>x.style.display!=="none");if(f)f.click()}})}
+/* permissões que o administrador liga e desliga para cada gestor (coluna do banco, campo local, nome curto) */
+const PERM_T=[["pC","pode_config","configurações","Pode alterar configurações","Horários, paradas, motivos, limites e o galpão."],["pI","pode_individual","individual","Pode ver acompanhamento individual","Aba Equipe: presença, produção por pessoa e mudar turno e almoço."],["pR","pode_registros","registros","Pode alterar e excluir registros","Corrigir ou apagar ondas e ausências já registradas."],["pP","pode_pessoas","pessoas","Pode cadastrar e editar pessoas","Criar, renomear, mudar de turno e excluir pessoas da Coleta."],["pM","pode_metas","metas","Pode alterar metas","Meta do dia e metas individuais do galpão e de cada pessoa."]];
+let mPermU=null;
+function cfgPerm(){const el=$("#mPerm");if(!el)return;const m=mPermU?S.ges.find(x=>x.u===mPermU):null;if(!m){el.innerHTML="";return}
+ el.innerHTML=`<div class="f" style="margin-top:14px;padding-top:12px;border-top:1px solid var(--line)"><b>Permissões de ${esc(m.n)}</b><div class="legend">Valem no próximo acesso dele. O banco confere cada permissão, então o que estiver desmarcado é recusado mesmo fora do site.</div>${PERM_T.map(([k,,,l,d])=>`<label class="row" style="align-items:flex-start"><input type="checkbox" data-pk="${k}" style="min-height:auto;margin-top:3px"${m[k]?" checked":""}> <span>${l}<br><small style="color:var(--mut);font-weight:400">${d}</small></span></label>`).join("")}<div class="ctl"><button class="btn sm" type="button" id="mPermOk">Salvar permissões</button> <button class="btn alt sm" type="button" id="mPermX">Fechar</button></div></div>`}
+document.addEventListener("click",async e=>{const t=e.target;if(!t.closest)return;
+ const a=t.closest("[data-mperm]");if(a){mPermU=mPermU===a.dataset.mperm?null:a.dataset.mperm;mAbasU=null;mGalU=null;cfgGes();const x=$("#mPerm");if(x&&mPermU)x.scrollIntoView({block:"nearest"});return}
+ if(t.id==="mPermX"){mPermU=null;cfgGes();return}
+ if(t.id==="mPermOk"){const m=S.ges.find(x=>x.u===mPermU);if(!m)return;const body={},loc={};PERM_T.forEach(([k,col])=>{const c=document.querySelector('#mPerm [data-pk="'+k+'"]');if(c){body[col]=c.checked;loc[k]=c.checked}});
+  if(ON){t.disabled=true;const ok=await rem(()=>mut("/rest/v1/gestores?email=eq."+encodeURIComponent(m.u),"PATCH",body),"Permissões de "+m.n+" salvas");t.disabled=false;if(ok){Object.assign(m,loc);mPermU=null;cfgGes()}return}
+  Object.assign(m,loc);save();mPermU=null;cfgGes();toast("Permissões de "+m.n+" salvas")}});
 const ABAS_T=[["painel","Painel"],["op","Coleta"],["prs","Procurando"],["ind","Equipe"],["his","Relatórios"],["cfg","Config"]];let mAbasU=null,mGalU=null;
 const isI=t=>t==="ind"||t==="his";
 /* aba só aparece se o perfil atual pode abri-la; o que não é acessível fica oculto */
@@ -2845,6 +2901,7 @@ document.addEventListener("click",e=>{const b=e.target.closest(".cfgAddB");if(!b
 function cfgVis(){const sm=soMeta(),tb=temBip();let pg=false;try{pg=pdGestor()}catch(e){}
  const V={cop:1,cme:1,cho:1,cpa:1,cmo:1,cus:1,cpd:pg,cge:!sm||tb,cga:!sm,cma:!ON||!!(me&&me.adm),cau:!!(ON&&me&&me.adm)};
  if(ON&&me&&!me.adm&&!me.pC)Object.keys(V).forEach(k=>{if(!["cho","cpa","cmo"].includes(k)&&!(k==="cge"&&tb))V[k]=false});
+ if(ON&&me&&!me.adm&&!me.bip){if(me.pP)V.cus=1;if(me.pM)V.cme=1}
  $$("#csub [data-c],#cfgNav [data-c]").forEach(b=>{b.style.display=V[b.dataset.c]?"":"none"});
  $$('#csub [data-c="cge"],#cfgNav [data-c="cge"]').forEach(b=>{b.textContent=sm?"Seus bipadores":"Gestores e bipadores"});
  $$("#cfgNav .cnG").forEach(g=>{g.style.display=[...g.querySelectorAll("[data-c]")].some(b=>b.style.display!=="none")?"":"none"});
@@ -3021,7 +3078,7 @@ $("#mB").onclick=()=>{const n=$("#mN").value.trim(),u=$("#mU").value.trim(),p=$(
   if(!adm&&!gg0){toast("Crie um galpão antes de cadastrar gestores.");return}
   if(p.length<8){toast("Defina uma senha de pelo menos 8 caracteres para o gestor.");$("#mP2").focus();return}
   const bt=$("#mB");bt.disabled=true;
-  rem(()=>api("/functions/v1/gestor-conta",{method:"POST",body:{acao:"criar",email:em,senha:p,nome:n,galpao_id:adm?null:(GID[gg0]||null),admin:adm,pode_config:$("#mC").checked,pode_individual:$("#mI").checked,pode_registros:$("#mR").checked}}),"Gestor criado. Ele já pode entrar com "+em+" e a senha definida.").then(ok=>{bt.disabled=false;if(ok)$("#mN").value=$("#mU").value=$("#mP2").value=""});return}
+  rem(()=>api("/functions/v1/gestor-conta",{method:"POST",body:{acao:"criar",email:em,senha:p,nome:n,galpao_id:adm?null:(GID[gg0]||null),admin:adm,pode_config:$("#mC").checked,pode_individual:$("#mI").checked,pode_registros:$("#mR").checked,pode_pessoas:$("#mPp").checked,pode_metas:$("#mPm").checked}}),"Gestor criado. Ele já pode entrar com "+em+" e a senha definida.").then(ok=>{bt.disabled=false;if(ok)$("#mN").value=$("#mU").value=$("#mP2").value=""});return}
  if(!n||!u){toast("Informe nome e usuário de login");return}
  const gg=$("#mG").value;if(!gg){toast("Selecione o galpão do gestor");return}
  if(S.ges.some(g=>g.u.toLowerCase()===u.toLowerCase())){toast("Usuário de login já existe");return}
@@ -3132,7 +3189,7 @@ function pdLocalB(){const W=new Set(S.waves.filter(w=>!w.err).map(w=>normWN(w.wn
 async function pdCarregar(){diaTit();
  if(!ON){PDB=pdLocalB();return}
  if(!online())return;
- try{const [t,p,b,ps,mt]=await Promise.all([api("/rest/v1/prod_turnos?select=*&order=id"),api("/rest/v1/rpc/prod_postos",{method:"POST",body:{}}),api("/rest/v1/rpc/prod_bipagens_dia",{method:"POST",body:{p_dia:diaSel()}}),api("/rest/v1/prod_pessoas?select=id,codigo,nome,galpao_id&excluido_em=is.null&order=nome&limit=2000"),api("/rest/v1/prod_metas?select=galpao_id,atividade,por_hora,por_dia,horas_dia,inicio,criado_por&order=inicio&limit=2000").catch(()=>null)]);
+ try{const [t,p,b,ps,mt]=await Promise.all([api("/rest/v1/prod_turnos?select=*&order=id"),api("/rest/v1/rpc/prod_postos",{method:"POST",body:{}}),api("/rest/v1/rpc/prod_bipagens_dia",{method:"POST",body:{p_dia:diaSel()}}),api("/rest/v1/prod_pessoas?select=id,codigo,nome,galpao_id&excluido_em=is.null&order=nome&limit=2000"),api("/rest/v1/prod_metas?select=galpao_id,atividade,andar,por_hora,por_dia,horas_dia,inicio,criado_por&order=inicio&limit=2000").catch(()=>null)]);
   if(mt)PDM=mt.map(pdMmap);PDPES=ps.map(x=>({id:x.id,m:x.codigo,n:x.nome,g:GN[x.galpao_id]||""}));if(PDsel)PDsel=PDPES.find(o=>o.id===PDsel.id)||null;
   PDT=t.map(pdTmap);PDA=p.map(pdAmap);PDB=b.map(x=>({id:x.id,wn:x.wn,oid:x.pessoa_id,andar:x.andar,at:x.atividade,tu:x.turno_id,em:Date.parse(x.bipada_em),col:!!x.coletado,q:x.origem==="quantidade"?+x.quantidade:undefined,st:"ok"}));
   if(pdGestor()){try{PDH=(await api("/rest/v1/prod_atribuicoes?select=*&order=inicio.desc&limit=3000")).map(pdAmap)}catch(e){PDH=[]}}else PDH=[];
@@ -3340,11 +3397,13 @@ async function pdTurnoSalvar(f){const v=n=>(f.querySelector(`[name="${n}"]`)||{}
 let PDM=[],PDpr="bip",PDE="ind",PDfp="todos",PDps="",PDper="1",PDD={key:"",t:0,B:[],err:""},PDDl=false;
 const PD_PK=PD_POS.map(([a,x])=>a+"-"+x),pdPN=k=>{const [a,x]=String(k).split("-");return PD_AND[a]&&PD_AT[x]?PD_AND[a]+" "+PD_AT[x]:"—"};
 const nf1=v=>(Math.round((+v||0)*10)/10).toLocaleString("pt-BR",{maximumFractionDigits:1});
-const pdMmap=m=>({g:m.galpao_id,at:m.atividade,h:+m.por_hora,d:m.por_dia==null?null:+m.por_dia,hd:m.horas_dia==null?null:+m.horas_dia,ini:m.inicio,por:m.criado_por||""});
+const pdMmap=m=>({g:m.galpao_id,at:m.atividade,an:m.andar||null,h:+m.por_hora,d:m.por_dia==null?null:+m.por_dia,hd:m.horas_dia==null?null:+m.horas_dia,ini:m.inicio,por:m.criado_por||""});
 function pdMetas(){return ON?PDM:(S.prodMetas||(S.prodMetas=[]))}
 function pdGid(){return ON?(GID[pdGalpao()]||null):pdGalpao()}
-function pdMetaR(at,dia){const g=pdGid();let r=null;pdMetas().forEach(m=>{if(m.g===g&&m.at===at&&m.ini<=dia&&(!r||m.ini>r.ini))r=m});return r}
-function pdMetaH(at,dia){const r=pdMetaR(at,dia);return r?+r.h:0}
+/* meta da embalagem do posto (andar + atividade) no galpão; sem meta do posto, vale a meta geral da atividade */
+function pdGidDe(nome){return ON?(GID[nome]||null):nome}
+function pdMetaR(at,dia,an,g){g=g||pdGid();let r=null,rg=null;pdMetas().forEach(m=>{if(m.g!==g||m.at!==at||m.ini>dia)return;if(an&&m.an===an){if(!r||m.ini>r.ini)r=m}else if(!m.an){if(!rg||m.ini>rg.ini)rg=m}});return r||rg}
+function pdMetaH(at,dia,an,g){const r=pdMetaR(at,dia,an,g);return r?+r.h:0}
 function pdNome(oid){const o=pdOps().find(x=>pdK(x)===oid)||(S.prodPesEx||[]).find(x=>pdK(x)===oid);return o?{nm:o.n,cod:o.m}:{nm:"Pessoa removida",cod:""}}
 const pdFiltroP=B=>PDfp==="todos"?B:B.filter(b=>b.andar+"-"+b.at===PDfp);
 function pdStats(B){const now=Date.now(),P=new Map(),H=new Map(),D=new Map(),Q=new Map(),vis=new Set(),fr=h=>Math.max(0,Math.min(1,(now-h)/36e5));
@@ -3354,7 +3413,7 @@ function pdStats(B){const now=Date.now(),P=new Map(),H=new Map(),D=new Map(),Q=n
   let d=D.get(b.dia);if(!d)D.set(b.dia,d={dia:b.dia,n:0,pes:new Set(),meta:0});d.n+=w;d.pes.add(b.oid);
   let q=Q.get(k);if(!q)Q.set(k,q={n:0,pes:new Set(),hrs:0,meta:0});q.n+=w;q.pes.add(b.oid);
   let pd=p.dias.get(b.dia);if(!pd)p.dias.set(b.dia,pd={n:0,meta:0});pd.n+=w;
-  const sk=b.oid+"|"+h;if(!vis.has(sk)){vis.add(sk);const f=fr(h),m=pdMetaH(b.at,b.dia)*f;p.hrs+=f;p.meta+=m;pd.meta+=m;x.meta+=m;d.meta+=m;q.hrs+=f;q.meta+=m}});
+  const sk=b.oid+"|"+h;if(!vis.has(sk)){vis.add(sk);const f=fr(h),po=pdOp(b.oid),m=pdMetaH(b.at,b.dia,b.andar,po&&po.g?pdGidDe(po.g):undefined)*f;p.hrs+=f;p.meta+=m;pd.meta+=m;x.meta+=m;d.meta+=m;q.hrs+=f;q.meta+=m}});
  const L=[...P.values()];return{n:B.reduce((a,b)=>a+(b.q||1),0),col:B.reduce((a,b)=>a+(b.col||b.q?(b.q||1):0),0),meta:L.reduce((a,p)=>a+p.meta,0),hrs:L.reduce((a,p)=>a+p.hrs,0),P:L,H,D,Q}}
 const pdAbaixo=p=>{const hj=hoje(),F=p?[...p.dias].filter(([k,d])=>k<hj&&d.meta):[];return F.length?F.filter(([k,d])=>d.n<d.meta).length+" de "+F.length:"—"};
 const pdPct=(n,m)=>m?n/m*100:null,pdStC=pc=>pc>=100?"ok":pc>=80?"warn":"err";
@@ -3381,7 +3440,7 @@ function pdPlacar(st,txt){const pc=pdPct(st.n,st.meta);
 const pdK2=(t,v,s)=>`<div class="kpi"><dt>${t}</dt><dd class="num">${v}</dd><dd class="sm">${s||""}</dd></div>`;
 function pdChipsP(B){const n={todos:B.reduce((a,b)=>a+(b.q||1),0)};PD_PK.forEach(k=>n[k]=0);B.forEach(b=>{const k=b.andar+"-"+b.at,w=b.q||1;if(k in n)n[k]+=w});
  return`<div class="pdChips pdChipsP" role="group" aria-label="Filtrar por posto">`+[["todos","Todos os postos"]].concat(PD_PK.map(k=>[k,pdPN(k)])).map(([k,t])=>`<button type="button" data-pdfp="${k}" aria-pressed="${PDfp===k}">${t} <span class="pdCn">${fmt(n[k])}</span></button>`).join("")+"</div>"}
-function pdPostosHtml(st,dia){return PD_PK.filter(k=>PDfp==="todos"||PDfp===k).map(k=>{const q=st.Q.get(k)||{n:0,pes:new Set(),hrs:0,meta:0},pc=pdPct(q.n,q.meta),mh=q.hrs?q.meta/q.hrs:pdMetaH(k.split("-")[1],dia);
+function pdPostosHtml(st,dia){return PD_PK.filter(k=>PDfp==="todos"||PDfp===k).map(k=>{const q=st.Q.get(k)||{n:0,pes:new Set(),hrs:0,meta:0},pc=pdPct(q.n,q.meta),mh=q.hrs?q.meta/q.hrs:pdMetaH(k.split("-")[1],dia,k.split("-")[0]);
  return`<div class="gal"><div class="r"><b>${pdPN(k)}</b><span>${fmt(q.n)} <small>${q.n===1?"onda":"ondas"}</small></span></div><div class="bar" style="--c:${pc!=null&&pc>=100?"var(--k)":"var(--g)"}"><b style="width:${pc!=null?Math.min(100,pc):0}%"></b></div>
   <div class="pdH" style="margin-top:5px">${q.pes.size} ${q.pes.size===1?"pessoa":"pessoas"}, ${nf1(q.hrs?q.n/q.hrs:0)} por pessoa por hora${mh?`, meta ${nf1(mh)}`+(pc!=null&&q.n?` (${fmt(pc)}%)`:""):", sem meta"}</div></div>`}).join("")}
 function pdPesTab(st,dias){const L=st.P.slice().sort((a,b)=>b.n-a.n||String(a.nm).localeCompare(String(b.nm),"pt-BR"));if(!L.length)return'<div class="empty">Ninguém bipou no período.</div>';
@@ -3422,29 +3481,33 @@ function pdDesempenho(){const el=$("#pdDesV");if(!el)return;const dias=pdPerDias
   +pdK2("Ondas por hora",nf1(st.hrs?st.n/st.hrs:0),st.hrs&&st.meta?"meta "+nf1(st.meta/st.hrs)+(pc!=null?" ("+fmt(pc)+"%)":""):"sem meta")
   +pdK2("Dias abaixo da meta",pdAbaixo(p),"dias encerrados do período")+`</dl></div>
   <div class="card" style="margin-top:12px"><h2>Produção de ${esc(pes.get(PDps)||"")} ${single?"por hora":"por dia"}</h2>${pdBarras(single?pdHorasItens(st):pdDiasItens(st,dias),{w:960,metaTxt:"Meta individual",aria:"Ondas embaladas pela pessoa e meta individual"})}</div>`}
-function pdMetasHtml(){const hj=hoje(),R=at=>pdMetaR(at,hj),g=pdGid(),H=pdMetas().filter(m=>m.g===g).sort((a,b)=>a.ini<b.ini?1:a.ini>b.ini?-1:0).slice(0,6),fd=d=>new Date(d+"T12:00:00").toLocaleDateString("pt-BR");
- const dia=r=>r?(r.d!=null?r.d:r.h*(r.hd||8)):null,hd=(R("mesa")||{}).hd||(R("maquina")||{}).hd||8,txt=r=>r?`${nf1(dia(r))} por dia <small>(${nf1(r.h)} por hora)</small>`:"<small>sem meta</small>";
- const inp=(at)=>{const r=R(at);return`<label>${PD_AT[at]}<span class="pdUn"><input type="text" name="${at}" maxlength="7" autocomplete="off" inputmode="decimal" value="${r?nf1(dia(r)):""}" placeholder="0"><small data-pdmh="${at}">${r?"= "+nf1(r.h)+" ondas por hora no gráfico":"ondas por dia, por pessoa"}</small></span></label>`};
- return`<div class="card pc"><h2>Metas diárias</h2>`+(pdGestor()?`<form id="pdMetaF" class="pdG pdMetaF" novalidate>${inp("mesa")}${inp("maquina")}
-   <label>Horas de trabalho por dia<span class="pdUn"><input type="text" name="hd" maxlength="5" autocomplete="off" inputmode="decimal" value="${nf1(hd)}"><small>para calcular a meta por hora</small></span></label>
+function pdMetasHtml(){const hj=hoje(),GS=(ON&&me&&!me.adm&&me.g)?[me.g]:S.gals,fd=d=>new Date(d+"T12:00:00").toLocaleDateString("pt-BR"),dia=r=>r?(r.d!=null?r.d:r.h*(r.hd||8)):null,gidN={};GS.forEach(n=>gidN[pdGidDe(n)]=n);
+ const H=pdMetas().filter(m=>gidN[m.g]!==undefined).sort((a,b)=>a.ini<b.ini?1:a.ini>b.ini?-1:0).slice(0,10),hd0=(H[0]||{}).hd||8;
+ const cel=(gn,k)=>{const [an,at]=k.split("-"),r=pdMetaR(at,hj,an,pdGidDe(gn)),ex=r&&r.an===an;return`<td><input type="text" name="${esc("m|"+gn+"|"+k)}" maxlength="9" autocomplete="off" inputmode="decimal" value="${ex?nf1(dia(r)):""}" placeholder="${r&&!ex?"geral: "+nf1(dia(r)):"sem meta"}" aria-label="Meta de ${esc(pdPN(k))} em ${esc(gn)}, unidades por dia por pessoa"></td>`};
+ const ver=(gn,k)=>{const [an,at]=k.split("-"),r=pdMetaR(at,hj,an,pdGidDe(gn));return`<td class="num">${r?nf1(dia(r)):"—"}</td>`};
+ const tab=c=>`<div class="tw"><table class="pdMtT"><tr><th>Galpão</th>${PD_PK.map(k=>`<th>${pdPN(k)}</th>`).join("")}</tr>${GS.map(gn=>`<tr><td><b>${esc(gn)}</b></td>${PD_PK.map(k=>c(gn,k)).join("")}</tr>`).join("")}</table></div>`;
+ return`<div class="card pc"><h2>Metas de embalagens, por unidades</h2><p class="legend" style="margin:0 0 10px">Unidades por dia, por pessoa, em cada posto. Em branco, o posto usa a meta geral da atividade (quando houver).</p>`+(pdGestor()&&podeM()?`<form id="pdMetaF" novalidate>${tab(cel)}
+   <div class="pdG pdMetaF" style="margin-top:12px"><label>Horas de trabalho por dia<span class="pdUn"><input type="text" name="hd" maxlength="5" autocomplete="off" inputmode="decimal" value="${nf1(hd0)}"><small>para calcular a meta por hora</small></span></label>
    <label>Vale a partir de<input type="date" name="ini" min="${hj}" value="${hj}"></label>
-   <div class="ctl2 pdMetaAc"><span></span><button type="submit" class="btn">Salvar metas</button></div></form>`
-  :`<div class="gal"><div class="r"><b>Mesa</b><span>${txt(R("mesa"))}</span></div></div><div class="gal"><div class="r"><b>Máquina</b><span>${txt(R("maquina"))}</span></div></div>`)
-  +(H.length?`<ul class="pdHist" aria-label="Histórico das metas">${H.map(m=>`<li>${PD_AT[m.at]}: ${nf1(dia(m))} por dia${m.hd?" em "+nf1(m.hd)+" h":""} (${nf1(m.h)} por hora), a partir de ${fd(m.ini)}</li>`).join("")}</ul>`:"")
-  +`<div class="legend">A meta é digitada por dia, por pessoa. O gráfico usa a meta por hora (meta diária ÷ horas de trabalho) vezes as horas em que a pessoa bipou; a meta da equipe é a soma. Mudar a meta não altera os dias anteriores.</div></div>`}
-const pdNum=v=>{v=String(v||"").trim().replace(",",".");return v===""?null:parseFloat(v)};
-function pdMetaPrev(f){const hd=pdNum(f.querySelector('[name="hd"]').value);["mesa","maquina"].forEach(at=>{const v=pdNum(f.querySelector(`[name="${at}"]`).value),el=f.querySelector(`[data-pdmh="${at}"]`);if(el)el.textContent=v>0&&hd>0?"= "+nf1(v/hd)+" ondas por hora no gráfico":"ondas por dia, por pessoa"})}
+   <div class="ctl2 pdMetaAc"><span id="pdMetaPv" class="legend" style="margin:0"></span><button type="submit" class="btn">Salvar metas</button></div></div></form>`:tab(ver))
+  +(H.length?`<ul class="pdHist" aria-label="Histórico das metas">${H.map(m=>`<li>${esc(gidN[m.g]||"")} · ${m.an?esc(pdPN(m.an+"-"+m.at)):PD_AT[m.at]+" (geral)"}: ${nf1(dia(m))} por dia${m.hd?" em "+nf1(m.hd)+" h":""} (${nf1(m.h)} por hora), a partir de ${fd(m.ini)}</li>`).join("")}</ul>`:"")
+  +`<div class="legend">O gráfico usa a meta por hora (meta diária ÷ horas de trabalho) vezes as horas em que a pessoa bipou; a meta da equipe é a soma. Para milhar, use ponto: 1.500 é mil e quinhentos. Mudar a meta não altera os dias anteriores.</div></div>`}
+const pdNum=v=>{v=String(v||"").trim().replace(/\s/g,"");if(v==="")return null;if(/^\d{1,3}(\.\d{3})+(,\d+)?$/.test(v))v=v.replace(/\./g,"");v=v.replace(",",".");return /^\d+(\.\d+)?$/.test(v)?parseFloat(v):NaN};
+function pdMetaPrev(f){const hd=pdNum(f.querySelector('[name="hd"]').value),el=f.querySelector("#pdMetaPv");if(!el)return;const t=document.activeElement;
+ if(!t||!t.name||t.name.indexOf("m|")!==0){el.textContent="";return}const v=pdNum(t.value);el.textContent=v>0&&hd>0?nf1(v)+" por dia = "+nf1(v/hd)+" unidades por hora no gráfico":(t.value.trim()&&!(v>0)?"Número inválido: use só números, como 1.500 ou 80.":"")}
 async function pdMetaSalvar(f){const ini=f.querySelector('[name="ini"]').value,hj=hoje(),M=[],hd=Math.round((pdNum(f.querySelector('[name="hd"]').value)||0)*100)/100;
- if(!ini||ini<hj){toast("A meta só pode valer a partir de hoje.",5000);return}
- if(!(hd>0&&hd<=24)){toast("Informe as horas de trabalho por dia (de 1 a 24).",5000);f.querySelector('[name="hd"]').focus();return}
- for(const at of ["mesa","maquina"]){const s=f.querySelector(`[name="${at}"]`).value.trim();if(!s)continue;const v=Math.round(pdNum(s)*10)/10;
-  if(!(v>0&&v<=20000)){toast("A meta diária de "+PD_AT[at]+" precisa ser maior que zero.",5000);f.querySelector(`[name="${at}"]`).focus();return}const r=pdMetaR(at,ini);if(!r||r.d!==v||r.hd!==hd)M.push([at,v])}
+ if(!ini||ini<hj){toast("Data inválida: a meta só pode valer a partir de hoje.",5000);return}
+ if(!(hd>0&&hd<=24)){toast("Horas inválidas: informe as horas de trabalho por dia (de 1 a 24).",5000);f.querySelector('[name="hd"]').focus();return}
+ for(const i of f.querySelectorAll('input[name^="m|"]')){const s0=i.value.trim();if(!s0)continue;const [,gn,k]=i.name.split("|"),[an,at]=k.split("-"),v=Math.round(pdNum(s0)*10)/10;
+  if(!(v>0&&v<=20000)){toast("Meta inválida em "+pdPN(k)+" ("+gn+"): use um número de 1 a 20.000. Para milhar use ponto, como 1.500.",7000);i.focus();return}
+  const r=pdMetaR(at,ini,an,pdGidDe(gn));if(!r||r.an!==an||r.d!==v||r.hd!==hd||r.ini!==ini)M.push({gn,k,an,at,v})}
  if(!M.length){toast("Nenhuma meta alterada.");return}
- const msg="Metas salvas a partir de "+new Date(ini+"T12:00:00").toLocaleDateString("pt-BR")+": "+M.map(([at,v])=>PD_AT[at]+" "+nf1(v)+" por dia ("+nf1(v/hd)+" por hora)").join(", ");
+ const msg="Metas salvas a partir de "+new Date(ini+"T12:00:00").toLocaleDateString("pt-BR")+": "+M.map(x=>(GS_N(x.gn))+pdPN(x.k)+" "+nf1(x.v)+" por dia").join(", ");
  if(ON){const b=f.querySelector('[type="submit"]');b.disabled=true;
-  try{for(const [at,v] of M)await api("/rest/v1/rpc/prod_meta_salvar",{method:"POST",body:{p_galpao:GID[pdGalpao()]||null,p_atividade:at,p_por_dia:v,p_horas_dia:hd,p_inicio:ini}})}catch(e){b.disabled=false;toast(errMsg(e),7000);return}
-  await pdCarregar();pdRender();toast(msg,5000);return}
- const L=pdMetas(),g=pdGid();M.forEach(([at,v])=>{const x={g,at,d:v,hd,h:Math.round(v/hd*1000)/1000,ini,por:me?me.u:"local"},o=L.find(m=>m.g===g&&m.at===at&&m.ini===ini);if(o)Object.assign(o,x);else L.push(x)});save();pdRender();toast(msg,5000)}
+  try{for(const x of M)await api("/rest/v1/rpc/prod_meta_salvar",{method:"POST",body:{p_galpao:GID[x.gn]||null,p_atividade:x.at,p_andar:x.an,p_por_dia:x.v,p_horas_dia:hd,p_inicio:ini}})}catch(e){b.disabled=false;toast(errMsg(e),8000);return}
+  await pdCarregar();pdRender();toast(msg,6000);return}
+ const L=pdMetas();M.forEach(x=>{const g=pdGidDe(x.gn),o={g,at:x.at,an:x.an,d:x.v,hd,h:Math.round(x.v/hd*1000)/1000,ini,por:me?me.u:"local"},y=L.find(m=>m.g===g&&m.at===x.at&&(m.an||null)===x.an&&m.ini===ini);if(y)Object.assign(y,o);else L.push(o)});save();pdRender();toast(msg,6000)}
+const GS_N=gn=>S.gals.length>1?gn+" · ":"";
 function pdEqRender(){pdEqSeg();pdDesempenho()}
 
 /* ---------- Painel: Coleta e Embalagem juntas (só quantidade por hora e por pessoa; metas separadas) ---------- */
@@ -3549,7 +3612,7 @@ function pnVisDados(D,E){const UM=E.UM,H=new Map(),hx=h=>{let x=H.get(h);if(!x)H
   p.u+=+w.qty||0;p.n++;p.hs.add(Math.floor((w.fin||w.ts)/36e5));p.ini=Math.min(p.ini,w.ts)});
  E.B.slice().sort((a,b)=>a.em-b.em).forEach(b=>{const k="e:"+b.oid;let p=P.get(k);if(!p){const s=stP.get(b.oid),o=pdOp(b.oid);P.set(k,p={k,oid:b.oid,set:"",nm:(s&&s.nm)||b.nm||(o?o.n:"—"),u:0,n:0,hs:new Set(),ini:Infinity})}
   p.set=b.andar+"-"+b.at;p.u+=eu(b);p.n+=b.q||1;p.hs.add(Math.floor(b.em/36e5));p.ini=Math.min(p.ini,b.em)});
- P.forEach(p=>{p.h=p.hs.size;if(p.set==="col"){const m=+((MI()[p.g]||{}).q)||0;p.meta=m;p.pc=m?p.u/m*100:null}else{const s=stP.get(p.oid);p.meta=s?s.meta:0;p.pc=s&&s.meta?s.n/s.meta*100:null}p.pt=pnPont(p)});
+ P.forEach(p=>{p.h=p.hs.size;if(p.set==="col"){const m=+(MIP(Object.assign({g:p.g},opOf(p.k.slice(2))||{})).q)||0;p.meta=m;p.pc=m?p.u/m*100:null}else{const s=stP.get(p.oid);p.meta=s?s.meta:0;p.pc=s&&s.meta?s.n/s.meta*100:null}p.pt=pnPont(p)});
  const L=[...P.values()],sec=PN_SET.map(([k,nm,c])=>{const G=L.filter(p=>p.set===k),hit=G.filter(p=>p.pc!=null&&p.pc>=100).length,sem=G.filter(p=>p.pc==null).length;
   if(k==="col")return{k,nm,c,u:D.tot,n:D.P0.length,pc:D.pc,falta:D.metaT&&!D.TF?Math.max(0,D.metaT-D.totM):null,fu:"un.",hit,tot:G.length,sem};
   const q=E.st.Q.get(k)||{n:0,meta:0},u=E.B.filter(b=>b.andar+"-"+b.at===k).reduce((a,b)=>a+eu(b),0);

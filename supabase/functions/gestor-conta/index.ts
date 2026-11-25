@@ -64,8 +64,11 @@ Deno.serve(async (req) => {
       const { error: ei } = await adm.from("gestores").insert({
         email, nome, galpao_id, admin,
         ...(bip
-          ? { perfil: "bipador", responsavel, abas, pode_config: false, pode_individual: false, pode_registros: false }
-          : { pode_config: b.pode_config !== false, pode_individual: b.pode_individual !== false, pode_registros: b.pode_registros !== false }),
+          ? { perfil: "bipador", responsavel, abas, pode_config: false, pode_individual: false, pode_registros: false, pode_pessoas: false, pode_metas: false }
+          : {
+            pode_config: b.pode_config !== false, pode_individual: b.pode_individual !== false, pode_registros: b.pode_registros !== false,
+            pode_pessoas: b.pode_pessoas !== false, pode_metas: b.pode_metas !== false,
+          }),
       });
       if (ei) return resp(400, { erro: ei.message });
       await adm.from("solicitacoes_gestor").delete().eq("email", email);

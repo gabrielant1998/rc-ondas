@@ -70,7 +70,7 @@ function fake(db){const cors={'access-control-allow-origin':'*','access-control-
   if(t==='prod_metas'&&m==='GET')return J(route,200,(db.pm||[]).slice().sort((x,y)=>x.inicio<y.inicio?-1:1));
   if(t==='rpc/prod_meta_salvar'){if(!g||!(g.admin||(g.pode_config&&g.galpao_id===body.p_galpao)))return J(route,403,{code:'42501',message:'Sem permissão para alterar as metas da produção'});
    const hj=new Date(Date.now()-3*36e5).toISOString().slice(0,10);if(body.p_inicio<hj)return J(route,400,{code:'22023',message:'A meta só pode valer a partir de hoje; os dias anteriores ficam com a meta da época'});
-   db.pm=db.pm||[];const x=db.pm.find(z=>z.galpao_id===body.p_galpao&&z.atividade===body.p_atividade&&z.inicio===body.p_inicio);const ph=body.p_por_dia/body.p_horas_dia;if(x)Object.assign(x,{por_dia:body.p_por_dia,horas_dia:body.p_horas_dia,por_hora:ph});else db.pm.push({galpao_id:body.p_galpao,atividade:body.p_atividade,por_dia:body.p_por_dia,horas_dia:body.p_horas_dia,por_hora:ph,inicio:body.p_inicio,criado_por:email});return J(route,200,1)}
+   db.pm=db.pm||[];const an=body.p_andar||null,x=db.pm.find(z=>z.galpao_id===body.p_galpao&&z.atividade===body.p_atividade&&(z.andar||null)===an&&z.inicio===body.p_inicio);const ph=body.p_por_dia/body.p_horas_dia;if(x)Object.assign(x,{por_dia:body.p_por_dia,horas_dia:body.p_horas_dia,por_hora:ph});else db.pm.push({galpao_id:body.p_galpao,atividade:body.p_atividade,andar:an,por_dia:body.p_por_dia,horas_dia:body.p_horas_dia,por_hora:ph,inicio:body.p_inicio,criado_por:email});return J(route,200,1)}
   if(t==='rpc/prod_bipagens_periodo'){if(!g)return J(route,403,{code:'42501',message:'Entre como gestor para ver o desempenho'});db.calls.per=(db.calls.per||0)+1;
    return J(route,200,db.pb.filter(x=>x.dia>=body.p_ini&&x.dia<=body.p_fim).map(x=>{const o=db.ppes.find(z=>z.id===x.pessoa_id)||{};return Object.assign({},x,{nome:o.nome,codigo:o.codigo,coletado:db.ondas.some(w=>nW(w.wn)===nW(x.wn))})}).filter(x=>{const o=db.ppes.find(z=>z.id===x.pessoa_id);return o&&escopo(o.galpao_id)}))}
   if(t==='rpc/prod_bipagens_dia')return J(route,200,db.pb.filter(x=>x.dia===body.p_dia).map(x=>Object.assign({},x,{coletado:db.ondas.some(w=>nW(w.wn)===nW(x.wn))})));
@@ -136,7 +136,7 @@ function fake(db){const cors={'access-control-allow-origin':'*','access-control-
    const row=Object.assign({id:'pr'+db.seq++,horario_ini:null,horario_fim:null,observacao:null,criado_por:email,cancelado_em:null},body);(db.presenca=db.presenca||[]).push(row);return J(route,201,[row])}
   if(t==='presenca_registros'&&m==='PATCH'){const r=(db.presenca||[]).find(x=>x.id===eq('id')),op=r&&db.operadores.find(o=>o.id===r.operador_id);if(!r||!(g&&g.pode_registros&&(g.admin||g.galpao_id===op.galpao_id)))return J(route,200,[]);Object.assign(r,body);return J(route,200,[r])}
   if(t==='operadores'&&m==='PATCH'&&!eq('id')){const L=db.operadores.filter(o=>o.galpao_id===eq('galpao_id')&&String(o.turno)===eq('turno')&&String(o.inicio)===eq('inicio')&&String(o.fim)===eq('fim')&&!o.excluido_em&&podeC(o.galpao_id));L.forEach(o=>Object.assign(o,body));return J(route,200,L)}
-  if(t==='operadores'&&m==='PATCH'){const o=db.operadores.find(x=>x.id===eq('id'));if(!o||!podeC(o.galpao_id))return J(route,200,[]);Object.assign(o,body);return J(route,200,[o])}
+  if(t==='operadores'&&m==='PATCH'){const o=db.operadores.find(x=>x.id===eq('id'));if(!o||!podeC(o.galpao_id))return J(route,200,[]);if(body.nome!==undefined&&g&&!g.admin&&g.pode_pessoas===false)return J(route,403,{code:'42501',message:'Sem permissão para editar pessoas. Peça ao administrador para liberar "Pode cadastrar e editar pessoas".'});if(body.nome!==undefined&&db.operadores.some(x=>x!==o&&!x.excluido_em&&x.nome.toLowerCase()===String(body.nome).toLowerCase()))return J(route,409,{code:'23505',message:'duplicate key value violates unique constraint "operadores_nome_ativo_uq"'});Object.assign(o,body);return J(route,200,[o])}
   if(t==='galpoes'&&m==='POST'){if(!(g&&g.admin))return J(route,403,{code:'42501',message:'rls'});const row=Object.assign({id:'00000000-0000-4000-8000-'+String(db.seq++).padStart(12,'0')},body);db.galpoes.push(row);return J(route,201,[row])}
   if(t==='galpoes'&&m==='PATCH'){const o=db.galpoes.find(x=>x.id===eq('id'));if(!o||!(g&&(g.admin||(g.pode_config&&g.galpao_id===o.id))))return J(route,200,[]);Object.assign(o,body);return J(route,200,[o])}
   if(t==='galpoes'&&m==='DELETE'){const o=db.galpoes.find(x=>x.id===eq('id'));if(!o||!(g&&g.admin))return J(route,200,[]);
@@ -221,8 +221,8 @@ await T('S06 WN que já existe no banco (de outro aparelho) vira "recusada" e n�
  await p.click('#last [data-del]');await p.waitForTimeout(150);ok((await p.evaluate(()=>S.waves.length))===1,'não removeu a recusada')});
 
 await T('S07 Senha errada, e-mail sem confirmação e e-mail que não é gestor não entram',async()=>{const db=banco();const p=await page(b,db);
- await login(p,'adm@x.com','errada');ok(!(await p.isHidden('#login')),'entrou com senha errada');ok(/inválidos/.test(await p.textContent('#toast')),await p.textContent('#toast'));
- await p.fill('#lU','novo@x.com');await p.fill('#lP','senha1234');await p.click('#lB');await p.waitForTimeout(400);ok(/Confirme o e-mail/.test(await p.textContent('#toast')),await p.textContent('#toast'));
+ await login(p,'adm@x.com','errada');ok(!(await p.isHidden('#login')),'entrou com senha errada');ok(/incorretos/.test(await p.textContent('#toast')),await p.textContent('#toast'));
+ await p.fill('#lU','novo@x.com');await p.fill('#lP','senha1234');await p.click('#lB');await p.waitForTimeout(400);ok(/E-mail não confirmado/.test(await p.textContent('#toast')),await p.textContent('#toast'));
  await p.fill('#lU','fora@x.com');await p.click('#lB');await p.waitForTimeout(500);ok(/Pedido enviado/.test(await p.textContent('#toast'))&&db.pedidos.includes('fora@x.com'),await p.textContent('#toast'));
  ok((await p.evaluate(()=>me===null&&sess===null)),'ficou sessão aberta')});
 
@@ -295,7 +295,7 @@ await T('S12 Admin: galpão, meta, limite, turno e gestor gravam no banco',async
  await p.click('[data-c="cge"]');await abrirAdd(p);await p.fill('#mN','Nova Gestora');await p.fill('#mU','Nova@X.com');await p.fill('#mP2','senha1234');await p.click('#mB');await p.waitForTimeout(450);
  ok(mmin===500,'meta mínima '+mmin);ok(db.tipos.find(t=>t.nome==='Itens Únicos').limite===250,'limite');ok(db.galpoes.find(x=>x.id===G1).horarios[1].fim===17,'turno do galpão: '+JSON.stringify(db.galpoes.find(x=>x.id===G1).horarios));
  ok(db.galpoes.some(g=>g.nome==='Galpão Norte'),'galpão novo');ok(db.metas.some(m=>m.galpao_id===G2&&m.data===HJ&&m.meta===3000),'meta do dia salva');
- ok(db.galpoes.some(g=>g.id===G1)&&/Não dá para excluir/.test(tg),'excluiu galpão com operadores: '+tg);
+ ok(db.galpoes.some(g=>g.id===G1)&&/não dá para excluir/.test(tg),'excluiu galpão com operadores: '+tg);
  ok(db.gestores.some(g=>g.email==='nova@x.com'&&!g.admin&&g.galpao_id),'gestor: '+JSON.stringify(db.gestores.slice(-1)));
  ok(await p.isVisible('#mP2'),'campo de senha do gestor deveria aparecer');ok(p.errors.length===0,p.errors.join(';'))});
 
@@ -428,6 +428,30 @@ await T('S110 Bipador: admin cria com gestor responsável, pessoa entra com usu�
  await p.click('#logbtn');await p.waitForTimeout(300);await login(p,'joao.bip','senha1234');await p.waitForTimeout(400);
  v=await p.evaluate(()=>[...document.querySelectorAll('#sub button')].filter(x=>x.style.display!=='none').map(x=>x.dataset.s));ok(v.join()==='reg,aus','subs depois: '+v);
  await p.click('#logbtn');await p.waitForTimeout(300);v=await p.evaluate(()=>[...document.querySelectorAll('#sub button')].filter(x=>x.style.display!=='none').map(x=>x.dataset.s));ok(v.length===4,'público ficou com abas escondidas: '+v);
+ ok(!p.errors.length,p.errors.join(';'))});
+
+await T('S111 Gestor comum (com configurações) muda turno e galpão de pessoa e salva a meta individual',async()=>{const db=banco();db.gestores.push({email:'bip@rcondas.bip',nome:'Iza Bip',galpao_id:G2,admin:false,pode_config:false,pode_individual:false,pode_registros:false,perfil:'bipador',responsavel:'g2@x.com',abas:['op','prs']});db.users['bip@rcondas.bip']={pw:'senha1234',ok:true};const p=await page(b,db);await login(p,'g2@x.com','senha1234');
+ await p.evaluate(()=>go('cfg'));await p.waitForTimeout(300);
+ const nav=await p.evaluate(()=>[...document.querySelectorAll('#cfgNav [data-c]')].filter(x=>x.style.display!=='none').map(x=>x.dataset.c));
+ await p.click('#cfgNav [data-c="cus"]');await p.waitForTimeout(300);await p.evaluate(()=>{const b=document.querySelector('[data-uall="1"]');if(b)b.click()});await p.waitForTimeout(200);
+ const sel=await p.$('#uL select[data-ut2]');ok(sel,'sem lista de pessoas para editar: '+await p.textContent('#cus')+' nav '+nav);
+ await sel.selectOption('1');await p.waitForTimeout(500);const o=db.operadores.find(x=>x.galpao_id===G2);ok(o&&o.turno===1,'turno não salvo: '+JSON.stringify(o));
+ await p.click('#cfgNav [data-c="cme"]');await p.waitForTimeout(300);const inp=await p.$('#mtL [data-gmo]');ok(inp,'sem campo de meta individual: '+await p.textContent('#cme'));
+ await inp.fill('25');await inp.press('Tab');await p.waitForTimeout(500);if(process.env.SHOT){await p.screenshot({path:process.env.SHOT+'/g_cme.png'});await p.click('#cfgNav [data-c="cus"]');await p.waitForTimeout(300);await p.screenshot({path:process.env.SHOT+'/g_cus.png'})}const g=db.galpoes.find(x=>x.id===G2);ok(g&&g.meta_ind_ondas===25,'meta individual não salva: '+JSON.stringify(g));ok(!p.errors.length,p.errors.join(';'))});
+
+await T('S112 Editar pessoa: nome e meta individual própria; admin muda permissões do gestor e a tela respeita',async()=>{const db=banco();db.operadores.push({id:'00000000-0000-4000-8000-0000000000b3',codigo:'CL003',nome:'Bia Rocha',turno:1,galpao_id:G2,excluido_em:null});
+ db.galpoes.find(x=>x.id===G2).meta_ind_ondas=20;
+ const p=await page(b,db);await login(p,'adm@x.com','senha1234');await p.evaluate(()=>go('cfg'));await p.click('#cfgNav [data-c="cus"]');await p.evaluate(()=>{const b=document.querySelector('[data-uall="1"]');if(b)b.click()});await p.waitForTimeout(200);
+ await p.click('[data-uedit="CL002"]');await p.waitForTimeout(150);ok((await p.getAttribute('[data-uef="CL002"] [name="mo"]','placeholder')).includes('20'),'placeholder com a meta do galpão');
+ await p.fill('[data-uef="CL002"] [name="n"]','Bia Rocha');await p.click('[data-uef="CL002"] [type="submit"]');await p.waitForTimeout(300);ok((await p.textContent('#toast')).includes('Nome repetido')||(await p.textContent('#toast')).includes('Já existe outra pessoa'),'nome repetido: '+await p.textContent('#toast'));
+ await p.fill('[data-uef="CL002"] [name="n"]','Carla Dias Souza');await p.fill('[data-uef="CL002"] [name="mo"]','35');await p.click('[data-uef="CL002"] [type="submit"]');await p.waitForTimeout(600);
+ const o=db.operadores.find(x=>x.codigo==='CL002');ok(o.nome==='Carla Dias Souza'&&o.meta_ind_ondas===35,'salvo: '+JSON.stringify(o));ok((await p.textContent('#uL')).includes('meta própria: 35 ondas'),'lista mostra a meta própria');
+ ok(await p.evaluate(()=>MIP(S.ops.find(x=>x.m==='CL002')).o===35&&MIP(S.ops.find(x=>x.m==='CL003')).o===20),'meta da pessoa e do galpão');
+ await p.click('#cfgNav [data-c="cge"]');await p.waitForTimeout(400);await p.click('[data-mperm="g2@x.com"]');await p.uncheck('#mPerm [data-pk="pP"]');await p.click('#mPermOk');await p.waitForTimeout(500);
+ const g=db.gestores.find(x=>x.email==='g2@x.com');ok(g.pode_pessoas===false&&g.pode_metas===true&&g.pode_config===true,'permissões: '+JSON.stringify(g));ok((await p.textContent('#mL')).includes('metas'),'lista de permissões');
+ await p.click('#logbtn');await p.waitForTimeout(300);await login(p,'g2@x.com','senha1234');await p.evaluate(()=>go('cfg'));await p.click('#cfgNav [data-c="cus"]');await p.evaluate(()=>{const b=document.querySelector('[data-uall="1"]');if(b)b.click()});await p.waitForTimeout(200);
+ ok(!(await p.isVisible('[data-add="uAdd"]'))&&!(await p.$('[data-udel]'))&&await p.$eval('#uL select[data-ut2]',x=>x.disabled),'sem permissão de pessoas a tela trava');
+ await p.click('[data-uedit="CL002"]');await p.waitForTimeout(150);ok(!(await p.$('[data-uef="CL002"] [name="n"]'))&&await p.$('[data-uef="CL002"] [name="mo"]'),'só a meta fica editável');
  ok(!p.errors.length,p.errors.join(';'))});
 
 await T('S22 Gestor comum vê só "Metas" do seu galpão, sem Galpões; admin vê tudo',async()=>{const db=banco();const p=await page(b,db);
@@ -638,9 +662,9 @@ await T('S97 Produção: admin grava metas por hora e o desempenho do período v
  const neg=await p.evaluate(async()=>{try{await api("/rest/v1/rpc/prod_bipagens_periodo",{method:"POST",body:{p_ini:hoje(),p_fim:hoje()}});return 200}catch(e){return e.status||0}});ok(neg===403,'público leu o desempenho: '+neg);
  await p.evaluate(()=>go('painel'));await p.waitForTimeout(500);ok(!(await p.isVisible('#pnSeg'))&&!(await p.isVisible('#pnDuo')),'público vendo o painel da Embalagem');
  const pa=await page(b,db);await login(pa,'adm@x.com','senha1234');await pa.evaluate(()=>{go('cfg');document.querySelector('#csub [data-c="cpd"]').click()});await pa.waitForTimeout(600);
- await pa.evaluate(()=>document.querySelector('#csub [data-c="cme"]').click());await pa.waitForTimeout(300);ok((await pa.textContent('#pdMt')).includes('Metas diárias'),'metas na Config');
- await pa.fill('#pdMetaF [name="mesa"]','96');await pa.click('#pdMetaF [type="submit"]');await pa.waitForTimeout(600);
- ok(db.pm.length===1&&db.pm[0].atividade==='mesa'&&db.pm[0].por_dia===96&&db.pm[0].horas_dia===8&&db.pm[0].por_hora===12&&db.pm[0].galpao_id===G1,'meta gravada '+JSON.stringify(db.pm));
+ await pa.evaluate(()=>document.querySelector('#csub [data-c="cme"]').click());await pa.waitForTimeout(300);ok((await pa.textContent('#pdMt')).includes('Metas de embalagens'),'metas na Config');
+ await pa.fill('#pdMetaF [name="m|Galpão 1|terreo-mesa"]','96');await pa.click('#pdMetaF [type="submit"]');await pa.waitForTimeout(600);
+ ok(db.pm.length===1&&db.pm[0].atividade==='mesa'&&db.pm[0].andar==='terreo'&&db.pm[0].por_dia===96&&db.pm[0].horas_dia===8&&db.pm[0].por_hora===12&&db.pm[0].galpao_id===G1,'meta gravada '+JSON.stringify(db.pm));
  await pa.waitForTimeout(200);
  await pa.evaluate(()=>{go('ind');document.querySelector('#gsub [data-gs="pd"]').click()});await pa.waitForTimeout(600);ok(db.calls.per>=1,'não buscou o período no servidor');ok((await pa.textContent('#pdDesV')).includes('Ana Embalagem'),'individual');
  await pa.evaluate(()=>go('painel'));await pa.waitForTimeout(700);ok(await pa.isVisible('#pnSeg')&&await pa.isVisible('#pnDuo'),'admin deveria ver Coleta e Embalagem no Painel');ok(await pa.isVisible('#pnVis'),'visão geral do admin');await pa.click('#pnSeg [data-pnv="emb"]');await pa.waitForTimeout(300);ok((await pa.textContent('#pnDuo')).includes('Fila entre Coleta e Embalagem'),'fila no painel do admin');
