@@ -2602,7 +2602,7 @@ async function parExcluir(id){const p=parLista().find(x=>x.id===id);if(!p)return
  PRES_AT=0;await rem(()=>mut("/rest/v1/paradas?id=eq."+encodeURIComponent(id),"DELETE"),"Parada excluída")}
 document.addEventListener("click",e=>{if(e.target.id==="parSalvar")parSalvar();const d=e.target.closest&&e.target.closest("[data-pardel]");if(d)parExcluir(d.dataset.pardel)});
 document.addEventListener("input",e=>{if(e.target.id==="parIni"||e.target.id==="parFim")parDurTxt()});
-function cfgMan(){usoBanco();const v=$("#xGal").value;$("#xGal").innerHTML='<option value="">Todos os galpões</option>'+S.gals.map(g=>`<option value="${esc(g)}">${esc(g)}</option>`).join("");if(S.gals.includes(v))$("#xGal").value=v}
+function cfgMan(){usoBanco();const v=$("#xGal").value;$("#xGal").innerHTML=(restricted()?"":'<option value="">Todos os galpões</option>')+visG().map(g=>`<option value="${esc(g)}">${esc(g)}</option>`).join("");if(S.gals.includes(v))$("#xGal").value=v}
 async function xContar(){const q=xMan();if(!q)return;
  try{let n;if(ON)n=Number(await api("/rest/v1/rpc/apagar_ondas",{method:"POST",body:{p_de:q.de,p_ate:q.ate,p_galpao:q.gid||null,p_so_contar:true}}));else n=xLocal(q).length;
   $("#xRes").textContent=n+(n===1?" registro":" registros")+" neste período"+(q.gn?" do "+q.gn:"")+".";return n}
@@ -2849,7 +2849,7 @@ const isI=t=>t==="ind"||t==="his";
 function podeVer(t){if(ON&&me&&me.bip){const ab=me.ab||[];return ab.includes(t)||ab.some(k=>k.indexOf(t+".")===0)}if(t==="painel"&&ON&&!me)return false;if(t==="prod")return true;if(ON&&me&&!me.adm&&me.ab&&!me.ab.includes(t))return false;if(t==="op"||t==="prod"||t==="painel"||t==="prs")return true;if(ON)return !!me&&(isI(t)?!!me.pI:t==='cfg'?!!(me.pC||me.pI):!!me.pC);if(t==="painel")return true;return !needAuth(t)}
 function updTabs(){$$(".tab[data-t]").forEach(b=>{b.style.display=podeVer(b.dataset.t)?"":"none"});cfgVis();if(!podeVer(view)){const f=["op","prod","prs","painel"].find(k=>podeVer(k))||"op";if(f!=="op"){setTimeout(()=>go(f),0)}else{view="op";["painel","op","prod","prs","ind","his","cfg"].forEach(s=>{const x=$("#"+s);if(x)x.classList.toggle("hide",s!=="op")});$$(".tab[data-t]").forEach(b=>b.classList.toggle("on",b.dataset.t==="op"))}}bipSubs()}
 let hWho="";
-function authUI(){const w=me?me.n+"|"+(me.g||"")+"|"+(me.adm?1:0):"";if(w!==hWho){hWho=w;hKey="";HW=null;HPW=null}$("#who").textContent=me?(me.bip?"Bipador: ":"Gestor: ")+me.n:"";const pub=ON&&!me;["#turnoF","#day"].forEach(i=>$(i).classList.toggle("hide",pub));$("#gal").classList.remove("hide");if(pub){$("#turnoF").value="";$("#day").value=dk(Date.now())}$("#logtx").textContent=me?"Sair":"Entrar";$("#pwbtn").classList.toggle("hide",!me);updTabs();if(ON&&!me&&view==="painel")go("op")}
+function authUI(){galFixoSync();const w=me?me.n+"|"+(me.g||"")+"|"+(me.adm?1:0):"";if(w!==hWho){hWho=w;hKey="";HW=null;HPW=null}$("#who").textContent=me?(me.bip?"Bipador: ":"Gestor: ")+me.n:"";const pub=ON&&!me;["#turnoF","#day"].forEach(i=>$(i).classList.toggle("hide",pub));$("#gal").classList.remove("hide");if(pub){$("#turnoF").value="";$("#day").value=dk(Date.now())}$("#logtx").textContent=me?"Sair":"Entrar";$("#pwbtn").classList.toggle("hide",!me);updTabs();if(ON&&!me&&view==="painel")go("op")}
 function go(t){if(t==="painel"&&ON&&!me)t="op";if(ON&&me&&!me.adm&&me.ab&&!podeVer(t)){const f=["op","prod","prs","painel","ind","his","cfg"].find(k=>podeVer(k));if(f)t=f}setTimeout(()=>{try{sideSubs()}catch(e){}},0);
  updTabs();
  if((t==="cfg"||isI(t))&&needAuth(t)){$("#login").classList.remove("hide");$("#lU").focus();pend=t;return}
@@ -2894,10 +2894,15 @@ const restricted=()=>ON?!!me&&!me.adm:S.ges.length>0&&!(me&&me.adm);
 /* o que aparece nas listas segue o galpão escolhido no topo (gestor comum: sempre o seu) */
 const inView=w=>{if(!(ON&&!me)&&restricted()&&w.gal!==myG())return false;const g=galAtual();return !g||w.gal===g};
 const galOk=g=>{const a=galAtual();return !a||!g||g===a};
-const visG=()=>restricted()?[myG()]:S.gals;
+/* aparelho de um galpão: depois que um gestor (não administrador) entra, o aparelho mostra só o galpão dele, mesmo sem login.
+   Entrar como administrador libera o aparelho para todos os galpões. */
+const GFIXO="rcondas.galFixo";
+function galFixo(){if(!ON)return null;try{const g=localStorage.getItem(GFIXO);return g&&S.gals.includes(g)?g:null}catch(e){return null}}
+function galFixoSync(){if(!ON||!me)return;try{if(me.adm)localStorage.removeItem(GFIXO);else if(me.g){localStorage.setItem(GFIXO,me.g);localStorage.setItem("rcondas.galAparelho",me.g)}}catch(e){}}
+const visG=()=>restricted()?[myG()]:(ON&&!me&&galFixo())?[galFixo()]:S.gals;
 const inTurno=w=>{const f=$("#turnoF").value;if(!f)return true;const o=opOf(w.op);return!!o&&String(o.t)===f};
-function galSel(){const e=$("#gal");let v=e.value;if(ON&&!me){let a=null;try{a=localStorage.getItem("rcondas.galAparelho")}catch(x){}v=a&&visG().includes(a)?a:"__all"}e.innerHTML=(restricted()?"":`<option value="__all">${ON&&!me?"Todos os galpões":"Visão geral"}</option>`)+visG().map(g=>`<option>${esc(g)}</option>`).join("");
- if(restricted()){S.gal=myG();e.value=myG();e.disabled=true}else{e.value=S.gals.includes(v)||v==="__all"?v:S.gal;e.disabled=false}}
+function galSel(){const e=$("#gal");let v=e.value;if(ON&&!me){let a=null;try{a=localStorage.getItem("rcondas.galAparelho")}catch(x){}v=a&&visG().includes(a)?a:"__all"}const fx=ON&&!me?galFixo():null;if(fx)v=fx;e.innerHTML=(restricted()||fx?"":`<option value="__all">${ON&&!me?"Todos os galpões":"Visão geral"}</option>`)+visG().map(g=>`<option>${esc(g)}</option>`).join("");
+ if(restricted()){S.gal=myG();e.value=myG();e.disabled=true}else if(fx){S.gal=fx;e.value=fx;e.disabled=true}else{e.value=S.gals.includes(v)||v==="__all"?v:S.gal;e.disabled=false}}
 function renderAll(){netUI();galSel();if(ON&&!me){if(view==="painel")painelPublico()}else painel();painelVivo();aceLista();operacao();procurando();filters();
  $("#sub2").textContent=new Date($("#day").value+"T12:00").toLocaleDateString("pt-BR",{weekday:"long",day:"numeric",month:"long",year:"numeric"});
  if(view==="ind"){individual();coletiva();if(gsub==="chk")checking()}if(view==="his")hisRender();if(view==="painel"&&window.__pnOk)pnRender()}

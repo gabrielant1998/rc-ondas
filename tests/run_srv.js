@@ -192,6 +192,29 @@ function proxCod(db){for(let i=1;i<10000;i++){const c='CL'+String(i).padStart(i<
 async function T(name,fn){if(process.env.ONLY&&!process.env.ONLY.split(",").some(k=>name.startsWith(k+" ")))return;const t0=Date.now();try{const i=await fn();R.push(['PASS',name,(i||'')+` (${Date.now()-t0}ms)`])}catch(e){R.push(['FALHA',name,e.message.split('\n')[0]])}}
 (async()=>{const b=await chromium.launch();
 
+await T('S116 Gestor de um galpão não vê o nome de outro galpão em nenhuma aba',async()=>{const db=banco();const p=await page(b,db);await login(p,'g2@x.com','senha1234');
+ const achados=new Set();
+ const varrer=async onde=>{const r=await p.evaluate(()=>{const vis=e=>{const s=getComputedStyle(e);if(s.display==='none'||s.visibility==='hidden')return false;const r=e.getBoundingClientRect();return r.width>0&&r.height>0};
+   const out=[];document.querySelectorAll('details').forEach(d=>d.open=true);
+   document.querySelectorAll('body *').forEach(e=>{if(!vis(e))return;if(e.tagName==='SELECT'){[...e.options].forEach(o=>{if(o.textContent.includes('Galpão 1'))out.push('select#'+e.id+' opção "'+o.textContent.trim()+'"')});return}
+    for(const n of e.childNodes)if(n.nodeType===3&&n.textContent.includes('Galpão 1'))out.push((e.id?'#'+e.id:e.tagName+'.'+e.className)+' "'+n.textContent.trim().slice(0,60)+'"')});return out});
+  r.forEach(x=>achados.add(onde+': '+x))};
+ const tabs=await p.$$eval('.tab[data-t]',x=>x.filter(e=>e.offsetParent).map(e=>e.dataset.t));
+ for(const t of tabs){await p.evaluate(t=>go(t),t);await p.waitForTimeout(250);await varrer(t);
+  const subs=await p.$$eval('#gsub [data-gs],#csub [data-c],.ssub button[data-s],.ssub button[data-h]',x=>x.filter(e=>e.offsetParent||e.closest('#csub')).map(e=>e.closest('#gsub')?'#gsub [data-gs="'+e.dataset.gs+'"]':e.closest('#csub')?'#csub [data-c="'+e.dataset.c+'"]':null).filter(Boolean));
+  for(const s of subs){await p.evaluate(s=>{const e=document.querySelector(s);if(e)e.click()},s);await p.waitForTimeout(200);await varrer(t+' '+s)}}
+ ok(!achados.size,[...achados].slice(0,30).join(' | '));ok(!p.errors.length,p.errors.join(';'))});
+
+await T('S117 Aparelho de um gestor mostra só o galpão dele, mesmo depois de sair; administrador libera',async()=>{const db=banco();const p=await page(b,db);
+ const opts=()=>p.$eval('#gal',e=>({o:[...e.options].map(x=>x.textContent).join(','),d:e.disabled,v:e.value}));
+ let r=await opts();ok(r.o.includes('Galpão 1')&&r.o.includes('Galpão 2'),'antes: '+JSON.stringify(r));
+ await login(p,'g2@x.com','senha1234');r=await opts();ok(r.o==='Galpão 2'&&r.d,'logado: '+JSON.stringify(r));
+ await p.evaluate(()=>sair());await p.waitForTimeout(500);r=await opts();ok(r.o==='Galpão 2'&&r.d&&r.v==='Galpão 2','depois de sair: '+JSON.stringify(r));
+ await p.reload();await p.waitForTimeout(600);r=await opts();ok(r.o==='Galpão 2'&&r.d,'recarregou: '+JSON.stringify(r));
+ ok(!(await p.evaluate(()=>S.ops.filter(o=>inView({gal:o.g})).map(o=>o.g))).includes('Galpão 1'),'pessoas do outro galpão');
+ await login(p,'adm@x.com','senha1234');await p.evaluate(()=>sair());await p.waitForTimeout(500);r=await opts();ok(r.o.includes('Galpão 1')&&!r.d,'administrador liberou: '+JSON.stringify(r));
+ ok(!p.errors.length,p.errors.join(';'))});
+
 await T('S01 Público: carrega cadastros do banco e abre na Coleta (Painel só com login)',async()=>{const db=banco();const p=await page(b,db);
  const r=await p.evaluate(()=>({ops:S.ops.map(o=>o.m).join(),gals:S.gals.join(),view,temId:!!S.ops[0].id}));
  ok(r.ops==='CL001,CL002'&&r.gals==='Galpão 1,Galpão 2'&&r.view==='op'&&r.temId,JSON.stringify(r));ok(p.errors.length===0,p.errors.join(';'))});
