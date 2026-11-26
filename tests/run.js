@@ -304,6 +304,12 @@ await T("71 Onda que passou por Procurando não entra no tempo do conjunto (unid
  const p=await page(b,base({waves:W}));
  const r=await p.evaluate(()=>{const a=durs(S.waves).length;S.waves.find(w=>w.id==='b').hist=[{e:'m',q:'x',t:Date.now()-5e5},{e:'a',q:'',t:Date.now()-4e5}];const c=conjuntos(S.waves);return{a,n:c.length,q:prod(S.waves).reduce((s,w)=>s+w.qty,0)}});
  ok(r.a===3&&r.n===3&&r.q===42,'esperava 3→3 conjuntos sem a onda de procurando e 42 un.: '+JSON.stringify(r))});
+await T("100 Equipe › Semana: Coleta dia a dia com totais e busca",async()=>{const p=await page(b,bigState());await p.evaluate(()=>{go('ind');gsSel('sem')});await p.waitForTimeout(400);
+ const r=await p.evaluate(()=>({th:[...document.querySelectorAll('#semBody .semT tr:first-child th')].map(x=>x.textContent),rows:document.querySelectorAll('#semBody .semT tr').length,k:document.querySelectorAll('#semBody .semK').length}));
+ ok(r.th.length===13&&r.th[1].startsWith('Seg')&&r.th[7].startsWith('Dom'),'colunas: '+r.th);ok(r.rows>2&&r.k===7,'linhas e quadros: '+JSON.stringify(r));
+ const n0=r.rows;await p.fill('#semQ','zzz-ninguem');await p.waitForTimeout(150);ok((await p.textContent('#semBody')).includes('Ninguém'),'busca');ok(await p.evaluate(()=>document.activeElement.id==='semQ'),'foco fica na busca');
+ await p.fill('#semQ','');await p.waitForTimeout(150);ok((await p.$$eval('#semBody .semT tr',a=>a.length))===n0,'volta');ok(!p.errors.length,p.errors.join(';'))});
+
 await T("73 Abas internas: no topo da página e, nos Relatórios, menu agrupado ao lado",async()=>{
  const p=await page(b,base(),{sidebarSubs:true});
  ok(!(await p.isVisible('#hsub')),'barra interna deveria sumir no computador');
@@ -535,7 +541,7 @@ await T("77 Lista de presença: três atalhos (Check-in, Semanal, Conferidos), c
  ok(n90.n===90&&n90.dia===dia0,'Trimestral usa 90 dias sem mudar a data do topo: '+JSON.stringify(n90));
  await p.evaluate(()=>document.querySelector('#ckBody [data-sper="7"]').click());await p.waitForTimeout(500);
  ok(await p.evaluate(()=>$('#day').value)===dia0,'a data do topo não muda ao navegar na Lista de presença');
- ok(!(await p.evaluate(()=>!!document.querySelector('#gsub [data-gs="sem"]'))),'sem aba Semana');
+ ok(await p.evaluate(()=>!!document.querySelector('#gsub [data-gs="sem"]')),'aba Semana própria (pedido de 26/11)');
  await p.evaluate(()=>document.querySelector('#ckBody .wkc[data-m="CL002"][data-d]').click());
  await p.waitForTimeout(400);
  const q=await p.evaluate(()=>({op:$('#iOp').value,per:$('#iPer').value}));
@@ -765,7 +771,7 @@ await T("99 Produção individual: gráfico de produtividade com meta individual
  const p=await page(b,st);
  const r=await p.evaluate(()=>{MT()['Galpão 1']=400;$("#gal").value="Galpão 1";$("#turnoF").value="";go('ind');const tabs=[...document.querySelectorAll('#gsub button')].map(x=>x.textContent);individual();document.querySelector('[data-ivw="graf"]').click();
   const rows=[...document.querySelectorAll('.pgt tr')].map(t=>[...t.children].map(c=>c.textContent.trim()).join('|'));return{n:S.ops.filter(o=>o.g==='Galpão 1').length,tabs,rows,bars:document.querySelectorAll('.pgv rect').length,lines:document.querySelectorAll('.pgv path').length}});
- ok(r.tabs[0]==='Produção coleta'&&r.tabs.length===3,'abas: '+r.tabs);
+ ok(r.tabs[0]==='Produção coleta'&&r.tabs.length===4&&r.tabs[2]==='Semana','abas: '+r.tabs);
  ok(r.bars===r.n&&r.lines===1,'barras e linhas: '+JSON.stringify(r));
  ok(/^1º\|Ana Souza\|120\|100\|120%\|30%$/.test(r.rows[1]),'Ana: '+r.rows[1]);ok(/^2º\|Bruno Lima\|80\|100\|80%\|20%$/.test(r.rows[2]),'Bruno: '+r.rows[2]);
  const r2=await p.evaluate(()=>{const s=document.querySelector('#pgOrd');s.value='alfa';s.dispatchEvent(new Event('change',{bubbles:true}));return[...document.querySelectorAll('.pgt tr')].slice(1,-1).map(t=>t.children[1].textContent.trim())});

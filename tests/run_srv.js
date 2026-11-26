@@ -95,6 +95,7 @@ function fake(db){const cors={'access-control-allow-origin':'*','access-control-
   if(t==='rpc/bipador_acessos'){const o=db.gestores.find(x=>x.email===body.p_email&&x.perfil==='bipador');if(!o)return J(route,400,{code:'23503',message:'Bipador não encontrado'});if(!(g&&(g.admin||o.responsavel===g.email)))return J(route,403,{code:'42501',message:'Só o administrador ou o gestor responsável muda os acessos'});o.abas=body.p_abas.slice().sort();return J(route,200,'ok')}
   if(t==='rpc/metas_individuais_coleta'){if(!(g&&(g.admin||g.pode_metas!==false)))return J(route,403,{code:'42501',message:'Sem permissão para alterar metas. Peça ao administrador para liberar "Pode alterar metas".'});let n=0;db.operadores.forEach(o=>{if(body.p_ids.includes(o.id)&&!o.excluido_em){if(body.p_mudar_ondas)o.meta_ind_ondas=body.p_ondas;if(body.p_mudar_unidades)o.meta_ind_qtd=body.p_unidades;n++}});return J(route,200,n)}
   if(t==='rpc/metas_individuais_embalagem'){let n=0;(db.ppes||[]).forEach(o=>{if(body.p_ids.includes(o.id)){o.meta_dia=body.p_meta_dia;n++}});return J(route,200,n)}
+  if(t==='rpc/prod_semana'){if(!(g&&(g.admin||g.pode_semana!==false)))return J(route,403,{code:'42501',message:'Sem permissão para ver a semana da equipe. Peça ao administrador para liberar "Pode ver a semana da equipe".'});return J(route,200,(db.semEmb||[]))}
   if(t==='rpc/uso_banco'){if(!(g&&g.admin))return J(route,403,{code:'42501',message:'Sem permissão'});return J(route,200,{banco_bytes:18*1048576,ondas:db.ondas.length,ondas_bytes:9*1048576,auditoria_bytes:320000,limite_bytes:500*1048576})}
   if(t==='rpc/ausencias_publicas'){return J(route,200,(db.aus||[]).filter(a=>new Date(Date.parse(a.inicio)-3*36e5).toISOString().slice(0,10)===body.p_dia))}
   if(t==='rpc/registrar_ausencia'){const op=db.operadores.find(o=>o.id===body.p_operador&&!o.excluido_em);if(!op)return J(route,400,{code:'23503',message:'Pessoa não encontrada'});
@@ -471,6 +472,16 @@ await T('S114 Meta individual de uma ou mais pessoas de uma vez (Coleta) e volta
  ok((await p.$$eval('[data-usel]:checked',a=>a.length))===0,'seleção limpa');
  await p.check('[data-usel="CL001"]');await p.waitForTimeout(100);await p.click('[data-mlvolta="col"]');await p.waitForTimeout(500);ok(a1.meta_ind_ondas===null&&a1.meta_ind_qtd===null&&a3.meta_ind_ondas===30,'voltou à do galpão');
  await p.check('[data-uselall]');await p.waitForTimeout(150);ok((await p.textContent('[data-mlote="col"]')).includes((await p.$$eval('[data-usel]',a=>a.length))+' pessoas'),'selecionar todas');
+ ok(!p.errors.length,p.errors.join(';'))});
+
+await T('S115 Equipe › Semana: Coleta dia a dia, Embalagem pelo servidor e permissão própria',async()=>{const db=banco();const dkk=ms=>new Date(ms-3*36e5).toISOString().slice(0,10),hj=dkk(Date.now());
+ db.ppes=[{id:'00000000-0000-4000-8000-0000000ee001',codigo:'PR001',nome:'Rita Embala',galpao_id:G1,excluido_em:null}];db.semEmb=[{pessoa_id:'00000000-0000-4000-8000-0000000ee001',dia:hj,primeira_em:new Date(Date.now()-36e5).toISOString(),ondas:12,unidades:340,ausencias:2,minutos_ausente:25,motivos:'Banheiro'}];
+ const p=await page(b,db);await login(p,'adm@x.com','senha1234');await p.evaluate(()=>{go('ind');gsSel('sem')});await p.waitForTimeout(900);
+ ok(await p.isVisible('#gsSem')&&await p.isVisible('#semBody .semT'),'página aparece');const n=await p.$$eval('#semBody .semT tr',a=>a.length);ok(n>=3,'linhas: '+n);
+ ok((await p.textContent('#semBody .semNav b')).includes('Semana de'),'navegação');await p.click('[data-semnav="-1"]');await p.waitForTimeout(500);ok(await p.isVisible('[data-semnav="0"]'),'semana anterior com volta');await p.click('[data-semnav="0"]');await p.waitForTimeout(500);
+ await p.click('[data-semset="emb"]');await p.waitForTimeout(700);const t=await p.textContent('#semBody .semT');ok(t.includes('Rita Embala')&&t.includes('340 un.')&&t.includes('2 saídas'),'embalagem: '+t.slice(0,200));if(process.env.SHOT)await p.screenshot({path:process.env.SHOT+'/sem_emb_srv.png'});
+ db.gestores.find(x=>x.email==='adm@x.com');const g2=db.gestores.find(x=>x.email==='g2@x.com');g2.pode_semana=false;
+ await p.click('#logbtn');await p.waitForTimeout(300);await login(p,'g2@x.com','senha1234');await p.evaluate(()=>go('ind'));await p.waitForTimeout(300);ok(!(await p.isVisible('#gsSem')),'sem permissão a aba some');
  ok(!p.errors.length,p.errors.join(';'))});
 
 await T('S22 Gestor comum vê só "Metas" do seu galpão, sem Galpões; admin vê tudo',async()=>{const db=banco();const p=await page(b,db);

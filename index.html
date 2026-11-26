@@ -611,6 +611,23 @@ body[data-v=cfg] #turnoF,body[data-v=cfg] #gal,body[data-v=cfg] #day{display:non
 .mLote.on{border-style:solid;border-color:var(--g);background:color-mix(in srgb,var(--g) 7%,transparent)}
 .mLoteT{display:flex;flex-direction:column;gap:2px;min-width:200px}.mLoteT span{font-size:13px;color:var(--mut)}
 .mLoteF{display:flex;flex-wrap:wrap;align-items:flex-end;gap:8px 10px}.mLoteF label{display:grid;gap:4px;font-size:13px;font-weight:500}.mLoteF input{width:130px}
+
+#semBody .semTop{display:flex;flex-wrap:wrap;align-items:center;gap:10px 16px;margin:0 0 14px}
+.semSeg{display:inline-flex;border:1px solid var(--line);border-radius:9px;padding:3px;background:var(--card)}
+.semSeg button{all:unset;cursor:pointer;padding:7px 14px;border-radius:7px;font-weight:600;font-size:14px;color:var(--mut);min-height:22px}
+.semSeg button.on{background:var(--g);color:#fff}.semSeg button:focus-visible{outline:2px solid var(--g);outline-offset:2px}
+.semNav{display:flex;align-items:center;gap:8px}.semNav b{font-size:15px;white-space:nowrap}
+#semQ{margin-left:auto;max-width:260px}
+.semKs{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin:0 0 14px}
+.semK{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px 12px;display:flex;flex-direction:column;gap:2px}
+.semK b{font-size:22px;font-variant-numeric:tabular-nums}.semK span{font-size:12.5px;color:var(--mut)}
+.semK.r b{color:var(--r)}.semK.o b{color:#c98a12}
+.semT th,.semT td{padding:7px 6px;vertical-align:middle}.semT .semD{text-align:center;line-height:1.15}.semT .semD small{display:block;font-weight:500;color:var(--mut)}
+.semT .semD.hj{color:var(--g)}.semT .semC{text-align:center}.semT .semC .wkc{min-width:84px}
+.semP{position:sticky;left:0;background:var(--card);z-index:1;min-width:150px}.semP small{display:block;color:var(--mut)}
+.semF{color:var(--line)}.semAus{color:#c98a12!important}.semR{color:var(--r);font-weight:700}.semO{color:#c98a12;font-weight:700}
+.semTot td{border-top:1px solid var(--ink);font-weight:700;padding-top:10px}
+@media(max-width:760px){#semQ{margin-left:0;max-width:none;width:100%}.semNav b{font-size:14px}.semKs{grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}.semK{padding:8px}.semK b{font-size:17px}.semK span{font-size:11.5px}#gsub{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none}#gsub button{white-space:nowrap}}
 </style>
 </head>
 <body>
@@ -768,10 +785,10 @@ body[data-v=cfg] #turnoF,body[data-v=cfg] #gal,body[data-v=cfg] #day{display:non
 
 <!-- ======================= INDIVIDUAL ======================= -->
 <section id="ind" class="hide">
- <div class="sub" id="gsub"><button data-gs="co" class="on">Produção coleta</button><button data-gs="chk">Presença</button><button data-gs="pd" id="gsPd">Embalagem</button></div>
+ <div class="sub" id="gsub"><button data-gs="co" class="on">Produção coleta</button><button data-gs="chk">Presença</button><button data-gs="sem" id="gsSem">Semana</button><button data-gs="pd" id="gsPd">Embalagem</button></div>
  <div class="pdTabs" id="coSeg" role="group" aria-label="Ver a produção da coleta" style="margin-bottom:12px"><button type="button" data-gs="mc" data-cv="eq">Equipe</button><button type="button" data-gs="mc" data-cv="tu">Por turno</button><button type="button" data-gs="mi" class="on">Individual</button></div>
  <div class="ctl" style="margin-bottom:12px"><select id="iOp" aria-label="Operador"></select><select id="iPer" aria-label="Período"><option value="1">Dia selecionado</option><option value="7">Últimos 7 dias</option><option value="30">Últimos 30 dias</option><option value="90">Últimos 90 dias</option></select><button class="btn" id="iPrint" type="button">Imprimir folha</button></div>
- <div id="mgStatus" class="legend hide" role="status"></div><div id="iBody"></div><div id="coBody" class="hide" data-cv="eq"></div><div id="ckBody" class="hide"></div>
+ <div id="mgStatus" class="legend hide" role="status"></div><div id="iBody"></div><div id="coBody" class="hide" data-cv="eq"></div><div id="ckBody" class="hide"></div><div id="semBody" class="hide"></div>
  <div id="pdEqV" class="hide">
  <div class="pdTop"><span></span>
   <div class="ctl" id="pdEqCtl"><select id="pdPer" aria-label="Período da embalagem"><option value="1">Dia selecionado</option><option value="7">Últimos 7 dias</option><option value="30">Últimos 30 dias</option></select><select id="pdPs" aria-label="Pessoa"></select></div></div>
@@ -884,6 +901,7 @@ body[data-v=cfg] #turnoF,body[data-v=cfg] #gal,body[data-v=cfg] #day{display:non
    <label class="row mGesP"><input type="checkbox" id="mR" checked style="min-height:auto"> Pode alterar e excluir registros</label>
    <label class="row mGesP"><input type="checkbox" id="mPp" checked style="min-height:auto"> Pode cadastrar e editar pessoas</label>
    <label class="row mGesP"><input type="checkbox" id="mPm" checked style="min-height:auto"> Pode alterar metas</label>
+   <label class="row mGesP"><input type="checkbox" id="mPs" checked style="min-height:auto"> Pode ver a semana da equipe</label>
    <label class="row mGesP"><input type="checkbox" id="mA" style="min-height:auto"> Administrador (vê todos os galpões)</label>
    <button class="btn" id="mB">Criar gestor</button></div></div>
   <div class="card"><div class="cfgLH"><h2 id="mLT">Gestores</h2><button class="btn sm cfgAddB" type="button" data-add="mNovo" id="mAddB">Adicionar acesso</button></div><div class="tw" id="mL"></div><div id="mSen"></div><div id="mPerm"></div><div id="mAbas"></div><div id="mGalE"></div><div class="legend">Enquanto não existir nenhum gestor, Configurações e Individual ficam abertos. Depois do primeiro gestor, passam a exigir login.</div></div>
@@ -1093,7 +1111,7 @@ async function pullReal(opt){
  if(sess){
   const mt=await api("/rest/v1/metas_diarias?select=galpao_id,meta&data=eq."+hoje());const dh=hoje();S.metasDia[dh]={};mt.forEach(x=>{const n=GN[x.galpao_id];if(n)S.metasDia[dh][n]=x.meta});
   const g=await api("/rest/v1/gestores?select=*&order=nome");
-  S.ges=g.map(x=>({n:x.nome,u:x.email,g:x.galpao_id?GN[x.galpao_id]:null,adm:x.admin,pC:x.pode_config,pI:x.pode_individual,pR:x.pode_registros,pP:x.pode_pessoas!==false,pM:x.pode_metas!==false,ab:x.abas||null,bip:x.perfil==="bipador",rs:x.responsavel||null}));
+  S.ges=g.map(x=>({n:x.nome,u:x.email,g:x.galpao_id?GN[x.galpao_id]:null,adm:x.admin,pC:x.pode_config,pI:x.pode_individual,pR:x.pode_registros,pP:x.pode_pessoas!==false,pM:x.pode_metas!==false,pS:x.pode_semana!==false,ab:x.abas||null,bip:x.perfil==="bipador",rs:x.responsavel||null}));
   me=S.ges.find(x=>x.u===sess.email)||null;
   if(!me){S.ges=[];SOL=[];const pd=pedidoPendente();try{await api("/rest/v1/rpc/solicitar_acesso",{method:"POST",body:{p_nome:pd?pd.nome:null,p_galpao:(pd&&GID[pd.galpao])||null}});localStorage.removeItem("rcondas.pedido");pedidoDados=null}catch(e){}setSess(null);cacheLimpar();toast("Ainda sem acesso. Pedido enviado ao administrador: quando ele liberar, entre de novo.",8000)}
   else{if(me.g)S.gal=me.g;SOL=[];if(me.adm)try{SOL=await api("/rest/v1/solicitacoes_gestor?select=email,criado_em,nome,galpao_id&order=criado_em")}catch(e){}}}
@@ -1648,10 +1666,10 @@ const mgChave=()=>{const d=mgDates();return d[0]+'|'+d[d.length-1]};
 const mgPronto=()=>!(ON&&me)||(MGW!==null&&MGKEY===mgChave());
 const esqueleto=()=>'<div class="card esq" aria-busy="true" aria-label="Carregando"><i></i><i></i><i></i><i></i></div>';
 const mgBar=on=>{const b=$("#mgBar");if(b)b.classList.toggle('hide',!on)};
-const mgRender=()=>{if(gsub==='chk')checking();else{individual();coletiva()}};
+const mgRender=()=>{if(gsub==='chk')checking();else if(gsub==='sem')semRender();else{individual();coletiva()}};
 function limparGestao(){MGW=null;MGKEY='';MGC.clear();mgSeq++;mgBar(false);mgState='';$("#iBody").innerHTML='';$("#coBody").innerHTML='';$("#mgStatus").classList.add('hide')}
 /* na Lista de presença o período é próprio (semana, 30 ou 90 dias) e não mexe na data do topo */
-function mgDates(){const ov=view==='ind'&&gsub==='chk'?MGOV:null,n=ov?ov.n:+$("#iPer").value||1,end=new Date((ov?ov.end:$("#day").value)+'T12:00:00'),a=[];for(let i=n-1;i>=0;i--){const d=new Date(end);d.setDate(d.getDate()-i);a.push(dk(d))}return a}
+function mgDates(){const ov=view==='ind'&&(gsub==='chk'||gsub==='sem')?MGOV:null,n=ov?ov.n:+$("#iPer").value||1,end=new Date((ov?ov.end:$("#day").value)+'T12:00:00'),a=[];for(let i=n-1;i>=0;i--){const d=new Date(end);d.setDate(d.getDate()-i);a.push(dk(d))}return a}
 function mgOps(){
  if(!ON)return S.ops;
  return Object.values(OPSALL).map(o=>({id:o.id,m:o.excluido_em?o.codigo+'~'+o.id.slice(0,6):o.codigo,n:o.nome,t:o.turno,ini:o.inicio,fim:o.fim,al:{ini:o.almoco_ini,fim:o.almoco_fim},g:GN[o.galpao_id],criado:o.criado_em,excluido:o.excluido_em}))
@@ -1942,6 +1960,66 @@ $("#ckBody").addEventListener("click",e=>{const b=e.target.closest("[data-ck]");
  const c=e.target.closest(".wkc");if(c)wkAbrir(c.dataset.m,c.dataset.d)});
 $("#ckBody").addEventListener("input",e=>{if(e.target.id!=="wkQ")return;WKQ=e.target.value;checking();const i=$("#wkQ");if(i){i.focus();i.setSelectionRange(i.value.length,i.value.length)}});
 /* abre a pessoa no dia escolhido na aba Meta individual */
+/* ===================== Equipe › Semana: presença e ausências de cada pessoa, dia a dia ===================== */
+let SEMW=null,SEMSET="col",SEMQ="",PDSEM={k:"",rows:null,err:""};
+function podeSem(){return!ON||!!(me&&(me.adm||me.pS!==false))}
+async function semEntrar(){if(!podeSem()){$("#semBody").innerHTML='<div class="card"><div class="empty">Sem permissão: seu acesso não inclui a semana da equipe. Peça ao administrador para liberar "Pode ver a semana da equipe".</div></div>';return}
+ if(!SEMW)SEMW=mondayOf(($("#day")&&$("#day").value)||hoje());MGOV={end:addDias(SEMW,6),n:7};semRender();
+ if(SEMSET==="col"){if(ON&&me)await loadManagement({cache:true});semRender()}else await semCarregarEmb()}
+async function semCarregarEmb(){const ini=SEMW,fim=addDias(SEMW,6),k=ini+"|"+fim;
+ try{if(typeof pdCarregar==="function"&&!pdOps().length)await pdCarregar()}catch(e){}
+ if(!ON){PDSEM={k,rows:semEmbLocal(ini,fim),err:""};semRender();return}
+ if(PDSEM.k!==k)PDSEM={k,rows:null,err:""};semRender();
+ try{const r=await api("/rest/v1/rpc/prod_semana",{method:"POST",body:{p_ini:ini,p_fim:fim}});if(PDSEM.k!==k)return;PDSEM.rows=r.map(x=>({k:x.pessoa_id,d:x.dia,pe:x.primeira_em?Date.parse(x.primeira_em):0,n:x.ondas,q:x.unidades,an:x.ausencias,am:x.minutos_ausente,mot:x.motivos||""}));PDSEM.err=""}
+ catch(e){if(PDSEM.k===k){PDSEM.rows=[];PDSEM.err=errMsg(e)}}semRender()}
+function semEmbLocal(ini,fim){const M=new Map(),get=(k,d)=>{const x=k+"|"+d;if(!M.has(x))M.set(x,{k,d,pe:0,n:0,q:0,an:0,am:0,mot:new Set()});return M.get(x)};
+ (S.prodB||[]).forEach(b=>{if(b.dia<ini||b.dia>fim)return;const r=get(b.oid,b.dia),t=+b.em||Date.parse(b.em)||0;r.n++;r.q+=+b.q||1;if(t&&(!r.pe||t<r.pe))r.pe=t});
+ (S.prodAus||[]).forEach(a=>{const d=dk(a.ini);if(d<ini||d>fim)return;const r=get(a.oid,d);r.an++;r.am+=Math.round(((a.fim||Math.min(Date.now(),a.ini+16*36e5))-a.ini)/6e4);r.mot.add(a.mot)});
+ return[...M.values()].map(r=>({...r,mot:[...r.mot].join(", ")}))}
+function semNav(){const fim=addDias(SEMW,6),atual=mondayOf(hoje()),fd=d=>presData(d).slice(0,5);
+ const seg=(v,l)=>`<button type="button" class="${SEMSET===v?"on":""}" data-semset="${v}" aria-pressed="${SEMSET===v}">${l}</button>`;
+ return`<div class="semTop"><div class="semSeg" role="group" aria-label="Setor">${seg("col","Coleta")}${seg("emb","Embalagem")}</div>
+  <div class="semNav"><button type="button" class="btn alt sm" data-semnav="-1" aria-label="Semana anterior">‹</button><b>Semana de ${fd(SEMW)} a ${presData(fim)}</b><button type="button" class="btn alt sm" data-semnav="1" aria-label="Próxima semana"${SEMW>=atual?" disabled":""}>›</button>${SEMW!==atual?'<button type="button" class="lk" data-semnav="0">Esta semana</button>':""}</div>
+  <input type="search" id="semQ" placeholder="Pesquisar pessoa" value="${esc(SEMQ)}" aria-label="Pesquisar pessoa"></div>`}
+const semTile=(n,l,c)=>`<div class="semK${c?" "+c:""}"><b>${n}</b><span>${l}</span></div>`;
+function semRender(){const box=$("#semBody");if(!box||gsub!=="sem")return;const days=Array.from({length:7},(_,i)=>addDias(SEMW,i)),hj=hoje(),q=nrm(SEMQ).trim(),g=$("#gal").value,t=$("#turnoF").value;
+ const head=(extra)=>`<tr><th>Pessoa</th>${days.map((d,i)=>`<th class="semD${d===hj?" hj":""}">${WKDIAS[i]}<small>${presData(d).slice(0,5)}</small></th>`).join("")}${extra}</tr>`;
+ let corpo,tiles,leg;
+ if(SEMSET==="col"){
+  if(!mgPronto()||!mgDates().includes(SEMW)){box.innerHTML=semNav()+'<div class="card">'+(mgState&&/Não foi/.test(mgState)?'<div class="empty">'+esc(mgState)+'</div>':esqueleto())+'</div>';return}
+  const data=mgData(),ops=data.ops.filter(o=>(g==="__all"||o.g===g)&&(!t||String(o.t)===t)).filter(o=>!o.excluido||data.waves.some(w=>w.op===o.m)).filter(o=>!q||nrm(o.n+" "+o.m).includes(q)).sort((a,b)=>a.n.localeCompare(b.n,"pt-BR"));
+  const T={v:0,pres:0,f:0,a:0,dc:0,fo:0,at:0,p:0},porDia=days.map(()=>0);
+  const rows=ops.map(o=>{let v=0,f=0,ou=0,at=0,p=0;
+   const cells=days.map((d,i)=>{if(d>hj)return'<td class="semC"><span class="semF">—</span></td>';const L=data.byOpDay.get(d+"|"+o.m)||[],st=mgStatus(o,d,L,data),r=wkRotulo(st),m=atrasoDia(o,d,L);
+    if(veioSt(st)){v++;porDia[i]++;T.pres++}if(st.startsWith("Falta")){f++;T.f++}if(st.startsWith("Atestado")){ou++;T.a++}if(st.startsWith("Declaração")){ou++;T.dc++}if(st.startsWith("Folga")){ou++;T.fo++}if(st.startsWith("Pendente")){p++;T.p++}if(m>0){at++;T.at++}
+    const sub=m>0?"atraso "+hh(m*6e4):(L.length?fmt(L.reduce((s,w)=>s+(+w.qty||0),0))+" un.":"");
+    return`<td class="semC"><button class="wkc" type="button" data-s="${esc(r)}" data-m="${esc(o.m)}" data-d="${d}" title="${esc(st)}" aria-label="${esc(o.n)}, ${presData(d)}: ${esc(st)}${sub?", "+esc(sub):""}">${esc(r)}${sub?"<small>"+esc(sub)+"</small>":""}</button></td>`}).join("");
+   if(v)T.v++;return`<tr><td class="semP"><b>${esc(o.n)}</b><small>${esc(o.m.split("~")[0])} · ${esc(String(o.t))}º turno</small></td>${cells}<td class="num"><b>${v}</b></td><td class="num${f?" semR":""}">${f||"—"}</td><td class="num">${at||"—"}</td><td class="num">${ou||"—"}</td><td class="num${p?" semO":""}">${p||"—"}</td></tr>`}).join("");
+  tiles=semTile(T.v+" de "+ops.length,"pessoas vieram na semana")+semTile(T.pres,"presenças (pessoa por dia)")+semTile(T.f,"faltas",T.f?"r":"")+semTile(T.a+T.dc,"atestados e declarações")+semTile(T.fo,"folgas")+semTile(T.at,"atrasos",T.at?"o":"")+semTile(T.p,"pendentes de conferir",T.p?"o":"");
+  corpo=ops.length?`<table class="uTab semT">${head("<th>Veio</th><th>Faltas</th><th>Atrasos</th><th title='Atestado, declaração ou folga'>Justificadas</th><th>Pendentes</th>")}${rows}<tr class="semTot"><td>Vieram no dia</td>${porDia.map((n,i)=>`<td class="semC">${days[i]>hj?"—":n}</td>`).join("")}<td class="num">${T.pres}</td><td class="num">${T.f}</td><td class="num">${T.at}</td><td class="num">${T.a+T.dc+T.fo}</td><td class="num">${T.p}</td></tr></table>`:'<div class="empty">Ninguém nos filtros escolhidos.</div>';
+  leg="Toque no dia para abrir a pessoa naquele dia. Pendente = dia com operação em que a pessoa não bipou e ainda não foi conferida em Presença.";
+ }else{
+  if(PDSEM.rows===null){box.innerHTML=semNav()+'<div class="card">'+esqueleto()+'</div>';return}
+  if(PDSEM.err){box.innerHTML=semNav()+'<div class="card"><div class="empty">'+esc(PDSEM.err)+'</div></div>';return}
+  const now=Date.now(),by=new Map(PDSEM.rows.map(r=>[r.k+"|"+r.d,r])),ops=pdOps().filter(o=>(g==="__all"||!o.g||o.g===g)&&(!q||nrm(o.n+" "+o.m).includes(q))).sort((a,b)=>a.n.localeCompare(b.n,"pt-BR"));
+  const opDia=days.map(d=>PDSEM.rows.some(r=>r.d===d&&r.n>0)),T={v:0,pres:0,q:0,an:0,am:0,nb:0},porDia=days.map(()=>0);
+  const rows=ops.map(o=>{const k=pdK(o),a=pdPosto(k,now);let v=0,qq=0,an=0,am=0,nb=0;
+   const cells=days.map((d,i)=>{if(d>hj)return'<td class="semC"><span class="semF">—</span></td>';const r=by.get(k+"|"+d),aus=r&&r.an?`${r.an} ${r.an===1?"saída":"saídas"} · ${hh(r.am*6e4)}`:"";
+    if(r&&r.n){v++;porDia[i]++;T.pres++;qq+=r.q;T.q+=r.q;if(r.an){an+=r.an;am+=r.am;T.an+=r.an;T.am+=r.am}
+     return`<td class="semC"><span class="wkc" data-s="Bipou" title="${esc((r.mot?"Ausências: "+r.mot+". ":"")+"Primeira bipagem "+presHm(r.pe))}">Veio<small>${presHm(r.pe)} · ${fmt(r.q)} un.</small>${aus?`<small class="semAus">${esc(aus)}</small>`:""}</span></td>`}
+    if(opDia[i]&&a&&a.sit==="ativo"){nb++;T.nb++;return'<td class="semC"><span class="wkc" data-s="Pendente" title="O setor trabalhou e a pessoa não bipou">Não bipou</span></td>'}
+    return'<td class="semC"><span class="semF">—</span></td>'}).join("");
+   if(v)T.v++;return`<tr><td class="semP"><b>${esc(o.n)}</b><small>${esc(o.m)}${a&&a.sit==="ativo"?" · "+PD_AND[a.andar]+" "+PD_AT[a.at]:""}</small></td>${cells}<td class="num"><b>${v}</b></td><td class="num">${qq?fmt(qq):"—"}</td><td class="num">${an||"—"}</td><td class="num">${am?hh(am*6e4):"—"}</td><td class="num${nb?" semO":""}">${nb||"—"}</td></tr>`}).join("");
+  tiles=semTile(T.v+" de "+ops.length,"pessoas vieram na semana")+semTile(T.pres,"presenças (pessoa por dia)")+semTile(fmt(T.q),"unidades embaladas")+semTile(T.an,"saídas registradas")+semTile(T.am?hh(T.am*6e4):"0","tempo fora (ausências)")+semTile(T.nb,"dias sem bipar",T.nb?"o":"");
+  corpo=ops.length?`<table class="uTab semT">${head("<th>Veio</th><th>Unidades</th><th>Saídas</th><th>Tempo fora</th><th>Não bipou</th>")}${rows}<tr class="semTot"><td>Vieram no dia</td>${porDia.map((n,i)=>`<td class="semC">${days[i]>hj?"—":n}</td>`).join("")}<td class="num">${T.pres}</td><td class="num">${fmt(T.q)}</td><td class="num">${T.an}</td><td class="num">${T.am?hh(T.am*6e4):"0"}</td><td class="num">${T.nb}</td></tr></table>`:'<div class="empty">Ninguém da embalagem nos filtros escolhidos.</div>';
+  leg="Veio = bipou alguma onda no dia (horário da primeira bipagem e unidades). Saídas e tempo fora vêm da aba Ausente da Embalagem. Não bipou = o setor trabalhou e a pessoa, com posto ativo, não bipou.";
+ }
+ box.innerHTML=semNav()+`<div class="semKs">${tiles}</div><div class="card semCard"><div class="tw">${corpo}</div><div class="legend">${leg}</div></div>`}
+document.addEventListener("click",e=>{const b=e.target.closest&&e.target.closest("[data-semnav],[data-semset]");if(!b||!b.closest("#semBody"))return;
+ if(b.dataset.semset){SEMSET=b.dataset.semset;semEntrar();return}
+ const v=+b.dataset.semnav;SEMW=v===0?mondayOf(hoje()):addDias(SEMW,7*v);semEntrar()});
+document.addEventListener("input",e=>{if(e.target.id!=="semQ")return;SEMQ=e.target.value;const pos=e.target.selectionStart;semRender();const i=$("#semQ");if(i){i.focus();try{i.setSelectionRange(pos,pos)}catch(x){}}});
+document.addEventListener("click",e=>{const c=e.target.closest&&e.target.closest("#semBody button.wkc");if(c)wkAbrir(c.dataset.m,c.dataset.d)});
 async function wkAbrir(m,d){$("#day").value=d;$("#iPer").value="1";gsSel("mi");await loadManagement();$("#iOp").value=m;individual()}
 const PHX_CAMPO={saida:'horário da saída',cancelado_em:'cancelamento',observacao:'observação',data_ini:'data inicial',data_fim:'data final',horario_ini:'horário inicial',horario_fim:'horário final',tipo:'tipo',inicio:'início do turno',fim:'término do turno'};
 /* histórico de presença da pessoa (registros, baixas e alterações de turno) */
@@ -2740,7 +2818,7 @@ function bipSubs(){const B=ON&&me&&me.bip,ab=(me&&me.ab)||[];
  [["#sub",'reg',"op","s"],["#sub","ctl","op.ctl","s"],["#sub","ace","op.ace","s"],["#sub","aus","op.aus","s"],["#pasub","bip","prod","pa"],["#pasub","aus","prod.aus","pa"]].forEach(([bar,v,k,ds])=>{const b=document.querySelector(bar+' [data-'+ds+'="'+v+'"]');if(!b)return;if(B)b.style.display=ab.includes(k)?"":"none";else if(b.dataset.bipH)b.style.display="";b.dataset.bipH=B?"1":""});
  if(B)["#sub","#pasub"].forEach(bar=>{const on=document.querySelector(bar+" button.on");if(on&&on.style.display==="none"){const f=[...document.querySelectorAll(bar+" button")].find(x=>x.style.display!=="none");if(f)f.click()}})}
 /* permissões que o administrador liga e desliga para cada gestor (coluna do banco, campo local, nome curto) */
-const PERM_T=[["pC","pode_config","configurações","Pode alterar configurações","Horários, paradas, motivos, limites e o galpão."],["pI","pode_individual","individual","Pode ver acompanhamento individual","Aba Equipe: presença, produção por pessoa e mudar turno e almoço."],["pR","pode_registros","registros","Pode alterar e excluir registros","Corrigir ou apagar ondas e ausências já registradas."],["pP","pode_pessoas","pessoas","Pode cadastrar e editar pessoas","Criar, renomear, mudar de turno e excluir pessoas da Coleta."],["pM","pode_metas","metas","Pode alterar metas","Meta do dia e metas individuais do galpão e de cada pessoa."]];
+const PERM_T=[["pC","pode_config","configurações","Pode alterar configurações","Horários, paradas, motivos, limites e o galpão."],["pI","pode_individual","individual","Pode ver acompanhamento individual","Aba Equipe: presença, produção por pessoa e mudar turno e almoço."],["pR","pode_registros","registros","Pode alterar e excluir registros","Corrigir ou apagar ondas e ausências já registradas."],["pP","pode_pessoas","pessoas","Pode cadastrar e editar pessoas","Criar, renomear, mudar de turno e excluir pessoas da Coleta."],["pM","pode_metas","metas","Pode alterar metas","Meta do dia e metas individuais do galpão e de cada pessoa."],["pS","pode_semana","semana","Pode ver a semana da equipe","Equipe › Semana: presença, faltas e ausências de cada pessoa, dia a dia."]];
 let mPermU=null;
 function cfgPerm(){const el=$("#mPerm");if(!el)return;const m=mPermU?S.ges.find(x=>x.u===mPermU):null;if(!m){el.innerHTML="";return}
  el.innerHTML=`<div class="f" style="margin-top:14px;padding-top:12px;border-top:1px solid var(--line)"><b>Permissões de ${esc(m.n)}</b><div class="legend">Valem no próximo acesso dele. O banco confere cada permissão, então o que estiver desmarcado é recusado mesmo fora do site.</div>${PERM_T.map(([k,,,l,d])=>`<label class="row" style="align-items:flex-start"><input type="checkbox" data-pk="${k}" style="min-height:auto;margin-top:3px"${m[k]?" checked":""}> <span>${l}<br><small style="color:var(--mut);font-weight:400">${d}</small></span></label>`).join("")}<div class="ctl"><button class="btn sm" type="button" id="mPermOk">Salvar permissões</button> <button class="btn alt sm" type="button" id="mPermX">Fechar</button></div></div>`}
@@ -2936,7 +3014,7 @@ cfgNavAbre();window.addEventListener("resize",cfgNavAbre);
 document.addEventListener("click",e=>{const b=e.target.closest(".cfgAddB");if(!b)return;const f=$("#"+b.dataset.add);if(!f)return;if(!b.dataset.t0)b.dataset.t0=b.textContent;
  const fechado=f.classList.toggle("cfgAddOff");b.textContent=fechado?b.dataset.t0:"Fechar";b.setAttribute("aria-expanded",String(!fechado));
  if(!fechado){const i=f.querySelector("input:not([type=hidden]):not([type=checkbox]),select");try{f.scrollIntoView({block:"nearest",behavior:"smooth"})}catch(x){}if(i)setTimeout(()=>i.focus(),60)}});
-function cfgVis(){const sm=soMeta(),tb=temBip();let pg=false;try{pg=pdGestor()}catch(e){}
+function cfgVis(){try{const b=$("#gsSem");if(b)b.style.display=podeSem()?"":"none";if(!podeSem()&&gsub==="sem"&&view==="ind")setTimeout(()=>gsSel("chk"),0)}catch(e){}const sm=soMeta(),tb=temBip();let pg=false;try{pg=pdGestor()}catch(e){}
  const V={cop:1,cme:1,cho:1,cpa:1,cmo:1,cus:1,cpd:pg,cge:!sm||tb,cga:!sm,cma:!ON||!!(me&&me.adm),cau:!!(ON&&me&&me.adm)};
  if(ON&&me&&!me.adm&&!me.pC)Object.keys(V).forEach(k=>{if(!["cho","cpa","cmo"].includes(k)&&!(k==="cge"&&tb))V[k]=false});
  if(ON&&me&&!me.adm&&!me.bip){if(me.pP)V.cus=1;if(me.pM)V.cme=1}
@@ -2954,7 +3032,7 @@ function gsSel(x,cv){if(x==="co"){x=COV==="in"?"mi":"mc";cv=COV}if(x==="mi")COV=
  $$("#gsub button").forEach(b=>b.classList.toggle("on",b.dataset.gs===x||(b.dataset.gs==="co"&&(x==="mi"||x==="mc"))));
  $$("#coSeg button").forEach(b=>{const on=(x==="mi"&&b.dataset.gs==="mi")||(x==="mc"&&b.dataset.cv===COV);b.classList.toggle("on",on);b.setAttribute("aria-pressed",on)});
  $("#coSeg").classList.toggle("hide",x!=="mi"&&x!=="mc");$("#coBody").dataset.cv=COV==="tu"?"tu":"eq";try{sideSubs()}catch(e){}
-$("#iBody").classList.toggle("hide",x!=="mi");$("#coBody").classList.toggle("hide",x!=="mc");$("#ckBody").classList.toggle("hide",x!=="chk");$("#iOp").classList.toggle("hide",x!=="mi");$("#iPrint").classList.toggle("hide",x!=="mi");$("#iPer").classList.toggle("hide",x==="chk"||x==="pd");$("#pdEqV").classList.toggle("hide",x!=="pd");$("#iOp").classList.toggle("hide",x!=="mi");if(x==="pd"){$("#mgStatus").classList.add("hide");pdAbrirDis()}else if(x==="chk")ckEntrar();else if(x==="mc"){coletiva();loadManagement({cache:true})}else{individual();loadManagement({cache:true})}}
+$("#iBody").classList.toggle("hide",x!=="mi");$("#coBody").classList.toggle("hide",x!=="mc");$("#ckBody").classList.toggle("hide",x!=="chk");$("#semBody").classList.toggle("hide",x!=="sem");$("#iOp").classList.toggle("hide",x!=="mi");$("#iPrint").classList.toggle("hide",x!=="mi");$("#iPer").classList.toggle("hide",x==="chk"||x==="pd"||x==="sem");$("#pdEqV").classList.toggle("hide",x!=="pd");$("#iOp").classList.toggle("hide",x!=="mi");if(x==="pd"){$("#mgStatus").classList.add("hide");pdAbrirDis()}else if(x==="chk")ckEntrar();else if(x==="sem")semEntrar();else if(x==="mc"){coletiva();loadManagement({cache:true})}else{individual();loadManagement({cache:true})}}
 $("#gsub").onclick=e=>{const b=e.target.closest("[data-gs]");if(b)gsSel(b.dataset.gs)};
 $("#coSeg").onclick=e=>{const b=e.target.closest("[data-gs]");if(b)gsSel(b.dataset.gs,b.dataset.cv)};
 
@@ -3116,7 +3194,7 @@ $("#mB").onclick=()=>{const n=$("#mN").value.trim(),u=$("#mU").value.trim(),p=$(
   if(!adm&&!gg0){toast("Crie um galpão antes de cadastrar gestores.");return}
   if(p.length<8){toast("Defina uma senha de pelo menos 8 caracteres para o gestor.");$("#mP2").focus();return}
   const bt=$("#mB");bt.disabled=true;
-  rem(()=>api("/functions/v1/gestor-conta",{method:"POST",body:{acao:"criar",email:em,senha:p,nome:n,galpao_id:adm?null:(GID[gg0]||null),admin:adm,pode_config:$("#mC").checked,pode_individual:$("#mI").checked,pode_registros:$("#mR").checked,pode_pessoas:$("#mPp").checked,pode_metas:$("#mPm").checked}}),"Gestor criado. Ele já pode entrar com "+em+" e a senha definida.").then(ok=>{bt.disabled=false;if(ok)$("#mN").value=$("#mU").value=$("#mP2").value=""});return}
+  rem(()=>api("/functions/v1/gestor-conta",{method:"POST",body:{acao:"criar",email:em,senha:p,nome:n,galpao_id:adm?null:(GID[gg0]||null),admin:adm,pode_config:$("#mC").checked,pode_individual:$("#mI").checked,pode_registros:$("#mR").checked,pode_pessoas:$("#mPp").checked,pode_metas:$("#mPm").checked,pode_semana:$("#mPs").checked}}),"Gestor criado. Ele já pode entrar com "+em+" e a senha definida.").then(ok=>{bt.disabled=false;if(ok)$("#mN").value=$("#mU").value=$("#mP2").value=""});return}
  if(!n||!u){toast("Informe nome e usuário de login");return}
  const gg=$("#mG").value;if(!gg){toast("Selecione o galpão do gestor");return}
  if(S.ges.some(g=>g.u.toLowerCase()===u.toLowerCase())){toast("Usuário de login já existe");return}
