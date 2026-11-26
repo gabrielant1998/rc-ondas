@@ -106,6 +106,19 @@ await T("P20 Meta individual da embalagem para uma ou mais pessoas e voltar à d
  await p.check('[data-psel="'+ks[0]+'"]');await p.click('[data-mlvolta="emb"]');await p.waitForTimeout(120);s=await st(p);ok(s.prodPes.filter(o=>o.md===1500).length===1,'voltou à do posto');
  ok(await p.evaluate(k=>{const o=pdOp(k);return Math.abs(pdMetaPesH(o,"mesa",hoje(),"terreo")-1500/8)<0.01||o.md===0},ks[1]),'meta por hora da pessoa');ok(!p.errors.length,p.errors.join(';'))});
 
+await T("P21 Galpão só com Mesa e Máquina: sem Térreo e Mezanino na embalagem",async()=>{const p=await page(b,base());await p.click('.tab[data-t="prod"]');const mt=()=>dis(p,'cme');await mt();
+ ok(await p.isVisible('#pdMt [data-pdsa="1"][data-g="G2"]'),'opção por galpão');await p.click('#pdMt [data-pdsa="1"][data-g="G2"]');await p.waitForTimeout(120);
+ let s=await st(p);ok(s.galH&&s.galH.G2&&s.galH.G2.pdSA===true,'salvou G2: '+JSON.stringify(s.galH));
+ let th=await p.$$eval('#pdMt table.pdMtT',T=>T.map(t=>[...t.querySelectorAll('th')].map(x=>x.textContent.trim()).join('|')));ok(th.length===2&&th[1]==='Galpão|Mesa|Máquina'&&th[0].includes('Mezanino'),'tabelas de metas: '+th);
+ await p.click('#pdMt [data-pdsa="1"][data-g="RC"]');await p.waitForTimeout(120);
+ await dis(p);await abrirAdd(p);ok(!(await p.$('#pdNovaF legend >> text=Andar')),'sem andar no cadastro');await p.fill('#pdNovaF [name="n"]','Mara Reis');await p.check('#pdNovaF input[name="pdAt"][value="maquina"]');await p.click('#pdNovaF [type="submit"]');await p.waitForTimeout(150);
+ s=await st(p);const o=s.prodPes.find(x=>x.n==='Mara Reis');ok(o,'cadastrou');const a=s.prodA.find(x=>x.oid===o.id);ok(a&&a.andar==='terreo'&&a.at==='maquina','posto guardado: '+JSON.stringify(a));
+ const f=await p.$$eval('#pdDf [data-pdf]',x=>x.map(e=>e.textContent.replace(/\s*\d+$/,'').trim()));ok(f.join('|')==='Todos|Mesa|Máquina|Sem posto','filtros: '+f);
+ await p.fill('#pdDq','Mara');await p.waitForTimeout(80);ok((await p.textContent('#pdDl')).includes('Máquina')&&!(await p.textContent('#pdDl')).includes('Térreo'),'lista sem andar');
+ await p.locator('#pdDl [data-pded]').first().click();ok(!(await p.$('.pdEd input[name="pdAn"]:not([hidden])')),'editor sem andar');
+ await mt();await p.click('#pdMt [data-pdsa="0"][data-g="RC"]');await p.waitForTimeout(120);s=await st(p);ok(!s.galH.RC.pdSA,'voltou com andares');await dis(p);await abrirAdd(p);ok(await p.$('#pdNovaF input[name="pdAn"][value="mezanino"]'),'mezanino de volta');
+ ok(!p.errors.length,p.errors.join(';'))});
+
 await T("P10 Celular: sem rolagem horizontal na Produção",async()=>{const p=await page(b,base(),{width:390,height:844});await p.click('.tab[data-t="prod"]');
  await posto(p,'Ana','terreo','mesa');await bipar(p,'PR001',['123456789']);let w=await p.evaluate(()=>document.documentElement.scrollWidth);ok(w<=391,'bipar '+w);
  if(SHOT)await p.screenshot({path:SHOT+'/p_cel.png'});
