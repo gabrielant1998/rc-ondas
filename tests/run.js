@@ -311,6 +311,17 @@ await T("100 Equipe › Semana: Coleta dia a dia com totais e busca",async()=>{c
  const n0=r.rows;await p.fill('#semQ','zzz-ninguem');await p.waitForTimeout(150);ok((await p.textContent('#semBody')).includes('Ninguém'),'busca');ok(await p.evaluate(()=>document.activeElement.id==='semQ'),'foco fica na busca');
  await p.fill('#semQ','');await p.waitForTimeout(150);ok((await p.$$eval('#semBody .semT tr',a=>a.length))===n0,'volta');ok(!p.errors.length,p.errors.join(';'))});
 
+await T("101 Turnos por galpão: galpão com 1 turno esconde o 2º turno nos horários, cadastros e filtro",async()=>{const st=bigState();st.gals=["Galpão 1","Galpão 2"];const p=await page(b,st);
+ await p.evaluate(()=>{go('cfg');document.querySelector('#csub [data-c="cho"]').click()});await p.waitForTimeout(200);
+ await p.evaluate(()=>{const x=document.querySelector('#turnos [data-hgal="Galpão 2"]');if(x)x.click()});await p.waitForTimeout(150);ok((await p.$$eval('#turnos form[data-hr]',a=>a.length))===2,'começa com 2 turnos');
+ await p.click('#turnos [data-hnt="1"]');await p.waitForTimeout(200);
+ const r=await p.evaluate(()=>({forms:[...document.querySelectorAll('#turnos form[data-hr]')].map(f=>f.dataset.hr),n:nTurnos('Galpão 2'),n1:nTurnos('Galpão 1'),salvo:JSON.parse(localStorage.getItem('rcondas.v2')).galH['Galpão 2'].n}));
+ ok(r.forms.join()==='1'&&r.n===1&&r.n1===2&&r.salvo===1,'1 turno salvo: '+JSON.stringify(r));if(process.env.SHOT)await (await p.$('#cho')).screenshot({path:process.env.SHOT+'/nt.png'});
+ await p.evaluate(()=>{$('#gal').value='Galpão 2';$('#gal').dispatchEvent(new Event('change',{bubbles:true}))});await p.waitForTimeout(150);ok(await p.evaluate(()=>document.querySelector('#turnoF option[value="2"]').hidden),'filtro sem 2º turno');
+ await p.evaluate(()=>{$('#gal').value='Galpão 1';$('#gal').dispatchEvent(new Event('change',{bubbles:true}))});await p.waitForTimeout(150);ok(!(await p.evaluate(()=>document.querySelector('#turnoF option[value="2"]').hidden)),'outro galpão mantém');
+ ok(await p.evaluate(()=>turnosDe('Galpão 2').join()==='1'&&turnosDe('Galpão 2',2).join()==='1,2'),'quem já está no 2º continua aparecendo');
+ await p.click('#turnos [data-hnt="2"]');await p.waitForTimeout(150);ok((await p.$$eval('#turnos form[data-hr]',a=>a.length))===2,'volta a 2 turnos');ok(!p.errors.length,p.errors.join(';'))});
+
 await T("73 Abas internas: no topo da página e, nos Relatórios, menu agrupado ao lado",async()=>{
  const p=await page(b,base(),{sidebarSubs:true});
  ok(!(await p.isVisible('#hsub')),'barra interna deveria sumir no computador');

@@ -628,6 +628,7 @@ body[data-v=cfg] #turnoF,body[data-v=cfg] #gal,body[data-v=cfg] #day{display:non
 .semF{color:var(--line)}.semAus{color:#c98a12!important}.semR{color:var(--r);font-weight:700}.semO{color:#c98a12;font-weight:700}
 .semTot td{border-top:1px solid var(--ink);font-weight:700;padding-top:10px}
 @media(max-width:760px){#semQ{margin-left:0;max-width:none;width:100%}.semNav b{font-size:14px}.semKs{grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}.semK{padding:8px}.semK b{font-size:17px}.semK span{font-size:11.5px}#gsub{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none}#gsub button{white-space:nowrap}}
+.hrNT{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;margin:4px 0 14px}.hrNT>span{font-weight:600}.hrNT small{color:var(--mut)}.hrNT .hrAviso{color:#c98a12;font-weight:600}
 </style>
 </head>
 <body>
@@ -1349,6 +1350,10 @@ let PRS={},PBX={},PHX={},ATR={};
 /* horário da pessoa; com dia informado, usa o horário que valia naquele dia (desfaz alterações posteriores) */
 /* horário por galpão (galpoes.horarios). Sem horário próprio, o galpão usa o horário geral (config). */
 const okJ=j=>!!j&&j.ini!=null&&j.fim!=null&&+j.fim>+j.ini;
+/* quantos turnos o galpão tem (1 ou 2), guardado em galpoes.horarios.n; sem configurar = 2 */
+function nTurnos(g){const H=g&&S.galH&&S.galH[g];return H&&+H.n===1?1:2}
+function turnosDe(g,atual){const L=nTurnos(g)===1?[1]:[1,2];if(atual&&!L.includes(atual))L.push(atual);return L}
+function turnoFSync(){const f=$("#turnoF");if(!f)return;const g=$("#gal")?$("#gal").value:"__all",GS=g&&g!=="__all"?[g]:((ON&&restricted())?[myG()]:S.gals),dois=GS.some(x=>nTurnos(x)===2),o2=f.querySelector('option[value="2"]');if(o2){o2.hidden=!dois;o2.disabled=!dois}if(!dois&&f.value==="2"){f.value="";if(typeof renderAll==="function")renderAll()}}
 function hT(t,g){const H=g&&S.galH&&S.galH[g],x=H&&H[t===2?2:1];return okJ(x)?x:null}
 function turnoBase(t,g){const x=hT(t,g);return x?{ini:+x.ini,fim:+x.fim}:S.cfg.turnos[t===2?2:1]}
 function pausasGeral(t){const z=((S.cfg&&S.cfg.pz)||{})[t===2?2:1];return Array.isArray(z)?z.filter(p=>p&&p.i!=null&&p.f>p.i):[]}
@@ -2329,7 +2334,13 @@ function horBloco(t,g){const x=hEdit(t,g),proprio=!!hT(t,g),dis=ON&&!(me&&(me.pC
   ${dis?"":`<button type="button" class="lk hrAdd" data-pzadd="1">+ Outra pausa (ginástica, reunião…)</button>
   <div class="hrF"><label class="row"><input type="checkbox" data-happ checked style="min-height:auto"> Atualizar também quem está com o expediente atual deste turno</label><button type="submit" class="btn sm">Salvar ${T}</button></div>`}</form>`}
 function horRender(){const el=$("#turnos");if(!el)return;const{GS,lim}=horGal();
- el.innerHTML=`${GS.length>1&&!lim?`<div class="hrG" role="tablist" aria-label="Galpão">${GS.map(g=>`<button type="button" role="tab" data-hgal="${esc(g)}" aria-selected="${g===HGAL}" class="${g===HGAL?"on":""}">${esc(g)}</button>`).join("")}</div>`:`<div class="hrG1">${esc(HGAL||"")}</div>`}<div class="hrGrid">${[1,2].map(t=>horBloco(t,HGAL)).join("")}</div>`}
+ el.innerHTML=`${GS.length>1&&!lim?`<div class="hrG" role="tablist" aria-label="Galpão">${GS.map(g=>`<button type="button" role="tab" data-hgal="${esc(g)}" aria-selected="${g===HGAL}" class="${g===HGAL?"on":""}">${esc(g)}</button>`).join("")}</div>`:`<div class="hrG1">${esc(HGAL||"")}</div>`}${horNT(HGAL)}<div class="hrGrid">${turnosDe(HGAL).map(t=>horBloco(t,HGAL)).join("")}</div>`}
+function horNT(g){const n=nTurnos(g),dis=ON&&!(me&&(me.pC||me.adm))?" disabled":"",n2=S.ops.filter(o=>o.g===g&&o.t===2).length;
+ return`<div class="hrNT"><span>Turnos neste galpão</span><div class="semSeg" role="group" aria-label="Quantos turnos ${esc(g||"")} tem">${[1,2].map(k=>`<button type="button" data-hnt="${k}" class="${n===k?"on":""}" aria-pressed="${n===k}"${dis}>${k===1?"1 turno":"2 turnos"}</button>`).join("")}</div>${n===1&&n2?`<small class="hrAviso">${n2} ${n2===1?"pessoa ainda está":"pessoas ainda estão"} no 2º turno. Mude o turno delas em Pessoas da coleta.</small>`:`<small>${n===1?"Só o 1º turno aparece para este galpão.":"1º e 2º turno."}</small>`}</div>`}
+async function horSalvarNT(g,n){if(ON&&!(me&&(me.pC||me.adm))){toast("Sem permissão: seu acesso não permite alterar horários. Peça ao administrador para liberar \"Pode alterar configurações\".",7000);return}
+ const H=JSON.parse(JSON.stringify((S.galH&&S.galH[g])||{}));H.n=n;const msg=g+" agora tem "+(n===1?"1 turno":"2 turnos")+".";
+ if(!ON){S.galH=S.galH||{};S.galH[g]=H;save();horRender();turnoFSync();renderAll();toast(msg);return}
+ const ok=await rem(()=>mut("/rest/v1/galpoes?id=eq."+GID[g],"PATCH",{horarios:H}),msg);if(ok){horRender();turnoFSync()}}
 /* lê o formulário de um turno; devolve {erro} ou o horário pronto para salvar */
 function horLer(f,t,g){const v=k=>{const i=f.querySelector(`[data-hk="${k}"]`);return i?i.value:""},tn=k=>hm2m(v(k)),T=t+"º turno: ";let erroH="";
  const hn=k=>{const m=tn(k);if(m==null)return null;if(m===1439)return 24;if(m%60){erroH=T+"o expediente, o sábado e o domingo usam hora cheia (ex.: 07:00, 16:00).";return null}return m/60};
@@ -2351,6 +2362,7 @@ async function horSalvar(f){const t=+f.dataset.hr,g=HGAL,r=horLer(f,t,g);if(r.er
    if(aplicar){const r2=await api("/rest/v1/operadores?galpao_id=eq."+GID[g]+"&turno=eq."+t+"&inicio=eq."+antes.ini+"&fim=eq."+antes.fim+"&excluido_em=is.null",{method:"PATCH",body:{inicio:r.h.ini,fim:r.h.fim},prefer:"return=representation"});n=Array.isArray(r2)?r2.length:0}},null);
  if(b)b.disabled=false;if(ok){delete HPZ[g+"|"+t];horRender();toast("Horário do "+t+"º turno de "+g+" salvo"+(n?", "+n+(n===1?" pessoa atualizada":" pessoas atualizadas"):""))}}
 document.addEventListener("submit",e=>{const f=e.target.closest&&e.target.closest("form[data-hr]");if(!f)return;e.preventDefault();horSalvar(f)});
+document.addEventListener("click",e=>{const b=e.target.closest&&e.target.closest("[data-hnt]");if(!b||!b.closest("#turnos")||b.disabled)return;const n=+b.dataset.hnt;if(n!==nTurnos(HGAL))horSalvarNT(HGAL,n)});
 document.addEventListener("click",e=>{const b=e.target.closest&&e.target.closest("[data-hgal],[data-pzadd],[data-pzdel]");if(!b||!b.closest("#turnos"))return;
  if(b.dataset.hgal){HGAL=b.dataset.hgal;horRender();return}
  const f=b.closest("form[data-hr]"),t=+f.dataset.hr,k=HGAL+"|"+t,L=HPZ[k]||[],snap={};$$("#turnos form[data-hr]").forEach(ff=>{const z={};ff.querySelectorAll("[data-hk]").forEach(i=>{z[i.dataset.hk]=i.value});const ap=ff.querySelector("[data-happ]");z._ap=ap?ap.checked:true;snap[ff.dataset.hr]=z});
@@ -2450,7 +2462,7 @@ document.addEventListener("click",async e=>{const b=e.target.closest&&e.target.c
  if(await rem(()=>mut("/rest/v1/ausencias?id=eq."+encodeURIComponent(b.dataset.ausdel),"DELETE"),"Ausência excluída"))ausRel(true)});
 function cfgUsers(){
  $("#nextCode").textContent="próximo: "+nextCode();if(ON&&me)api("/rest/v1/rpc/operador_proximo_codigo",{method:"POST",body:{}}).then(c=>{if(c)$("#nextCode").textContent="próximo: "+c}).catch(()=>{});
- $("#uT").innerHTML=[1,2].map(t=>`<button data-ut="${t}" class="${uT===t?"on":""}" style="--c:${t===1?"var(--g)":"var(--v)"}">${t}º turno</button>`).join("");
+ {const gU=($("#uG")&&$("#uG").value)||S.gal;if(nTurnos(gU)===1&&uT===2)uT=1;$("#uT").dataset.g=gU}$("#uT").innerHTML=turnosDe(($("#uG")&&$("#uG").value)||S.gal).map(t=>`<button data-ut="${t}" class="${uT===t?"on":""}" style="--c:${t===1?"var(--g)":"var(--v)"}">${t}º turno</button>`).join("");
  const lim=ON&&restricted(),GS=lim?[myG()]:S.gals,OPS=lim?S.ops.filter(o=>o.g===myG()):S.ops;
  $("#uG").innerHTML=GS.map(g=>`<option>${esc(g)}</option>`).join("");$("#uG").closest("label").classList.toggle("hide",lim);
  $("#uCnt").textContent=OPS.length+" cadastrados";$$('[data-add="uAdd"]').forEach(b=>b.classList.toggle("hide",!podeP()));if(!podeP())$("#uAdd").classList.add("cfgAddOff");
@@ -2461,12 +2473,13 @@ function cfgUsers(){
  $("#uL").innerHTML=(pm&&V.length?metaLoteBar("col",USEL.size,V.length&&V.every(o=>USEL.has(o.m))):"")+(V.length?`<table class="uTab"><tr>${pm?`<th class="selC"><input type="checkbox" data-uselall aria-label="Selecionar todas as pessoas da lista"${V.every(o=>USEL.has(o.m))?" checked":""}></th>`:""}<th>Código</th><th>Nome</th><th>Turno</th><th>Galpão</th><th>Ondas</th><th></th></tr>`+
   V.map(o=>{const n=S.waves.filter(w=>w.op===o.m).length;
    const pp=podeP(),mi=MIP(o),mg=(MI()[o.g]||{});
-   return`<tr${uEd===o.m?' class="uEdOn"':''}>${pm?`<td class="selC"><input type="checkbox" data-usel="${o.m}" aria-label="Selecionar ${esc(o.n)}"${USEL.has(o.m)?" checked":""}></td>`:""}<td><b>${o.m}</b></td><td>${esc(o.n)}${o.mo||o.mq?`<br><small class="uMeta">meta própria: ${[o.mo?fmt(o.mo)+" ondas":"",o.mq?fmt(o.mq)+" un.":""].filter(Boolean).join(" e ")} por dia</small>`:""}</td><td><select data-ut2="${o.m}" aria-label="Turno de ${esc(o.n)}"${pp?"":" disabled"}><option value="1"${o.t===1?" selected":""}>1º turno</option><option value="2"${o.t===2?" selected":""}>2º turno</option></select></td><td>${lim?esc(o.g):`<select data-ug2="${o.m}" aria-label="Galpão de ${esc(o.n)}">${S.gals.map(g=>`<option${g===o.g?" selected":""}>${esc(g)}</option>`).join("")}</select>`}</td><td>${n}</td><td class="uAc">${pp||podeM()?`<button class="btn alt sm" type="button" data-uedit="${o.m}" aria-expanded="${uEd===o.m}">${uEd===o.m?"Fechar":"Editar"}</button> `:""}${pp?`<button class="btn d sm" data-udel="${o.m}">Excluir</button>`:""}</td></tr>`+(uEd===o.m?`<tr class="uEdR"><td colspan="${pm?7:6}"><form class="uEdF" data-uef="${o.m}">
+   return`<tr${uEd===o.m?' class="uEdOn"':''}>${pm?`<td class="selC"><input type="checkbox" data-usel="${o.m}" aria-label="Selecionar ${esc(o.n)}"${USEL.has(o.m)?" checked":""}></td>`:""}<td><b>${o.m}</b></td><td>${esc(o.n)}${o.mo||o.mq?`<br><small class="uMeta">meta própria: ${[o.mo?fmt(o.mo)+" ondas":"",o.mq?fmt(o.mq)+" un.":""].filter(Boolean).join(" e ")} por dia</small>`:""}</td><td><select data-ut2="${o.m}" aria-label="Turno de ${esc(o.n)}"${pp?"":" disabled"}>${turnosDe(o.g,o.t).map(k=>`<option value="${k}"${o.t===k?" selected":""}>${k}º turno</option>`).join("")}</select></td><td>${lim?esc(o.g):`<select data-ug2="${o.m}" aria-label="Galpão de ${esc(o.n)}">${S.gals.map(g=>`<option${g===o.g?" selected":""}>${esc(g)}</option>`).join("")}</select>`}</td><td>${n}</td><td class="uAc">${pp||podeM()?`<button class="btn alt sm" type="button" data-uedit="${o.m}" aria-expanded="${uEd===o.m}">${uEd===o.m?"Fechar":"Editar"}</button> `:""}${pp?`<button class="btn d sm" data-udel="${o.m}">Excluir</button>`:""}</td></tr>`+(uEd===o.m?`<tr class="uEdR"><td colspan="${pm?7:6}"><form class="uEdF" data-uef="${o.m}">
     ${pp?`<label>Nome e sobrenome<input name="n" value="${esc(o.n)}" maxlength="80" autocomplete="off" required></label>`:""}
     ${podeM()?`<label>Meta individual: ondas por dia<input name="mo" type="number" min="1" step="1" value="${o.mo||""}" placeholder="${mg.o?"do galpão: "+fmt(mg.o):"sem meta"}"></label><label>Meta individual: unidades por dia<input name="mq" type="number" min="1" step="1" value="${o.mq||""}" placeholder="${mg.q?"do galpão: "+fmt(mg.q):"sem meta"}"></label>`:""}
     <div class="uEdB"><button class="btn sm" type="submit">Salvar</button><button class="btn alt sm" type="button" data-uedit="${o.m}">Cancelar</button></div>
     <div class="legend">${podeM()?"Deixe a meta em branco para usar a meta individual do galpão"+(mg.o||mg.q?" ("+[mg.o?fmt(mg.o)+" ondas":"",mg.q?fmt(mg.q)+" un.":""].filter(Boolean).join(" e ")+" por dia)":"")+". ":""}Mudar o nome não altera a produtividade: as ondas, a presença e as metas continuam ligadas à mesma pessoa.</div></form></td></tr>`:"")}).join("")+"</table>":"")+rodape}
 let uEd=null;const USEL=new Set(),PSEL=new Set();
+document.addEventListener("change",e=>{if(e.target.id==="uG"&&$("#uT")){const g=e.target.value;if(nTurnos(g)===1&&uT===2)uT=1;$("#uT").innerHTML=turnosDe(g).map(t=>`<button data-ut="${t}" class="${uT===t?"on":""}" style="--c:${t===1?"var(--g)":"var(--v)"}">${t}º turno</button>`).join("")}if(e.target.id==="gal")turnoFSync()});
 /* barra para mudar a meta individual de uma ou mais pessoas de uma vez */
 function metaLoteBar(t,n,todas){const col=t==="col",ids=col?"mlc":"mle";
  return`<div class="mLote${n?" on":""}" data-mlote="${t}" role="region" aria-label="Meta individual em lote"><div class="mLoteT"><b>${n?n+(n===1?" pessoa selecionada":" pessoas selecionadas"):"Meta individual"}</b><span>${n?"Defina a meta própria de quem está marcado.":"Marque uma ou mais pessoas na lista para mudar a meta individual delas."}</span></div>
@@ -3016,7 +3029,7 @@ cfgNavAbre();window.addEventListener("resize",cfgNavAbre);
 document.addEventListener("click",e=>{const b=e.target.closest(".cfgAddB");if(!b)return;const f=$("#"+b.dataset.add);if(!f)return;if(!b.dataset.t0)b.dataset.t0=b.textContent;
  const fechado=f.classList.toggle("cfgAddOff");b.textContent=fechado?b.dataset.t0:"Fechar";b.setAttribute("aria-expanded",String(!fechado));
  if(!fechado){const i=f.querySelector("input:not([type=hidden]):not([type=checkbox]),select");try{f.scrollIntoView({block:"nearest",behavior:"smooth"})}catch(x){}if(i)setTimeout(()=>i.focus(),60)}});
-function cfgVis(){try{const b=$("#gsSem");if(b)b.style.display=podeSem()?"":"none";if(!podeSem()&&gsub==="sem"&&view==="ind")setTimeout(()=>gsSel("chk"),0)}catch(e){}const sm=soMeta(),tb=temBip();let pg=false;try{pg=pdGestor()}catch(e){}
+function cfgVis(){try{turnoFSync()}catch(e){}try{const b=$("#gsSem");if(b)b.style.display=podeSem()?"":"none";if(!podeSem()&&gsub==="sem"&&view==="ind")setTimeout(()=>gsSel("chk"),0)}catch(e){}const sm=soMeta(),tb=temBip();let pg=false;try{pg=pdGestor()}catch(e){}
  const V={cop:1,cme:1,cho:1,cpa:1,cmo:1,cus:1,cpd:pg,cge:!sm||tb,cga:!sm,cma:!ON||!!(me&&me.adm),cau:!!(ON&&me&&me.adm)};
  if(ON&&me&&!me.adm&&!me.pC)Object.keys(V).forEach(k=>{if(!["cho","cpa","cmo"].includes(k)&&!(k==="cge"&&tb))V[k]=false});
  if(ON&&me&&!me.adm&&!me.bip){if(me.pP)V.cus=1;if(me.pM)V.cme=1}
