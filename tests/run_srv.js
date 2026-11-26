@@ -479,7 +479,7 @@ await T('S115 Equipe › Semana: Coleta dia a dia, Embalagem pelo servidor e per
  const p=await page(b,db);await login(p,'adm@x.com','senha1234');await p.evaluate(()=>{go('ind');gsSel('sem')});await p.waitForTimeout(900);
  ok(await p.isVisible('#gsSem')&&await p.isVisible('#semBody .semT'),'página aparece');const n=await p.$$eval('#semBody .semT tr',a=>a.length);ok(n>=3,'linhas: '+n);
  ok((await p.textContent('#semBody .semNav b')).includes('Semana de'),'navegação');await p.click('[data-semnav="-1"]');await p.waitForTimeout(500);ok(await p.isVisible('[data-semnav="0"]'),'semana anterior com volta');await p.click('[data-semnav="0"]');await p.waitForTimeout(500);
- await p.click('[data-semset="emb"]');await p.waitForTimeout(700);const t=await p.textContent('#semBody .semT');ok(t.includes('Rita Embala')&&t.includes('340 un.')&&t.includes('2 saídas'),'embalagem: '+t.slice(0,200));if(process.env.SHOT)await p.screenshot({path:process.env.SHOT+'/sem_emb_srv.png'});
+ await p.click('[data-semset="emb"]');await p.waitForTimeout(700);const t=await p.textContent('#semBody .semT');ok(t.includes('Rita Embala')&&t.includes('340 un.')&&t.includes('2 saídas'),'embalagem: '+t.slice(0,200));ok(t.includes('Presente')&&!t.includes('Veio'),'rótulo Presente');if(process.env.SHOT)await p.screenshot({path:process.env.SHOT+'/sem_emb_srv.png'});
  db.gestores.find(x=>x.email==='adm@x.com');const g2=db.gestores.find(x=>x.email==='g2@x.com');g2.pode_semana=false;
  await p.click('#logbtn');await p.waitForTimeout(300);await login(p,'g2@x.com','senha1234');await p.evaluate(()=>go('ind'));await p.waitForTimeout(300);ok(!(await p.isVisible('#gsSem')),'sem permissão a aba some');
  ok(!p.errors.length,p.errors.join(';'))});
